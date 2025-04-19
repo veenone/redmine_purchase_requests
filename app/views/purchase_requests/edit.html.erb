@@ -1,0 +1,7 @@
+<% @purchase_request = PurchaseRequest.find(params[:id]) %>
+
+<h1>Edit Purchase Request</h1>
+
+<%= render 'form', purchase_request: @purchase_request %>
+
+<%= link_to 'Back', purchase_requests_path %>

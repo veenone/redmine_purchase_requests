@@ -1,0 +1,8 @@
+<h2><%= l(:label_status_edit) %></h2>
+
+<%= form_for @status do |f| %>
+  <%= render partial: 'form', locals: { f: f } %>
+  <%= submit_tag l(:button_save) %>
+<% end %>
+
+<%= link_to l(:button_back), purchase_request_statuses_path, class: 'icon icon-back' %>

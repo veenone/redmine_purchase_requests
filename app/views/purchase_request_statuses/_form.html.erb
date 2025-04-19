@@ -1,0 +1,29 @@
+<%= error_messages_for 'status' %>
+
+<div class="box tabular">
+  <p>
+    <%= f.label :name, l(:label_status_name) %><span class="required"> *</span>
+    <%= f.text_field :name, required: true, size: 30 %>
+  </p>
+  
+  <p>
+    <%= f.label :position, l(:label_status_position) %>
+    <%= f.number_field :position, min: 1 %>
+  </p>
+  
+  <p>
+    <%= f.label :is_closed, l(:label_status_is_closed) %>
+    <%= f.check_box :is_closed %>
+  </p>
+  
+  <p>
+    <%= f.label :color, l(:label_status_color) %>
+    <%= f.color_field :color %>
+  </p>
+
+  <p>
+    <%= f.label :is_default, l(:label_is_default) %>
+    <%= f.check_box :is_default %>
+    <em class="info"><%= l(:text_is_default_info) %></em>
+  </p>
+</div>

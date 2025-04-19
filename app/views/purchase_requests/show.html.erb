@@ -1,0 +1,296 @@
+<% html_title "#{l(:label_purchase_request)} ##{@purchase_request.id}: #{@purchase_request.title}" %>
+
+<div class="contextual">
+  <%= link_to l(:button_edit), edit_purchase_request_path(@purchase_request), class: 'icon icon-edit' if User.current.allowed_to?(:edit_purchase_requests, nil, global: true) %>
+  <%= link_to l(:button_delete), purchase_request_path(@purchase_request), 
+              method: :delete, 
+              data: { confirm: l(:text_are_you_sure) }, 
+              class: 'icon icon-del', 
+              title: l(:button_delete) if User.current.allowed_to?(:delete_purchase_requests, nil, global: true) %>
+  <%= link_to l(:button_back), purchase_requests_path, class: 'icon icon-back' %>
+</div>
+
+<h2><%= l(:label_purchase_request) %> #<%= @purchase_request.id %></h2>
+
+<div class="box">
+  <div class="purchase-request-details">
+    <div class="status-line">
+      <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
+        <%= @purchase_request.status.name %>
+      </span>
+      <span class="priority-badge <%= @purchase_request.priority %>">
+        <%= l("label_priority_#{@purchase_request.priority}".to_sym) %>
+      </span>
+    </div>
+    
+    <h3 class="purchase-title"><%= @purchase_request.title %></h3>
+    
+    <div class="purchase-meta">
+      <div class="meta-item">
+        <span class="label"><%= l(:field_created_on) %>:</span>
+        <span class="value"><%= format_time(@purchase_request.created_at) %></span>
+      </div>
+      <div class="meta-item">
+        <span class="label"><%= l(:field_updated_on) %>:</span>
+        <span class="value"><%= format_time(@purchase_request.updated_at) %></span>
+      </div>
+      <div class="meta-item">
+        <span class="label"><%= l(:field_author) %>:</span>
+        <span class="value"><%= link_to_user @purchase_request.user %></span>
+      </div>
+      <% if @purchase_request.due_date.present? %>
+        <div class="meta-item">
+          <span class="label"><%= l(:field_due_date) %>:</span>
+          <span class="value<%= ' overdue' if @purchase_request.due_date < Date.today && !@purchase_request.status.is_closed? %>">
+            <%= format_date(@purchase_request.due_date) %>
+          </span>
+        </div>
+      <% end %>
+    </div>
+    
+    <div class="details-section">
+      <h4><%= l(:field_description) %></h4>
+      <div class="wiki">
+        <%= textilizable(@purchase_request.description) %>
+      </div>
+    </div>
+    
+    <div class="details-columns">
+      <div class="column">
+        <div class="details-section">
+          <h4><%= l(:field_product_details) %></h4>
+          <div class="details-grid">
+            <% if @purchase_request.product_url.present? %>
+              <div class="grid-row">
+                <span class="label"><%= l(:field_product_url) %>:</span>
+                <span class="value"><%= link_to @purchase_request.product_url, @purchase_request.product_url, target: "_blank" %></span>
+              </div>
+            <% end %>
+            
+            <% if @purchase_request.vendor.present? %>
+              <div class="grid-row">
+                <span class="label"><%= l(:field_vendor) %>:</span>
+                <span class="value"><%= @purchase_request.vendor %></span>
+              </div>
+            <% end %>
+            
+            <% if @purchase_request.estimated_price.present? %>
+              <div class="grid-row">
+                <span class="label"><%= l(:field_estimated_price) %>:</span>
+                <span class="value price"><%= @purchase_request.formatted_price %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      
+      <% if @purchase_request.notes.present? %>
+        <div class="column">
+          <div class="details-section">
+            <h4><%= l(:label_additional_notes) %></h4>
+            <div class="notes">
+              <%= simple_format(h(@purchase_request.notes)) %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+    <% if @purchase_request.attachments.present? && @purchase_request.attachments.any? %>
+      <div class="details-section">
+        <h4><%= l(:label_attachment_plural) %></h4>
+        <%= render partial: 'attachments/links', locals: { attachments: @purchase_request.attachments } %>
+      </div>
+    <% end %>
+    
+    <div class="action-buttons">
+      <%= link_to l(:button_edit), edit_purchase_request_path(@purchase_request), class: 'button-positive' if User.current.allowed_to?(:edit_purchase_requests, nil, global: true) %>
+      <%= link_to l(:button_back_to_list), purchase_requests_path, class: 'button-neutral' %>
+    </div>
+  </div>
+</div>
+
+<% content_for :header_tags do %>
+<style>
+  .purchase-request-details {
+    padding: 15px;
+  }
+  
+  .status-line {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    color: white;
+    font-size: 12px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  }
+  
+  .priority-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    background-color: #f0f0f0;
+  }
+  
+  .priority-badge.low {
+    background-color: #e8eaf6;
+    color: #3949ab;
+  }
+  
+  .priority-badge.normal {
+    background-color: #e0f2f1;
+    color: #00897b;
+  }
+  
+  .priority-badge.high {
+    background-color: #fff8e1;
+    color: #ff8f00;
+  }
+  
+  .priority-badge.urgent {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+  
+  .purchase-title {
+    font-size: 1.5em;
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  
+  .purchase-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 3px;
+  }
+  
+  .meta-item {
+    display: inline-block;
+  }
+  
+  .meta-item .label {
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .meta-item .value {
+    margin-left: 5px;
+  }
+  
+  .meta-item .value.overdue {
+    color: #c62828;
+    font-weight: bold;
+  }
+  
+  .details-section {
+    margin-bottom: 25px;
+  }
+  
+  .details-section h4 {
+    font-size: 1.1em;
+    color: #333;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 10px;
+  }
+  
+  .details-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    margin-bottom: 20px;
+  }
+  
+  .column {
+    flex: 1;
+    min-width: 300px;
+  }
+  
+  .details-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 5px 15px;
+  }
+  
+  .grid-row {
+    display: contents;
+  }
+  
+  .grid-row .label {
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .grid-row .value {
+    word-break: break-word;
+  }
+  
+  .grid-row .value.price {
+    font-weight: bold;
+    color: #2e7d32;
+  }
+  
+  .wiki {
+    margin-top: 10px;
+  }
+  
+  .notes {
+    background-color: #fffde7;
+    padding: 10px;
+    border-left: 3px solid #ffd54f;
+    border-radius: 2px;
+  }
+  
+  .action-buttons {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+  
+  .button-positive {
+    background-color: #4CAF50;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: bold;
+  }
+  
+  .button-positive:hover {
+    background-color: #45a049;
+  }
+  
+  .button-neutral {
+    background-color: #607d8b;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-left: 10px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: bold;
+  }
+  
+  .button-neutral:hover {
+    background-color: #546e7a;
+  }
+</style>
+<% end %>

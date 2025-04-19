@@ -1,0 +1,31 @@
+<div class="contextual">
+  <%= link_to l(:label_status_new), new_purchase_request_status_path, class: 'icon icon-add' %>
+</div>
+
+<h2><%= l(:label_purchase_request_statuses) %></h2>
+
+<table class="list">
+  <thead>
+    <tr>
+      <th><%= l(:field_name) %></th>
+      <th><%= l(:field_is_closed) %></th>
+      <th><%= l(:field_position) %></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @statuses.each do |status| %>
+      <tr>
+        <td><%= status.name %></td>
+        <td><%= checked_image status.is_closed? if status.respond_to?(:is_closed?) %></td>
+        <td><%= status.position %></td>
+        <td class="buttons">
+          <%= link_to l(:button_edit), edit_purchase_request_status_path(status), class: 'icon icon-edit' %>
+          <%= delete_link purchase_request_status_path(status) %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= link_to l(:button_back), plugin_settings_path('redmine_purchase_requests'), class: 'icon icon-back' %>

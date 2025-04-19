@@ -1,0 +1,1 @@
+// This file contains JavaScript code related to the purchase requests functionality, potentially handling client-side interactions.

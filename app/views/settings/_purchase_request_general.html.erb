@@ -1,0 +1,18 @@
+<p>
+  <label><%= l(:label_default_status) %></label>
+  <%= select_tag 'settings[default_status_id]',
+                options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, @settings['default_status_id'].to_i),
+                include_blank: true %>
+</p>
+
+<p>
+  <label><%= l(:label_enable_notifications) %></label>
+  <%= check_box_tag 'settings[enable_notifications]', '1', @settings['enable_notifications'] == '1' %>
+</p>
+
+<p>
+  <label><%= l(:label_default_assigned_to) %></label>
+  <%= select_tag 'settings[default_assigned_to_id]',
+                options_from_collection_for_select(User.active, :id, :name, @settings['default_assigned_to_id'].to_i),
+                include_blank: true %>
+</p>

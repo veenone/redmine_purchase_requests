@@ -1,0 +1,36 @@
+<%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+
+<div class="tabs">
+  <ul>
+    <% purchase_request_settings_tabs.each do |tab| %>
+      <li><%= link_to l(tab[:label]), { tab: tab[:name] }, 
+                    id: "tab-#{tab[:name]}", 
+                    class: (tab[:name] == @tab ? 'selected' : ''),
+                    onclick: "showTab('#{tab[:name]}'); return false;" %></li>
+    <% end %>
+  </ul>
+</div>
+
+<div class="tabs-content">
+  <% purchase_request_settings_tabs.each do |tab| %>
+    <div id="tab-content-<%= tab[:name] %>" class="tab-content <%= tab[:name] != @tab ? 'hidden' : '' %>">
+      <%= render partial: tab[:partial], locals: { settings: @settings } %>
+    </div>
+  <% end %>
+</div>
+
+<%= javascript_tag do %>
+  function showTab(name) {
+    $('.tab-content').hide();
+    $('#tab-content-' + name).show();
+    $('.tabs ul li a').removeClass('selected');
+    $('#tab-' + name).addClass('selected');
+    return false;
+  }
+  
+  $(function() {
+    if (location.hash != '') {
+      showTab(location.hash.replace(/^#/, ''));
+    }
+  });
+<% end %>
