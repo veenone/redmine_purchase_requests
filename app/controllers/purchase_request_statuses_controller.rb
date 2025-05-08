@@ -11,13 +11,7 @@ class PurchaseRequestStatusesController < ApplicationController
   end
   
   def create
-    @status = PurchaseRequestStatus.new(status_params)
-    
-    # If this is being set as default, remove default from others
-    if @status.is_default?
-      PurchaseRequestStatus.where(is_default: true).update_all(is_default: false)
-    end
-    
+    @status = PurchaseRequestStatus.new(purchase_request_status_params)
     if @status.save
       flash[:notice] = l(:notice_successful_create)
       redirect_to purchase_request_statuses_path
@@ -32,13 +26,7 @@ class PurchaseRequestStatusesController < ApplicationController
   
   def update
     @status = PurchaseRequestStatus.find(params[:id])
-    
-    # If this is being set as default, remove default from others
-    if status_params[:is_default] == '1' && !@status.is_default?
-      PurchaseRequestStatus.where(is_default: true).update_all(is_default: false)
-    end
-    
-    if @status.update(status_params)
+    if @status.update(purchase_request_status_params)
       flash[:notice] = l(:notice_successful_update)
       redirect_to purchase_request_statuses_path
     else
@@ -58,7 +46,7 @@ class PurchaseRequestStatusesController < ApplicationController
   
   private
   
-  def status_params
-    params.require(:purchase_request_status).permit(:name, :position, :is_closed, :color, :is_default)
+  def purchase_request_status_params
+    params.require(:purchase_request_status).permit(:name, :position, :is_closed)
   end
 end

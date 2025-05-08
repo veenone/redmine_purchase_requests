@@ -1,131 +1,164 @@
-<% html_title "#{l(:label_purchase_request)} ##{@purchase_request.id}: #{@purchase_request.title}" %>
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/show.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% html_title "#{l(:label_purchase_request)} ##{@purchase_request.id}: #{h(@purchase_request.title)}" %>
 
 <div class="contextual">
-  <%= link_to l(:button_edit), edit_purchase_request_path(@purchase_request), class: 'icon icon-edit' if User.current.allowed_to?(:edit_purchase_requests, nil, global: true) %>
+  <%= link_to l(:button_edit), edit_purchase_request_path(@purchase_request), class: 'icon icon-edit button-action', title: l(:button_edit) if User.current.allowed_to?(:edit_purchase_requests, nil, global: true) %>
   <%= link_to l(:button_delete), purchase_request_path(@purchase_request), 
               method: :delete, 
               data: { confirm: l(:text_are_you_sure) }, 
-              class: 'icon icon-del', 
+              class: 'icon icon-del button-action', 
               title: l(:button_delete) if User.current.allowed_to?(:delete_purchase_requests, nil, global: true) %>
-  <%= link_to l(:button_back), purchase_requests_path, class: 'icon icon-back' %>
+  <%= link_to l(:button_back_to_list), purchase_requests_path, class: 'icon icon-back button-action', title: l(:button_back_to_list) %>
 </div>
 
-<h2><%= l(:label_purchase_request) %> #<%= @purchase_request.id %></h2>
+<div class="purchase-request-header">
+  <h2>
+    <%= l(:label_purchase_request) %>
+    <span class="request-id">#<%= @purchase_request.id %></span>
+  </h2>
+  <div class="request-meta">
+    <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
+      <%= @purchase_request.status.name %>
+    </span>
+    <span class="priority-badge <%= @purchase_request.priority %>">
+      <%= l("label_priority_#{@purchase_request.priority}".to_sym) %>
+    </span>
+    <span class="last-updated">
+      <%= l(:label_last_updated) %>: <%= format_time(@purchase_request.updated_at) %>
+    </span>
+  </div>
+</div>
 
-<div class="box">
-  <div class="purchase-request-details">
-    <div class="status-line">
-      <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
-        <%= @purchase_request.status.name %>
-      </span>
-      <span class="priority-badge <%= @purchase_request.priority %>">
-        <%= l("label_priority_#{@purchase_request.priority}".to_sym) %>
-      </span>
-    </div>
-    
-    <h3 class="purchase-title"><%= @purchase_request.title %></h3>
-    
-    <div class="purchase-meta">
-      <div class="meta-item">
-        <span class="label"><%= l(:field_created_on) %>:</span>
-        <span class="value"><%= format_time(@purchase_request.created_at) %></span>
-      </div>
-      <div class="meta-item">
-        <span class="label"><%= l(:field_updated_on) %>:</span>
-        <span class="value"><%= format_time(@purchase_request.updated_at) %></span>
-      </div>
-      <div class="meta-item">
-        <span class="label"><%= l(:field_author) %>:</span>
-        <span class="value"><%= link_to_user @purchase_request.user %></span>
-      </div>
-      <% if @purchase_request.due_date.present? %>
-        <div class="meta-item">
-          <span class="label"><%= l(:field_due_date) %>:</span>
-          <span class="value<%= ' overdue' if @purchase_request.due_date < Date.today && !@purchase_request.status.is_closed? %>">
-            <%= format_date(@purchase_request.due_date) %>
-          </span>
-        </div>
+<div class="box purchase-request-show-container">
+  <div class="purchase-request-title">
+    <h3><%= h(@purchase_request.title) %></h3>
+  </div>
+  
+  <div class="tabs">
+    <ul>
+      <li class="selected"><a href="#tab-general" class="tab-selector" data-tab="tab-general"><%= l(:label_general) %></a></li>
+      <li><a href="#tab-details" class="tab-selector" data-tab="tab-details"><%= l(:label_details) %></a></li>
+      <% if @purchase_request.attachments.any? %>
+        <li><a href="#tab-attachments" class="tab-selector" data-tab="tab-attachments"><%= l(:label_attachment_plural) %></a></li>
       <% end %>
-    </div>
-    
-    <div class="details-section">
-      <h4><%= l(:field_description) %></h4>
-      <div class="wiki">
-        <%= textilizable(@purchase_request.description) %>
-      </div>
-    </div>
-    
-    <div class="details-columns">
-      <div class="column">
-        <div class="details-section">
-          <h4><%= l(:field_product_details) %></h4>
-          <div class="details-grid">
-            <% if @purchase_request.product_url.present? %>
-              <div class="grid-row">
-                <span class="label"><%= l(:field_product_url) %>:</span>
-                <span class="value"><%= link_to @purchase_request.product_url, @purchase_request.product_url, target: "_blank" %></span>
-              </div>
-            <% end %>
-            
-            <% if @purchase_request.vendor.present? %>
-              <div class="grid-row">
-                <span class="label"><%= l(:field_vendor) %>:</span>
-                <span class="value"><%= @purchase_request.vendor %></span>
-              </div>
-            <% end %>
-            
-            <% if @purchase_request.estimated_price.present? %>
-              <div class="grid-row">
-                <span class="label"><%= l(:field_estimated_price) %>:</span>
-                <span class="value price"><%= @purchase_request.formatted_price %></span>
-              </div>
-            <% end %>
-          </div>
+    </ul>
+  </div>
+  
+  <div class="purchase-request-content tab-content" id="tab-content">
+    <div id="tab-general" class="tabbed-form">
+      <div class="purchase-meta">
+        <div class="meta-item">
+          <span class="label"><%= l(:field_created_on) %>:</span>
+          <span class="value"><%= format_time(@purchase_request.created_at) %></span>
         </div>
+        <div class="meta-item">
+          <span class="label"><%= l(:field_author) %>:</span>
+          <span class="value"><%= link_to_user @purchase_request.user %></span>
+        </div>
+        <% if @purchase_request.due_date.present? %>
+          <div class="meta-item">
+            <span class="label"><%= l(:field_due_date) %>:</span>
+            <span class="value<%= ' overdue' if @purchase_request.due_date < Date.today && !@purchase_request.status.is_closed? %>">
+              <%= format_date(@purchase_request.due_date) %>
+            </span>
+          </div>
+        <% end %>
       </div>
       
-      <% if @purchase_request.notes.present? %>
+      <div class="details-section">
+        <h4><%= l(:field_description) %></h4>
+        <div class="wiki">
+          <%= textilizable(@purchase_request.description) %>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-details" class="tabbed-form" style="display: none;">
+      <div class="details-columns">
         <div class="column">
           <div class="details-section">
-            <h4><%= l(:label_additional_notes) %></h4>
-            <div class="notes">
-              <%= simple_format(h(@purchase_request.notes)) %>
+            <h4><%= l(:field_product_details) %></h4>
+            <div class="details-grid">
+              <% if @purchase_request.product_url.present? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:field_product_url) %>:</span>
+                  <span class="value"><%= link_to @purchase_request.product_url, @purchase_request.product_url, target: "_blank", class: "external" %></span>
+                </div>
+              <% end %>
+              
+              <% if @purchase_request.vendor.present? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:field_vendor) %>:</span>
+                  <span class="value"><%= @purchase_request.vendor %></span>
+                </div>
+              <% end %>
+              
+              <% if @purchase_request.estimated_price.present? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:field_estimated_price) %>:</span>
+                  <span class="value price"><%= @purchase_request.formatted_price %></span>
+                </div>
+              <% end %>
             </div>
           </div>
         </div>
-      <% end %>
+        
+        <% if @purchase_request.notes.present? %>
+          <div class="column">
+            <div class="details-section">
+              <h4><%= l(:label_additional_notes) %></h4>
+              <div class="notes">
+                <%= simple_format(h(@purchase_request.notes)) %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
     </div>
     
-    <% if @purchase_request.attachments.present? && @purchase_request.attachments.any? %>
-      <div class="details-section">
-        <h4><%= l(:label_attachment_plural) %></h4>
-        <%= render partial: 'attachments/links', locals: { attachments: @purchase_request.attachments } %>
+    <% if @purchase_request.attachments.any? %>
+      <div id="tab-attachments" class="tabbed-form" style="display: none;">
+        <div class="details-section">
+          <h4><%= l(:label_attachment_plural) %></h4>
+          <div class="attachments">
+            <%= render partial: 'attachments/links', locals: { attachments: @purchase_request.attachments } %>
+          </div>
+        </div>
       </div>
     <% end %>
     
-    <div class="action-buttons">
+    <div class="form-actions">
       <%= link_to l(:button_edit), edit_purchase_request_path(@purchase_request), class: 'button-positive' if User.current.allowed_to?(:edit_purchase_requests, nil, global: true) %>
       <%= link_to l(:button_back_to_list), purchase_requests_path, class: 'button-neutral' %>
     </div>
   </div>
 </div>
 
-<% content_for :header_tags do %>
 <style>
-  .purchase-request-details {
-    padding: 15px;
+  .purchase-request-header {
+    margin-bottom: 20px;
   }
   
-  .status-line {
-    margin-bottom: 15px;
+  .request-id {
+    color: #777;
+    font-size: 0.9em;
+  }
+  
+  .request-meta {
+    margin-top: 10px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
+    flex-wrap: wrap;
   }
   
   .status-badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 3px 8px;
     border-radius: 3px;
     color: white;
     font-size: 12px;
@@ -160,21 +193,67 @@
     color: #c62828;
   }
   
-  .purchase-title {
-    font-size: 1.5em;
-    margin: 0 0 15px 0;
+  .last-updated {
+    color: #666;
+    font-size: 0.9em;
+  }
+  
+  .purchase-request-title {
+    margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .purchase-request-title h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5em;
+  }
+  
+  .tabs {
+    margin-bottom: 15px;
+  }
+  
+  .tabs ul {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .tabs ul li {
+    margin-right: 5px;
+  }
+  
+  .tabs ul li a {
+    display: block;
+    padding: 8px 15px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    color: #555;
+  }
+  
+  .tabs ul li.selected a {
+    background-color: #fff;
+    border-color: #ddd;
+    border-bottom-color: #fff;
+    color: #333;
+    position: relative;
+    bottom: -1px;
+    font-weight: bold;
   }
   
   .purchase-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 20px;
     background-color: #f9f9f9;
     padding: 10px;
     border-radius: 3px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
   }
   
   .meta-item {
@@ -222,7 +301,7 @@
   .details-grid {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 5px 15px;
+    gap: 8px 15px;
   }
   
   .grid-row {
@@ -243,10 +322,6 @@
     color: #2e7d32;
   }
   
-  .wiki {
-    margin-top: 10px;
-  }
-  
   .notes {
     background-color: #fffde7;
     padding: 10px;
@@ -254,7 +329,11 @@
     border-radius: 2px;
   }
   
-  .action-buttons {
+  .wiki {
+    margin-top: 10px;
+  }
+  
+  .form-actions {
     margin-top: 20px;
     padding-top: 15px;
     border-top: 1px solid #eee;
@@ -292,5 +371,56 @@
   .button-neutral:hover {
     background-color: #546e7a;
   }
+  
+  .button-action {
+    margin-left: 5px;
+  }
+  
+  .button-highlight {
+    opacity: 0.8;
+  }
+  
+  .external:after {
+    content: "\f08e";
+    font-family: FontAwesome;
+    margin-left: 3px;
+    font-size: 0.8em;
+    color: #888;
+  }
+  
+  .attachments {
+    padding: 5px 0;
+  }
 </style>
+
+<%= javascript_tag do %>
+$(document).ready(function() {
+  // Tab functionality
+  $('.tab-selector').click(function(e) {
+    e.preventDefault();
+    var tabId = $(this).data('tab');
+    
+    // Hide all tabbed forms
+    $('.tabbed-form').hide();
+    
+    // Show the selected tab content
+    $('#' + tabId).show();
+    
+    // Update tab selection
+    $('.tabs ul li').removeClass('selected');
+    $(this).parent('li').addClass('selected');
+    
+    return false;
+  });
+  
+  // Initialize tab content - first tab is shown by default
+  $('.tabbed-form').hide();
+  $('#tab-general').show();
+  
+  // Add smooth hover effects for buttons
+  $('.button-action').hover(
+    function() { $(this).addClass('button-highlight'); },
+    function() { $(this).removeClass('button-highlight'); }
+  );
+});
 <% end %>

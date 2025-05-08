@@ -5,8 +5,8 @@ Redmine::Plugin.register :redmine_purchase_requests do
   author 'Your Name'
   description 'A plugin for managing purchase requests in Redmine'
   version '0.1.0'
-  url 'https://github.com/yourusername/redmine_purchase_requests'
-  author_url 'https://github.com/yourusername'
+  url 'https://github.com/veenone/redmine_purchase_requests'
+  author_url 'https://github.com/veenone'
   
   # Add permission
   project_module :purchase_requests do

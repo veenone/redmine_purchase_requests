@@ -19,7 +19,7 @@ A comprehensive plugin for managing purchase requests within Redmine. This plugi
 
 1. Clone or download this repository into your Redmine plugins directory:
    ```
-   git clone <repository-url> redmine_purchase_requests
+   git clone https://github.com/veenone/redmine_purchase_requests.git redmine_purchase_requests
    ```
 
 2. Navigate to the Redmine root directory and run the following command to migrate the database:

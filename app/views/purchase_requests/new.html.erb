@@ -1,13 +1,30 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
 <% html_title l(:label_new_purchase_request) %>
 
 <div class="contextual">
-  <%= link_to l(:button_back), purchase_requests_path, class: 'icon icon-back' %>
+  <%= link_to l(:button_back_to_list), purchase_requests_path, class: 'icon icon-back button-action', title: l(:button_back_to_list) %>
 </div>
 
-<h2><%= l(:label_new_purchase_request) %></h2>
+<div class="purchase-request-header">
+  <h2><%= l(:label_new_purchase_request) %></h2>
+  <div class="form-instructions">
+    <p><%= l(:text_new_purchase_request_instructions) %></p>
+  </div>
+</div>
 
-<div class="box">
-  <div class="purchase-request-form">
+<div class="box purchase-request-edit-container">
+  <div class="tabs">
+    <ul>
+      <li class="selected"><a href="#tab-general" class="tab-selector" data-tab="tab-general"><%= l(:label_general) %></a></li>
+      <li><a href="#tab-details" class="tab-selector" data-tab="tab-details"><%= l(:label_details) %></a></li>
+      <li><a href="#tab-attachments" class="tab-selector" data-tab="tab-attachments"><%= l(:label_attachment_plural) %></a></li>
+    </ul>
+  </div>
+  
+  <div class="purchase-request-form tab-content" id="tab-content">
     <%= form_with(model: @purchase_request, local: true, multipart: true, id: 'purchase-request-form') do |form| %>
       <% if @purchase_request.errors.any? %>
         <div id="error_explanation" class="flash error">
@@ -20,84 +37,104 @@
         </div>
       <% end %>
       
-      <div class="box tabular">
-        <p>
-          <%= form.label :title, l(:field_title), class: 'required' %> <span class="required">*</span>
-          <%= form.text_field :title, required: true, size: 60, maxlength: 255 %>
-          <em class="info"><%= l(:text_purchase_title_info) %></em>
-        </p>
-        
-        <p>
-          <%= form.label :description, l(:field_description) %>
-          <%= form.text_area :description, rows: 6, cols: 60, class: 'wiki-edit' %>
-          <em class="info"><%= l(:text_purchase_description_info) %></em>
-        </p>
-        
-        <% if @purchase_request.new_record? && PurchaseRequestStatus.count > 0 %>
+      <div id="tab-general" class="tabbed-form">
+        <div class="box tabular">
           <p>
-            <%= form.label :status_id, l(:field_status) %> <span class="required">*</span>
-            <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name, 
-                                     { selected: PurchaseRequestStatus.default&.id || PurchaseRequestStatus.first&.id },
-                                     { required: true } %>
+            <%= form.label :title, l(:field_title), class: 'required' %> <span class="required">*</span>
+            <%= form.text_field :title, required: true, size: 60, maxlength: 255 %>
+            <em class="info"><%= l(:text_purchase_title_info) %></em>
           </p>
-        <% end %>
-        
-        <p>
-          <%= form.label :product_url, l(:field_product_url) %>
-          <%= form.text_field :product_url, size: 60 %>
-          <em class="info"><%= l(:text_product_url_info) %> <%= l(:text_optional) %></em>
-        </p>
-        
-        <p>
-          <%= form.label :estimated_price, l(:field_estimated_price) %>
-          <span class="currency-wrapper">
-            <span class="currency-symbol">$</span>
-            <%= form.number_field :estimated_price, min: 0, step: '0.01', class: 'currency-field' %>
-          </span>
-          <em class="info"><%= l(:text_estimated_price_info) %></em>
-        </p>
-        
-        <p>
-          <%= form.label :vendor, l(:field_vendor) %>
-          <%= form.text_field :vendor, size: 40 %>
-          <em class="info"><%= l(:text_vendor_info) %></em>
-        </p>
-        
-        <p>
-          <%= form.label :priority, l(:field_priority) %>
-          <%= form.select :priority, 
-                       [[l(:label_priority_low), 'low'], 
-                        [l(:label_priority_normal), 'normal'], 
-                        [l(:label_priority_high), 'high'], 
-                        [l(:label_priority_urgent), 'urgent']], 
-                       { selected: 'normal' } %>
-        </p>
-        
-        <p>
-          <%= form.label :due_date, l(:field_due_date) %>
-          <%= form.date_field :due_date %>
-          <em class="info"><%= l(:text_due_date_info) %></em>
-        </p>
-        
-        <p>
-          <%= form.label :attachment, l(:label_attachment_plural) %>
-          <%= form.file_field :attachments, multiple: true, class: 'attachments-field' %>
-          <em class="info"><%= l(:text_attachment_info) %></em>
-        </p>
-        
-        <p>
-          <%= form.check_box :notify_manager %>
-          <%= form.label :notify_manager, l(:field_notify_manager) %>
-          <em class="info"><%= l(:text_notify_manager_info) %></em>
-        </p>
+          
+          <p>
+            <%= form.label :description, l(:field_description) %>
+            <%= form.text_area :description, rows: 6, cols: 60, class: 'wiki-edit' %>
+            <em class="info"><%= l(:text_purchase_description_info) %></em>
+          </p>
+          
+          <% if @purchase_request.new_record? && PurchaseRequestStatus.count > 0 %>
+            <p>
+              <%= form.label :status_id, l(:field_status) %> <span class="required">*</span>
+              <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name, 
+                                       { selected: PurchaseRequestStatus.default&.id || PurchaseRequestStatus.first&.id },
+                                       { required: true } %>
+              <em class="info"><%= l(:text_status_info) %></em>
+            </p>
+          <% end %>
+          
+          <p>
+            <%= form.label :priority, l(:field_priority) %>
+            <%= form.select :priority, 
+                         [[l(:label_priority_low), 'low'], 
+                          [l(:label_priority_normal), 'normal'], 
+                          [l(:label_priority_high), 'high'], 
+                          [l(:label_priority_urgent), 'urgent']], 
+                         { selected: 'normal' } %>
+            <em class="info"><%= l(:text_priority_info) %></em>
+          </p>
+        </div>
       </div>
       
-      <fieldset class="box">
-        <legend><%= l(:label_additional_notes) %></legend>
-        <p>
-          <%= form.text_area :notes, rows: 4, cols: 60, placeholder: l(:text_additional_notes_placeholder) %>
-        </p>
-      </fieldset>
+      <div id="tab-details" class="tabbed-form" style="display: none;">
+        <div class="box tabular">
+          <p>
+            <%= form.label :product_url, l(:field_product_url) %>
+            <%= form.text_field :product_url, size: 60 %>
+            <em class="info"><%= l(:text_product_url_info) %> <%= l(:text_optional) %></em>
+          </p>
+          
+          <p>
+            <%= form.label :estimated_price, l(:field_estimated_price) %>
+            <span class="currency-wrapper">
+              <span class="currency-symbol">$</span>
+              <%= form.number_field :estimated_price, min: 0, step: '0.01', class: 'currency-field' %>
+            </span>
+            <em class="info"><%= l(:text_estimated_price_info) %></em>
+          </p>
+          
+          <p>
+            <%= form.label :vendor, l(:field_vendor) %>
+            <%= form.text_field :vendor, size: 40 %>
+            <em class="info"><%= l(:text_vendor_info) %></em>
+          </p>
+          
+          <p>
+            <%= form.label :due_date, l(:field_due_date) %>
+            <%= form.date_field :due_date %>
+            <em class="info"><%= l(:text_due_date_info) %></em>
+          </p>
+          
+          <p>
+            <%= form.check_box :notify_manager %>
+            <%= form.label :notify_manager, l(:field_notify_manager) %>
+            <em class="info"><%= l(:text_notify_manager_info) %></em>
+          </p>
+          
+          <p>
+            <%= form.label :notes, l(:label_additional_notes) %>
+            <%= form.text_area :notes, rows: 4, cols: 60, placeholder: l(:text_additional_notes_placeholder) %>
+            <em class="info"><%= l(:text_notes_info) %></em>
+          </p>
+        </div>
+      </div>
+      
+      <div id="tab-attachments" class="tabbed-form" style="display: none;">
+        <div class="box tabular">
+          <p>
+            <%= form.label :attachments, l(:label_attachment_plural) %>
+            <%= form.file_field :attachments, multiple: true, class: 'attachments-field' %>
+            <em class="info"><%= l(:text_attachment_info) %></em>
+          </p>
+          
+          <div class="attachment-instructions">
+            <h4><%= l(:label_attachment_instructions) %></h4>
+            <ul>
+              <li><%= l(:text_attachment_size_limit) %></li>
+              <li><%= l(:text_attachment_types_allowed) %></li>
+              <li><%= l(:text_attachment_naming) %></li>
+            </ul>
+          </div>
+        </div>
+      </div>
       
       <div class="form-actions">
         <%= form.submit l(:button_create), class: 'button-positive' %>
@@ -107,85 +144,190 @@
   </div>
 </div>
 
-<% content_for :header_tags do %>
-  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <style>
-    .currency-wrapper {
-      position: relative;
-      display: inline-block;
-    }
-    
-    .currency-symbol {
-      position: absolute;
-      top: 50%;
-      left: 10px;
-      transform: translateY(-50%);
-      color: #666;
-    }
-    
-    .currency-field {
-      padding-left: 25px;
-    }
-    
-    .purchase-request-form .required {
-      color: #d00;
-      font-weight: bold;
-    }
-    
-    .form-actions {
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
-    }
-    
-    .button-positive {
-      background-color: #4CAF50;
-      color: white;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    
-    .button-positive:hover {
-      background-color: #45a049;
-    }
-    
-    .button-negative {
-      background-color: #f44336;
-      color: white;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      margin-left: 10px;
-      text-decoration: none;
-      display: inline-block;
-      font-weight: bold;
-    }
-    
-    .button-negative:hover {
-      background-color: #da190b;
-    }
-    
-    .info {
-      display: block;
-      color: #888;
-      font-size: 0.9em;
-      margin-top: 2px;
-    }
-    
-    .box.tabular p {
-      padding: 5px 0;
-      margin-bottom: 8px;
-    }
-  </style>
-<% end %>
+<style>
+  .purchase-request-header {
+    margin-bottom: 20px;
+  }
+  
+  .form-instructions {
+    margin-top: 10px;
+    color: #555;
+    font-size: 0.95em;
+    background-color: #f8f8f8;
+    padding: 10px;
+    border-left: 3px solid #4CAF50;
+    border-radius: 2px;
+  }
+  
+  .tabs {
+    margin-bottom: 15px;
+  }
+  
+  .tabs ul {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .tabs ul li {
+    margin-right: 5px;
+  }
+  
+  .tabs ul li a {
+    display: block;
+    padding: 8px 15px;
+    text-decoration: none;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    color: #555;
+  }
+  
+  .tabs ul li.selected a {
+    background-color: #fff;
+    border-color: #ddd;
+    border-bottom-color: #fff;
+    color: #333;
+    position: relative;
+    bottom: -1px;
+    font-weight: bold;
+  }
+  
+  .currency-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .currency-symbol {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: translateY(-50%);
+    color: #666;
+  }
+  
+  .currency-field {
+    padding-left: 25px;
+  }
+  
+  .purchase-request-form .required {
+    color: #d00;
+    font-weight: bold;
+  }
+  
+  .form-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+  
+  .button-positive {
+    background-color: #4CAF50;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  
+  .button-positive:hover {
+    background-color: #45a049;
+  }
+  
+  .button-negative {
+    background-color: #f44336;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-left: 10px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: bold;
+  }
+  
+  .button-negative:hover {
+    background-color: #da190b;
+  }
+  
+  .info {
+    display: block;
+    color: #888;
+    font-size: 0.9em;
+    margin-top: 2px;
+  }
+  
+  .box.tabular p {
+    padding: 5px 0;
+    margin-bottom: 8px;
+  }
+  
+  .button-action {
+    margin-left: 5px;
+  }
+  
+  .button-highlight {
+    opacity: 0.8;
+  }
+  
+  .attachment-instructions {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 3px;
+    border-left: 3px solid #607d8b;
+  }
+  
+  .attachment-instructions h4 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1em;
+  }
+  
+  .attachment-instructions ul {
+    margin: 10px 0 0 0;
+    padding-left: 20px;
+    color: #666;
+  }
+</style>
 
 <%= javascript_tag do %>
 $(document).ready(function() {
+  // Tab functionality
+  $('.tab-selector').click(function(e) {
+    e.preventDefault();
+    var tabId = $(this).data('tab');
+    
+    // Hide all tabbed forms
+    $('.tabbed-form').hide();
+    
+    // Show the selected tab content
+    $('#' + tabId).show();
+    
+    // Update tab selection
+    $('.tabs ul li').removeClass('selected');
+    $(this).parent('li').addClass('selected');
+    
+    return false;
+  });
+  
+  // Initialize tab content - first tab is shown by default
+  $('.tabbed-form').hide();
+  $('#tab-general').show();
+  
+  // Add smooth hover effects for buttons
+  $('.button-action').hover(
+    function() { $(this).addClass('button-highlight'); },
+    function() { $(this).removeClass('button-highlight'); }
+  );
+  
+  // Focus on the most important field when the page loads
+  $('#purchase_request_title').focus();
+  
   // Initialize any JS-based controls
   $('#purchase_request_description').addClass('wiki-edit');
   
