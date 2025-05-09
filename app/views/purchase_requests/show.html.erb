@@ -100,7 +100,12 @@
               <% if @purchase_request.estimated_price.present? %>
                 <div class="grid-row">
                   <span class="label"><%= l(:field_estimated_price) %>:</span>
-                  <span class="value price"><%= @purchase_request.formatted_price %></span>
+                  <span class="value price">
+                    <%= @purchase_request.formatted_price %>
+                    <% if @purchase_request.currency != Setting.plugin_redmine_purchase_requests['default_currency'] %>
+                      <span class="currency-code">(<%= @purchase_request.currency %>)</span>
+                    <% end %>
+                  </span>
                 </div>
               <% end %>
             </div>

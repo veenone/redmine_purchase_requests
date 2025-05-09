@@ -1,31 +1,478 @@
-<h1>Purchase Requests Dashboard</h1>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <style>
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .dashboard-card {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+      box-shadow: 0 3px 8px rgba(0,0,0,.15);
+    }
+    
+    .dashboard-card-header {
+      background-color: #f5f5f5;
+      padding: 12px 15px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    
+    .dashboard-card-header h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #333;
+    }
+    
+    .dashboard-card-body {
+      padding: 15px;
+    }
+    
+    .summary-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-box {
+      flex: 1;
+      min-width: 200px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+      padding: 15px;
+      margin: 0 10px 10px 0;
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .progress-bar-container {
+      background-color: #f5f5f5;
+      height: 20px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      text-align: center;
+      line-height: 20px;
+      color: white;
+      font-size: 12px;
+    }
+    
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-right: 15px;
+    }
+    
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      margin-right: 5px;
+      border-radius: 3px;
+    }
+    
+    .priority-urgent { background-color: #f44336; }
+    .priority-high { background-color: #ff9800; }
+    .priority-normal { background-color: #4caf50; }
+    .priority-low { background-color: #2196f3; }
+    
+    .stat-currency {
+      color: #2e7d32;
+    }
+    
+    table.dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    table.dashboard-table th,
+    table.dashboard-table td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    table.dashboard-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    table.dashboard-table th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+    
+    .trend-chart {
+      width: 100%;
+      height: 200px;
+      display: flex;
+      align-items: flex-end;
+      padding-top: 20px;
+    }
+    
+    .trend-bar {
+      flex: 1;
+      margin: 0 5px;
+      background-color: #64b5f6;
+      min-height: 5px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+    
+    .trend-bar-value {
+      font-size: 12px;
+      position: absolute;
+      top: -20px;
+    }
+    
+    .trend-bar-label {
+      font-size: 11px;
+      margin-top: 5px;
+      transform: rotate(-45deg);
+      transform-origin: left top;
+      white-space: nowrap;
+    }
+  </style>
+<% end %>
 
-<div class="dashboard">
-  <h2>Status Overview</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Status</th>
-        <th>Count</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @purchase_request_statuses.each do |status| %>
-        <tr>
-          <td><%= status.name %></td>
-          <td><%= status.purchase_requests.count %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+<% html_title l(:label_purchase_request_dashboard) %>
 
-  <h2>Recent Purchase Requests</h2>
-  <ul>
-    <% @recent_purchase_requests.each do |request| %>
-      <li>
-        <strong><%= request.title %></strong> - <%= request.status.name %>
-        <%= link_to 'View', purchase_request_path(request) %>
-      </li>
-    <% end %>
-  </ul>
+<h2><%= l(:label_purchase_request_dashboard) %></h2>
+
+<div class="contextual">
+  <%= link_to l(:label_purchase_requests), purchase_requests_path, class: 'icon icon-list' %>
+  <%= link_to l(:label_new_purchase_request), new_purchase_request_path, class: 'icon icon-add' %>
 </div>
+
+<div class="summary-stats">
+  <div class="stat-box">
+    <div class="stat-number"><%= @total_requests %></div>
+    <div class="stat-label"><%= l(:label_total_requests) %></div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-number"><%= @open_requests %></div>
+    <div class="stat-label"><%= l(:label_open_requests) %></div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-number"><%= @closed_requests %></div>
+    <div class="stat-label"><%= l(:label_closed_requests) %></div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-number stat-currency">$<%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
+    <div class="stat-label"><%= l(:label_total_estimated_cost) %></div>
+  </div>
+</div>
+
+<div class="dashboard-container">
+  <!-- Status Distribution Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_status_distribution) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% @status_distribution.each do |status| %>
+        <% percentage = @total_requests > 0 ? (status[:count].to_f / @total_requests * 100).round : 0 %>
+        <div class="status-item">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span><%= status[:name] %></span>
+            <span><%= status[:count] %> (<%= percentage %>%)</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" style="width: <%= percentage %>%; background-color: <%= status[:color] %>;">
+              <% if percentage >= 10 %><%= percentage %>%<% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Priority Distribution Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_priority_distribution) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% priority_total = @priority_distribution.values.sum %>
+      
+      <% urgent_percentage = priority_total > 0 ? (@priority_distribution[:urgent].to_f / priority_total * 100).round : 0 %>
+      <div class="status-item">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><%= l(:label_priority_urgent) %></span>
+          <span><%= @priority_distribution[:urgent] %> (<%= urgent_percentage %>%)</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar priority-urgent" style="width: <%= urgent_percentage %>%;">
+            <% if urgent_percentage >= 10 %><%= urgent_percentage %>%<% end %>
+          </div>
+        </div>
+      </div>
+      
+      <% high_percentage = priority_total > 0 ? (@priority_distribution[:high].to_f / priority_total * 100).round : 0 %>
+      <div class="status-item">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><%= l(:label_priority_high) %></span>
+          <span><%= @priority_distribution[:high] %> (<%= high_percentage %>%)</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar priority-high" style="width: <%= high_percentage %>%;">
+            <% if high_percentage >= 10 %><%= high_percentage %>%<% end %>
+          </div>
+        </div>
+      </div>
+      
+      <% normal_percentage = priority_total > 0 ? (@priority_distribution[:normal].to_f / priority_total * 100).round : 0 %>
+      <div class="status-item">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><%= l(:label_priority_normal) %></span>
+          <span><%= @priority_distribution[:normal] %> (<%= normal_percentage %>%)</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar priority-normal" style="width: <%= normal_percentage %>%;">
+            <% if normal_percentage >= 10 %><%= normal_percentage %>%<% end %>
+          </div>
+        </div>
+      </div>
+      
+      <% low_percentage = priority_total > 0 ? (@priority_distribution[:low].to_f / priority_total * 100).round : 0 %>
+      <div class="status-item">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span><%= l(:label_priority_low) %></span>
+          <span><%= @priority_distribution[:low] %> (<%= low_percentage %>%)</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar priority-low" style="width: <%= low_percentage %>%;">
+            <% if low_percentage >= 10 %><%= low_percentage %>%<% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Financial Overview Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_financial_overview) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div class="financial-stats">
+        <table class="dashboard-table">
+          <% default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %>
+          <% default_symbol = currency_symbol(default_currency) %>
+          
+          <tr>
+            <th><%= l(:label_total_estimated_cost) %></th>
+            <td class="stat-currency">
+              <%= default_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
+              <span class="currency-code">(<%= default_currency %>)</span>
+            </td>
+          </tr>
+          <tr>
+            <th><%= l(:label_pending_cost) %></th>
+            <td class="stat-currency">
+              <%= default_symbol %><%= number_with_precision(@pending_cost, precision: 2, delimiter: ',') %>
+              <span class="currency-code">(<%= default_currency %>)</span>
+            </td>
+          </tr>
+          <tr>
+            <th><%= l(:label_approved_cost) %></th>
+            <td class="stat-currency">
+              <%= default_symbol %><%= number_with_precision(@approved_cost, precision: 2, delimiter: ',') %>
+              <span class="currency-code">(<%= default_currency %>)</span>
+            </td>
+          </tr>
+          <tr>
+            <th><%= l(:label_average_request_amount) %></th>
+            <td class="stat-currency">
+              <% avg = @total_requests > 0 ? @total_estimated_cost / @total_requests : 0 %>
+              <%= default_symbol %><%= number_with_precision(avg, precision: 2, delimiter: ',') %>
+              <span class="currency-code">(<%= default_currency %>)</span>
+            </td>
+          </tr>
+          
+          <% if @currency_distribution && @currency_distribution.size > 1 %>
+            <tr>
+              <th colspan="2" class="section-header"><%= l(:label_currency_breakdown) %></th>
+            </tr>
+            <% @currency_distribution.each do |currency, amount| %>
+              <tr>
+                <th><%= currency %></th>
+                <td class="stat-currency">
+                  <%= currency_symbol(currency) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Requesters Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_top_requesters) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @top_requesters.any? %>
+        <table class="dashboard-table">
+          <tr>
+            <th><%= l(:field_user) %></th>
+            <th><%= l(:label_requests) %></th>
+          </tr>
+          <% @top_requesters.each do |user| %>
+            <tr>
+              <td><%= link_to_user user %></td>
+              <td><%= user.request_count %></td>
+            </tr>
+          <% end %>
+        </table>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Monthly Trends Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_monthly_trends) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div class="trend-chart">
+        <% max_count = @monthly_trends.map { |t| t[:count] }.max %>
+        <% max_count = 1 if max_count == 0 %>
+        
+        <% @monthly_trends.each do |trend| %>
+          <div class="trend-bar" style="height: <%= (trend[:count].to_f / max_count * 100).round %>%;">
+            <div class="trend-bar-value"><%= trend[:count] %></div>
+            <div class="trend-bar-label"><%= trend[:month] %></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_recent_requests) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @recent_requests.any? %>
+        <table class="dashboard-table">
+          <tr>
+            <th>#</th>
+            <th><%= l(:field_title) %></th>
+            <th><%= l(:field_status) %></th>
+            <th><%= l(:field_created_on) %></th>
+          </tr>
+          <% @recent_requests.each do |request| %>
+            <tr>
+              <td><%= link_to "##{request.id}", purchase_request_path(request) %></td>
+              <td><%= link_to truncate(request.title, length: 30), purchase_request_path(request) %></td>
+              <td>
+                <span class="status-badge" style="background-color: <%= request.status.color.presence || '#777777' %>; color: white; padding: 2px 5px; border-radius: 3px; font-size: 11px;">
+                  <%= request.status.name %>
+                </span>
+              </td>
+              <td><%= format_time(request.created_at) %></td>
+            </tr>
+          <% end %>
+        </table>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Top Vendors Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_top_vendors) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @top_vendors.any? %>
+        <table class="dashboard-table">
+          <tr>
+            <th><%= l(:field_vendor) %></th>
+            <th><%= l(:label_requests) %></th>
+            <th><%= l(:label_total_cost) %></th>
+          </tr>
+          <% @top_vendors.each do |vendor| %>
+            <tr>
+              <td><%= vendor[:vendor] %></td>
+              <td><%= vendor[:count] %></td>
+              <td class="stat-currency">$<%= number_with_precision(vendor[:total_cost], precision: 2, delimiter: ',') %></td>
+            </tr>
+          <% end %>
+        </table>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Response Time Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_average_response_time) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div class="stat-box" style="width: 100%; box-shadow: none; margin: 0;">
+        <div class="stat-number"><%= @avg_response_days %> <%= l(:label_days) %></div>
+        <div class="stat-label"><%= l(:label_avg_processing_time) %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="box">
+  <p><%= l(:text_dashboard_info) %></p>
+  <p>
+    <%= link_to l(:label_view_all_requests), purchase_requests_path, class: 'button' %>
+    <%= link_to l(:label_new_purchase_request), new_purchase_request_path, class: 'button button-positive' %>
+  </p>
+</div>
+
+<%= javascript_tag do %>
+  $(document).ready(function() {
+    // Future JavaScript for enhancing the dashboard can be added here
+    // For example, we could add chart.js or other visualization libraries
+  });
+<% end %>

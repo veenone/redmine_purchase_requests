@@ -10,7 +10,7 @@ class PurchaseRequest < ActiveRecord::Base
   if Redmine::VERSION::MAJOR < 5
     attr_accessible :title, :description, :status_id, :product_url, 
                    :estimated_price, :vendor, :priority, :due_date, 
-                   :notify_manager, :notes
+                   :notify_manager, :notes, :currency
   end
   
   validates :title, presence: true
@@ -25,10 +25,15 @@ class PurchaseRequest < ActiveRecord::Base
   
   def formatted_price
     if estimated_price.present?
-      "$#{'%.2f' % estimated_price}"
+      symbol = PurchaseRequestsHelper.currency_symbol(currency || 'USD')
+      "#{symbol}#{'%.2f' % estimated_price}"
     else
       "-"
     end
+  end
+
+  def currency
+    read_attribute(:currency).presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
   end
   
   # Simplified workflow methods

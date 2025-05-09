@@ -74,9 +74,14 @@
       <div class="form-row">
         <p>
           <%= form.label :estimated_price, l(:field_estimated_price) %>
-          <span class="currency-wrapper">
-            <span class="currency-symbol">$</span>
-            <%= form.number_field :estimated_price, min: 0, step: '0.01', class: 'currency-field form-control' %>
+          <span class="currency-price-wrapper">
+            <span class="currency-select-wrapper">
+              <%= form.select :currency, 
+                            currency_options,
+                            { selected: purchase_request.currency || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' },
+                            { class: 'currency-select' } %>
+            </span>
+            <%= form.number_field :estimated_price, min: 0, step: '0.01', class: 'price-field' %>
           </span>
           <em class="info"><%= l(:text_estimated_price_info) %></em>
         </p>
@@ -395,6 +400,24 @@
       padding: 5px 0;
       margin-bottom: 8px;
     }
+
+    .currency-price-wrapper {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    
+    .currency-select-wrapper {
+      margin-right: 10px;
+    }
+    
+    .currency-select {
+      min-width: 100px;
+    }
+    
+    .price-field {
+      flex: 1;
+    }
   </style>
 <% end %>
 
@@ -420,5 +443,15 @@ $(document).ready(function() {
   $('#purchase-request-form input[type="submit"]').click(function() {
     formChanged = false;
   });
+
+  // Update currency symbol when currency is changed
+  $('#purchase_request_currency').change(function() {
+    var selectedOption = $(this).find('option:selected');
+    var symbol = selectedOption.data('symbol');
+    $('.currency-symbol').text(symbol);
+  });
+  
+  // Trigger change to set initial symbol
+  $('#purchase_request_currency').trigger('change');
 });
 <% end %>

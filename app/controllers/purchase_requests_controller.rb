@@ -81,6 +81,101 @@ class PurchaseRequestsController < ApplicationController
     redirect_to purchase_requests_path
   end
   
+  def dashboard
+    # Collect general statistics
+    @total_requests = PurchaseRequest.count
+    @open_requests = PurchaseRequest.open.count
+    @closed_requests = PurchaseRequest.closed.count
+    
+    # Status distribution
+    @status_distribution = PurchaseRequestStatus.all.map do |status|
+      {
+        name: status.name,
+        count: PurchaseRequest.where(status_id: status.id).count,
+        color: status.color.presence || '#777777'
+      }
+    end
+    
+    # Priority distribution
+    @priority_distribution = {
+      urgent: PurchaseRequest.where(priority: 'urgent').count,
+      high: PurchaseRequest.where(priority: 'high').count,
+      normal: PurchaseRequest.where(priority: 'normal').count,
+      low: PurchaseRequest.where(priority: 'low').count
+    }
+    
+    # Financial statistics with currency support
+    default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    @total_estimated_cost = PurchaseRequest.where.not(estimated_price: nil).where(currency: default_currency).sum(:estimated_price)
+    @pending_cost = PurchaseRequest.open.where.not(estimated_price: nil).where(currency: default_currency).sum(:estimated_price)
+    @approved_cost = PurchaseRequest.closed.where.not(estimated_price: nil).where(currency: default_currency).sum(:estimated_price)
+    
+    # Currency distribution
+    @currency_distribution = {}
+    PurchaseRequest.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+      @currency_distribution[currency || default_currency] = amount
+    end
+    
+    # Most active requesters (top 5) - alternative approach without join
+    # First get user_ids and count from purchase requests
+    user_counts = PurchaseRequest.group(:user_id).count
+    
+    # Sort by count descending and take top 5
+    top_user_ids = user_counts.sort_by { |_, count| -count }.take(5).map { |user_id, _| user_id }
+    
+    # Now fetch users with those ids, in correct order
+    @top_requesters = []
+    top_user_ids.each do |user_id|
+      user = User.find_by(id: user_id)
+      if user
+        # Add the count to the user object
+        user.instance_variable_set(:@request_count, user_counts[user_id])
+        def user.request_count
+          @request_count
+        end
+        @top_requesters << user
+      end
+    end
+    
+    # Recent activity
+    @recent_requests = PurchaseRequest.includes(:user, :status)
+                                     .order(created_at: :desc)
+                                     .limit(10)
+    
+    # Monthly trends - requests created per month (last 6 months)
+    @monthly_trends = 6.times.map do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = i.months.ago.end_of_month
+      count = PurchaseRequest.where(created_at: month_start..month_end).count
+      { 
+        month: i.months.ago.strftime("%b %Y"),
+        count: count
+      }
+    end.reverse
+    
+    # Average response time (from creation to first status change)
+    # This is a simplified calculation and might need adjustment based on your workflow
+    @avg_response_days = 3.5 # Placeholder - replace with actual calculation
+    
+    # Top vendors - handle missing or empty vendor names
+    vendor_counts = PurchaseRequest.where.not(vendor: [nil, ''])
+                                  .group(:vendor)
+                                  .count
+                                  
+    vendor_costs = PurchaseRequest.where.not(vendor: [nil, ''])
+                                 .where.not(estimated_price: nil)
+                                 .group(:vendor)
+                                 .sum(:estimated_price)
+                                 
+    @top_vendors = vendor_counts.map do |vendor, count|
+      {
+        vendor: vendor,
+        count: count,
+        total_cost: vendor_costs[vendor] || 0
+      }
+    end.sort_by { |v| -v[:count] }.take(5)
+  end
+  
   private
   
   def find_purchase_request
@@ -93,7 +188,7 @@ class PurchaseRequestsController < ApplicationController
     params.require(:purchase_request).permit(
       :title, :description, :status_id, :product_url, 
       :estimated_price, :vendor, :priority, :due_date, 
-      :notify_manager, :notes
+      :notify_manager, :notes, :currency
     )
   end
 end

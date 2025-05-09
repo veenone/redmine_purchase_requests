@@ -1,0 +1,169 @@
+<h3><%= l(:label_currency_settings) %></h3>
+
+<p>
+  <label><%= l(:label_default_currency) %></label>
+  <%= select_tag 'settings[default_currency]',
+                options_for_select([
+                  ['US Dollar ($)', 'USD'],
+                  ['Euro (€)', 'EUR'],
+                  ['British Pound (£)', 'GBP'],
+                  ['Japanese Yen (¥)', 'JPY'],
+                  ['Canadian Dollar (C$)', 'CAD'],
+                  ['Australian Dollar (A$)', 'AUD'],
+                  ['Swiss Franc (CHF)', 'CHF'],
+                  ['Chinese Yuan (¥)', 'CNY'],
+                  ['Swedish Krona (kr)', 'SEK'],
+                  ['New Zealand Dollar (NZ$)', 'NZD'],
+                  ['Mexican Peso (Mex$)', 'MXN'],
+                  ['Singapore Dollar (S$)', 'SGD'],
+                  ['Hong Kong Dollar (HK$)', 'HKD'],
+                  ['Indonesian Rupiah (Rp)', 'IDR'],
+                  ['Norwegian Krone (kr)', 'NOK'],
+                  ['South Korean Won (₩)', 'KRW'],
+                  ['Turkish Lira (₺)', 'TRY'],
+                  ['Russian Ruble (₽)', 'RUB'],
+                  ['Indian Rupee (₹)', 'INR'],
+                  ['Brazilian Real (R$)', 'BRL'],
+                  ['South African Rand (R)', 'ZAR']
+                ], @settings['default_currency'] || 'USD'),
+                class: 'currency-select' %>
+</p>
+
+<p>
+  <label><%= l(:label_enabled_currencies) %></label>
+  <div class="enabled-currencies-container">
+    <% all_currencies = [
+      ['US Dollar ($)', 'USD'],
+      ['Euro (€)', 'EUR'],
+      ['British Pound (£)', 'GBP'],
+      ['Japanese Yen (¥)', 'JPY'],
+      ['Canadian Dollar (C$)', 'CAD'],
+      ['Australian Dollar (A$)', 'AUD'],
+      ['Swiss Franc (CHF)', 'CHF'],
+      ['Chinese Yuan (¥)', 'CNY'],
+      ['Swedish Krona (kr)', 'SEK'],
+      ['New Zealand Dollar (NZ$)', 'NZD'],
+      ['Mexican Peso (Mex$)', 'MXN'],
+      ['Singapore Dollar (S$)', 'SGD'],
+      ['Hong Kong Dollar (HK$)', 'HKD'],
+      ['Indonesian Rupiah (Rp)', 'IDR'],
+      ['Norwegian Krone (kr)', 'NOK'],
+      ['South Korean Won (₩)', 'KRW'],
+      ['Turkish Lira (₺)', 'TRY'],
+      ['Russian Ruble (₽)', 'RUB'],
+      ['Indian Rupee (₹)', 'INR'],
+      ['Brazilian Real (R$)', 'BRL'],
+      ['South African Rand (R)', 'ZAR']
+    ] %>
+    
+    <% enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD']) %>
+    
+    <% all_currencies.each do |currency_name, currency_code| %>
+      <div class="currency-checkbox">
+        <label>
+          <%= check_box_tag "settings[enabled_currencies][]", currency_code, 
+                          enabled_currencies.include?(currency_code),
+                          id: "currency_#{currency_code}" %>
+          <%= "#{currency_name} (#{currency_code})" %>
+        </label>
+      </div>
+    <% end %>
+    
+    <%= hidden_field_tag "settings[enabled_currencies][]", "" %>
+  </div>
+</p>
+
+<p>
+  <label><%= l(:label_show_exchange_rates) %></label>
+  <%= check_box_tag 'settings[show_exchange_rates]', '1', @settings['show_exchange_rates'] == '1' %>
+  <em class="info"><%= l(:text_show_exchange_rates_info) %></em>
+</p>
+
+<style>
+  .enabled-currencies-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 3px;
+    margin-top: 5px;
+    background-color: #f9f9f9;
+  }
+  
+  .currency-checkbox {
+    margin-bottom: 8px;
+    padding: 5px;
+    border-bottom: 1px dotted #eee;
+    display: flex;
+    align-items: center;
+  }
+  
+  .currency-checkbox:last-child {
+    border-bottom: none;
+  }
+  
+  .currency-checkbox label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    font-weight: normal;
+    margin: 0;
+  }
+  
+  .currency-checkbox input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  .currency-select {
+    min-width: 200px;
+    padding: 4px;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+  }
+  
+  /* Fixing potential theme-specific issues */
+  .currency-checkbox input[type="checkbox"] {
+    opacity: 1;
+    position: static;
+    width: auto;
+    height: auto;
+  }
+  
+  /* Better label spacing */
+  label {
+    margin-bottom: 3px;
+    display: block;
+    font-weight: bold;
+  }
+</style>
+
+<%= javascript_tag do %>
+  $(document).ready(function() {
+    // Make the default currency always checked
+    $('#settings_default_currency').on('change', function() {
+      var selectedCurrency = $(this).val();
+      $('#currency_' + selectedCurrency).prop('checked', true);
+    });
+    
+    // Ensure at least one currency is selected
+    $('form').on('submit', function() {
+      if ($('input[name="settings[enabled_currencies][]"]:checked').length === 0) {
+        alert('<%= l(:error_at_least_one_currency) %>');
+        return false;
+      }
+      return true;
+    });
+    
+    // Initially make sure default currency is checked
+    var defaultCurrency = $('#settings_default_currency').val();
+    $('#currency_' + defaultCurrency).prop('checked', true);
+    
+    // Highlight rows on hover
+    $('.currency-checkbox').hover(
+      function() { $(this).css('background-color', '#e9e9e9'); },
+      function() { $(this).css('background-color', 'transparent'); }
+    );
+  });
+<% end %>
