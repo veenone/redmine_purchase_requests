@@ -91,22 +91,6 @@
   <em class="info"><%= l(:text_show_exchange_rates_info) %></em>
 </p>
 
-<div class="box tabular settings">
-  <p>
-    <label for="settings_default_currency"><%= l(:setting_default_currency) %></label>
-    <%= select_tag 'settings[default_currency]',
-                   options_for_select(available_currencies, @settings['default_currency']),
-                   include_blank: false %>
-    <em class="info"><%= l(:text_default_currency_info) %></em>
-  </p>
-  
-  <p>
-    <label for="settings_enabled_currencies"><%= l(:setting_enabled_currencies) %></label>
-    <%= select_tag 'settings[enabled_currencies][]',
-                 options_for_select(available_currencies, @settings['enabled_currencies']),
-                 multiple: true, size: 8 %>
-    <em class="info"><%= l(:text_enabled_currencies_info) %></em>
-  </p>
   
   <fieldset class="box">
     <legend><%= l(:label_exchange_rates) %></legend>
@@ -115,8 +99,8 @@
       
       <% 
         default_currency = @settings['default_currency'] || 'USD'
-        exchange_rates = @settings['exchange_rates'] || {}
-        enabled_currencies = @settings['enabled_currencies'] || []
+        exchange_rates = @settings['exchange_rates'].is_a?(Hash) ? @settings['exchange_rates'] : {}
+        enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD'])
       %>
       
       <table class="list">
@@ -134,8 +118,8 @@
               <td><%= currency %></td>
               <td>
                 <%= text_field_tag "settings[exchange_rates][#{currency}]", 
-                                 exchange_rates[currency], 
-                                 size: 10,
+                                 exchange_rates[currency].to_s, 
+                                 size: 10, 
                                  class: 'exchange-rate',
                                  placeholder: '1.0' %>
               </td>
@@ -144,7 +128,7 @@
                   <%= l(:text_exchange_rate_example, 
                       amount: '100', 
                       currency: currency, 
-                      converted: (100.0 / exchange_rates[currency].to_f).round(2), 
+                      converted: (100.0 / exchange_rates[currency].to_f rescue 100.0).round(2), 
                       default_currency: default_currency) %>
                 </em>
               </td>
@@ -254,34 +238,3 @@
     );
   });
 <% end %>
-
-<script>
-  $(document).ready(function() {
-    // Update exchange rate examples when the rate input changes
-    $('.exchange-rate').on('input', function() {
-      var $row = $(this).closest('tr');
-      var currency = $row.find('td:first').text();
-      var rate = parseFloat($(this).val()) || 1.0;
-      var defaultCurrency = '<%= @settings['default_currency'] || 'USD' %>';
-      var amount = 100;
-      var converted = (amount / rate).toFixed(2);
-      
-      var exampleText = '<%= l(:text_exchange_rate_example, 
-                             amount: '100', 
-                             currency: 'XXX', 
-                             converted: '0.00', 
-                             default_currency: @settings['default_currency'] || 'USD') %>';
-                             
-      exampleText = exampleText.replace('100 XXX', '100 ' + currency);
-      exampleText = exampleText.replace('0.00', converted);
-      
-      $row.find('.exchange-rate-example').text(exampleText);
-    });
-    
-    // When default currency changes, reload the page to update exchange rate table
-    $('#settings_default_currency').change(function() {
-      // Submit the form when default currency changes
-      $(this).closest('form').submit();
-    });
-  });
-</script>

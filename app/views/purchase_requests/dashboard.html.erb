@@ -419,7 +419,7 @@
           <% 
             # Get default currency for vendors table
             vendor_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            vendor_symbol = local_currency_symbol(vendor_currency)
+            vendor_symbol = local_currency_symbol(vendor_currency, symbol_map)
           %>
           <% @top_vendors.each do |vendor| %>
             <tr>
