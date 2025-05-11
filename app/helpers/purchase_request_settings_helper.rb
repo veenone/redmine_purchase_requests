@@ -1,3 +1,5 @@
+# File: app/helpers/purchase_request_settings_helper.rb
+
 module PurchaseRequestSettingsHelper
   def purchase_request_settings_tabs
     [

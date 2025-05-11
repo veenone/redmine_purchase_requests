@@ -1,3 +1,4 @@
+<%# app/views/settings/_purchase_request_currency.html.erb %>
 <h3><%= l(:label_currency_settings) %></h3>
 
 <p>
@@ -91,56 +92,55 @@
   <em class="info"><%= l(:text_show_exchange_rates_info) %></em>
 </p>
 
-  
-  <fieldset class="box">
-    <legend><%= l(:label_exchange_rates) %></legend>
-    <div class="exchange-rates-container">
-      <p class="info-text"><%= l(:text_exchange_rates_setup_info) %></p>
-      
-      <% 
-        default_currency = @settings['default_currency'] || 'USD'
-        exchange_rates = @settings['exchange_rates'].is_a?(Hash) ? @settings['exchange_rates'] : {}
-        enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD'])
-      %>
-      
-      <table class="list">
-        <thead>
+<fieldset class="box">
+  <legend><%= l(:label_exchange_rates) %></legend>
+  <div class="exchange-rates-container">
+    <p class="info-text"><%= l(:text_exchange_rates_setup_info) %></p>
+    
+    <% 
+      default_currency = @settings['default_currency'] || 'USD'
+      exchange_rates = @settings['exchange_rates'].is_a?(Hash) ? @settings['exchange_rates'] : {}
+      enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD'])
+    %>
+    
+    <table class="list">
+      <thead>
+        <tr>
+          <th><%= l(:field_currency) %></th>
+          <th><%= l(:label_rate_to) %> <%= default_currency %></th>
+          <th><%= l(:field_description) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% enabled_currencies.each do |currency| %>
+          <% next if currency == default_currency %>
           <tr>
-            <th><%= l(:field_currency) %></th>
-            <th><%= l(:label_rate_to) %> <%= default_currency %></th>
-            <th><%= l(:field_description) %></th>
+            <td><%= currency %></td>
+            <td>
+              <%# Instead of using nested parameters, use a single flat parameter name %>
+              <%= text_field_tag "settings[exchange_rate_#{currency}]", 
+                             exchange_rates[currency].to_s, 
+                             size: 10, 
+                             class: 'exchange-rate',
+                             placeholder: '1.0' %>
+            </td>
+            <td>
+              <em class="info exchange-rate-example">
+                <%= l(:text_exchange_rate_example, 
+                    amount: '100', 
+                    currency: currency, 
+                    converted: (100.0 / exchange_rates[currency].to_f rescue 100.0).round(2), 
+                    default_currency: default_currency) %>
+              </em>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          <% enabled_currencies.each do |currency| %>
-            <% next if currency == default_currency %>
-            <tr>
-              <td><%= currency %></td>
-              <td>
-                <%= text_field_tag "settings[exchange_rates][#{currency}]", 
-                                 exchange_rates[currency].to_s, 
-                                 size: 10, 
-                                 class: 'exchange-rate',
-                                 placeholder: '1.0' %>
-              </td>
-              <td>
-                <em class="info exchange-rate-example">
-                  <%= l(:text_exchange_rate_example, 
-                      amount: '100', 
-                      currency: currency, 
-                      converted: (100.0 / exchange_rates[currency].to_f rescue 100.0).round(2), 
-                      default_currency: default_currency) %>
-                </em>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-      
-      <p class="note"><%= l(:text_exchange_rates_note) %></p>
-    </div>
-  </fieldset>
-</div>
+        <% end %>
+      </tbody>
+    </table>
+    
+    <p class="note"><%= l(:text_exchange_rates_note) %></p>
+  </div>
+</fieldset>
 
 <style>
   .enabled-currencies-container {
