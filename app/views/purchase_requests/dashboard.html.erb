@@ -274,7 +274,7 @@
         <table class="dashboard-table">
           <% 
             default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            default_symbol = local_currency_symbol(default_currency)
+            default_symbol = local_currency_symbol(default_currency, symbol_map)
           %>
           
           <tr>
