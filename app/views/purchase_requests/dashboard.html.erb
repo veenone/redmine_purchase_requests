@@ -1,5 +1,7 @@
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <!-- Use local ApexCharts.js library instead of CDN -->
+  <%= javascript_include_tag 'apexcharts', plugin: 'redmine_purchase_requests' %>
   <style>
     .dashboard-container {
       display: grid;
@@ -164,10 +166,48 @@
       transform-origin: left top;
       white-space: nowrap;
     }
+
+    .chart-container {
+      width: 100%;
+      height: 250px;
+      margin-top: 10px;
+    }
   </style>
 <% end %>
 
 <% html_title l(:label_purchase_request_dashboard) %>
+
+<%
+  # Define currency symbols at the beginning of the template so it's available everywhere
+  symbol_map = {
+    'USD' => '$',
+    'EUR' => '€',
+    'GBP' => '£',
+    'JPY' => '¥',
+    'CAD' => 'C$',
+    'AUD' => 'A$',
+    'CHF' => 'CHF',
+    'CNY' => '¥',
+    'SEK' => 'kr',
+    'NZD' => 'NZ$',
+    'MXN' => 'Mex$',
+    'SGD' => 'S$',
+    'HKD' => 'HK$',
+    'IDR' => 'Rp',
+    'NOK' => 'kr',
+    'KRW' => '₩',
+    'TRY' => '₺',
+    'RUB' => '₽',
+    'INR' => '₹',
+    'BRL' => 'R$',
+    'ZAR' => 'R'
+  }
+  
+  # Helper function to get currency symbol - renamed to avoid conflict with helper method
+  def local_currency_symbol(currency_code, symbol_map)
+    symbol_map[currency_code] || currency_code
+  end
+%>
 
 <h2><%= l(:label_purchase_request_dashboard) %></h2>
 
@@ -192,8 +232,13 @@
     <div class="stat-label"><%= l(:label_closed_requests) %></div>
   </div>
   
+  <% 
+    # Get currency symbol for top stats
+    summary_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    summary_symbol = local_currency_symbol(summary_currency, symbol_map)
+  %>
   <div class="stat-box">
-    <div class="stat-number stat-currency">$<%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
+    <div class="stat-number stat-currency"><%= summary_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
     <div class="stat-label"><%= l(:label_total_estimated_cost) %></div>
   </div>
 </div>
@@ -205,20 +250,7 @@
       <h3><%= l(:label_status_distribution) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <% @status_distribution.each do |status| %>
-        <% percentage = @total_requests > 0 ? (status[:count].to_f / @total_requests * 100).round : 0 %>
-        <div class="status-item">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <span><%= status[:name] %></span>
-            <span><%= status[:count] %> (<%= percentage %>%)</span>
-          </div>
-          <div class="progress-bar-container">
-            <div class="progress-bar" style="width: <%= percentage %>%; background-color: <%= status[:color] %>;">
-              <% if percentage >= 10 %><%= percentage %>%<% end %>
-            </div>
-          </div>
-        </div>
-      <% end %>
+      <div id="statusChart" class="chart-container"></div>
     </div>
   </div>
 
@@ -228,59 +260,7 @@
       <h3><%= l(:label_priority_distribution) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <% priority_total = @priority_distribution.values.sum %>
-      
-      <% urgent_percentage = priority_total > 0 ? (@priority_distribution[:urgent].to_f / priority_total * 100).round : 0 %>
-      <div class="status-item">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-          <span><%= l(:label_priority_urgent) %></span>
-          <span><%= @priority_distribution[:urgent] %> (<%= urgent_percentage %>%)</span>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar priority-urgent" style="width: <%= urgent_percentage %>%;">
-            <% if urgent_percentage >= 10 %><%= urgent_percentage %>%<% end %>
-          </div>
-        </div>
-      </div>
-      
-      <% high_percentage = priority_total > 0 ? (@priority_distribution[:high].to_f / priority_total * 100).round : 0 %>
-      <div class="status-item">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-          <span><%= l(:label_priority_high) %></span>
-          <span><%= @priority_distribution[:high] %> (<%= high_percentage %>%)</span>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar priority-high" style="width: <%= high_percentage %>%;">
-            <% if high_percentage >= 10 %><%= high_percentage %>%<% end %>
-          </div>
-        </div>
-      </div>
-      
-      <% normal_percentage = priority_total > 0 ? (@priority_distribution[:normal].to_f / priority_total * 100).round : 0 %>
-      <div class="status-item">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-          <span><%= l(:label_priority_normal) %></span>
-          <span><%= @priority_distribution[:normal] %> (<%= normal_percentage %>%)</span>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar priority-normal" style="width: <%= normal_percentage %>%;">
-            <% if normal_percentage >= 10 %><%= normal_percentage %>%<% end %>
-          </div>
-        </div>
-      </div>
-      
-      <% low_percentage = priority_total > 0 ? (@priority_distribution[:low].to_f / priority_total * 100).round : 0 %>
-      <div class="status-item">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-          <span><%= l(:label_priority_low) %></span>
-          <span><%= @priority_distribution[:low] %> (<%= low_percentage %>%)</span>
-        </div>
-        <div class="progress-bar-container">
-          <div class="progress-bar priority-low" style="width: <%= low_percentage %>%;">
-            <% if low_percentage >= 10 %><%= low_percentage %>%<% end %>
-          </div>
-        </div>
-      </div>
+      <div id="priorityChart" class="chart-container"></div>
     </div>
   </div>
 
@@ -292,8 +272,10 @@
     <div class="dashboard-card-body">
       <div class="financial-stats">
         <table class="dashboard-table">
-          <% default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %>
-          <% default_symbol = currency_symbol(default_currency) %>
+          <% 
+            default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+            default_symbol = local_currency_symbol(default_currency)
+          %>
           
           <tr>
             <th><%= l(:label_total_estimated_cost) %></th>
@@ -333,7 +315,7 @@
               <tr>
                 <th><%= currency %></th>
                 <td class="stat-currency">
-                  <%= currency_symbol(currency) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+                  <%= local_currency_symbol(currency, symbol_map) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
                 </td>
               </tr>
             <% end %>
@@ -343,13 +325,23 @@
     </div>
   </div>
 
+  <!-- Financial Overview Card with Chart -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_cost_distribution) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div id="costDistributionChart" class="chart-container"></div>
+    </div>
+  </div>
+
   <!-- Top Requesters Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
       <h3><%= l(:label_top_requesters) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <% if @top_requesters.any? %>
+      <% if @top_requesters.present? && @top_requesters.any? %>
         <table class="dashboard-table">
           <tr>
             <th><%= l(:field_user) %></th>
@@ -374,17 +366,7 @@
       <h3><%= l(:label_monthly_trends) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <div class="trend-chart">
-        <% max_count = @monthly_trends.map { |t| t[:count] }.max %>
-        <% max_count = 1 if max_count == 0 %>
-        
-        <% @monthly_trends.each do |trend| %>
-          <div class="trend-bar" style="height: <%= (trend[:count].to_f / max_count * 100).round %>%;">
-            <div class="trend-bar-value"><%= trend[:count] %></div>
-            <div class="trend-bar-label"><%= trend[:month] %></div>
-          </div>
-        <% end %>
-      </div>
+      <div id="monthlyTrendChart" class="chart-container"></div>
     </div>
   </div>
 
@@ -394,7 +376,7 @@
       <h3><%= l(:label_recent_requests) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <% if @recent_requests.any? %>
+      <% if @recent_requests.present? && @recent_requests.any? %>
         <table class="dashboard-table">
           <tr>
             <th>#</th>
@@ -427,18 +409,23 @@
       <h3><%= l(:label_top_vendors) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <% if @top_vendors.any? %>
+      <% if @top_vendors.present? && @top_vendors.any? %>
         <table class="dashboard-table">
           <tr>
             <th><%= l(:field_vendor) %></th>
             <th><%= l(:label_requests) %></th>
             <th><%= l(:label_total_cost) %></th>
           </tr>
+          <% 
+            # Get default currency for vendors table
+            vendor_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+            vendor_symbol = local_currency_symbol(vendor_currency)
+          %>
           <% @top_vendors.each do |vendor| %>
             <tr>
               <td><%= vendor[:vendor] %></td>
               <td><%= vendor[:count] %></td>
-              <td class="stat-currency">$<%= number_with_precision(vendor[:total_cost], precision: 2, delimiter: ',') %></td>
+              <td class="stat-currency"><%= vendor_symbol %><%= number_with_precision(vendor[:total_cost], precision: 2, delimiter: ',') %></td>
             </tr>
           <% end %>
         </table>
@@ -460,6 +447,90 @@
       </div>
     </div>
   </div>
+
+  <!-- Currency Breakdown with Conversion Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_currency_breakdown_with_conversion) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @converted_currency_distribution && @converted_currency_distribution.any? %>
+        <table class="dashboard-table">
+          <tr>
+            <th><%= l(:field_currency) %></th>
+            <th><%= l(:label_original_amount) %></th>
+            <th><%= l(:label_equivalent_in_default) %></th>
+          </tr>
+          <% 
+            default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+          %>
+          <% @converted_currency_distribution.each do |currency, data| %>
+            <tr>
+              <th><%= currency %></th>
+              <td class="stat-currency">
+                <%= local_currency_symbol(currency, symbol_map) %><%= number_with_precision(data[:original], precision: 2, delimiter: ',') %>
+              </td>
+              <td class="stat-currency">
+                <%= local_currency_symbol(default_currency, symbol_map) %><%= number_with_precision(data[:converted], precision: 2, delimiter: ',') %>
+              </td>
+            </tr>
+          <% end %>
+          <tr class="total-row">
+            <th><%= l(:label_total_in) %> <%= default_currency %></th>
+            <td></td>
+            <td class="stat-currency total-value">
+              <%= local_currency_symbol(default_currency, symbol_map) %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
+            </td>
+          </tr>
+        </table>
+        
+        <% 
+          # Display exchange rates if available
+          exchange_rates = Setting.plugin_redmine_purchase_requests['exchange_rates'] || {}
+          if exchange_rates.any?
+        %>
+          <div class="exchange-rates-info">
+            <h4><%= l(:label_exchange_rates) %></h4>
+            <p class="info-text"><%= l(:text_exchange_rates_info) %></p>
+            <table class="dashboard-table">
+              <tr>
+                <th><%= l(:field_currency) %></th>
+                <th><%= l(:label_rate_to) %> <%= default_currency %></th>
+              </tr>
+              <% exchange_rates.each do |currency, rate| %>
+                <tr>
+                  <td><%= currency %></td>
+                  <td><%= number_with_precision(rate.to_f, precision: 6) %></td>
+                </tr>
+              <% end %>
+            </table>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Currency Distribution Chart Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_currency_distribution) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div id="currencyDistributionChart" class="chart-container"></div>
+    </div>
+  </div>
+  
+  <!-- Monthly Trends by Currency Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_monthly_trends_by_currency) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div id="currencyMonthlyTrendsChart" class="chart-container"></div>
+    </div>
+  </div>
 </div>
 
 <div class="box">
@@ -472,7 +543,332 @@
 
 <%= javascript_tag do %>
   $(document).ready(function() {
-    // Future JavaScript for enhancing the dashboard can be added here
-    // For example, we could add chart.js or other visualization libraries
+    // Convert Ruby variables to JavaScript
+    var statusData = <%= raw @status_distribution.to_json %>;
+    var priorityData = {
+      labels: [
+        '<%= l(:label_priority_urgent) %>',
+        '<%= l(:label_priority_high) %>',
+        '<%= l(:label_priority_normal) %>',
+        '<%= l(:label_priority_low) %>'
+      ],
+      series: [
+        <%= @priority_distribution[:urgent] %>,
+        <%= @priority_distribution[:high] %>,
+        <%= @priority_distribution[:normal] %>,
+        <%= @priority_distribution[:low] %>
+      ],
+      colors: ['#f44336', '#ff9800', '#4caf50', '#2196f3']
+    };
+    
+    var monthlyTrends = <%= raw @monthly_trends.to_json %>;
+    
+    // Financial data
+    var financialData = {
+      labels: ['<%= l(:label_pending_cost) %>', '<%= l(:label_approved_cost) %>'],
+      series: [<%= @pending_cost %>, <%= @approved_cost %>]
+    };
+    
+    // Initialize Status Distribution Chart
+    var statusChartOptions = {
+      chart: {
+        type: 'donut',
+        height: 250
+      },
+      series: statusData.map(function(status) { return status.count; }),
+      labels: statusData.map(function(status) { return status.name; }),
+      colors: statusData.map(function(status) { return status.color || '#777777'; }),
+      legend: {
+        position: 'bottom'
+      },
+      tooltip: {
+        y: {
+          formatter: function(value) {
+            return value + ' <%= l(:label_requests) %>';
+          }
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: function(val, opts) {
+          return Math.round(val) + '%';
+        }
+      },
+      responsive: [{
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%'
+          },
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }]
+    };
+    
+    var statusChart = new ApexCharts(document.querySelector("#statusChart"), statusChartOptions);
+    statusChart.render();
+    
+    // Initialize Priority Distribution Chart
+    var priorityChartOptions = {
+      chart: {
+        type: 'pie',
+        height: 250
+      },
+      series: priorityData.series,
+      labels: priorityData.labels,
+      colors: priorityData.colors,
+      legend: {
+        position: 'bottom'
+      },
+      tooltip: {
+        y: {
+          formatter: function(value) {
+            return value + ' <%= l(:label_requests) %>';
+          }
+        }
+      },
+      responsive: [{
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%'
+          },
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }]
+    };
+    
+    var priorityChart = new ApexCharts(document.querySelector("#priorityChart"), priorityChartOptions);
+    priorityChart.render();
+    
+    // Initialize Monthly Trends Chart
+    var monthlyTrendOptions = {
+      chart: {
+        type: 'bar',
+        height: 250
+      },
+      plotOptions: {
+        bar: {
+          borderRadius: 4,
+          columnWidth: '70%',
+        }
+      },
+      dataLabels: {
+        enabled: false
+      },
+      series: [{
+        name: '<%= l(:label_requests) %>',
+        data: monthlyTrends.map(function(month) { return month.count; })
+      }],
+      xaxis: {
+        categories: monthlyTrends.map(function(month) { return month.month; }),
+        position: 'bottom',
+        labels: {
+          rotate: -45,
+          rotateAlways: false
+        }
+      },
+      colors: ['#64b5f6'],
+      yaxis: {
+        title: {
+          text: '<%= l(:label_requests) %>'
+        }
+      }
+    };
+    
+    var monthlyTrendChart = new ApexCharts(document.querySelector("#monthlyTrendChart"), monthlyTrendOptions);
+    monthlyTrendChart.render();
+    
+    // Initialize Cost Distribution Chart
+    var costDistributionOptions = {
+      chart: {
+        type: 'radialBar',
+        height: 250
+      },
+      plotOptions: {
+        radialBar: {
+          dataLabels: {
+            name: {
+              fontSize: '22px',
+            },
+            value: {
+              fontSize: '16px',
+            },
+            total: {
+              show: true,
+              label: '<%= l(:label_total_estimated_cost) %>',
+              formatter: function (w) {
+                return '<%= number_with_precision(@total_estimated_cost, precision: 0, delimiter: ",") %>';
+              }
+            }
+          }
+        }
+      },
+      series: [
+        Math.round((<%= @pending_cost %> / <%= @total_estimated_cost %> || 0) * 100),
+        Math.round((<%= @approved_cost %> / <%= @total_estimated_cost %> || 0) * 100)
+      ],
+      labels: ['<%= l(:label_pending_cost) %>', '<%= l(:label_approved_cost) %>'],
+      colors: ['#ff9800', '#4caf50']
+    };
+    
+    var costDistributionChart = new ApexCharts(document.querySelector("#costDistributionChart"), costDistributionOptions);
+    costDistributionChart.render();
+    
+    // Currency Distribution Chart
+    <% 
+      default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+      currency_data = @requests_by_currency || {}
+      currency_labels = currency_data.keys
+      currency_values = currency_data.values
+      
+      # Generate colors for each currency
+      currency_colors = {
+        'USD' => '#2E7D32', # Green
+        'EUR' => '#1565C0', # Blue
+        'GBP' => '#6A1B9A', # Purple
+        'JPY' => '#E65100', # Orange
+        'CAD' => '#C62828', # Red
+        'AUD' => '#00838F', # Teal
+        'CHF' => '#4527A0', # Deep Purple
+        'CNY' => '#FF6F00', # Amber
+        'SEK' => '#0277BD', # Light Blue
+        'NZD' => '#558B2F', # Light Green
+      }
+      
+      # Default color for other currencies
+      default_color = '#757575' # Grey
+    %>
+    
+    var currencyDistributionOptions = {
+      chart: {
+        type: 'pie',
+        height: 250
+      },
+      series: <%= raw currency_values.to_json %>,
+      labels: <%= raw currency_labels.to_json %>,
+      colors: <%= raw currency_labels.map { |curr| currency_colors[curr] || default_color }.to_json %>,
+      legend: {
+        position: 'bottom'
+      },
+      tooltip: {
+        y: {
+          formatter: function(value) {
+            return value + ' <%= l(:label_requests) %>';
+          }
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: function(val, opts) {
+          const series = opts.w.globals.series;
+          const total = series.reduce((a, b) => a + b, 0);
+          const percent = Math.round((opts.w.globals.series[opts.seriesIndex] / total) * 100);
+          return percent + '%';
+        }
+      },
+      responsive: [{
+        breakpoint: 480,
+        options: {
+          chart: {
+            width: '100%'
+          },
+          legend: {
+            position: 'bottom'
+          }
+        }
+      }]
+    };
+    
+    var currencyDistributionChart = new ApexCharts(document.querySelector("#currencyDistributionChart"), currencyDistributionOptions);
+    currencyDistributionChart.render();
+    
+    // Monthly Trends by Currency Chart
+    <% 
+      # Prepare data for the chart
+      currency_monthly_data = []
+      if @currency_monthly_trends.present?
+        @currency_monthly_trends.each do |currency, data|
+          next if data.all? { |m| m[:amount] == 0 } # Skip currencies with no data
+          
+          currency_monthly_data.push({
+            name: currency,
+            data: data.map { |m| m[:amount] }
+          })
+        end
+      end
+      
+      # Get month labels (use first currency's months)
+      if @currency_monthly_trends.present? && @currency_monthly_trends.values.first.present?
+        month_labels = @currency_monthly_trends.values.first.map { |m| m[:month] }
+      else
+        month_labels = 6.times.map { |i| i.months.ago.strftime("%b %Y") }.reverse
+      end
+    %>
+    
+    var currencyMonthlyTrendsOptions = {
+      chart: {
+        type: 'line',
+        height: 250,
+        stacked: false,
+        toolbar: {
+          show: true
+        },
+        zoom: {
+          enabled: false
+        }
+      },
+      dataLabels: {
+        enabled: false
+      },
+      stroke: {
+        width: [3, 3, 3, 3, 3],
+        curve: 'smooth'
+      },
+      series: <%= raw currency_monthly_data.to_json %>,
+      colors: <%= raw currency_monthly_data.map { |data| currency_colors[data[:name]] || default_color }.to_json %>,
+      xaxis: {
+        categories: <%= raw month_labels.to_json %>,
+        labels: {
+          rotate: -45,
+          rotateAlways: false
+        }
+      },
+      yaxis: {
+        title: {
+          text: '<%= default_currency %> <%= l(:label_equivalent) %>'
+        },
+        labels: {
+          formatter: function(val) {
+            return '<%= local_currency_symbol(default_currency, symbol_map) %>' + val.toFixed(0);
+          }
+        }
+      },
+      tooltip: {
+        shared: true,
+        intersect: false,
+        y: {
+          formatter: function(value, { series, seriesIndex, dataPointIndex, w }) {
+            return '<%= local_currency_symbol(default_currency, symbol_map) %>' + value.toFixed(2);
+          }
+        }
+      },
+      legend: {
+        position: 'bottom'
+      },
+      markers: {
+        size: 5,
+        hover: {
+          size: 7
+        }
+      }
+    };
+    
+    var currencyMonthlyTrendsChart = new ApexCharts(document.querySelector("#currencyMonthlyTrendsChart"), currencyMonthlyTrendsOptions);
+    currencyMonthlyTrendsChart.render();
   });
 <% end %>

@@ -27,7 +27,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   # Add dashboard to top menu
   menu :project_menu, :purchase_requests_dashboard, 
        { controller: 'purchase_requests', action: 'dashboard' },
-       caption: :label_purchase_request_dashboard, after: :projects
+       caption: :label_purchase_request_dashboard, after: :purchase_requests
   
   # Add settings page
   settings default: {

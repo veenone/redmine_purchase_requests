@@ -110,3 +110,4 @@ en:
   text_show_exchange_rates_info: "Show exchange rates between currencies on the dashboard"
   error_at_least_one_currency: "At least one currency must be enabled"
   field_currency: "Currency"
+  field_code: "Code"

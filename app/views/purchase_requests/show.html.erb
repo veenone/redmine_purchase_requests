@@ -103,7 +103,7 @@
                   <span class="value price">
                     <%= @purchase_request.formatted_price %>
                     <% if @purchase_request.currency != Setting.plugin_redmine_purchase_requests['default_currency'] %>
-                      <span class="currency-code">(<%= @purchase_request.currency %>)</span>
+                      <span class="currency-badge"><%= @purchase_request.currency %></span>
                     <% end %>
                   </span>
                 </div>
@@ -325,6 +325,15 @@
   .grid-row .value.price {
     font-weight: bold;
     color: #2e7d32;
+  }
+  
+  .currency-badge {
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+    margin-left: 5px;
   }
   
   .notes {

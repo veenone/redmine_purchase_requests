@@ -39,38 +39,40 @@
       
       <div id="tab-general" class="tabbed-form">
         <div class="box tabular">
-          <p>
-            <%= form.label :title, l(:field_title), class: 'required' %> <span class="required">*</span>
-            <%= form.text_field :title, required: true, size: 60, maxlength: 255 %>
-            <em class="info"><%= l(:text_purchase_title_info) %></em>
-          </p>
-          
-          <p>
-            <%= form.label :description, l(:field_description) %>
-            <%= form.text_area :description, rows: 6, cols: 60, class: 'wiki-edit' %>
-            <em class="info"><%= l(:text_purchase_description_info) %></em>
-          </p>
-          
-          <% if @purchase_request.new_record? && PurchaseRequestStatus.count > 0 %>
-            <p>
-              <%= form.label :status_id, l(:field_status) %> <span class="required">*</span>
-              <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name, 
+          <div class="splitcontent">
+            <% if @purchase_request.new_record? && PurchaseRequestStatus.count > 0 %>
+              <p>
+                <%= form.label :title, l(:field_title), class: 'required' %><span class="required"> *</span>
+                <%= form.text_field :title, required: true, size: 60, maxlength: 255 %>
+                <em class="info"><%= l(:text_purchase_title_info) %></em>
+              </p>
+              
+              <p>
+                <%= form.label :description, l(:field_description) %>
+                <%= form.text_area :description, rows: 6, cols: 60, class: 'wiki-edit' %>
+                <em class="info"><%= l(:text_purchase_description_info) %></em>
+              </p>
+              
+              <p>
+                <%= form.label :status_id, l(:field_status), class: 'required' %><span class="required"> *</span>
+                <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name, 
                                        { selected: PurchaseRequestStatus.default&.id || PurchaseRequestStatus.first&.id },
                                        { required: true } %>
-              <em class="info"><%= l(:text_status_info) %></em>
-            </p>
-          <% end %>
-          
-          <p>
-            <%= form.label :priority, l(:field_priority) %>
-            <%= form.select :priority, 
-                         [[l(:label_priority_low), 'low'], 
-                          [l(:label_priority_normal), 'normal'], 
-                          [l(:label_priority_high), 'high'], 
-                          [l(:label_priority_urgent), 'urgent']], 
-                         { selected: 'normal' } %>
-            <em class="info"><%= l(:text_priority_info) %></em>
-          </p>
+                <em class="info"><%= l(:text_status_info) %></em>
+              </p>
+              
+              <p>
+                <%= form.label :priority, l(:field_priority) %>
+                <%= form.select :priority, 
+                           [[l(:label_priority_low), 'low'], 
+                            [l(:label_priority_normal), 'normal'], 
+                            [l(:label_priority_high), 'high'], 
+                            [l(:label_priority_urgent), 'urgent']], 
+                           { selected: 'normal' } %>
+                <em class="info"><%= l(:text_priority_info) %></em>
+              </p>
+            <% end %>
+          </div>
         </div>
       </div>
       
@@ -83,11 +85,17 @@
           </p>
           
           <p>
+            <%= form.label :currency, l(:field_currency) %>
+            <%= form.select :currency, 
+                       options_for_select(
+                         enabled_currencies_for_select,
+                         @purchase_request.currency || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+                       ) %>
+          </p>
+          
+          <p>
             <%= form.label :estimated_price, l(:field_estimated_price) %>
-            <span class="currency-wrapper">
-              <span class="currency-symbol">$</span>
-              <%= form.number_field :estimated_price, min: 0, step: '0.01', class: 'currency-field' %>
-            </span>
+            <%= form.text_field :estimated_price, size: 30 %>
             <em class="info"><%= l(:text_estimated_price_info) %></em>
           </p>
           
@@ -105,7 +113,7 @@
           
           <p>
             <%= form.check_box :notify_manager %>
-            <%= form.label :notify_manager, l(:field_notify_manager) %>
+            <%= form.label :notify_manager, l(:field_notify_manager), class: 'inline' %>
             <em class="info"><%= l(:text_notify_manager_info) %></em>
           </p>
           
@@ -292,6 +300,43 @@
     margin: 10px 0 0 0;
     padding-left: 20px;
     color: #666;
+  }
+
+  .currency-price-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 5px;
+  }
+  
+  .currency-select {
+    min-width: 150px;
+    flex: 0 0 auto;
+  }
+  
+  .price-field {
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .form-layout {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .form-layout th {
+    text-align: right;
+    padding-right: 15px;
+    vertical-align: top;
+    width: 25%;
+    padding-top: 8px;
+    font-weight: normal;
+  }
+  
+  .form-layout td {
+    vertical-align: top;
+    padding-bottom: 10px;
+    width: 75%;
   }
 </style>
 

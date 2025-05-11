@@ -38,6 +38,7 @@
           <th>#</th>
           <th><%= l(:field_title) %></th>
           <th><%= l(:field_status) %></th>
+          <th><%= l(:field_estimated_price) %></th>
           <th><%= l(:field_created_on) %></th>
           <th><%= l(:field_updated_on) %></th>
           <th class="buttons"><%= l(:label_action) %></th>
@@ -59,6 +60,18 @@
               <span class="status-badge" style="background-color: <%= purchase_request.status.color.presence || '#777777' %>">
                 <%= purchase_request.status.name %>
               </span>
+            </td>
+            <td class="price">
+              <% if purchase_request.estimated_price.present? %>
+                <span class="price-value">
+                  <%= purchase_request.formatted_price %>
+                  <% if purchase_request.currency != Setting.plugin_redmine_purchase_requests['default_currency'] %>
+                    <span class="currency-code"><%= purchase_request.currency %></span>
+                  <% end %>
+                </span>
+              <% else %>
+                <span class="no-price">-</span>
+              <% end %>
             </td>
             <td class="created-on"><%= format_time(purchase_request.created_at) %></td>
             <td class="updated-on"><%= format_time(purchase_request.updated_at) %></td>
@@ -98,6 +111,29 @@
   }
   
   .purchase-requests .closed {
+    color: #999;
+  }
+  
+  .purchase-requests .price {
+    white-space: nowrap;
+  }
+  
+  .purchase-requests .price-value {
+    font-weight: 500;
+  }
+  
+  .purchase-requests .currency-code {
+    display: inline-block;
+    font-size: 11px;
+    color: #777;
+    background-color: #f5f5f5;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-left: 3px;
+    vertical-align: middle;
+  }
+  
+  .purchase-requests .no-price {
     color: #999;
   }
   

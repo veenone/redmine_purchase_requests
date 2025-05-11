@@ -87,16 +87,19 @@ class PurchaseRequestsController < ApplicationController
     @open_requests = PurchaseRequest.open.count
     @closed_requests = PurchaseRequest.closed.count
     
-    # Status distribution
+    # Status distribution - with percentage calculation for ApexCharts
     @status_distribution = PurchaseRequestStatus.all.map do |status|
+      request_count = PurchaseRequest.where(status_id: status.id).count
+      percentage = @total_requests > 0 ? (request_count.to_f / @total_requests * 100).round(1) : 0
       {
         name: status.name,
-        count: PurchaseRequest.where(status_id: status.id).count,
+        count: request_count,
+        percentage: percentage,
         color: status.color.presence || '#777777'
       }
     end
     
-    # Priority distribution
+    # Priority distribution - enhanced for ApexCharts
     @priority_distribution = {
       urgent: PurchaseRequest.where(priority: 'urgent').count,
       high: PurchaseRequest.where(priority: 'high').count,
@@ -104,66 +107,198 @@ class PurchaseRequestsController < ApplicationController
       low: PurchaseRequest.where(priority: 'low').count
     }
     
-    # Financial statistics with currency support
-    default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    @total_estimated_cost = PurchaseRequest.where.not(estimated_price: nil).where(currency: default_currency).sum(:estimated_price)
-    @pending_cost = PurchaseRequest.open.where.not(estimated_price: nil).where(currency: default_currency).sum(:estimated_price)
-    @approved_cost = PurchaseRequest.closed.where.not(estimated_price: nil).where(currency: default_currency).sum(:estimated_price)
-    
-    # Currency distribution
-    @currency_distribution = {}
-    PurchaseRequest.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
-      @currency_distribution[currency || default_currency] = amount
+    # Calculate total for priority percentage
+    priority_total = @priority_distribution.values.sum
+    @priority_percentages = @priority_distribution.transform_values do |count|
+      priority_total > 0 ? (count.to_f / priority_total * 100).round(1) : 0
     end
     
-    # Most active requesters (top 5) - alternative approach without join
-    # First get user_ids and count from purchase requests
-    user_counts = PurchaseRequest.group(:user_id).count
+    # Financial statistics with multi-currency support
+    default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
     
-    # Sort by count descending and take top 5
-    top_user_ids = user_counts.sort_by { |_, count| -count }.take(5).map { |user_id, _| user_id }
+    # Calculate total estimated costs across all currencies using helper
+    @total_estimated_cost = 0
+    @pending_cost = 0
+    @approved_cost = 0
     
-    # Now fetch users with those ids, in correct order
-    @top_requesters = []
-    top_user_ids.each do |user_id|
-      user = User.find_by(id: user_id)
-      if user
-        # Add the count to the user object
-        user.instance_variable_set(:@request_count, user_counts[user_id])
-        def user.request_count
-          @request_count
-        end
-        @top_requesters << user
+    # Get all purchase requests with prices
+    requests_with_prices = PurchaseRequest.where.not(estimated_price: nil)
+    
+    # Process each request and convert currency
+    requests_with_prices.each do |request|
+      currency = request.currency.presence || default_currency
+      price = request.estimated_price
+      
+      # Convert currency using helper method
+      converted_price = helpers.convert_currency(price, currency, default_currency)
+      
+      # Add to appropriate totals
+      @total_estimated_cost += converted_price
+      
+      if request.open?
+        @pending_cost += converted_price
+      else
+        @approved_cost += converted_price
       end
     end
     
-    # Recent activity
-    @recent_requests = PurchaseRequest.includes(:user, :status)
-                                     .order(created_at: :desc)
-                                     .limit(10)
+    # Round totals to 2 decimal places
+    @total_estimated_cost = @total_estimated_cost.round(2)
+    @pending_cost = @pending_cost.round(2)
+    @approved_cost = @approved_cost.round(2)
     
-    # Monthly trends - requests created per month (last 6 months)
-    @monthly_trends = 6.times.map do |i|
+    # Currency distribution with original amounts
+    @currency_distribution = {}
+    PurchaseRequest.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+      curr = currency.presence || default_currency
+      @currency_distribution[curr] = amount.round(2)
+    end
+    
+    # Currency distribution with converted amounts for comparison
+    @converted_currency_distribution = {}
+    PurchaseRequest.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+      curr = currency.presence || default_currency
+      converted_amount = helpers.convert_currency(amount, curr, default_currency)
+      
+      @converted_currency_distribution[curr] = {
+        original: amount.round(2),
+        converted: converted_amount,
+        in_default: "#{converted_amount} #{default_currency}"
+      }
+    end
+    
+    # Monthly trends with multi-currency support
+    @monthly_trends = 12.times.map do |i|
       month_start = i.months.ago.beginning_of_month
       month_end = i.months.ago.end_of_month
-      count = PurchaseRequest.where(created_at: month_start..month_end).count
+      
+      # Get all requests for this month
+      requests = PurchaseRequest.where(created_at: month_start..month_end)
+      count = requests.count
+      
+      # Calculate converted total for the month
+      monthly_cost = 0
+      requests.where.not(estimated_price: nil).each do |request|
+        curr = request.currency.presence || default_currency
+        monthly_cost += helpers.convert_currency(request.estimated_price, curr, default_currency)
+      end
+      
       { 
         month: i.months.ago.strftime("%b %Y"),
-        count: count
+        count: count,
+        amount: monthly_cost.round(2)
       }
     end.reverse
     
-    # Average response time (from creation to first status change)
-    # This is a simplified calculation and might need adjustment based on your workflow
-    @avg_response_days = 3.5 # Placeholder - replace with actual calculation
+    # Create datasets for multi-series monthly chart 
+    @monthly_series_data = {
+      labels: @monthly_trends.map { |t| t[:month] },
+      counts: @monthly_trends.map { |t| t[:count] },
+      amounts: @monthly_trends.map { |t| t[:amount] }
+    }
     
-    # Top vendors - handle missing or empty vendor names
+    # Top vendors with multi-currency support using helpers
+    vendor_requests = PurchaseRequest.where.not(vendor: [nil, ''])
+                                    .where.not(estimated_price: nil)
+    
+    vendor_data = {}
+    
+    vendor_requests.each do |request|
+      vendor = request.vendor
+      curr = request.currency.presence || default_currency
+      converted_price = helpers.convert_currency(request.estimated_price, curr, default_currency)
+      
+      # Initialize vendor data if needed
+      vendor_data[vendor] ||= { count: 0, total_cost: 0 }
+      
+      # Update vendor data
+      vendor_data[vendor][:count] += 1
+      vendor_data[vendor][:total_cost] += converted_price
+    end
+    
+    # Format and sort vendors by total cost
+    @top_vendors = vendor_data.map do |vendor, data|
+      {
+        vendor: vendor,
+        count: data[:count],
+        total_cost: data[:total_cost].round(2)
+      }
+    end.sort_by { |v| -v[:total_cost] }.take(5)
+    
+    # Get requests by currency for pie chart
+    @requests_by_currency = PurchaseRequest.where.not(estimated_price: nil)
+                                          .group(:currency)
+                                          .count
+                                          .transform_keys { |k| k.presence || default_currency }
+    
+    # Monthly trends by currency
+    @currency_monthly_trends = {}
+    
+    # Get all currencies used in the system
+    all_used_currencies = PurchaseRequest.where.not(estimated_price: nil)
+                                        .pluck(:currency)
+                                        .compact
+                                        .uniq
+                                        .push(default_currency)
+                                        .uniq
+    
+    # Initialize data structure for each currency
+    all_used_currencies.each do |currency|
+      @currency_monthly_trends[currency] = 6.times.map do |i|
+        {
+          month: i.months.ago.strftime("%b %Y"),
+          amount: 0
+        }
+      end.reverse
+    end
+    
+    # Get data for the last 6 months by currency
+    6.times do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = i.months.ago.end_of_month
+      month_str = i.months.ago.strftime("%b %Y")
+      
+      # Get monthly totals by currency
+      currency_amounts = PurchaseRequest.where(created_at: month_start..month_end)
+                                       .where.not(estimated_price: nil)
+                                       .group(:currency)
+                                       .sum(:estimated_price)
+      
+      # Add data to the trends
+      currency_amounts.each do |currency, amount|
+        curr = currency.presence || default_currency
+        if @currency_monthly_trends.key?(curr)
+          month_idx = @currency_monthly_trends[curr].index { |m| m[:month] == month_str }
+          @currency_monthly_trends[curr][month_idx][:amount] = amount.round(2) if month_idx
+        end
+      end
+    end
+    
+    # Average response time calculation
+    closed_requests = PurchaseRequest.joins(:status)
+                                    .where(purchase_request_statuses: { is_closed: true })
+                                    
+    if closed_requests.any?
+      total_days = closed_requests.sum do |request|
+        if request.updated_at && request.created_at
+          (request.updated_at.to_date - request.created_at.to_date).to_i
+        else
+          0
+        end
+      end
+      @avg_response_days = (total_days.to_f / closed_requests.count).round(1)
+    else
+      @avg_response_days = 0
+    end
+    
+    # Top vendors - with better sorting by total cost
     vendor_counts = PurchaseRequest.where.not(vendor: [nil, ''])
                                   .group(:vendor)
                                   .count
                                   
     vendor_costs = PurchaseRequest.where.not(vendor: [nil, ''])
                                  .where.not(estimated_price: nil)
+                                 .where(currency: default_currency)
                                  .group(:vendor)
                                  .sum(:estimated_price)
                                  
@@ -173,7 +308,7 @@ class PurchaseRequestsController < ApplicationController
         count: count,
         total_cost: vendor_costs[vendor] || 0
       }
-    end.sort_by { |v| -v[:count] }.take(5)
+    end.sort_by { |v| -v[:total_cost] }.take(5)
   end
   
   private
