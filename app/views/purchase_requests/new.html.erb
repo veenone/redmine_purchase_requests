@@ -5,7 +5,7 @@
 <% html_title l(:label_new_purchase_request) %>
 
 <div class="contextual">
-  <%= link_to l(:button_back_to_list), purchase_requests_path, class: 'icon icon-back button-action', title: l(:button_back_to_list) %>
+  <%= link_to l(:button_back_to_list), project_purchase_requests_path(@project), class: 'icon icon-back button-action', title: l(:button_back_to_list) %>
 </div>
 
 <div class="purchase-request-header">
@@ -25,7 +25,7 @@
   </div>
   
   <div class="purchase-request-form tab-content" id="tab-content">
-    <%= form_with(model: @purchase_request, local: true, multipart: true, id: 'purchase-request-form') do |form| %>
+    <%= form_with(model: @purchase_request, url: project_purchase_requests_path(@project), local: true, multipart: true, id: 'purchase-request-form') do |form| %>
       <% if @purchase_request.errors.any? %>
         <div id="error_explanation" class="flash error">
           <h3><%= l(:label_form_contains_errors, count: @purchase_request.errors.count) %></h3>
@@ -146,7 +146,7 @@
       
       <div class="form-actions">
         <%= form.submit l(:button_create), class: 'button-positive' %>
-        <%= link_to l(:button_cancel), purchase_requests_path, class: 'button-negative' %>
+        <%= link_to l(:button_cancel), project_purchase_requests_path(@project), class: 'button-negative' %>
       </div>
     <% end %>
   </div>

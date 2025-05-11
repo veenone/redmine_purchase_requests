@@ -7,8 +7,8 @@
 <% html_title "#{l(:label_edit_purchase_request)} ##{@purchase_request.id}: #{h(@purchase_request.title)}" %>
 
 <div class="contextual">
-  <%= link_to l(:button_show), purchase_request_path(@purchase_request), class: 'icon icon-magnifier button-action', title: l(:button_show) %>
-  <%= link_to l(:button_back_to_list), purchase_requests_path, class: 'icon icon-back button-action', title: l(:button_back_to_list) %>
+  <%= link_to l(:button_show), project_purchase_request_path(@project, @purchase_request), class: 'icon icon-magnifier button-action', title: l(:button_show) %>
+  <%= link_to l(:button_back_to_list), project_purchase_requests_path(@project), class: 'icon icon-back button-action', title: l(:button_back_to_list) %>
 </div>
 
 <div class="purchase-request-header">
@@ -155,7 +155,7 @@
       
       <div class="form-actions">
         <%= form.submit l(:button_save), class: 'button-positive' %>
-        <%= link_to l(:button_cancel), purchase_request_path(@purchase_request), class: 'button-negative' %>
+        <%= link_to l(:button_cancel), project_purchase_request_path(@project, @purchase_request), class: 'button-negative' %>
       </div>
     <% end %>
   </div>

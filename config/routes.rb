@@ -1,13 +1,13 @@
-# Add routes for purchase request statuses
+# Routes for purchase requests plugin
 
 Rails.application.routes.draw do
-  resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
-  
-  resources :purchase_requests do
-    collection do
-      get 'dashboard'
+  resources :projects do
+    resources :purchase_requests do
+      collection do
+        get 'dashboard'
+      end
     end
   end
-  
-  # Include any other routes your plugin needs
+
+  resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
 end

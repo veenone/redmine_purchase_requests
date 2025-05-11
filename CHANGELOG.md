@@ -5,7 +5,28 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2025-04-19
+## [0.0.6] - 2025-05-12
+
+### Added
+- Project-level scoping for purchase requests
+- Multi-currency support with exchange rates
+- Support for Indonesian Rupiah (IDR) currency
+- Dashboard with currency conversion statistics
+
+### Fixed
+- Fixed parameter handling for exchange rates in settings
+- Fixed currency selection in new/edit forms
+- Updated top vendors and top requesters calculations to consider currency conversion
+- Corrected path helpers throughout the plugin for project-level scoping
+- Fixed dashboard menu visibility in project context
+
+### Technical Details
+- Added migration to include project_id in purchase requests table
+- Updated controllers to handle project-scoped routes properly
+- Implemented proper exchange rate conversion for financial calculations
+- Enhanced dashboard view with multi-currency support
+
+## [0.0.5] - 2025-04-19
 
 ### Added
 - Initial release of the Purchase Requests plugin

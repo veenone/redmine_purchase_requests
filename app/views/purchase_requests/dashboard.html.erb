@@ -212,8 +212,8 @@
 <h2><%= l(:label_purchase_request_dashboard) %></h2>
 
 <div class="contextual">
-  <%= link_to l(:label_purchase_requests), purchase_requests_path, class: 'icon icon-list' %>
-  <%= link_to l(:label_new_purchase_request), new_purchase_request_path, class: 'icon icon-add' %>
+  <%= link_to l(:label_purchase_requests), project_purchase_requests_path(@project), class: 'icon icon-list' %>
+  <%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'icon icon-add' %>
 </div>
 
 <div class="summary-stats">
@@ -346,11 +346,18 @@
           <tr>
             <th><%= l(:field_user) %></th>
             <th><%= l(:label_requests) %></th>
+            <th><%= l(:label_total_cost) %></th>
           </tr>
+          <% 
+            # Get default currency for requesters table
+            requester_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+            requester_symbol = local_currency_symbol(requester_currency, symbol_map) 
+          %>
           <% @top_requesters.each do |user| %>
             <tr>
-              <td><%= link_to_user user %></td>
+              <td><%= link_to(user.name.presence || user.login, user_path(user)) %></td>
               <td><%= user.request_count %></td>
+              <td class="stat-currency"><%= requester_symbol %><%= number_with_precision(user.total_cost, precision: 2, delimiter: ',') %></td>
             </tr>
           <% end %>
         </table>
@@ -386,8 +393,8 @@
           </tr>
           <% @recent_requests.each do |request| %>
             <tr>
-              <td><%= link_to "##{request.id}", purchase_request_path(request) %></td>
-              <td><%= link_to truncate(request.title, length: 30), purchase_request_path(request) %></td>
+              <td><%= link_to "##{request.id}", project_purchase_request_path(@project, request) %></td>
+              <td><%= link_to truncate(request.title, length: 30), project_purchase_request_path(@project, request) %></td>
               <td>
                 <span class="status-badge" style="background-color: <%= request.status.color.presence || '#777777' %>; color: white; padding: 2px 5px; border-radius: 3px; font-size: 11px;">
                   <%= request.status.name %>
@@ -536,8 +543,8 @@
 <div class="box">
   <p><%= l(:text_dashboard_info) %></p>
   <p>
-    <%= link_to l(:label_view_all_requests), purchase_requests_path, class: 'button' %>
-    <%= link_to l(:label_new_purchase_request), new_purchase_request_path, class: 'button button-positive' %>
+    <%= link_to l(:label_view_all_requests), project_purchase_requests_path(@project), class: 'button' %>
+    <%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'button button-positive' %>
   </p>
 </div>
 

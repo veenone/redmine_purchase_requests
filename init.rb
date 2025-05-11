@@ -8,7 +8,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
-  # Add permissions
+  # Add permissions - explicitly specify project context
   project_module :purchase_requests do
     permission :view_purchase_requests, { purchase_requests: [:index, :show] }
     permission :add_purchase_requests, { purchase_requests: [:new, :create] }
@@ -18,14 +18,18 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
   end
   
-  # Add menu items
+  # Fix project menu items
   menu :project_menu, :purchase_requests, 
        { controller: 'purchase_requests', action: 'index' },
-       caption: :label_purchase_requests, after: :issues, param: :project_id
+       caption: :label_purchase_requests,
+       after: :issues,
+       param: :project_id
 
   menu :project_menu, :purchase_requests_dashboard, 
        { controller: 'purchase_requests', action: 'dashboard' },
-       caption: :label_purchase_request_dashboard, after: :purchase_requests
+       caption: :label_purchase_request_dashboard,
+       param: :project_id,
+       parent: :purchase_requests
   
   # Add settings page with empty exchange_rates hash
   settings default: {

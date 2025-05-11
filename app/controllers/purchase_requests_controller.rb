@@ -1,40 +1,41 @@
 class PurchaseRequestsController < ApplicationController
+  before_action :find_project, only: [:index, :new, :create, :dashboard]
   before_action :find_purchase_request, only: [:show, :edit, :update, :destroy]
-  before_action :authorize_global
+  before_action :authorize, except: [:show]
+  
+  # Set the current menu item for proper highlighting
+  menu_item :purchase_requests, only: [:index, :new, :create, :show, :edit, :update, :destroy]
+  menu_item :purchase_requests_dashboard, only: [:dashboard]
   
   def index
-    @purchase_requests = PurchaseRequest.includes(:status)
+    @limit = per_page_option
+    
+    scope = @project ? @project.purchase_requests : PurchaseRequest
     
     if params[:status_id].present?
-      @purchase_requests = @purchase_requests.where(status_id: params[:status_id])
+      scope = scope.where(status_id: params[:status_id])
     end
     
     if params[:search].present?
-      search = "%#{params[:search].downcase}%"
-      @purchase_requests = @purchase_requests.where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", search, search)
+      search_terms = "%#{params[:search].downcase}%"
+      scope = scope.where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", search_terms, search_terms)
     end
     
-    @purchase_requests = @purchase_requests.order(created_at: :desc)
-    
-    # Simple pagination that works across all Redmine versions
-    @limit = per_page_option
-    @purchase_request_count = @purchase_requests.count
-    @page = params[:page].to_i > 0 ? params[:page].to_i : 1
-    @pages = Redmine::Pagination::Paginator.new(@purchase_request_count, @limit, @page)
-    @offset = (@page - 1) * @limit
-    
-    @purchase_requests = @purchase_requests.limit(@limit).offset(@offset)
+    @purchase_request_count = scope.count
+    @pages = Paginator.new @purchase_request_count, @limit, params[:page]
+    @offset ||= @pages.offset
+    @purchase_requests = scope.order(created_at: :desc).limit(@limit).offset(@offset)
   end
   
   def show
   end
   
   def new
-    @purchase_request = PurchaseRequest.new
+    @purchase_request = @project.purchase_requests.build
   end
   
   def create
-    @purchase_request = PurchaseRequest.new(purchase_request_params)
+    @purchase_request = @project.purchase_requests.new(purchase_request_params)
     @purchase_request.user = User.current
     
     # Set default status if none provided
@@ -53,7 +54,7 @@ class PurchaseRequestsController < ApplicationController
       end
       
       flash[:notice] = l(:notice_purchase_request_created)
-      redirect_to purchase_request_path(@purchase_request)
+      redirect_to project_purchase_request_path(@project, @purchase_request)
     else
       render :new
     end
@@ -69,7 +70,7 @@ class PurchaseRequestsController < ApplicationController
       render_attachment_warning_if_needed(@purchase_request)
       
       flash[:notice] = l(:notice_purchase_request_updated)
-      redirect_to purchase_request_path(@purchase_request)
+      redirect_to project_purchase_request_path(@project, @purchase_request)
     else
       render :edit
     end
@@ -78,18 +79,42 @@ class PurchaseRequestsController < ApplicationController
   def destroy
     @purchase_request.destroy
     flash[:notice] = l(:notice_purchase_request_deleted)
-    redirect_to purchase_requests_path
+    redirect_to project_purchase_requests_path(@project)
   end
   
   def dashboard
-    # Collect general statistics
-    @total_requests = PurchaseRequest.count
-    @open_requests = PurchaseRequest.open.count
-    @closed_requests = PurchaseRequest.closed.count
+    # Collect general statistics for the current project
+    scope = @project ? @project.purchase_requests : PurchaseRequest
+    
+    @total_requests = scope.count
+    @open_requests = scope.open.count
+    @closed_requests = scope.closed.count
+    
+    # Get default currency for all conversions
+    default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    
+    # Calculate total costs with currency conversion
+    @total_estimated_cost = 0
+    @pending_cost = 0
+    @approved_cost = 0
+    
+    # Process all requests with prices
+    scope.where.not(estimated_price: nil).each do |request|
+      source_currency = request.currency.presence || default_currency
+      converted_price = helpers.convert_currency(request.estimated_price, source_currency, default_currency)
+      
+      @total_estimated_cost += converted_price
+      
+      if request.status.is_closed?
+        @approved_cost += converted_price
+      else
+        @pending_cost += converted_price
+      end
+    end
     
     # Status distribution - with percentage calculation for ApexCharts
     @status_distribution = PurchaseRequestStatus.all.map do |status|
-      request_count = PurchaseRequest.where(status_id: status.id).count
+      request_count = scope.where(status_id: status.id).count
       percentage = @total_requests > 0 ? (request_count.to_f / @total_requests * 100).round(1) : 0
       {
         name: status.name,
@@ -101,10 +126,10 @@ class PurchaseRequestsController < ApplicationController
     
     # Priority distribution - enhanced for ApexCharts
     @priority_distribution = {
-      urgent: PurchaseRequest.where(priority: 'urgent').count,
-      high: PurchaseRequest.where(priority: 'high').count,
-      normal: PurchaseRequest.where(priority: 'normal').count,
-      low: PurchaseRequest.where(priority: 'low').count
+      urgent: scope.where(priority: 'urgent').count,
+      high: scope.where(priority: 'high').count,
+      normal: scope.where(priority: 'normal').count,
+      low: scope.where(priority: 'low').count
     }
     
     # Calculate total for priority percentage
@@ -122,7 +147,7 @@ class PurchaseRequestsController < ApplicationController
     @approved_cost = 0
     
     # Get all purchase requests with prices
-    requests_with_prices = PurchaseRequest.where.not(estimated_price: nil)
+    requests_with_prices = scope.where.not(estimated_price: nil)
     
     # Process each request and convert currency
     requests_with_prices.each do |request|
@@ -149,14 +174,14 @@ class PurchaseRequestsController < ApplicationController
     
     # Currency distribution with original amounts
     @currency_distribution = {}
-    PurchaseRequest.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+    scope.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
       curr = currency.presence || default_currency
       @currency_distribution[curr] = amount.round(2)
     end
     
     # Currency distribution with converted amounts for comparison
     @converted_currency_distribution = {}
-    PurchaseRequest.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+    scope.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
       curr = currency.presence || default_currency
       converted_amount = helpers.convert_currency(amount, curr, default_currency)
       
@@ -173,7 +198,7 @@ class PurchaseRequestsController < ApplicationController
       month_end = i.months.ago.end_of_month
       
       # Get all requests for this month
-      requests = PurchaseRequest.where(created_at: month_start..month_end)
+      requests = scope.where(created_at: month_start..month_end)
       count = requests.count
       
       # Calculate converted total for the month
@@ -198,7 +223,7 @@ class PurchaseRequestsController < ApplicationController
     }
     
     # Top vendors with multi-currency support using helpers
-    vendor_requests = PurchaseRequest.where.not(vendor: [nil, ''])
+    vendor_requests = scope.where.not(vendor: [nil, ''])
                                     .where.not(estimated_price: nil)
     
     vendor_data = {}
@@ -226,7 +251,7 @@ class PurchaseRequestsController < ApplicationController
     end.sort_by { |v| -v[:total_cost] }.take(5)
     
     # Get requests by currency for pie chart
-    @requests_by_currency = PurchaseRequest.where.not(estimated_price: nil)
+    @requests_by_currency = scope.where.not(estimated_price: nil)
                                           .group(:currency)
                                           .count
                                           .transform_keys { |k| k.presence || default_currency }
@@ -235,7 +260,7 @@ class PurchaseRequestsController < ApplicationController
     @currency_monthly_trends = {}
     
     # Get all currencies used in the system
-    all_used_currencies = PurchaseRequest.where.not(estimated_price: nil)
+    all_used_currencies = scope.where.not(estimated_price: nil)
                                         .pluck(:currency)
                                         .compact
                                         .uniq
@@ -259,7 +284,7 @@ class PurchaseRequestsController < ApplicationController
       month_str = i.months.ago.strftime("%b %Y")
       
       # Get monthly totals by currency
-      currency_amounts = PurchaseRequest.where(created_at: month_start..month_end)
+      currency_amounts = scope.where(created_at: month_start..month_end)
                                        .where.not(estimated_price: nil)
                                        .group(:currency)
                                        .sum(:estimated_price)
@@ -275,7 +300,7 @@ class PurchaseRequestsController < ApplicationController
     end
     
     # Average response time calculation
-    closed_requests = PurchaseRequest.joins(:status)
+    closed_requests = scope.joins(:status)
                                     .where(purchase_request_statuses: { is_closed: true })
                                     
     if closed_requests.any?
@@ -292,11 +317,11 @@ class PurchaseRequestsController < ApplicationController
     end
     
     # Top vendors - with better sorting by total cost
-    vendor_counts = PurchaseRequest.where.not(vendor: [nil, ''])
+    vendor_counts = scope.where.not(vendor: [nil, ''])
                                   .group(:vendor)
                                   .count
                                   
-    vendor_costs = PurchaseRequest.where.not(vendor: [nil, ''])
+    vendor_costs = scope.where.not(vendor: [nil, ''])
                                  .where.not(estimated_price: nil)
                                  .where(currency: default_currency)
                                  .group(:vendor)
@@ -309,12 +334,55 @@ class PurchaseRequestsController < ApplicationController
         total_cost: vendor_costs[vendor] || 0
       }
     end.sort_by { |v| -v[:total_cost] }.take(5)
+    
+    # TOP REQUESTERS - Improved with multi-currency support
+    # Get users with purchase requests - explicitly select user fields
+    @top_requesters = User.joins(:purchase_requests)
+                      .select('users.*, COUNT(purchase_requests.id) as request_count')
+                      .group('users.id')
+                      .order('request_count DESC')
+                      .limit(5)
+                      .to_a
+  
+    # Add total cost for each requester with currency conversion
+    @top_requesters.each do |user|
+      # Get all requests by this user that have a price
+      user_priced_requests = scope.where(user_id: user.id)
+                                           .where.not(estimated_price: nil)
+      
+      # Calculate total cost with currency conversion
+      total_cost = 0
+      
+      user_priced_requests.each do |request|
+        source_currency = request.currency.presence || default_currency
+        converted_price = helpers.convert_currency(request.estimated_price, source_currency, default_currency)
+        total_cost += converted_price
+      end
+      
+      # Store the total cost with the user
+      user.instance_variable_set(:@total_cost, total_cost.round(2))
+      
+      # Define a method to access the total cost
+      user.define_singleton_method(:total_cost) do
+        @total_cost
+      end
+    end
+  
+    # Sort requesters by total cost if available, otherwise by request count
+    @top_requesters.sort_by! { |user| [-user.total_cost, -user.request_count] }
   end
   
   private
   
+  def find_project
+    @project = Project.find(params[:project_id])
+  rescue ActiveRecord::RecordNotFound
+    render_404
+  end
+  
   def find_purchase_request
     @purchase_request = PurchaseRequest.find(params[:id])
+    @project = @purchase_request.project
   rescue ActiveRecord::RecordNotFound
     render_404
   end
@@ -334,6 +402,7 @@ class PurchaseRequest < ActiveRecord::Base
   
   belongs_to :user
   belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
+  belongs_to :project
   
   # Define the model as attachable
   acts_as_attachable
