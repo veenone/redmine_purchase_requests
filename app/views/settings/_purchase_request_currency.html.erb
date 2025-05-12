@@ -3,30 +3,35 @@
 
 <p>
   <label><%= l(:label_default_currency) %></label>
+  <% 
+    currency_options = [
+      ['US Dollar ($)', 'USD'],
+      ['Euro (€)', 'EUR'],
+      ['British Pound (£)', 'GBP'],
+      ['Japanese Yen (¥)', 'JPY'],
+      ['Canadian Dollar (C$)', 'CAD'],
+      ['Australian Dollar (A$)', 'AUD'],
+      ['Swiss Franc (CHF)', 'CHF'],
+      ['Chinese Yuan (¥)', 'CNY'],
+      ['Swedish Krona (kr)', 'SEK'],
+      ['New Zealand Dollar (NZ$)', 'NZD'],
+      ['Mexican Peso (Mex$)', 'MXN'],
+      ['Singapore Dollar (S$)', 'SGD'],
+      ['Hong Kong Dollar (HK$)', 'HKD'],
+      ['Indonesian Rupiah (Rp)', 'IDR'],
+      ['Norwegian Krone (kr)', 'NOK'],
+      ['South Korean Won (₩)', 'KRW'],
+      ['Turkish Lira (₺)', 'TRY'],
+      ['Russian Ruble (₽)', 'RUB'],
+      ['Indian Rupee (₹)', 'INR'],
+      ['Brazilian Real (R$)', 'BRL'],
+      ['South African Rand (R)', 'ZAR']
+    ]
+    # Ensure the current setting is a string to avoid comparison issues
+    current_currency = @settings['default_currency'].to_s || 'USD'
+  %>
   <%= select_tag 'settings[default_currency]',
-                options_for_select([
-                  ['US Dollar ($)', 'USD'],
-                  ['Euro (€)', 'EUR'],
-                  ['British Pound (£)', 'GBP'],
-                  ['Japanese Yen (¥)', 'JPY'],
-                  ['Canadian Dollar (C$)', 'CAD'],
-                  ['Australian Dollar (A$)', 'AUD'],
-                  ['Swiss Franc (CHF)', 'CHF'],
-                  ['Chinese Yuan (¥)', 'CNY'],
-                  ['Swedish Krona (kr)', 'SEK'],
-                  ['New Zealand Dollar (NZ$)', 'NZD'],
-                  ['Mexican Peso (Mex$)', 'MXN'],
-                  ['Singapore Dollar (S$)', 'SGD'],
-                  ['Hong Kong Dollar (HK$)', 'HKD'],
-                  ['Indonesian Rupiah (Rp)', 'IDR'],
-                  ['Norwegian Krone (kr)', 'NOK'],
-                  ['South Korean Won (₩)', 'KRW'],
-                  ['Turkish Lira (₺)', 'TRY'],
-                  ['Russian Ruble (₽)', 'RUB'],
-                  ['Indian Rupee (₹)', 'INR'],
-                  ['Brazilian Real (R$)', 'BRL'],
-                  ['South African Rand (R)', 'ZAR']
-                ], @settings['default_currency'] || 'USD'),
+                options_for_select(currency_options, current_currency),
                 class: 'currency-select' %>
 </p>
 

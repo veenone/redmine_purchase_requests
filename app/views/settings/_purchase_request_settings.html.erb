@@ -31,6 +31,9 @@
   $(function() {
     if (location.hash != '') {
       showTab(location.hash.replace(/^#/, ''));
+    } else {
+      // Default to the general tab if no hash is specified
+      showTab('general');
     }
   });
 <% end %>

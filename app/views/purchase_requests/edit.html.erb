@@ -40,7 +40,11 @@
   </div>
   
   <div class="purchase-request-form tab-content" id="tab-content">
-    <%= form_with(model: @purchase_request, local: true, multipart: true, id: 'purchase-request-form') do |form| %>
+    <%= form_with(model: @purchase_request, 
+                 url: project_purchase_request_path(@project, @purchase_request),
+                 local: true, 
+                 multipart: true, 
+                 id: 'purchase-request-form') do |form| %>
       <% if @purchase_request.errors.any? %>
         <div id="error_explanation" class="flash error">
           <h3><%= l(:label_form_contains_errors, count: @purchase_request.errors.count) %></h3>
