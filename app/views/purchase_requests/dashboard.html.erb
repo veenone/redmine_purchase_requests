@@ -796,15 +796,16 @@
     
     // Monthly Trends by Currency Chart
     <% 
-      # Prepare data for the chart
+      # Prepare data for the chart with properly converted amounts
       currency_monthly_data = []
       if @currency_monthly_trends.present?
         @currency_monthly_trends.each do |currency, data|
-          next if data.all? { |m| m[:amount] == 0 } # Skip currencies with no data
+          # Skip currencies with no data
+          next if data.all? { |m| m[:converted_amount] == 0 }
           
           currency_monthly_data.push({
             name: currency,
-            data: data.map { |m| m[:amount] }
+            data: data.map { |m| m[:converted_amount] }  # Use converted_amount instead of amount
           })
         end
       end

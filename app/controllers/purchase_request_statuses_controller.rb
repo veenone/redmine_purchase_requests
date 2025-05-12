@@ -47,6 +47,6 @@ class PurchaseRequestStatusesController < ApplicationController
   private
   
   def purchase_request_status_params
-    params.require(:purchase_request_status).permit(:name, :position, :is_closed)
+    params.require(:purchase_request_status).permit(:name, :position, :is_closed, :color, :is_default)
   end
 end

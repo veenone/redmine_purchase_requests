@@ -1,36 +1,56 @@
-<h3><%= l(:label_purchase_request_statuses) %></h3>
+<div class="box tabular settings">
+  <h3><%= l(:label_purchase_request_statuses) %></h3>
+  
+  <div class="contextual">
+    <%= link_to l(:label_new_status), new_purchase_request_status_path, class: 'icon icon-add' %>
+  </div>
 
-<table class="list">
-  <thead>
-    <tr>
-      <th><%= l(:label_status_name) %></th>
-      <th><%= l(:label_status_position) %></th>
-      <th><%= l(:label_status_is_closed) %></th>
-      <th><%= l(:label_status_color) %></th>
-      <th><%= l(:label_status_is_default) %></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% PurchaseRequestStatus.order(:position).each do |status| %>
+  <table class="list" style="width: 100%; max-width: 800px;">
+    <thead>
       <tr>
-        <td><%= status.name %></td>
-        <td><%= status.position %></td>
-        <td><%= checked_image status.is_closed? %></td>
-        <td style="background-color: <%= status.color.presence || '#777777' %>"></td>
-        <td class="is-default">
-          <%= checked_image status.is_default? %>
-        </td>
-        <td class="buttons">
-          <%= link_to l(:button_edit), edit_purchase_request_status_path(status), class: 'icon icon-edit' %>
-          <%= link_to l(:button_delete), purchase_request_status_path(status), 
-                method: :delete, 
-                class: 'icon icon-del', 
-                data: {confirm: l(:text_are_you_sure)} %>
-        </td>
+        <th style="width: 30%"><%= l(:label_status_name) %></th>
+        <th style="width: 10%"><%= l(:label_status_position) %></th>
+        <th style="width: 15%"><%= l(:label_status_is_closed) %></th>
+        <th style="width: 15%"><%= l(:label_status_color) %></th>
+        <th style="width: 15%"><%= l(:label_status_is_default) %></th>
+        <th style="width: 15%"></th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% PurchaseRequestStatus.order(:position).each do |status| %>
+        <tr>
+          <td><%= status.name %></td>
+          <td><%= status.position %></td>
+          <td><%= checked_image status.is_closed? %></td>
+          <td style="text-align: center;">
+            <span class="color-preview" style="display: inline-block; background-color: <%= status.color.presence || '#777777' %>; width: 25px; height: 25px; vertical-align: middle; border-radius: 4px;"></span>
+            <span><%= status.color.presence || '#777777' %></span>
+          </td>
+          <td class="is-default">
+            <%= checked_image status.is_default? %>
+          </td>
+          <td class="buttons">
+            <%= link_to l(:button_edit), edit_purchase_request_status_path(status), class: 'icon icon-edit' %>
+            <%= link_to l(:button_delete), purchase_request_status_path(status), 
+                  method: :delete, 
+                  class: 'icon icon-del', 
+                  data: {confirm: l(:text_are_you_sure)} %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 
-<p><%= link_to l(:label_new_status), new_purchase_request_status_path, class: 'icon icon-add' %></p>
+  <% if PurchaseRequestStatus.count == 0 %>
+    <p class="nodata"><%= l(:label_no_data) %></p>
+  <% end %>
+</div>
+
+<style>
+  table.list th, table.list td {
+    padding: 8px;
+  }
+  .color-preview {
+    border: 1px solid #ddd;
+  }
+</style>

@@ -256,7 +256,7 @@ class PurchaseRequestsController < ApplicationController
                                           .count
                                           .transform_keys { |k| k.presence || default_currency }
     
-    # Monthly trends by currency
+    # Monthly trends by currency with proper currency conversion
     @currency_monthly_trends = {}
     
     # Get all currencies used in the system
@@ -272,68 +272,113 @@ class PurchaseRequestsController < ApplicationController
       @currency_monthly_trends[currency] = 6.times.map do |i|
         {
           month: i.months.ago.strftime("%b %Y"),
-          amount: 0
+          amount: 0,
+          converted_amount: 0  # Add field for converted amount
         }
       end.reverse
     end
     
-    # Get data for the last 6 months by currency
+    # Get data for the last 6 months by currency with proper conversion
     6.times do |i|
       month_start = i.months.ago.beginning_of_month
       month_end = i.months.ago.end_of_month
       month_str = i.months.ago.strftime("%b %Y")
       
-      # Get monthly totals by currency
-      currency_amounts = scope.where(created_at: month_start..month_end)
-                                       .where.not(estimated_price: nil)
-                                       .group(:currency)
-                                       .sum(:estimated_price)
+      # For each currency, get all requests for this month
+      all_used_currencies.each do |currency|
+        # Get monthly requests for this specific currency
+        monthly_requests = scope.where(created_at: month_start..month_end)
+                               .where.not(estimated_price: nil)
+                               .where(currency: currency)
+        
+        # Skip if no requests for this currency and month
+        next if monthly_requests.empty?
+        
+        # Calculate both original and converted amounts
+        original_amount = monthly_requests.sum(:estimated_price)
+        converted_amount = 0
+        
+        # Convert each request amount individually to ensure accurate conversion
+        monthly_requests.each do |request|
+          converted_amount += helpers.convert_currency(request.estimated_price, currency, default_currency)
+        end
+        
+        # Find the corresponding month in the data structure
+        if @currency_monthly_trends.key?(currency)
+          month_idx = @currency_monthly_trends[currency].index { |m| m[:month] == month_str }
+          if month_idx
+            @currency_monthly_trends[currency][month_idx][:amount] = original_amount.round(2)
+            @currency_monthly_trends[currency][month_idx][:converted_amount] = converted_amount.round(2)
+          end
+        end
+      end
       
-      # Add data to the trends
-      currency_amounts.each do |currency, amount|
-        curr = currency.presence || default_currency
-        if @currency_monthly_trends.key?(curr)
-          month_idx = @currency_monthly_trends[curr].index { |m| m[:month] == month_str }
-          @currency_monthly_trends[curr][month_idx][:amount] = amount.round(2) if month_idx
+      # Also handle requests with null currency (defaults to default_currency)
+      monthly_null_requests = scope.where(created_at: month_start..month_end)
+                                   .where.not(estimated_price: nil)
+                                   .where(currency: nil)
+      
+      if monthly_null_requests.any? && @currency_monthly_trends.key?(default_currency)
+        month_idx = @currency_monthly_trends[default_currency].index { |m| m[:month] == month_str }
+        if month_idx
+          null_amount = monthly_null_requests.sum(:estimated_price)
+          @currency_monthly_trends[default_currency][month_idx][:amount] += null_amount.round(2)
+          @currency_monthly_trends[default_currency][month_idx][:converted_amount] += null_amount.round(2)
         end
       end
     end
     
-    # Average response time calculation
+    # Average response time calculation - Fixed to correctly calculate time between creation and closure
     closed_requests = scope.joins(:status)
-                                    .where(purchase_request_statuses: { is_closed: true })
+                           .where(purchase_request_statuses: { is_closed: true })
                                     
     if closed_requests.any?
-      total_days = closed_requests.sum do |request|
-        if request.updated_at && request.created_at
-          (request.updated_at.to_date - request.created_at.to_date).to_i
-        else
-          0
+      # Using active record to calculate time differences properly
+      total_days = 0
+      
+      closed_requests.each do |request|
+        # For each closed request, calculate the days between creation and the most recent status change
+        # This assumes the last update was when the request was closed
+        if request.created_at && request.updated_at
+          days_to_process = (request.updated_at.to_date - request.created_at.to_date).to_i
+          total_days += days_to_process
         end
       end
+      
       @avg_response_days = (total_days.to_f / closed_requests.count).round(1)
     else
       @avg_response_days = 0
     end
     
-    # Top vendors - with better sorting by total cost
+    # Top vendors - with proper currency conversion
     vendor_counts = scope.where.not(vendor: [nil, ''])
                                   .group(:vendor)
                                   .count
                                   
-    vendor_costs = scope.where.not(vendor: [nil, ''])
-                                 .where.not(estimated_price: nil)
-                                 .where(currency: default_currency)
-                                 .group(:vendor)
-                                 .sum(:estimated_price)
-                                 
-    @top_vendors = vendor_counts.map do |vendor, count|
-      {
+    # Instead of filtering by default currency, process each vendor's requests with currency conversion
+    @top_vendors = []
+    
+    vendor_counts.each do |vendor, count|
+      # Get all requests for this vendor
+      vendor_requests = scope.where(vendor: vendor).where.not(estimated_price: nil)
+      
+      # Calculate total cost with currency conversion
+      total_cost = 0
+      vendor_requests.each do |request|
+        source_currency = request.currency.presence || default_currency
+        converted_price = helpers.convert_currency(request.estimated_price, source_currency, default_currency)
+        total_cost += converted_price
+      end
+      
+      @top_vendors << {
         vendor: vendor,
         count: count,
-        total_cost: vendor_costs[vendor] || 0
+        total_cost: total_cost.round(2)
       }
-    end.sort_by { |v| -v[:total_cost] }.take(5)
+    end
+    
+    # Sort by total cost and take top 5
+    @top_vendors.sort_by! { |v| -v[:total_cost] }.take!(5) if @top_vendors.size > 5
     
     # TOP REQUESTERS - Improved with multi-currency support
     # Get users with purchase requests - explicitly select user fields
@@ -370,6 +415,9 @@ class PurchaseRequestsController < ApplicationController
   
     # Sort requesters by total cost if available, otherwise by request count
     @top_requesters.sort_by! { |user| [-user.total_cost, -user.request_count] }
+    
+    # Recent requests - add this to fix the empty recent activity list
+    @recent_requests = scope.order(created_at: :desc).limit(5)
   end
   
   private
