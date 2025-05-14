@@ -1,0 +1,13 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/new.html.erb %>
+<% html_title l(:label_vendor_new) %>
+
+<h2><%= l(:label_vendor_new) %></h2>
+
+<%= form_with(model: @vendor, local: true) do |f| %>
+  <%= render partial: 'form', locals: { f: f } %>
+  
+  <p>
+    <%= f.submit l(:button_create) %>
+    <%= link_to l(:button_cancel), vendors_path %>
+  </p>
+<% end %>

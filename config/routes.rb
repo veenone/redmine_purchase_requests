@@ -10,4 +10,11 @@ Rails.application.routes.draw do
   end
 
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
+  
+  resources :vendors, except: [:show] do
+    collection do
+      get 'autocomplete'
+      post 'migrate_from_settings'
+    end
+  end
 end

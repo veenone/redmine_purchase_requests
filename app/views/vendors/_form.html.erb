@@ -1,0 +1,34 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/_form.html.erb %>
+<%= error_messages_for 'vendor' %>
+
+<div class="box tabular">
+  <p>
+    <%= f.label :name, l(:field_vendor_name), class: 'required' %><span class="required"> *</span>
+    <%= f.text_field :name, required: true, size: 40 %>
+  </p>
+  
+  <p>
+    <%= f.label :vendor_id, l(:field_vendor_id) %>
+    <%= f.text_field :vendor_id, size: 30 %>
+  </p>
+  
+  <p>
+    <%= f.label :address, l(:field_address) %>
+    <%= f.text_area :address, rows: 3, cols: 40 %>
+  </p>
+  
+  <p>
+    <%= f.label :phone, l(:field_phone) %>
+    <%= f.text_field :phone, size: 30 %>
+  </p>
+  
+  <p>
+    <%= f.label :contact_person, l(:field_contact_person) %>
+    <%= f.text_field :contact_person, size: 40 %>
+  </p>
+  
+  <p>
+    <%= f.label :email, l(:field_email) %>
+    <%= f.email_field :email, size: 40 %>
+  </p>
+</div>

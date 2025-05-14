@@ -1,6 +1,7 @@
 class PurchaseRequest < ActiveRecord::Base
   belongs_to :user
   belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
+  belongs_to :vendor, optional: true
   
   # Include the attachable module from Redmine
   include Redmine::Acts::Attachable
@@ -9,7 +10,7 @@ class PurchaseRequest < ActiveRecord::Base
   # For Rails 3.x/4.x compatibility
   if Redmine::VERSION::MAJOR < 5
     attr_accessible :title, :description, :status_id, :product_url, 
-                   :estimated_price, :vendor, :priority, :due_date, 
+                   :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
                    :notify_manager, :notes, :currency
   end
   
@@ -43,6 +44,29 @@ class PurchaseRequest < ActiveRecord::Base
   
   def closed?
     status.is_closed?
+  end
+  
+  # Return the vendor name (for backward compatibility)
+  def vendor
+    if vendor_id.present? && (v = Vendor.find_by(id: vendor_id))
+      v.name
+    else
+      read_attribute(:vendor)
+    end
+  end
+  
+  # Set the vendor by name or ID
+  def vendor=(value)
+    if value.is_a?(Integer) || value.to_i.to_s == value.to_s
+      # It's an ID
+      self.vendor_id = value
+    else
+      # It's a name
+      write_attribute(:vendor, value)
+      # Try to find a matching vendor
+      v = Vendor.find_by(name: value)
+      self.vendor_id = v.id if v
+    end
   end
   
   # Method for checking if manager should be notified

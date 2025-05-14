@@ -438,7 +438,7 @@ class PurchaseRequestsController < ApplicationController
   def purchase_request_params
     params.require(:purchase_request).permit(
       :title, :description, :status_id, :product_url, 
-      :estimated_price, :vendor, :priority, :due_date, 
+      :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
       :notify_manager, :notes, :currency
     )
   end

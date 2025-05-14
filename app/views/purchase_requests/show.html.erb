@@ -90,10 +90,52 @@
                 </div>
               <% end %>
               
-              <% if @purchase_request.vendor.present? %>
+              <% if @purchase_request.vendor.present? || @purchase_request.vendor_id.present? %>
                 <div class="grid-row">
                   <span class="label"><%= l(:field_vendor) %>:</span>
-                  <span class="value"><%= @purchase_request.vendor %></span>
+                  <span class="value">
+                    <% 
+                      # Look up vendor from the database if ID is available
+                      vendor_obj = nil
+                      if @purchase_request.vendor_id.present?
+                        vendor_obj = Vendor.find_by(id: @purchase_request.vendor_id) 
+                        if vendor_obj
+                          vendor_name = vendor_obj.name
+                        else
+                          vendor_name = @purchase_request.vendor
+                        end
+                      else
+                        vendor_name = @purchase_request.vendor
+                      end
+                    %>
+                    <%= vendor_name %>
+                    
+                    <% if vendor_obj.present? %>
+                      <div class="vendor-details-display">
+                        <% if vendor_obj.vendor_id.present? %>
+                          <div><strong><%= l(:field_vendor_id) %>:</strong> <%= vendor_obj.vendor_id %></div>
+                        <% end %>
+                        
+                        <% if vendor_obj.address.present? %>
+                          <div><strong><%= l(:field_address) %>:</strong> <%= vendor_obj.address %></div>
+                        <% end %>
+                        
+                        <% if vendor_obj.contact_person.present? %>
+                          <div><strong><%= l(:field_contact_person) %>:</strong> <%= vendor_obj.contact_person %></div>
+                        <% end %>
+                        
+                        <% if vendor_obj.phone.present? %>
+                          <div><strong><%= l(:field_phone) %>:</strong> <%= vendor_obj.phone %></div>
+                        <% end %>
+                        
+                        <% if vendor_obj.email.present? %>
+                          <div><strong><%= l(:field_email) %>:</strong> 
+                            <a href="mailto:<%= vendor_obj.email %>"><%= vendor_obj.email %></a>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </span>
                 </div>
               <% end %>
               
@@ -404,6 +446,20 @@
   
   .attachments {
     padding: 5px 0;
+  }
+
+  /* Vendor details display styling */
+  .vendor-details-display {
+    margin-top: 5px;
+    padding: 8px;
+    background-color: #f5f7fa;
+    border-radius: 3px;
+    border-left: 3px solid #3498db;
+    font-size: 0.9em;
+  }
+  
+  .vendor-details-display div {
+    margin: 3px 0;
   }
 </style>
 

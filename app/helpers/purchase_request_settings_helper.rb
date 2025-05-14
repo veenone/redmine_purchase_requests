@@ -5,7 +5,8 @@ module PurchaseRequestSettingsHelper
     [
       {name: 'general', partial: 'settings/purchase_request_general', label: :label_general},
       {name: 'statuses', partial: 'settings/purchase_request_statuses', label: :label_purchase_request_statuses},
-      {name: 'currency', partial: 'settings/purchase_request_currency', label: :label_currency_settings}
+      {name: 'currency', partial: 'settings/purchase_request_currency', label: :label_currency_settings},
+      {name: 'vendors', partial: 'settings/purchase_request_vendors', label: :label_vendor_settings}
     ]
   end
   

@@ -126,3 +126,32 @@ en:
   text_exchange_rates_setup_info: "Configure exchange rates for currency conversion. All rates should be expressed relative to the default currency."
   text_exchange_rates_note: "These rates will be used to convert amounts in different currencies to the default currency for reporting purposes."
   text_exchange_rate_example: "%{amount} %{currency} = %{converted} %{default_currency}"
+  label_vendor_settings: Vendor Settings
+  label_vendor_list: Vendor List
+  label_allow_custom_vendors: Allow Custom Vendors
+  text_allow_custom_vendors_info: If enabled, users can enter vendor details manually in addition to selecting from the predefined list
+  button_add_vendor: Add Vendor
+  field_vendor_name: Vendor Name
+  field_vendor_id: Vendor ID
+  field_address: Address
+  field_phone: Phone
+  field_contact_person: Contact Person
+  field_email: Email
+  label_select_or_enter_vendor: -- Select vendor or enter manually --
+  label_enter_custom_vendor: Enter custom vendor name
+  label_use_custom_vendor: Use custom vendor
+  label_vendors: Vendors
+  label_vendor_new: New Vendor
+  label_vendor_edit: Edit Vendor
+  label_vendor_management: Vendor Management
+  text_vendor_management_info: Manage vendor information used in purchase requests
+  text_vendor_database_info: Vendors are now stored in the database for better management and reporting. Use the button below to access the vendor management page.
+  label_manage_vendors: Manage Vendors
+  button_migrate_vendors: Migrate Existing Vendors
+  notice_vendor_created: Vendor was successfully created.
+  notice_vendor_updated: Vendor was successfully updated.
+  notice_vendor_deleted: Vendor was successfully deleted.
+  error_vendor_not_deleted: Vendor could not be deleted.
+  notice_vendors_migrated: "%{count} vendors were successfully migrated to the database."
+  warning_no_vendors_migrated: No vendors were migrated. They may already exist in the database.
+  error_no_vendors_to_migrate: No vendors found to migrate.

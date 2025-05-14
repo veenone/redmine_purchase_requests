@@ -1,5 +1,9 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/_form.html.erb %>
-<%= form_with(model: purchase_request, local: true, multipart: true, id: 'purchase-request-form') do |form| %>
+<%= form_with(model: purchase_request, 
+               url: defined?(form_url) ? form_url : nil,
+               local: true, 
+               multipart: true, 
+               id: 'purchase-request-form') do |form| %>
   <% if purchase_request.errors.any? %>
     <div id="error_explanation" class="flash error">
       <h3><%= l(:label_form_contains_errors, count: purchase_request.errors.count) %></h3>
@@ -90,7 +94,72 @@
       <div class="form-row">
         <p>
           <%= form.label :vendor, l(:field_vendor) %>
-          <%= form.text_field :vendor, size: 40, class: 'form-control' %>
+          <% 
+            vendors = Vendor.sorted 
+            allow_custom = Setting.plugin_redmine_purchase_requests['allow_custom_vendors'] == '1'
+            
+            if vendors.any?
+              # Get the current selected vendor if any
+              current_vendor = nil
+              current_vendor_name = nil
+              
+              if purchase_request.vendor_id.present?
+                current_vendor = Vendor.find_by(id: purchase_request.vendor_id)
+                current_vendor_name = current_vendor.try(:name)
+              elsif purchase_request.vendor.present?
+                current_vendor_name = purchase_request.vendor
+              end
+          %>
+            <div class="vendor-selector">
+              <% if Redmine::VERSION::MAJOR >= 4 %>
+                <%= form.select :vendor_id, 
+                              vendors.collect{|v| [v.name, v.id]},
+                              { include_blank: true, selected: purchase_request.vendor_id },
+                              { class: 'vendor-select form-control' } %>
+              <% else %>
+                <%= form.select :vendor_id, 
+                              vendors.collect{|v| [v.name, v.id]},
+                              { include_blank: true },
+                              { class: 'vendor-select form-control' } %>
+              <% end %>
+                          
+              <% if allow_custom %>
+                <%= form.text_field :vendor, size: 40, class: 'form-control vendor-input', 
+                                  style: 'display: none;',
+                                  placeholder: l(:label_enter_custom_vendor) %>
+                <%= check_box_tag 'custom_vendor', '1', purchase_request.vendor_id.blank? && purchase_request.vendor.present?, 
+                                class: 'custom-vendor-checkbox' %>
+                <%= label_tag 'custom_vendor', l(:label_use_custom_vendor), class: 'checkbox-label' %>
+              <% end %>
+            </div>
+            
+            <div class="vendor-details" style="display: none;">
+              <table class="vendor-info-table">
+                <tr id="vendor-id-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_vendor_id) %>:</td>
+                  <td class="vendor-value" id="vendor-id-value"></td>
+                </tr>
+                <tr id="vendor-address-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_address) %>:</td>
+                  <td class="vendor-value" id="vendor-address-value"></td>
+                </tr>
+                <tr id="vendor-contact-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_contact_person) %>:</td>
+                  <td class="vendor-value" id="vendor-contact-value"></td>
+                </tr>
+                <tr id="vendor-phone-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_phone) %>:</td>
+                  <td class="vendor-value" id="vendor-phone-value"></td>
+                </tr>
+                <tr id="vendor-email-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_email) %>:</td>
+                  <td class="vendor-value" id="vendor-email-value"></td>
+                </tr>
+              </table>
+            </div>
+          <% else %>
+            <%= form.text_field :vendor, size: 40, class: 'form-control vendor-input' %>
+          <% end %>
           <em class="info"><%= l(:text_vendor_info) %></em>
         </p>
       </div>
@@ -141,11 +210,11 @@
   
   <div class="form-actions">
     <% if purchase_request.new_record? %>
-      <%= form.submit l(:button_create), class: 'button-positive' %>
+      <%= form.submit defined?(button_label) ? button_label : l(:button_create), class: 'button-positive' %>
     <% else %>
-      <%= form.submit l(:button_save), class: 'button-positive' %>
+      <%= form.submit defined?(button_label) ? button_label : l(:button_save), class: 'button-positive' %>
     <% end %>
-    <%= link_to l(:button_cancel), purchase_request_path(purchase_request), class: 'button-negative' %>
+    <%= link_to l(:button_cancel), defined?(cancel_path) ? cancel_path : project_purchase_requests_path(@project), class: 'button-negative' %>
   </div>
 <% end %>
 
@@ -418,6 +487,41 @@
     .price-field {
       flex: 1;
     }
+
+    /* Vendor selector styling */
+    .vendor-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .vendor-select {
+      min-width: 250px;
+    }
+    
+    .vendor-details {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 3px;
+      border-left: 3px solid #3498db;
+    }
+    
+    .vendor-info-table {
+      width: 100%;
+    }
+    
+    .vendor-label {
+      width: 120px;
+      color: #666;
+      font-weight: bold;
+      padding: 3px 0;
+      vertical-align: top;
+    }
+    
+    .vendor-value {
+      padding: 3px 0;
+    }
   </style>
 <% end %>
 
@@ -425,6 +529,100 @@
 $(document).ready(function() {
   // Initialize any JS-based controls
   $('#purchase_request_description').addClass('wiki-edit');
+  
+  // Vendor select functionality
+  $('#purchase_request_vendor_id').change(function() {
+    var selectedVendorId = $(this).val();
+    
+    if (selectedVendorId) {
+      // If a vendor is selected, hide custom input and get vendor details
+      $('.vendor-input').hide();
+      $('#custom_vendor').prop('checked', false);
+      
+      // Get vendor details via AJAX
+      $.ajax({
+        url: '<%= vendors_path %>/autocomplete',
+        data: { id: selectedVendorId },
+        dataType: 'json',
+        success: function(data) {
+          if (data && data.length > 0) {
+            var vendor = data[0];
+            
+            // Show vendor details and populate fields
+            $('.vendor-details').show();
+            
+            // Show/hide rows based on data availability
+            if (vendor.vendor_id) {
+              $('#vendor-id-row').show();
+              $('#vendor-id-value').text(vendor.vendor_id);
+            } else {
+              $('#vendor-id-row').hide();
+            }
+            
+            if (vendor.address) {
+              $('#vendor-address-row').show();
+              $('#vendor-address-value').text(vendor.address);
+            } else {
+              $('#vendor-address-row').hide();
+            }
+            
+            if (vendor.contact_person) {
+              $('#vendor-contact-row').show();
+              $('#vendor-contact-value').text(vendor.contact_person);
+            } else {
+              $('#vendor-contact-row').hide();
+            }
+            
+            if (vendor.phone) {
+              $('#vendor-phone-row').show();
+              $('#vendor-phone-value').text(vendor.phone);
+            } else {
+              $('#vendor-phone-row').hide();
+            }
+            
+            if (vendor.email) {
+              $('#vendor-email-row').show();
+              $('#vendor-email-value').text(vendor.email);
+            } else {
+              $('#vendor-email-row').hide();
+            }
+          } else {
+            $('.vendor-details').hide();
+          }
+        },
+        error: function() {
+          $('.vendor-details').hide();
+        }
+      });
+    } else {
+      // If no vendor is selected
+      if ($('#custom_vendor').is(':checked')) {
+        $('.vendor-input').show().focus();
+      }
+      $('.vendor-details').hide();
+    }
+  });
+  
+  // Custom vendor checkbox
+  $('#custom_vendor').change(function() {
+    if ($(this).is(':checked')) {
+      // Show custom vendor input, hide dropdown
+      $('#purchase_request_vendor_id').val('');
+      $('.vendor-input').show().focus();
+      $('.vendor-details').hide();
+    } else {
+      // Show dropdown, hide custom vendor input
+      $('.vendor-input').hide().val('');
+      $('#purchase_request_vendor_id').focus();
+    }
+  });
+  
+  // Initialize vendor selection
+  if ($('#purchase_request_vendor_id').val()) {
+    $('#purchase_request_vendor_id').trigger('change');
+  } else if ($('#custom_vendor').is(':checked')) {
+    $('.vendor-input').show();
+  }
   
   // Show confirmation if user attempts to leave page with unsaved changes
   var formChanged = false;
@@ -443,15 +641,5 @@ $(document).ready(function() {
   $('#purchase-request-form input[type="submit"]').click(function() {
     formChanged = false;
   });
-
-  // Update currency symbol when currency is changed
-  $('#purchase_request_currency').change(function() {
-    var selectedOption = $(this).find('option:selected');
-    var symbol = selectedOption.data('symbol');
-    $('.currency-symbol').text(symbol);
-  });
-  
-  // Trigger change to set initial symbol
-  $('#purchase_request_currency').trigger('change');
 });
 <% end %>

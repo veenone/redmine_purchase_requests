@@ -39,7 +39,9 @@ Redmine::Plugin.register :redmine_purchase_requests do
     'default_currency' => 'USD',
     'enabled_currencies' => ['USD', 'EUR', 'GBP', 'IDR'],
     'show_exchange_rates' => '0',
-    'exchange_rates' => {}  # Initialize exchange_rates as an empty hash
+    'exchange_rates' => {},  # Initialize exchange_rates as an empty hash
+    'allow_custom_vendors' => '1',
+    'vendors' => []  # Initialize vendors as an empty array
   }, partial: 'settings/purchase_request_settings'
 end
 
