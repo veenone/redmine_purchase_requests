@@ -38,6 +38,7 @@
           <th>#</th>
           <th><%= l(:field_title) %></th>
           <th><%= l(:field_status) %></th>
+          <th><%= l(:field_author) %></th>
           <th><%= l(:field_estimated_price) %></th>
           <th><%= l(:field_created_on) %></th>
           <th><%= l(:field_updated_on) %></th>
@@ -61,13 +62,42 @@
                 <%= purchase_request.status.name %>
               </span>
             </td>
+            <td class="author">
+              <%= link_to_user purchase_request.user %>
+            </td>
             <td class="price">
               <% if purchase_request.estimated_price.present? %>
                 <span class="price-value">
-                  <%= purchase_request.formatted_price %>
-                  <% if purchase_request.currency != Setting.plugin_redmine_purchase_requests['default_currency'] %>
-                    <span class="currency-code"><%= purchase_request.currency %></span>
-                  <% end %>
+                  <% 
+                    # Get the correct currency symbol for this purchase request
+                    symbol_map = {
+                      'USD' => '$',
+                      'EUR' => '€',
+                      'GBP' => '£',
+                      'JPY' => '¥',
+                      'CAD' => 'C$',
+                      'AUD' => 'A$',
+                      'CHF' => 'CHF',
+                      'CNY' => '¥',
+                      'SEK' => 'kr',
+                      'NZD' => 'NZ$',
+                      'MXN' => 'Mex$',
+                      'SGD' => 'S$',
+                      'HKD' => 'HK$',
+                      'IDR' => 'Rp',
+                      'NOK' => 'kr',
+                      'KRW' => '₩',
+                      'TRY' => '₺',
+                      'RUB' => '₽',
+                      'INR' => '₹',
+                      'BRL' => 'R$',
+                      'ZAR' => 'R'
+                    }
+                    currency_code = purchase_request.currency
+                    symbol = symbol_map[currency_code] || currency_code
+                  %>
+                  <%= symbol %><%= number_with_precision(purchase_request.estimated_price, precision: 2, delimiter: ',') %>
+                  <span class="currency-code"><%= purchase_request.currency %></span>
                 </span>
               <% else %>
                 <span class="no-price">-</span>
@@ -137,6 +167,14 @@
     color: #999;
   }
   
+  .purchase-requests .author a {
+    color: #555;
+  }
+  
+  .purchase-requests .author a:hover {
+    text-decoration: underline;
+  }
+  
   .filter-options {
     display: flex;
     align-items: center;
@@ -189,6 +227,10 @@
   .button-small {
     padding: 2px 10px;
     font-size: 12px;
+  }
+
+  .purchase-requests .price .created-on .updated-on {
+    text-align: left;
   }
 </style>
 <% end %>
