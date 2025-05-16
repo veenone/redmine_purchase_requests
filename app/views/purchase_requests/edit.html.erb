@@ -1,6 +1,7 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/edit.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
 <% @purchase_request = PurchaseRequest.find(params[:id]) %>
@@ -203,6 +204,18 @@
     padding-bottom: 10px;
     width: 75%;
   }
+
+  .tab-content {
+    margin-top: 10px;
+  }
+  
+  .tabbed-form {
+    display: none;
+  }
+  
+  #tab-general.tabbed-form {
+    display: block;
+  }
 </style>
 
 <%= javascript_tag do %>
@@ -226,8 +239,8 @@ $(document).ready(function() {
   });
   
   // Initialize tab content - first tab is shown by default
-  $('.tabbed-form').hide();
-  $('#tab-general').show();
+  // The general tab is shown by default and others should be hidden
+  $('.tabbed-form').not('#tab-general').hide();
   
   // Add smooth hover effects for buttons
   $('.button-action').hover(

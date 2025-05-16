@@ -87,30 +87,33 @@ class VendorsController < ApplicationController
   
   # API for autocomplete
   def autocomplete
-    # Check if it's an API call
-    if params[:id].present?
-      # Request for specific vendor details
-      @vendor = Vendor.find_by(id: params[:id])
-      if @vendor
-        render json: [@vendor.as_json]
-      else
-        render json: []
+    respond_to do |format|
+      format.json do
+        if params[:id].present?
+          # Request for specific vendor details
+          vendor = Vendor.find_by(id: params[:id])
+          if vendor
+            render json: vendor.attributes
+          else
+            render json: {}
+          end
+        elsif params[:term].present?
+          # Search for vendors matching term
+          vendors = Vendor.where("LOWER(name) LIKE ?", "%#{params[:term].downcase}%").limit(10)
+          render json: vendors.map { |v| { 
+            id: v.id, 
+            label: v.name, 
+            value: v.name,
+            vendor_id: v.vendor_id,
+            address: v.address,
+            phone: v.phone,
+            contact_person: v.contact_person,
+            email: v.email
+          }}
+        else
+          render json: []
+        end
       end
-    elsif params[:term].present?
-      # Search for vendors matching term
-      @vendors = Vendor.where("LOWER(name) LIKE ?", "%#{params[:term].downcase}%").limit(10)
-      render json: @vendors.map { |v| { 
-        id: v.id, 
-        label: v.name, 
-        value: v.name,
-        vendor_id: v.vendor_id,
-        address: v.address,
-        phone: v.phone,
-        contact_person: v.contact_person,
-        email: v.email
-      }}
-    else
-      render json: []
     end
   end
   

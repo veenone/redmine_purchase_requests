@@ -5,6 +5,32 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.7] - 2025-05-16
+
+### Added
+- Database-backed vendor management system
+- Vendor details storage with name, ID, address, phone, contact person, and email
+- Vendor selection dropdown in purchase request forms
+- Vendor management UI with CRUD operations
+- Migration tool to convert settings-based vendors to database records
+- Improved tab navigation with proper content separation
+
+### Fixed
+- Fixed tab content display in purchase request forms
+- Resolved vendor details display and selection issues
+- Fixed JavaScript loading and execution for dynamic forms
+- Improved form validation for vendor selection
+- Fixed asset loading with proper view hooks
+
+### Technical Details
+- Added vendors database table migration
+- Created full Vendor model with validations
+- Added VendorsController with CRUD and API methods
+- Updated purchase request views to use the new vendor model
+- Implemented proper hook-based asset loading
+- Added JavaScript improvements for form interactivity
+- Enhanced form styling for better usability
+
 ## [0.0.6] - 2025-05-12
 
 ### Added

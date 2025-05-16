@@ -4,7 +4,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
   description 'A plugin for managing purchase requests in Redmine'
-  version '0.0.6' # Increment version number
+  version '0.0.7' # Increment version number
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -44,6 +44,12 @@ Redmine::Plugin.register :redmine_purchase_requests do
     'vendors' => []  # Initialize vendors as an empty array
   }, partial: 'settings/purchase_request_settings'
 end
+
+# Register plugin assets
+require 'redmine'
+
+# Register assets to be included
+Rails.application.config.assets.precompile += %w(purchase_requests.js apexcharts.js purchase_requests.css)
 
 # Load plugin components
 Rails.application.config.to_prepare do

@@ -1,0 +1,8 @@
+<%# This partial is used to include custom JavaScript and CSS files for purchase requests %>
+<% if controller_name == 'purchase_requests' || controller_name == 'vendors' %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <% if action_name == 'dashboard' %>
+    <%= javascript_include_tag 'apexcharts', plugin: 'redmine_purchase_requests' %>
+  <% end %>
+<% end %>

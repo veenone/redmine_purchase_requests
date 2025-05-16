@@ -15,7 +15,7 @@
     </div>
   <% end %>
   
-  <div id="tab-general" class="tab-pane">
+  <div id="tab-general" class="tab-pane tabbed-form">
     <div class="box tabular general-fields">
       <div class="form-row">
         <p>
@@ -65,7 +65,7 @@
     </div>
   </div>
   
-  <div id="tab-details" class="tab-pane">
+  <div id="tab-details" class="tab-pane tabbed-form" style="display: none;">
     <div class="box tabular detail-fields">
       <div class="form-row">
         <p>
@@ -115,12 +115,14 @@
                 <%= form.select :vendor_id, 
                               vendors.collect{|v| [v.name, v.id]},
                               { include_blank: true, selected: purchase_request.vendor_id },
-                              { class: 'vendor-select form-control' } %>
+                              { class: 'vendor-select form-control', 
+                                'data-autocomplete-url': autocomplete_vendors_path } %>
               <% else %>
                 <%= form.select :vendor_id, 
                               vendors.collect{|v| [v.name, v.id]},
                               { include_blank: true },
-                              { class: 'vendor-select form-control' } %>
+                              { class: 'vendor-select form-control', 
+                                'data-autocomplete-url': autocomplete_vendors_path } %>
               <% end %>
                           
               <% if allow_custom %>
@@ -181,7 +183,7 @@
     </div>
   </div>
   
-  <div id="tab-attachments" class="tab-pane">
+  <div id="tab-attachments" class="tab-pane tabbed-form" style="display: none;">
     <div class="box tabular attachment-fields">
       <div class="form-row">
         <p>
@@ -527,102 +529,8 @@
 
 <%= javascript_tag do %>
 $(document).ready(function() {
-  // Initialize any JS-based controls
+  // Initialize wiki editor
   $('#purchase_request_description').addClass('wiki-edit');
-  
-  // Vendor select functionality
-  $('#purchase_request_vendor_id').change(function() {
-    var selectedVendorId = $(this).val();
-    
-    if (selectedVendorId) {
-      // If a vendor is selected, hide custom input and get vendor details
-      $('.vendor-input').hide();
-      $('#custom_vendor').prop('checked', false);
-      
-      // Get vendor details via AJAX
-      $.ajax({
-        url: '<%= vendors_path %>/autocomplete',
-        data: { id: selectedVendorId },
-        dataType: 'json',
-        success: function(data) {
-          if (data && data.length > 0) {
-            var vendor = data[0];
-            
-            // Show vendor details and populate fields
-            $('.vendor-details').show();
-            
-            // Show/hide rows based on data availability
-            if (vendor.vendor_id) {
-              $('#vendor-id-row').show();
-              $('#vendor-id-value').text(vendor.vendor_id);
-            } else {
-              $('#vendor-id-row').hide();
-            }
-            
-            if (vendor.address) {
-              $('#vendor-address-row').show();
-              $('#vendor-address-value').text(vendor.address);
-            } else {
-              $('#vendor-address-row').hide();
-            }
-            
-            if (vendor.contact_person) {
-              $('#vendor-contact-row').show();
-              $('#vendor-contact-value').text(vendor.contact_person);
-            } else {
-              $('#vendor-contact-row').hide();
-            }
-            
-            if (vendor.phone) {
-              $('#vendor-phone-row').show();
-              $('#vendor-phone-value').text(vendor.phone);
-            } else {
-              $('#vendor-phone-row').hide();
-            }
-            
-            if (vendor.email) {
-              $('#vendor-email-row').show();
-              $('#vendor-email-value').text(vendor.email);
-            } else {
-              $('#vendor-email-row').hide();
-            }
-          } else {
-            $('.vendor-details').hide();
-          }
-        },
-        error: function() {
-          $('.vendor-details').hide();
-        }
-      });
-    } else {
-      // If no vendor is selected
-      if ($('#custom_vendor').is(':checked')) {
-        $('.vendor-input').show().focus();
-      }
-      $('.vendor-details').hide();
-    }
-  });
-  
-  // Custom vendor checkbox
-  $('#custom_vendor').change(function() {
-    if ($(this).is(':checked')) {
-      // Show custom vendor input, hide dropdown
-      $('#purchase_request_vendor_id').val('');
-      $('.vendor-input').show().focus();
-      $('.vendor-details').hide();
-    } else {
-      // Show dropdown, hide custom vendor input
-      $('.vendor-input').hide().val('');
-      $('#purchase_request_vendor_id').focus();
-    }
-  });
-  
-  // Initialize vendor selection
-  if ($('#purchase_request_vendor_id').val()) {
-    $('#purchase_request_vendor_id').trigger('change');
-  } else if ($('#custom_vendor').is(':checked')) {
-    $('.vendor-input').show();
-  }
   
   // Show confirmation if user attempts to leave page with unsaved changes
   var formChanged = false;
