@@ -1,6 +1,7 @@
 <%# This partial is used to include custom JavaScript and CSS files for purchase requests %>
-<% if controller_name == 'purchase_requests' || controller_name == 'vendors' %>
+<% if controller_name == 'purchase_requests' || controller_name == 'vendors' || controller_name == 'purchase_request_statuses' %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
   <% if action_name == 'dashboard' %>
     <%= javascript_include_tag 'apexcharts', plugin: 'redmine_purchase_requests' %>

@@ -1,0 +1,130 @@
+
+/**
+ * Purchase Request Button Styles
+ * 
+ * This stylesheet contains all button styling for the Purchase Requests plugin.
+ * Use these styles for all buttons in the plugin to maintain consistency.
+ *
+ * Usage examples:
+ * - Basic button: <a class="pr-button pr-button-primary">Text</a>
+ * - Icon button: <a class="pr-button pr-button-primary pr-button-icon"><span class="icon icon-add"></span> Text</a>
+ * - Small button: <a class="pr-button pr-button-primary small">Text</a>
+ * - Form actions: <div class="pr-form-actions">...buttons here...</div>
+ */
+
+/* Standard button styling */
+.pr-button {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: background-color 0.2s, transform 0.1s;
+  font-size: 14px;
+  text-align: center;
+  min-width: 100px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.pr-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.pr-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Button variations */
+.pr-button-primary {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.pr-button-primary:hover {
+  background-color: #45a049;
+}
+
+.pr-button-secondary {
+  background-color: #2196F3;
+  color: white;
+}
+
+.pr-button-secondary:hover {
+  background-color: #0b7dda;
+}
+
+.pr-button-danger {
+  background-color: #f44336;
+  color: white;
+}
+
+.pr-button-danger:hover {
+  background-color: #da190b;
+}
+
+.pr-button-cancel {
+  background-color: #757575;
+  color: white;
+}
+
+.pr-button-cancel:hover {
+  background-color: #616161;
+}
+
+/* Button container */
+.pr-form-actions {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.pr-form-actions.left-aligned {
+  justify-content: flex-start;
+}
+
+/* Icon buttons */
+.pr-button-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pr-button-icon i,
+.pr-button-icon .icon {
+  font-size: 14px;
+}
+
+/* Button sizes */
+.pr-button.small {
+  padding: 5px 10px;
+  font-size: 12px;
+  min-width: 70px;
+}
+
+.pr-button.large {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+/* Table row buttons */
+.buttons .pr-button-icon.small {
+  min-width: 30px;
+  margin: 0 2px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+/* Add compact styling for buttons in tables */
+td.buttons {
+  white-space: nowrap;
+  text-align: center;
+  min-width: 150px;
+}

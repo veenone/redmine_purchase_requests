@@ -32,6 +32,19 @@ h1, h2, h3 {
     border-radius: 5px;
 }
 
+/**
+ * DEPRECATED: Legacy button styles - DO NOT USE IN NEW CODE
+ *
+ * These styles are kept for backward compatibility only.
+ * For all new development, please use the pr-button classes from 
+ * purchase_request_buttons.css instead:
+ *
+ * Instead of:
+ * - .button → use .pr-button.pr-button-secondary
+ * - .button-positive → use .pr-button.pr-button-primary
+ * - .button-negative → use .pr-button.pr-button-danger
+ * - .form-actions → use .pr-form-actions
+ */
 .button {
     background-color: #007bff;
     color: white;
@@ -39,8 +52,31 @@ h1, h2, h3 {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .button:hover {
     background-color: #0056b3;
+}
+
+.button-positive {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.button-negative {
+    background-color: #f44336;
+    color: white;
+}
+
+/* DEPRECATED: Legacy button container - use pr-form-actions instead */
+.form-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
 }

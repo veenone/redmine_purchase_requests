@@ -1,5 +1,7 @@
 <div class="contextual">
-  <%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'icon icon-add' %>
+  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+    <span class="icon icon-add"></span> <%= l(:label_new_purchase_request) %>
+  <% end %>
 </div>
 
 <h2><%= l(:label_purchase_requests) %></h2>
@@ -7,7 +9,7 @@
 <% if @purchase_requests.empty? %>
   <div class="nodata">
     <p><%= l(:label_no_data) %></p>
-    <p><%= l(:label_create_first_purchase_request, link: link_to(l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'icon icon-add')).html_safe %></p>
+    <p><%= l(:label_create_first_purchase_request, link: link_to(l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon')).html_safe %></p>
   </div>
 <% else %>
   <%= form_tag(project_purchase_requests_path(@project), method: :get, id: "purchase-requests-form") do %>
@@ -23,9 +25,11 @@
         <label for="search"><%= l(:label_search) %>:</label>
         <%= text_field_tag 'search', params[:search], size: 30 %>
         
-        <%= submit_tag l(:button_apply), name: nil, class: 'button-small' %>
+        <%= submit_tag l(:button_apply), name: nil, class: 'pr-button pr-button-secondary small' %>
         <% if params[:status_id].present? || params[:search].present? %>
-          <%= link_to l(:button_clear), project_purchase_requests_path(@project), class: 'icon icon-reload' %>
+          <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+            <span class="icon icon-reload"></span> <%= l(:button_clear) %>
+          <% end %>
         <% end %>
       </div>
     </fieldset>
@@ -106,15 +110,23 @@
             <td class="created-on"><%= format_time(purchase_request.created_at) %></td>
             <td class="updated-on"><%= format_time(purchase_request.updated_at) %></td>
             <td class="buttons">
-              <%= link_to l(:button_view), project_purchase_request_path(@project, purchase_request), 
-                          class: 'icon icon-magnifier', title: l(:button_view) %>
-              <%= link_to l(:button_edit), edit_project_purchase_request_path(@project, purchase_request), 
-                          class: 'icon icon-edit', title: l(:button_edit) %>
-              <%= link_to l(:button_delete), project_purchase_request_path(@project, purchase_request), 
+              <%= link_to project_purchase_request_path(@project, purchase_request), 
+                          class: 'pr-button pr-button-secondary pr-button-icon small', 
+                          title: l(:button_view) do %>
+                <span class="icon icon-magnifier"></span> <%= l(:button_view) %>
+              <% end %>
+              <%= link_to edit_project_purchase_request_path(@project, purchase_request), 
+                          class: 'pr-button pr-button-secondary pr-button-icon small', 
+                          title: l(:button_edit) do %>
+                <span class="icon icon-edit"></span> <%= l(:button_edit) %>
+              <% end %>
+              <%= link_to project_purchase_request_path(@project, purchase_request), 
                           method: :delete, 
                           data: { confirm: l(:text_are_you_sure) }, 
-                          class: 'icon icon-del', 
-                          title: l(:button_delete) %>
+                          class: 'pr-button pr-button-danger pr-button-icon small', 
+                          title: l(:button_delete) do %>
+                <span class="icon icon-del"></span> <%= l(:button_delete) %>
+              <% end %>
             </td>
           </tr>
         <% end %>

@@ -210,13 +210,13 @@
     </div>
   </div>
   
-  <div class="form-actions">
+  <div class="pr-form-actions">
     <% if purchase_request.new_record? %>
-      <%= form.submit defined?(button_label) ? button_label : l(:button_create), class: 'button-positive' %>
+      <%= form.submit defined?(button_label) ? button_label : l(:button_create), class: 'pr-button pr-button-primary' %>
     <% else %>
-      <%= form.submit defined?(button_label) ? button_label : l(:button_save), class: 'button-positive' %>
+      <%= form.submit defined?(button_label) ? button_label : l(:button_save), class: 'pr-button pr-button-primary' %>
     <% end %>
-    <%= link_to l(:button_cancel), defined?(cancel_path) ? cancel_path : project_purchase_requests_path(@project), class: 'button-negative' %>
+    <%= link_to l(:button_cancel), defined?(cancel_path) ? cancel_path : project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel' %>
   </div>
 <% end %>
 

@@ -6,8 +6,8 @@
 <%= form_with(model: @vendor, local: true) do |f| %>
   <%= render partial: 'form', locals: { f: f } %>
   
-  <p>
-    <%= f.submit l(:button_create) %>
-    <%= link_to l(:button_cancel), vendors_path %>
-  </p>
+  <div class="pr-form-actions">
+    <%= f.submit l(:button_create), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel), vendors_path, class: 'pr-button pr-button-cancel' %>
+  </div>
 <% end %>

@@ -6,13 +6,23 @@
 <% html_title "#{l(:label_purchase_request)} ##{@purchase_request.id}: #{h(@purchase_request.title)}" %>
 
 <div class="contextual">
-  <%= link_to l(:button_edit), edit_project_purchase_request_path(@project, @purchase_request), class: 'icon icon-edit button-action', title: l(:button_edit) if User.current.allowed_to?(:edit_purchase_requests, @project) %>
-  <%= link_to l(:button_delete), project_purchase_request_path(@project, @purchase_request), 
+  <% if User.current.allowed_to?(:edit_purchase_requests, @project) %>
+    <%= link_to edit_project_purchase_request_path(@project, @purchase_request), class: 'pr-button pr-button-secondary pr-button-icon small', title: l(:button_edit) do %>
+      <span class="icon icon-edit"></span> <%= l(:button_edit) %>
+    <% end %>
+  <% end %>
+  <% if User.current.allowed_to?(:delete_purchase_requests, @project) %>
+    <%= link_to project_purchase_request_path(@project, @purchase_request), 
               method: :delete, 
               data: { confirm: l(:text_are_you_sure) }, 
-              class: 'icon icon-del button-action', 
-              title: l(:button_delete) if User.current.allowed_to?(:delete_purchase_requests, @project) %>
-  <%= link_to l(:button_back_to_list), project_purchase_requests_path(@project), class: 'icon icon-back button-action', title: l(:button_back_to_list) %>
+              class: 'pr-button pr-button-danger pr-button-icon small', 
+              title: l(:button_delete) do %>
+      <span class="icon icon-del"></span> <%= l(:button_delete) %>
+    <% end %>
+  <% end %>
+  <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back_to_list) do %>
+    <span class="icon icon-back"></span> <%= l(:button_back_to_list) %>
+  <% end %>
 </div>
 
 <div class="purchase-request-header">
@@ -178,9 +188,15 @@
       </div>
     <% end %>
     
-    <div class="form-actions">
-      <%= link_to l(:button_edit), edit_project_purchase_request_path(@project, @purchase_request), class: 'button-positive' if User.current.allowed_to?(:edit_purchase_requests, @project) %>
-      <%= link_to l(:button_back_to_list), project_purchase_requests_path(@project), class: 'button-neutral' %>
+    <div class="pr-form-actions">
+      <% if User.current.allowed_to?(:edit_purchase_requests, @project) %>
+        <%= link_to edit_project_purchase_request_path(@project, @purchase_request), class: 'pr-button pr-button-primary' do %>
+          <%= l(:button_edit) %>
+        <% end %>
+      <% end %>
+      <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel' do %>
+        <%= l(:button_back_to_list) %>
+      <% end %>
     </div>
   </div>
 </div>
@@ -389,44 +405,7 @@
     margin-top: 10px;
   }
   
-  .form-actions {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-  }
-  
-  .button-positive {
-    background-color: #4CAF50;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    font-weight: bold;
-  }
-  
-  .button-positive:hover {
-    background-color: #45a049;
-  }
-  
-  .button-neutral {
-    background-color: #607d8b;
-    color: white;
-    padding: 6px 12px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    margin-left: 10px;
-    text-decoration: none;
-    display: inline-block;
-    font-weight: bold;
-  }
-  
-  .button-neutral:hover {
-    background-color: #546e7a;
-  }
+  /* Using shared styles from purchase_request_buttons.css */
   
   .button-action {
     margin-left: 5px;

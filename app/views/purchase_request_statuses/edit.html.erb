@@ -2,7 +2,12 @@
 
 <%= form_for @status do |f| %>
   <%= render partial: 'form', locals: { f: f } %>
-  <%= submit_tag l(:button_save) %>
+  <div class="pr-form-actions">
+    <%= submit_tag l(:button_save), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel), plugin_settings_path('redmine_purchase_requests', tab: 'statuses'), class: 'pr-button pr-button-cancel' %>
+  </div>
 <% end %>
 
-<%= link_to l(:button_back), purchase_request_statuses_path, class: 'icon icon-back' %>
+<%= link_to l(:button_back), purchase_request_statuses_path, class: 'pr-button-icon pr-button pr-button-secondary small' do %>
+  <span class="icon icon-back"></span> <%= l(:button_back) %>
+<% end %>
