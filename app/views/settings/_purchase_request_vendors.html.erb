@@ -13,8 +13,12 @@
   
   <div class="vendor-management-actions">
     <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-edit"></span> <%= l(:label_manage_vendors) %>
+      <span class="icon icon-edit"></span> <%= l(:label_global_vendor_settings) %>
     <% end %>
+    
+    <p class="info-message">
+      <strong><%= l(:label_notice) %>:</strong> <%= l(:text_vendor_management_moved_to_project) %>
+    </p>
     
     <% if Setting.plugin_redmine_purchase_requests['vendors'].is_a?(Array) && Setting.plugin_redmine_purchase_requests['vendors'].any? %>
       <%= form_tag({controller: 'vendors', action: 'migrate_from_settings'}, {method: :post, class: 'migration-form'}) do %>
@@ -25,6 +29,16 @@
     <% end %>
   </div>
 </div>
+
+<style>
+  .info-message {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: #fff8e1;
+    border-left: 3px solid #ffca28;
+    border-radius: 3px;
+  }
+</style>
 
 <style>
   .vendor-management-actions {

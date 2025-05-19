@@ -5,6 +5,7 @@ class Vendor < ActiveRecord::Base
   has_many :purchase_requests
   
   scope :sorted, -> { order(:name) }
+  scope :search, ->(term) { where("LOWER(name) LIKE :term OR LOWER(vendor_id) LIKE :term", term: "%#{term.downcase}%") if term.present? }
   
   def to_s
     name
@@ -21,5 +22,14 @@ class Vendor < ActiveRecord::Base
       contact_person: contact_person,
       email: email
     }
+  end
+  
+  # Returns a formatted display name for the vendor
+  def display_name
+    if vendor_id.present?
+      "#{name} (#{vendor_id})"
+    else
+      name
+    end
   end
 end

@@ -147,6 +147,24 @@ en:
   text_vendor_management_info: Manage vendor information used in purchase requests
   text_vendor_database_info: Vendors are now stored in the database for better management and reporting. Use the button below to access the vendor management page.
   label_manage_vendors: Manage Vendors
+  label_available_vendors: Available Vendors
+  label_global_vendor_settings: Global Vendor Settings
+  label_admin_settings: Administrator Settings
+  label_useful_links: Useful Links
+  text_vendor_management_project_info: "Vendors are managed globally but can be used in any project."
+  text_vendor_management_info_project: "This page shows all vendors available for use in purchase requests. Only administrators can add, edit, or delete vendors."
+  text_vendor_admin_only_notice: "Only administrators can add, edit, or delete vendors. Please contact an administrator if you need changes."
+  text_admin_vendor_settings_info: "You can access global vendor settings as an administrator."
+  text_project_vendor_info: "These vendors are available for use in purchase requests across all projects."
+  text_no_vendors_add_some: "There are no vendors in the system yet. As an administrator, you can add vendors for use in purchase requests."
+  text_vendor_management_moved_to_project: "Vendor management is now accessible at the project level. Navigate to any project with the Purchase Requests module enabled and go to Vendors in the project menu."
+  label_notice: Notice
+  text_global_vendor_management_info: "This page allows administrators to manage vendors at the global level. These vendors will be available for use in all projects with the Purchase Requests module enabled."
+  label_vendor_search: "Search vendors by name or ID..."
+  label_no_vendors_found: "No vendors matching your search criteria"
+  button_apply: "Search"
+  button_clear: "Clear"
+  error_searching_vendors: "An error occurred while searching vendors. Please try again."
   button_migrate_vendors: Migrate Existing Vendors
   notice_vendor_created: Vendor was successfully created.
   notice_vendor_updated: Vendor was successfully updated.

@@ -8,7 +8,9 @@ A comprehensive plugin for managing purchase requests within Redmine. This plugi
 
 - **Complete Purchase Request Management**: Create, view, edit, and delete purchase requests
 - **Customizable Statuses**: Define your own purchase request statuses with custom colors and workflows
-- **Database-backed Vendor Management**: Store and manage vendor information in a dedicated database
+- **Project-level Vendor Management**: Access vendor information directly from project interfaces
+- **Global Vendor Database**: Centralized vendor data accessible across all projects
+- **Vendor Search Capabilities**: Find vendors quickly by name or vendor ID
 - **Vendor Details Storage**: Track vendor information including name, ID, address, contact person, phone, and email
 - **Detailed Request Information**: Track product details, estimated prices, vendors, and due dates
 - **File Attachments**: Attach supporting documents to purchase requests
@@ -59,6 +61,18 @@ To migrate existing vendors from the plugin settings to the database:
 Once migrated, you can manage vendors through the dedicated vendor management interface.
 
 ## Upgrade Notes
+
+### From 0.0.7 to 0.0.8
+
+Version 0.0.8 moves vendor management from plugin settings level to project level. No database migration is needed, but new permissions need to be assigned to roles:
+
+1. Go to Administration > Roles and Permissions
+2. For each role that needs access to vendors, enable:
+   - "View vendors" permission to allow viewing the vendor list
+   - "Manage vendors" permission to allow access to the vendor management page
+
+After upgrading, vendor management is accessible through the project menu via:
+Project > Purchase Requests > Vendors
 
 ### From 0.0.6 to 0.0.7
 

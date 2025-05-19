@@ -1,5 +1,5 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/index.html.erb %>
-<% html_title l(:label_vendors) %>
+<% html_title l(:label_global_vendor_settings) %>
 
 <div class="contextual">
   <%= link_to new_vendor_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
@@ -7,51 +7,32 @@
   <% end %>
 </div>
 
-<h2><%= l(:label_vendors) %></h2>
+<h2><%= l(:label_global_vendor_settings) %></h2>
 
-<% if @vendors.any? %>
-  <table class="list vendors">
-    <thead>
-      <tr>
-        <th><%= l(:field_vendor_name) %></th>
-        <th><%= l(:field_vendor_id) %></th>
-        <th><%= l(:field_address) %></th>
-        <th><%= l(:field_phone) %></th>
-        <th><%= l(:field_contact_person) %></th>
-        <th><%= l(:field_email) %></th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @vendors.each do |vendor| %>
-        <tr>
-          <td><%= vendor.name %></td>
-          <td><%= vendor.vendor_id %></td>
-          <td><%= vendor.address %></td>
-          <td><%= vendor.phone %></td>
-          <td><%= vendor.contact_person %></td>
-          <td><%= vendor.email %></td>
-          <td class="buttons">
-            <%= link_to edit_vendor_path(vendor), 
-                      class: 'pr-button pr-button-secondary pr-button-icon small',
-                      title: l(:button_edit) do %>
-              <span class="icon icon-edit"></span>
-            <% end %>
-            <%= link_to vendor_path(vendor), 
-                      method: :delete, 
-                      data: { confirm: l(:text_are_you_sure) }, 
-                      class: 'pr-button pr-button-danger pr-button-icon small',
-                      title: l(:button_delete) do %>
-              <span class="icon icon-del"></span>
-            <% end %>
-          </td>
-        </tr>
+<div class="box">
+  <p><%= l(:text_global_vendor_management_info) %></p>
+  <p class="info-message">
+    <strong><%= l(:label_notice) %>:</strong> <%= l(:text_vendor_management_moved_to_project) %>
+  </p>
+</div>
+
+<div class="vendor-search-form">
+  <%= form_tag vendors_path, method: :get do %>
+    <div class="input-group">
+      <%= text_field_tag :search, params[:search], placeholder: l(:label_vendor_search), class: 'vendor-search-input' %>
+      <%= submit_tag l(:button_apply), class: 'button-small' %>
+      <% if params[:search].present? %>
+        <%= link_to l(:button_clear), vendors_path, class: 'button-small' %>
       <% end %>
-    </tbody>
-  </table>
-<% else %>
-  <p class="nodata"><%= l(:label_no_data) %></p>
-<% end %>
+    </div>
+  <% end %>
+</div>
+
+<%= render partial: 'vendors/vendor_list', locals: { 
+  vendors: @vendors, 
+  admin_actions: true,
+  empty_message: params[:search].present? ? l(:label_no_vendors_found) : l(:label_no_data)
+} %>
 
 <% content_for :sidebar do %>
   <h3><%= l(:label_vendor_management) %></h3>

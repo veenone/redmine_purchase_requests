@@ -1,4 +1,3 @@
-
 /**
  * Purchase Request Button Styles
  * 
@@ -94,12 +93,51 @@
 .pr-button-icon {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px; /* Space between icon and text */
 }
 
 .pr-button-icon i,
 .pr-button-icon .icon {
   font-size: 14px;
+}
+
+.pr-button-icon .icon {
+  position: relative; /* Ensure icon is positioned correctly */
+  margin-right: 3px; /* Add space between icon and text */
+}
+
+/* For small buttons, adjust the padding */
+.pr-button-icon.small {
+  padding: 2px 8px;
+}
+
+/* Table action buttons specifically */
+.pr-table-actions .pr-button-icon {
+  text-align: center;
+  min-width: 28px; /* Ensure minimum width to fit text */
+}
+
+/* For buttons where we want icons only, add this class */
+.pr-button-icon-only .button-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* For screenreaders */
+.pr-button-icon-only:focus .button-text,
+.pr-button-icon-only:hover .button-text {
+  position: static;
+  width: auto;
+  height: auto;
+  clip: auto;
+  white-space: normal;
 }
 
 /* Button sizes */

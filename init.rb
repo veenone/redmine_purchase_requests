@@ -4,7 +4,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
   description 'A plugin for managing purchase requests in Redmine'
-  version '0.0.7' # Increment version number
+  version '0.0.8' # Increment version number
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -16,6 +16,8 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :delete_purchase_requests, { purchase_requests: [:destroy] }
     permission :manage_purchase_request_settings, { purchase_request_settings: [:index] }
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
+    permission :view_purchase_request_vendors, { project_vendors: [:index] }
+    permission :manage_purchase_request_vendors, { project_vendors: [:manage] }
   end
   
   # Fix project menu items
@@ -28,6 +30,12 @@ Redmine::Plugin.register :redmine_purchase_requests do
   menu :project_menu, :purchase_requests_dashboard, 
        { controller: 'purchase_requests', action: 'dashboard' },
        caption: :label_purchase_request_dashboard,
+       param: :project_id,
+       parent: :purchase_requests
+       
+  menu :project_menu, :purchase_requests_vendors,
+       { controller: 'project_vendors', action: 'index' },
+       caption: :label_vendors,
        param: :project_id,
        parent: :purchase_requests
   
@@ -49,7 +57,7 @@ end
 require 'redmine'
 
 # Register assets to be included
-Rails.application.config.assets.precompile += %w(purchase_requests.js apexcharts.js purchase_requests.css)
+Rails.application.config.assets.precompile += %w(purchase_requests.js apexcharts.js purchase_requests.css purchase_request_buttons.css purchase_request_vendors.css)
 
 # Load plugin components
 Rails.application.config.to_prepare do

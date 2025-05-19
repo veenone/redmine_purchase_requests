@@ -5,7 +5,7 @@ class VendorsController < ApplicationController
   before_action :find_vendor, only: [:edit, :update, :destroy]
   
   def index
-    @vendors = Vendor.sorted
+    @vendors = find_vendors
   end
   
   def new
@@ -99,10 +99,10 @@ class VendorsController < ApplicationController
           end
         elsif params[:term].present?
           # Search for vendors matching term
-          vendors = Vendor.where("LOWER(name) LIKE ?", "%#{params[:term].downcase}%").limit(10)
+          vendors = Vendor.search(params[:term]).limit(10)
           render json: vendors.map { |v| { 
             id: v.id, 
-            label: v.name, 
+            label: v.display_name, 
             value: v.name,
             vendor_id: v.vendor_id,
             address: v.address,
@@ -127,5 +127,21 @@ class VendorsController < ApplicationController
   
   def vendor_params
     params.require(:vendor).permit(:name, :vendor_id, :address, :phone, :contact_person, :email)
+  end
+  
+  def find_vendors
+    vendors = Vendor.sorted
+    
+    # Apply search filter if present
+    if params[:search].present?
+      begin
+        vendors = vendors.search(params[:search])
+      rescue => e
+        Rails.logger.error "Error searching vendors: #{e.message}"
+        flash.now[:error] = l(:error_searching_vendors)
+      end
+    end
+    
+    vendors
   end
 end

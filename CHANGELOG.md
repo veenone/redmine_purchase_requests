@@ -5,6 +5,23 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2025-05-20
+
+### Added
+- Moved vendor management from plugin settings to project level
+- Added project-specific vendor management UI
+- Created new vendor listing partial to standardize display
+- Added improved vendor search capabilities
+- Added project-level permissions for vendor management
+- Enhanced vendor display with formatting improvements
+- Added project menu entry for vendor management
+
+### Changed
+- Maintained global vendor data while providing project-level access
+- Improved vendor selection UI in purchase request forms
+- Enhanced vendor autocomplete with better search results
+- Reorganized vendor management interface for better usability
+
 ## [0.0.7] - 2025-05-16
 
 ### Added

@@ -1,0 +1,54 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/_vendor_list.html.erb %>
+<% 
+  # Default parameters
+  admin_actions ||= false 
+  empty_message ||= "No data"
+%>
+
+<% if vendors.any? %>
+  <table class="list vendors">
+    <thead>
+      <tr>
+        <th><%= l(:field_vendor_name) %></th>
+        <th><%= l(:field_vendor_id) %></th>
+        <th><%= l(:field_address) %></th>
+        <th><%= l(:field_phone) %></th>
+        <th><%= l(:field_contact_person) %></th>
+        <th><%= l(:field_email) %></th>
+        <% if admin_actions %>
+          <th class="buttons"><%= l(:label_action) %></th>
+        <% end %>
+      </tr>
+    </thead>
+    <tbody>
+      <% vendors.each do |vendor| %>
+        <tr>
+          <td><%= vendor.name %></td>
+          <td><%= vendor.vendor_id %></td>
+          <td><%= vendor.address %></td>
+          <td><%= vendor.phone %></td>
+          <td><%= vendor.contact_person %></td>
+          <td><%= vendor.email %></td>
+          <% if admin_actions %>
+            <td class="buttons">
+              <%= link_to edit_vendor_path(vendor), 
+                        class: 'pr-button pr-button-secondary pr-button-icon small',
+                        title: l(:button_edit) do %>
+                <span class="icon icon-edit"></span>
+              <% end %>
+              <%= link_to vendor_path(vendor), 
+                        method: :delete, 
+                        data: { confirm: l(:text_are_you_sure) }, 
+                        class: 'pr-button pr-button-danger pr-button-icon small',
+                        title: l(:button_delete) do %>
+                <span class="icon icon-del"></span>
+              <% end %>
+            </td>
+          <% end %>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="nodata"><%= empty_message %></p>
+<% end %>

@@ -1,0 +1,69 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/project_vendors/index.html.erb %>
+<% html_title "Vendors" %>
+
+<div class="contextual">
+  <% if User.current.allowed_to?(:manage_purchase_request_vendors, @project) %>
+    <%= link_to manage_project_vendors_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-edit"></span> Manage Vendors
+    <% end %>
+  <% end %>
+</div>
+
+<h2>Vendors</h2>
+
+<div class="box">
+  <p>These vendors are available for use in purchase requests across all projects.</p>
+</div>
+
+<div class="vendor-search-form">
+  <%= form_tag project_vendors_path(@project), method: :get do %>
+    <div class="input-group">
+      <%= text_field_tag :search, params[:search], placeholder: "Search vendors by name or ID...", class: 'vendor-search-input' %>
+      <%= submit_tag "Search", class: 'button-small' %>
+      <% if params[:search].present? %>
+        <%= link_to "Clear", project_vendors_path(@project), class: 'button-small' %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<% has_vendors = @vendors && @vendors.any? %>
+
+<% if has_vendors %>
+  <%= render partial: 'vendors/vendor_list', locals: { 
+    vendors: @vendors, 
+    admin_actions: false,
+    empty_message: "No vendors found"
+  } %>
+<% else %>
+  <p class="nodata">No vendors found</p>
+  
+  <% if User.current.allowed_to?(:manage_purchase_request_vendors, @project) %>
+    <div class="box">
+      <p>There are no vendors in the system yet.</p>
+      <p>
+        <%= link_to manage_project_vendors_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+          <span class="icon icon-add"></span> Add Vendor
+        <% end %>
+      </p>
+    </div>
+  <% end %>
+<% end %>
+
+<% content_for :sidebar do %>
+  <h3>Vendor Management</h3>
+  <p>Vendors are managed globally but can be used in any project.</p>
+  
+  <% if User.current.admin? %>
+    <hr>
+    <p>
+      <strong>Administrator Settings</strong><br>
+      You can access global vendor settings as an administrator.
+    </p>
+    <p>
+      <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon small' do %>
+        <span class="icon icon-settings"></span> Global Vendor Settings
+      <% end %>
+    </p>
+  <% end %>
+<% end %>

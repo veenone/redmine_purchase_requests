@@ -1,0 +1,106 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/project_vendors/manage.html.erb %>
+<% html_title "Manage Vendors - #{@project.name}" %>
+
+<div class="contextual">
+  <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back) do %>
+    <span class="icon icon-back"></span> Back
+  <% end %>
+</div>
+
+<h2>Manage Vendors</h2>
+
+<div class="box">
+  <p>
+    This page shows all vendors available for use in purchase requests. Only administrators can add, edit, or delete vendors.
+  </p>
+  
+  <h3>Available Vendors</h3>
+  
+  <div class="vendor-search-form">
+    <%= form_tag manage_project_vendors_path(@project), method: :get do %>
+      <div class="input-group">
+        <%= text_field_tag :search, params[:search], placeholder: "Search vendors by name or ID...", class: 'vendor-search-input' %>
+        <%= submit_tag "Search", class: 'button-small' %>
+        <% if params[:search].present? %>
+          <%= link_to "Clear", manage_project_vendors_path(@project), class: 'button-small' %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  
+  <% has_vendors = @vendors && @vendors.any? %>
+
+<% if has_vendors %>
+  <%= render partial: 'vendors/vendor_list', locals: { 
+    vendors: @vendors, 
+    admin_actions: User.current.admin?,
+    empty_message: "No vendors found"
+  } %>
+<% else %>
+  <p class="nodata">No vendors found</p>
+<% end %>
+
+  <% if User.current.admin? %>
+    <div class="vendor-management-actions">
+      <%= link_to new_vendor_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
+        <span class="icon icon-add"></span> New Vendor
+      <% end %>
+      
+      <% if Setting.plugin_redmine_purchase_requests['vendors'].is_a?(Array) && Setting.plugin_redmine_purchase_requests['vendors'].any? %>
+        <%= form_tag({controller: 'vendors', action: 'migrate_from_settings'}, {method: :post, class: 'migration-form'}) do %>
+          <%= button_tag type: 'submit', class: 'pr-button pr-button-secondary pr-button-icon' do %>
+            <span class="icon icon-import"></span> Migrate Vendors
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="info-box">
+      <p>Only administrators can add, edit, or delete vendors. Please contact an administrator if you need changes.</p>
+    </div>
+  <% end %>
+</div>
+
+<% content_for :sidebar do %>
+  <h3>Vendor Management</h3>
+  <p>Vendors are managed globally but can be used in any project.</p>
+  
+  <h4>Useful Links</h4>
+  <ul>
+    <li><%= link_to "Purchase Requests", project_purchase_requests_path(@project) %></li>
+    <li><%= link_to "Dashboard", dashboard_project_purchase_requests_path(@project) %></li>
+  </ul>
+  
+  <% if User.current.admin? %>
+    <hr>
+    <p>
+      <strong>Administrator Settings</strong><br>
+      You can access global vendor settings as an administrator.
+    </p>
+    <p>
+      <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon small' do %>
+        <span class="icon icon-settings"></span> Global Vendor Settings
+      <% end %>
+    </p>
+  <% end %>
+<% end %>
+
+<style>
+  .vendor-management-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 15px;
+  }
+  
+  .migration-form {
+    display: inline;
+  }
+  
+  .info-box {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-left: 3px solid #607d8b;
+    border-radius: 3px;
+  }
+</style>

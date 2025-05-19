@@ -7,10 +7,18 @@ Rails.application.routes.draw do
         get 'dashboard'
       end
     end
+    
+    # Add project-scoped vendor management
+    resources :vendors, only: [:index], controller: 'project_vendors' do
+      collection do
+        get 'manage'
+      end
+    end
   end
 
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
   
+  # Keep global vendors for data storage
   resources :vendors, except: [:show] do
     collection do
       get 'autocomplete'
