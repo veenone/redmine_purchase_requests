@@ -1,0 +1,209 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/capex/_form.html.erb %>
+<% form_url = @capex.new_record? ? project_capex_index_path(@project) : project_capex_path(@project, @capex) %>
+<% form_method = @capex.new_record? ? :post : :patch %>
+<%= form_with(model: @capex, url: form_url, method: form_method, local: true) do |form| %>
+  <% if @capex.errors.any? %>
+    <div id="error_explanation" class="errorExplanation">
+      <h2><%= pluralize(@capex.errors.count, "error") %> prohibited this CAPEX entry from being saved:</h2>
+      <ul>
+        <% @capex.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="box tabular">
+    <fieldset>
+      <legend>Basic Information</legend>
+      
+      <p>
+        <%= form.label :year, 'CAPEX Year', class: 'required' %>
+        <%= form.number_field :year, required: true, min: 2000, max: 2100, 
+                              value: @capex.year || Date.current.year %>
+      </p>
+      
+      <p>
+        <%= form.label :tpc_code, 'TPC Code', class: 'required' %>
+        <%= form.text_field :tpc_code, required: true, size: 20, maxlength: 50 %>
+        <em class="info">Unique identifier for this CAPEX entry within the project and year</em>
+      </p>
+      
+      <p>
+        <%= form.label :description, 'Description', class: 'required' %>
+        <%= form.text_area :description, required: true, rows: 3, cols: 60 %>
+      </p>
+    </fieldset>
+    
+    <fieldset>
+      <legend>Financial Information</legend>
+      
+      <p>
+        <%= form.label :currency, 'Currency', class: 'required' %>
+        <%= form.select :currency, 
+                        options_for_select([
+                          ['US Dollar (USD)', 'USD'],
+                          ['Euro (EUR)', 'EUR'],
+                          ['British Pound (GBP)', 'GBP'],
+                          ['Japanese Yen (JPY)', 'JPY'],
+                          ['Canadian Dollar (CAD)', 'CAD'],
+                          ['Australian Dollar (AUD)', 'AUD'],
+                          ['Swiss Franc (CHF)', 'CHF'],
+                          ['Chinese Yuan (CNY)', 'CNY'],
+                          ['Swedish Krona (SEK)', 'SEK'],
+                          ['New Zealand Dollar (NZD)', 'NZD'],
+                          ['Mexican Peso (MXN)', 'MXN'],
+                          ['Singapore Dollar (SGD)', 'SGD'],
+                          ['Hong Kong Dollar (HKD)', 'HKD'],
+                          ['Indonesian Rupiah (IDR)', 'IDR'],
+                          ['Norwegian Krone (NOK)', 'NOK'],
+                          ['South Korean Won (KRW)', 'KRW'],
+                          ['Turkish Lira (TRY)', 'TRY'],
+                          ['Russian Ruble (RUB)', 'RUB'],
+                          ['Indian Rupee (INR)', 'INR'],
+                          ['Brazilian Real (BRL)', 'BRL'],
+                          ['South African Rand (ZAR)', 'ZAR']
+                        ], @capex.currency) %>
+      </p>
+      
+      <p>
+        <%= form.label :total_amount, 'Total Amount', class: 'required' %>
+        <%= form.number_field :total_amount, required: true, step: 0.01, min: 0 %>
+      </p>
+    </fieldset>
+    
+    <fieldset>
+      <legend>Quarterly Distribution</legend>
+      <p class="info-message">
+        <strong>Note:</strong> The sum of all quarterly amounts must equal the total amount.
+      </p>
+      
+      <div class="quarterly-inputs">
+        <p>
+          <%= form.label :q1_amount, 'Q1 Amount', class: 'required' %>
+          <%= form.number_field :q1_amount, required: true, step: 0.01, min: 0, class: 'quarterly-input' %>
+        </p>
+        
+        <p>
+          <%= form.label :q2_amount, 'Q2 Amount', class: 'required' %>
+          <%= form.number_field :q2_amount, required: true, step: 0.01, min: 0, class: 'quarterly-input' %>
+        </p>
+        
+        <p>
+          <%= form.label :q3_amount, 'Q3 Amount', class: 'required' %>
+          <%= form.number_field :q3_amount, required: true, step: 0.01, min: 0, class: 'quarterly-input' %>
+        </p>
+        
+        <p>
+          <%= form.label :q4_amount, 'Q4 Amount', class: 'required' %>
+          <%= form.number_field :q4_amount, required: true, step: 0.01, min: 0, class: 'quarterly-input' %>
+        </p>
+      </div>
+      
+      <div id="quarterly-summary">
+        <p>
+          <strong>Quarterly Total: </strong>
+          <span id="quarterly-total">0.00</span>
+        </p>
+        <p id="balance-check" class="balance-warning" style="display: none;">
+          <strong>Warning:</strong> Quarterly total does not match total amount!
+        </p>
+      </div>
+    </fieldset>
+    
+    <fieldset>
+      <legend>Additional Information</legend>
+      
+      <p>
+        <%= form.label :notes, 'Notes' %>
+        <%= form.text_area :notes, rows: 4, cols: 60 %>
+        <em class="info">Optional notes or comments about this CAPEX entry</em>
+      </p>
+    </fieldset>
+  </div>
+
+  <div class="actions">
+    <%= form.submit class: 'pr-button pr-button-primary' %>
+    <%= link_to 'Cancel', project_capex_index_path(@project), class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
+
+<%= javascript_tag do %>
+$(document).ready(function() {
+  // Function to calculate quarterly total
+  function updateQuarterlyTotal() {
+    var total = 0;
+    $('.quarterly-input').each(function() {
+      var value = parseFloat($(this).val()) || 0;
+      total += value;
+    });
+    
+    $('#quarterly-total').text(total.toFixed(2));
+    
+    // Check if quarterly total matches total amount
+    var totalAmount = parseFloat($('#capex_total_amount').val()) || 0;
+    var difference = Math.abs(total - totalAmount);
+    
+    if (difference > 0.01 && totalAmount > 0) {
+      $('#balance-check').show();
+    } else {
+      $('#balance-check').hide();
+    }
+  }
+  
+  // Update when quarterly inputs change
+  $('.quarterly-input, #capex_total_amount').on('input', updateQuarterlyTotal);
+  
+  // Auto-distribute total amount equally across quarters
+  $('#capex_total_amount').on('blur', function() {
+    if (confirm('Would you like to distribute the total amount equally across all quarters?')) {
+      var totalAmount = parseFloat($(this).val()) || 0;
+      var quarterAmount = (totalAmount / 4).toFixed(2);
+      
+      $('.quarterly-input').val(quarterAmount);
+      updateQuarterlyTotal();
+    }
+  });
+  
+  // Initial calculation
+  updateQuarterlyTotal();
+});
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .quarterly-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  
+  .quarterly-input {
+    width: 150px;
+  }
+  
+  #quarterly-summary {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+  }
+  
+  .balance-warning {
+    color: #d32f2f;
+    font-weight: bold;
+  }
+  
+  .info-message {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .actions {
+    margin-top: 20px;
+  }
+</style>
+<% end %>

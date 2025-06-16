@@ -1,0 +1,4 @@
+<%# Project menu hook for CAPEX functionality %>
+<% if @project && @project.module_enabled?('purchase_requests') %>
+  <%# This hook adds CAPEX menu items to the project sidebar %>
+<% end %>

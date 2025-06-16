@@ -1,4 +1,10 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/_form.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
 <%= form_with(model: purchase_request, 
                url: defined?(form_url) ? form_url : nil,
                local: true, 
@@ -168,6 +174,47 @@
       
       <div class="form-row">
         <p>
+          <%= form.label :capex_id, 'CAPEX Entry' %>
+          <% 
+            capex_entries = @project.capex.for_year(Date.current.year).ordered if @project
+            if capex_entries && capex_entries.any?
+          %>
+            <%= form.select :capex_id, 
+                          options_from_collection_for_select(capex_entries, :id, :display_name, purchase_request.capex_id),
+                          { include_blank: 'No CAPEX Entry' },
+                          { class: 'capex-select form-control' } %>
+            <em class="info">Link this purchase request to a specific CAPEX entry for budget tracking</em>
+            
+            <div class="capex-details" style="display: none;">
+              <table class="capex-info-table">
+                <tr id="capex-year-row" style="display: none;">
+                  <td class="capex-label">Year:</td>
+                  <td class="capex-value" id="capex-year-value"></td>
+                </tr>
+                <tr id="capex-budget-row" style="display: none;">
+                  <td class="capex-label">Total Budget:</td>
+                  <td class="capex-value" id="capex-budget-value"></td>
+                </tr>
+                <tr id="capex-remaining-row" style="display: none;">
+                  <td class="capex-label">Remaining:</td>
+                  <td class="capex-value" id="capex-remaining-value"></td>
+                </tr>
+              </table>
+            </div>
+          <% else %>
+            <span class="no-capex">No CAPEX entries available for current year</span>
+            <% if User.current.allowed_to?(:manage_capex, @project) %>
+              <br><em class="info">
+                <%= link_to 'Create CAPEX Entry', new_project_capex_path(@project), 
+                          class: 'capex-create-link', target: '_blank' %> to enable budget tracking
+              </em>
+            <% end %>
+          <% end %>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
           <%= form.check_box :notify_manager, class: 'form-control-checkbox' %>
           <%= form.label :notify_manager, l(:field_notify_manager) %>
           <em class="info"><%= l(:text_notify_manager_info) %></em>
@@ -220,334 +267,5 @@
   </div>
 <% end %>
 
-<% content_for :header_tags do %>
-  <style>
-    /* Header styling */
-    .purchase-request-header {
-      margin-bottom: 20px;
-    }
-    
-    .purchase-request-header h2 {
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-    }
-    
-    .request-id {
-      font-size: 0.9em;
-      color: #777;
-      margin-left: 10px;
-    }
-    
-    .request-meta {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 3px;
-      color: white;
-      font-size: 12px;
-      text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-    }
-    
-    .last-updated {
-      color: #666;
-      font-size: 0.9em;
-    }
-    
-    /* Purchase request title */
-    .purchase-request-title {
-      border-bottom: 1px solid #eee;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-    }
-    
-    .purchase-request-title h3 {
-      margin: 0;
-      color: #333;
-      font-size: 1.4em;
-    }
-    
-    /* Tab styling */
-    .tabs {
-      margin-bottom: 15px;
-    }
-    
-    .tabs ul {
-      display: flex;
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      border-bottom: 1px solid #ddd;
-    }
-    
-    .tabs ul li {
-      margin-right: 5px;
-    }
-    
-    .tabs ul li a {
-      display: block;
-      padding: 8px 15px;
-      text-decoration: none;
-      border: 1px solid transparent;
-      border-bottom: none;
-      border-radius: 3px 3px 0 0;
-      color: #555;
-    }
-    
-    .tabs ul li.selected a {
-      background-color: #fff;
-      border-color: #ddd;
-      border-bottom-color: #fff;
-      color: #333;
-      position: relative;
-      bottom: -1px;
-      font-weight: bold;
-    }
-    
-    /* Form styling */
-    .purchase-request-edit-container {
-      background-color: #fff;
-      border-radius: 4px;
-    }
-    
-    .form-row {
-      margin-bottom: 15px;
-    }
-    
-    .form-control {
-      padding: 6px 8px;
-      border: 1px solid #ccc;
-      border-radius: 3px;
-      font-size: 14px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    
-    .form-control:focus {
-      border-color: #66afe9;
-      outline: 0;
-      box-shadow: 0 0 8px rgba(102, 175, 233, 0.6);
-    }
-    
-    .form-control-checkbox {
-      margin-right: 5px;
-    }
-    
-    /* Currency input styling */
-    .currency-wrapper {
-      position: relative;
-      display: block;
-      width: 100%;
-    }
-    
-    .currency-symbol {
-      position: absolute;
-      top: 50%;
-      left: 10px;
-      transform: translateY(-50%);
-      color: #666;
-      font-weight: bold;
-    }
-    
-    .currency-field {
-      padding-left: 25px !important;
-    }
-    
-    /* Button styling */
-    .button-action {
-      display: inline-block;
-      padding: 5px 10px;
-      margin-left: 5px;
-      border-radius: 3px;
-      text-decoration: none;
-      transition: background-color 0.2s ease;
-    }
-    
-    .button-highlight {
-      background-color: #f5f5f5;
-    }
-    
-    .form-actions {
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid #eee;
-      text-align: center;
-    }
-    
-    .button-positive {
-      background-color: #4CAF50;
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.2s;
-    }
-    
-    .button-positive:hover {
-      background-color: #45a049;
-    }
-    
-    .button-negative {
-      background-color: #f44336;
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      margin-left: 10px;
-      text-decoration: none;
-      display: inline-block;
-      font-weight: bold;
-      transition: background-color 0.2s;
-    }
-    
-    .button-negative:hover {
-      background-color: #da190b;
-    }
-    
-    /* Helper text */
-    .info {
-      display: block;
-      color: #888;
-      font-size: 0.9em;
-      margin-top: 5px;
-    }
-    
-    /* Required field indicator */
-    .required {
-      color: #d00;
-      font-weight: bold;
-    }
-    
-    /* Existing attachments styling */
-    .existing-attachments {
-      margin-top: 20px;
-      padding: 15px;
-      background-color: #f9f9f9;
-      border-radius: 3px;
-    }
-    
-    .existing-attachments h3 {
-      margin-top: 0;
-      font-size: 1.1em;
-      color: #333;
-    }
-    
-    .existing-attachments ul {
-      list-style: none;
-      padding: 0;
-    }
-    
-    .existing-attachments li {
-      padding: 5px 0;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .existing-attachments .size {
-      color: #888;
-      font-size: 0.9em;
-    }
-    
-    .existing-attachments .author {
-      color: #555;
-      font-size: 0.9em;
-      margin-left: 10px;
-    }
-    
-    /* Box styling improvements */
-    .box.tabular {
-      padding: 15px;
-      margin-bottom: 0;
-    }
-    
-    .box.tabular p {
-      padding: 5px 0;
-      margin-bottom: 8px;
-    }
 
-    .currency-price-wrapper {
-      display: flex;
-      align-items: center;
-      width: 100%;
-    }
-    
-    .currency-select-wrapper {
-      margin-right: 10px;
-    }
-    
-    .currency-select {
-      min-width: 100px;
-    }
-    
-    .price-field {
-      flex: 1;
-    }
-
-    /* Vendor selector styling */
-    .vendor-selector {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    .vendor-select {
-      min-width: 250px;
-    }
-    
-    .vendor-details {
-      margin-top: 10px;
-      padding: 10px;
-      background-color: #f9f9f9;
-      border-radius: 3px;
-      border-left: 3px solid #3498db;
-    }
-    
-    .vendor-info-table {
-      width: 100%;
-    }
-    
-    .vendor-label {
-      width: 120px;
-      color: #666;
-      font-weight: bold;
-      padding: 3px 0;
-      vertical-align: top;
-    }
-    
-    .vendor-value {
-      padding: 3px 0;
-    }
-  </style>
-<% end %>
-
-<%= javascript_tag do %>
-$(document).ready(function() {
-  // Initialize wiki editor
-  $('#purchase_request_description').addClass('wiki-edit');
-  
-  // Show confirmation if user attempts to leave page with unsaved changes
-  var formChanged = false;
-  
-  $('#purchase-request-form input, #purchase-request-form textarea, #purchase-request-form select').change(function() {
-    formChanged = true;
-  });
-  
-  $(window).on('beforeunload', function() {
-    if (formChanged) {
-      return '<%= l(:text_unsaved_changes_confirmation) %>';
-    }
-  });
-  
-  // Submit button disables form changed flag
-  $('#purchase-request-form input[type="submit"]').click(function() {
-    formChanged = false;
-  });
-});
-<% end %>
+<%# Assets and styles are loaded via hooks - no need for direct includes %>

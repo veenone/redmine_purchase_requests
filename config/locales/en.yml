@@ -81,95 +81,167 @@ en:
   text_attachment_types_allowed: "Allowed file types: PDF, DOC, XLS, JPG, PNG"
   text_attachment_naming: "Use descriptive filenames for easier identification"
   text_are_you_sure: "Are you sure?"
+  
+  # Dashboard Translations
   label_purchase_request_dashboard: "Purchase Request Dashboard"
   label_total_requests: "Total Requests"
   label_open_requests: "Open Requests"
   label_closed_requests: "Closed Requests"
+  label_total_estimated_cost: "Total Estimated Cost"
   label_status_distribution: "Status Distribution"
   label_priority_distribution: "Priority Distribution"
   label_financial_overview: "Financial Overview"
-  label_top_requesters: "Top Requesters"
-  label_monthly_trends: "Monthly Trends"
-  label_recent_requests: "Recent Activity"
-  label_top_vendors: "Top Vendors"
-  label_requests: "Requests"
-  label_total_cost: "Total Cost"
-  label_total_estimated_cost: "Total Estimated Cost"
   label_pending_cost: "Pending Cost"
   label_approved_cost: "Approved Cost"
   label_average_request_amount: "Average Request Amount"
-  label_average_response_time: "Average Response Time"
-  label_days: "days"
-  label_avg_processing_time: "Average Processing Time"
-  label_view_all_requests: "View All Requests"
-  text_dashboard_info: "This dashboard provides an overview of all purchase requests in the system. Use the charts and statistics to track spending, monitor request status, and identify trends."
-  label_currency_settings: "Currency Settings"
-  label_default_currency: "Default Currency"
-  label_enabled_currencies: "Enabled Currencies"
-  label_show_exchange_rates: "Show Exchange Rates"
   label_currency_breakdown: "Currency Breakdown"
-  label_cost_distribution : "Cost Distribution"
-  text_show_exchange_rates_info: "Show exchange rates between currencies on the dashboard"
-  error_at_least_one_currency: "At least one currency must be enabled"
-  field_currency: "Currency"
-  field_code: "Code"
-  label_equivalent: "Equivalent"
-  label_currency_distribution: "Currency Distribution"
-  label_monthly_trends_by_currency: "Monthly Trends by Currency"
+  label_top_requesters: "Top Requesters"
+  label_requests: "Requests"
+  label_total_cost: "Total Cost"
+  label_monthly_trends: "Monthly Trends"
+  label_month: "Month"
+  label_amount: "Amount"
+  label_recent_requests: "Recent Requests"
+  label_top_vendors: "Top Vendors"
+  label_average_response_time: "Average Response Time"
+  label_days: "Days"
+  label_avg_processing_time: "Avg Processing Time"
   label_currency_breakdown_with_conversion: "Currency Breakdown with Conversion"
   label_original_amount: "Original Amount"
   label_equivalent_in_default: "Equivalent in Default Currency"
   label_total_in: "Total in"
-  label_exchange_rates: "Exchange Rates" 
-  text_exchange_rates_info: "Exchange rates used for currency conversion"
+  label_exchange_rates: "Exchange Rates"
   label_rate_to: "Rate to"
-  text_exchange_rates_setup_info: "Configure exchange rates for currency conversion. All rates should be expressed relative to the default currency."
-  text_exchange_rates_note: "These rates will be used to convert amounts in different currencies to the default currency for reporting purposes."
+  label_count: "Count"
+  label_percentage: "Percentage"
+  
+  # Currency and Exchange Rate Translations
+  text_exchange_rates_info: "Exchange rates used for currency conversion in dashboard calculations"
+  text_dashboard_info: "This dashboard provides an overview of purchase request activity, financial metrics, and key performance indicators for your project."
+  label_view_all_requests: "View All Requests"
+  
+  # CAPEX Dashboard Specific
+  label_capex_dashboard: "CAPEX Dashboard"
+  label_capex_settings: "CAPEX Settings"
+  label_capex_use_exchange_rates: "Use Exchange Rates for CAPEX"
+  label_capex_exchange_rates: "CAPEX Exchange Rates"
+  text_capex_use_exchange_rates_info: "Convert all CAPEX amounts to default currency using exchange rates"
+  text_capex_exchange_rates_setup_info: "Configure exchange rates specific to CAPEX calculations"
+  text_capex_exchange_rates_note: "Exchange rates are applied to convert CAPEX amounts to the default currency for unified reporting"
   text_exchange_rate_example: "%{amount} %{currency} = %{converted} %{default_currency}"
-  label_vendor_settings: Vendor Settings
-  label_vendor_list: Vendor List
-  label_allow_custom_vendors: Allow Custom Vendors
-  text_allow_custom_vendors_info: If enabled, users can enter vendor details manually in addition to selecting from the predefined list
-  button_add_vendor: Add Vendor
-  field_vendor_name: Vendor Name
-  field_vendor_id: Vendor ID
-  field_address: Address
-  field_phone: Phone
-  field_contact_person: Contact Person
-  field_email: Email
-  label_select_or_enter_vendor: -- Select vendor or enter manually --
-  label_enter_custom_vendor: Enter custom vendor name
-  label_use_custom_vendor: Use custom vendor
-  label_vendors: Vendors
-  label_vendor_new: New Vendor
-  label_vendor_edit: Edit Vendor
-  label_vendor_management: Vendor Management
-  text_vendor_management_info: Manage vendor information used in purchase requests
-  text_vendor_database_info: Vendors are now stored in the database for better management and reporting. Use the button below to access the vendor management page.
-  label_manage_vendors: Manage Vendors
-  label_available_vendors: Available Vendors
-  label_global_vendor_settings: Global Vendor Settings
-  label_admin_settings: Administrator Settings
-  label_useful_links: Useful Links
-  text_vendor_management_project_info: "Vendors are managed globally but can be used in any project."
-  text_vendor_management_info_project: "This page shows all vendors available for use in purchase requests. Only administrators can add, edit, or delete vendors."
-  text_vendor_admin_only_notice: "Only administrators can add, edit, or delete vendors. Please contact an administrator if you need changes."
-  text_admin_vendor_settings_info: "You can access global vendor settings as an administrator."
-  text_project_vendor_info: "These vendors are available for use in purchase requests across all projects."
-  text_no_vendors_add_some: "There are no vendors in the system yet. As an administrator, you can add vendors for use in purchase requests."
-  text_vendor_management_moved_to_project: "Vendor management is now accessible at the project level. Navigate to any project with the Purchase Requests module enabled and go to Vendors in the project menu."
-  label_notice: Notice
-  text_global_vendor_management_info: "This page allows administrators to manage vendors at the global level. These vendors will be available for use in all projects with the Purchase Requests module enabled."
-  label_vendor_search: "Search vendors by name or ID..."
-  label_no_vendors_found: "No vendors matching your search criteria"
-  button_apply: "Search"
-  button_clear: "Clear"
-  error_searching_vendors: "An error occurred while searching vendors. Please try again."
-  button_migrate_vendors: Migrate Existing Vendors
-  notice_vendor_created: Vendor was successfully created.
-  notice_vendor_updated: Vendor was successfully updated.
-  notice_vendor_deleted: Vendor was successfully deleted.
-  error_vendor_not_deleted: Vendor could not be deleted.
-  notice_vendors_migrated: "%{count} vendors were successfully migrated to the database."
-  warning_no_vendors_migrated: No vendors were migrated. They may already exist in the database.
-  error_no_vendors_to_migrate: No vendors found to migrate.
+  
+  # CAPEX Management
+  label_capex: "CAPEX"
+  label_capex_entries: "CAPEX Entries"
+  label_capex_entry: "CAPEX Entry"
+  label_capex_dashboard: "CAPEX Dashboard"
+  label_capex_settings: "CAPEX Settings"
+  label_new_capex: "New CAPEX Entry"
+  label_edit_capex: "Edit CAPEX Entry"
+  label_show_capex: "View CAPEX Entry"
+  label_capex_management: "CAPEX Management"
+  label_manage_capex: "Manage CAPEX"
+  label_no_capex_entries: "No CAPEX entries found"
+  label_capex_overview: "CAPEX Overview"
+  label_capex_utilization: "CAPEX Utilization"
+  label_capex_budget_tracking: "Budget Tracking"
+  label_capex_quarterly_breakdown: "Quarterly Breakdown"
+  label_capex_linked_requests: "Linked Purchase Requests"
+  label_capex_summary: "CAPEX Summary"
+  label_capex_statistics: "CAPEX Statistics"
+  
+  # CAPEX Fields
+  field_capex_year: "Year"
+  field_capex_description: "Description"
+  field_capex_tpc_code: "TPC Code"
+  field_capex_total_amount: "Total Amount"
+  field_capex_currency: "Currency"
+  field_capex_q1_amount: "Q1 Amount"
+  field_capex_q2_amount: "Q2 Amount"
+  field_capex_q3_amount: "Q3 Amount"
+  field_capex_q4_amount: "Q4 Amount"
+  field_capex_utilized_amount: "Utilized Amount"
+  field_capex_remaining_amount: "Remaining Amount"
+  field_capex_utilization_percentage: "Utilization %"
+  field_capex_status: "Status"
+  field_capex_approved_by: "Approved By"
+  field_capex_approved_at: "Approved At"
+  field_capex_entry: "CAPEX Entry"
+  
+  # CAPEX Settings
+  label_enable_capex: "Enable CAPEX Management"
+  label_require_capex_for_pr: "Require CAPEX for Purchase Requests"
+  label_capex_budget_alert_threshold: "Budget Alert Threshold"
+  label_capex_default_values: "Default Values"
+  label_default_capex_currency: "Default CAPEX Currency"
+  label_capex_auto_distribute_quarters: "Auto-distribute Quarterly Amounts"
+  label_capex_approval_workflow: "Approval Workflow"
+  label_require_capex_approval: "Require CAPEX Approval"
+  label_capex_approval_threshold: "Approval Threshold"
+  
+  # CAPEX Help Text
+  text_enable_capex_info: "Enable CAPEX (Capital Expenditure) management for projects"
+  text_require_capex_for_pr_info: "Require users to link purchase requests to CAPEX entries"
+  text_capex_budget_alert_threshold_info: "Show budget alerts when utilization exceeds this percentage"
+  text_default_capex_currency_info: "Default currency for new CAPEX entries"
+  text_capex_auto_distribute_quarters_info: "Automatically distribute total amount equally across quarters"
+  text_require_capex_approval_info: "Require approval for CAPEX entries above threshold"
+  text_capex_approval_threshold_info: "CAPEX entries above this amount require approval"
+  text_capex_year_info: "The budget year for this CAPEX entry"
+  text_capex_description_info: "Brief description of the capital expenditure"
+  text_capex_tpc_code_info: "TPC (Total Project Cost) code for tracking and reporting"
+  text_capex_total_amount_info: "Total budget amount for this CAPEX entry"
+  text_capex_quarterly_info: "Quarterly distribution of the budget (must sum to total amount)"
+  text_capex_form_validation: "Please ensure quarterly amounts sum to the total amount"
+  text_capex_dashboard_info: "Overview of CAPEX entries, utilization, and budget tracking"
+  text_capex_linked_pr_info: "This CAPEX entry is linked to purchase requests for budget tracking"
+  text_capex_no_linked_requests: "No purchase requests are currently linked to this CAPEX entry"
+  text_create_capex_entry: "Create a new CAPEX entry for budget tracking"
+  
+  # CAPEX Validations and Messages
+  error_capex_quarterly_sum_mismatch: "Quarterly amounts must sum to the total amount"
+  error_capex_tpc_code_taken: "TPC Code has already been taken for this year"
+  error_capex_invalid_year: "Year must be a valid 4-digit year"
+  error_capex_negative_amount: "Amount cannot be negative"
+  error_capex_quarterly_negative: "Quarterly amounts cannot be negative"
+  notice_capex_created: "CAPEX entry was successfully created"
+  notice_capex_updated: "CAPEX entry was successfully updated"
+  notice_capex_deleted: "CAPEX entry was successfully deleted"
+  error_capex_not_deleted: "CAPEX entry could not be deleted"
+  warning_capex_has_linked_requests: "This CAPEX entry has linked purchase requests"
+  
+  # CAPEX Dashboard
+  label_total_capex_budget: "Total CAPEX Budget"
+  label_utilized_budget: "Utilized Budget"
+  label_remaining_budget: "Remaining Budget"
+  label_average_utilization: "Average Utilization"
+  label_capex_by_year: "CAPEX by Year"
+  label_capex_by_currency: "CAPEX by Currency"
+  label_capex_utilization_trend: "Utilization Trend"
+  label_top_capex_entries: "Top CAPEX Entries"
+  label_recent_capex_activity: "Recent CAPEX Activity"
+  label_capex_alerts: "CAPEX Alerts"
+  label_over_budget: "Over Budget"
+  label_near_budget_limit: "Near Budget Limit"
+  label_underutilized: "Underutilized"
+  
+  # CAPEX Status
+  label_capex_status_active: "Active"
+  label_capex_status_completed: "Completed"
+  label_capex_status_cancelled: "Cancelled"
+  label_capex_status_on_hold: "On Hold"
+
+  label_currency_settings: "Currency Settings"
+  label_default_currency: "Default Currency"
+  label_enabled_currencies: "Enabled Currencies"
+  field_currency: "Currency"
+  label_show_exchange_rates: "Show Exchange Rates"
+  text_exchange_rates_note: "Exchange rates are updated daily. Ensure they are accurate for financial reporting."
+  label_vendor_settings: "Vendor Settings"
+  label_allow_custom_vendors: "Allow Custom Vendors"
+  text_allow_custom_vendors_info: "Allow users to add custom vendors not in the system"
+  text_vendor_database_info: "Maintain a database of approved vendors for purchase requests"
+  label_global_vendor_settings: "Global Vendor Settings"
+  label_notice: "Vendor settings apply globally across all projects"
+  text_vendor_management_moved_to_project: "Vendor management has been moved to the project settings. Please configure vendors there."
+  label_vendors: "Vendors"

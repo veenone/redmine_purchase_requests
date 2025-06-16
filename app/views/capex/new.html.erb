@@ -1,0 +1,19 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'capex', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'capex', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/capex/new.html.erb %>
+<% html_title "New CAPEX Entry - #{@project.name}" %>
+
+<div class="contextual">
+  <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-back"></span> Back to CAPEX List
+  <% end %>
+</div>
+
+<h2>New CAPEX Entry</h2>
+
+<%= render 'form' %>

@@ -1,9 +1,8 @@
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
-
-<% html_title l(:label_new_purchase_request) %>
 
 <div class="contextual">
   <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back_to_list) do %>

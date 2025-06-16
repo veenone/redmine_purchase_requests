@@ -1,0 +1,594 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/_form.html.erb %>
+<%= form_with(model: purchase_request, 
+               url: defined?(form_url) ? form_url : nil,
+               local: true, 
+               multipart: true, 
+               id: 'purchase-request-form') do |form| %>
+  <% if purchase_request.errors.any? %>
+    <div id="error_explanation" class="flash error">
+      <h3><%= l(:label_form_contains_errors, count: purchase_request.errors.count) %></h3>
+      <ul>
+        <% purchase_request.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+  
+  <div id="tab-general" class="tab-pane tabbed-form">
+    <div class="box tabular general-fields">
+      <div class="form-row">
+        <p>
+          <%= form.label :title, l(:field_title), class: 'required' %> <span class="required">*</span>
+          <%= form.text_field :title, required: true, size: 60, maxlength: 255, class: 'form-control' %>
+          <em class="info"><%= l(:text_purchase_title_info) %></em>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :description, l(:field_description) %>
+          <%= form.text_area :description, rows: 6, cols: 60, class: 'wiki-edit form-control' %>
+          <em class="info"><%= l(:text_purchase_description_info) %></em>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :status_id, l(:field_status), class: 'required' %> <span class="required">*</span>
+          <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name, 
+                                   { selected: purchase_request.status_id || PurchaseRequestStatus.default&.id || PurchaseRequestStatus.first&.id },
+                                   { required: true, class: 'form-control' } %>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :priority, l(:field_priority) %>
+          <%= form.select :priority, 
+                       [[l(:label_priority_low), 'low'], 
+                        [l(:label_priority_normal), 'normal'], 
+                        [l(:label_priority_high), 'high'], 
+                        [l(:label_priority_urgent), 'urgent']], 
+                       { selected: purchase_request.priority || 'normal' },
+                       { class: 'form-control' } %>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :due_date, l(:field_due_date) %>
+          <%= form.date_field :due_date, class: 'form-control' %>
+          <em class="info"><%= l(:text_due_date_info) %></em>
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <div id="tab-details" class="tab-pane tabbed-form" style="display: none;">
+    <div class="box tabular detail-fields">
+      <div class="form-row">
+        <p>
+          <%= form.label :product_url, l(:field_product_url) %>
+          <%= form.text_field :product_url, size: 60, class: 'form-control' %>
+          <em class="info"><%= l(:text_product_url_info) %> <%= l(:text_optional) %></em>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :estimated_price, l(:field_estimated_price) %>
+          <span class="currency-price-wrapper">
+            <span class="currency-select-wrapper">
+              <%= form.select :currency, 
+                            currency_options,
+                            { selected: purchase_request.currency || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' },
+                            { class: 'currency-select' } %>
+            </span>
+            <%= form.number_field :estimated_price, min: 0, step: '0.01', class: 'price-field' %>
+          </span>
+          <em class="info"><%= l(:text_estimated_price_info) %></em>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :vendor, l(:field_vendor) %>
+          <% 
+            vendors = Vendor.sorted 
+            allow_custom = Setting.plugin_redmine_purchase_requests['allow_custom_vendors'] == '1'
+            
+            if vendors.any?
+              # Get the current selected vendor if any
+              current_vendor = nil
+              current_vendor_name = nil
+              
+              if purchase_request.vendor_id.present?
+                current_vendor = Vendor.find_by(id: purchase_request.vendor_id)
+                current_vendor_name = current_vendor.try(:name)
+              elsif purchase_request.vendor.present?
+                current_vendor_name = purchase_request.vendor
+              end
+          %>
+            <div class="vendor-selector">
+              <% if Redmine::VERSION::MAJOR >= 4 %>
+                <%= form.select :vendor_id, 
+                              vendors.collect{|v| [v.name, v.id]},
+                              { include_blank: true, selected: purchase_request.vendor_id },
+                              { class: 'vendor-select form-control', 
+                                'data-autocomplete-url': autocomplete_vendors_path } %>
+              <% else %>
+                <%= form.select :vendor_id, 
+                              vendors.collect{|v| [v.name, v.id]},
+                              { include_blank: true },
+                              { class: 'vendor-select form-control', 
+                                'data-autocomplete-url': autocomplete_vendors_path } %>
+              <% end %>
+                          
+              <% if allow_custom %>
+                <%= form.text_field :vendor, size: 40, class: 'form-control vendor-input', 
+                                  style: 'display: none;',
+                                  placeholder: l(:label_enter_custom_vendor) %>
+                <%= check_box_tag 'custom_vendor', '1', purchase_request.vendor_id.blank? && purchase_request.vendor.present?, 
+                                class: 'custom-vendor-checkbox' %>
+                <%= label_tag 'custom_vendor', l(:label_use_custom_vendor), class: 'checkbox-label' %>
+              <% end %>
+            </div>
+            
+            <div class="vendor-details" style="display: none;">
+              <table class="vendor-info-table">
+                <tr id="vendor-id-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_vendor_id) %>:</td>
+                  <td class="vendor-value" id="vendor-id-value"></td>
+                </tr>
+                <tr id="vendor-address-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_address) %>:</td>
+                  <td class="vendor-value" id="vendor-address-value"></td>
+                </tr>
+                <tr id="vendor-contact-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_contact_person) %>:</td>
+                  <td class="vendor-value" id="vendor-contact-value"></td>
+                </tr>
+                <tr id="vendor-phone-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_phone) %>:</td>
+                  <td class="vendor-value" id="vendor-phone-value"></td>
+                </tr>
+                <tr id="vendor-email-row" style="display: none;">
+                  <td class="vendor-label"><%= l(:field_email) %>:</td>
+                  <td class="vendor-value" id="vendor-email-value"></td>
+                </tr>
+              </table>
+            </div>
+          <% else %>
+            <%= form.text_field :vendor, size: 40, class: 'form-control vendor-input' %>
+          <% end %>
+          <em class="info"><%= l(:text_vendor_info) %></em>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :capex_id, 'CAPEX Entry' %>
+          <% 
+            capex_entries = @project.capex.for_year(Date.current.year).ordered if @project
+            if capex_entries && capex_entries.any?
+          %>
+            <%= form.select :capex_id, 
+                          options_from_collection_for_select(capex_entries, :id, :display_name, purchase_request.capex_id),
+                          { include_blank: 'No CAPEX Entry' },
+                          { class: 'capex-select form-control' } %>
+            <em class="info">Link this purchase request to a specific CAPEX entry for budget tracking</em>
+            
+            <div class="capex-details" style="display: none;">
+              <table class="capex-info-table">
+                <tr id="capex-year-row" style="display: none;">
+                  <td class="capex-label">Year:</td>
+                  <td class="capex-value" id="capex-year-value"></td>
+                </tr>
+                <tr id="capex-budget-row" style="display: none;">
+                  <td class="capex-label">Total Budget:</td>
+                  <td class="capex-value" id="capex-budget-value"></td>
+                </tr>
+                <tr id="capex-remaining-row" style="display: none;">
+                  <td class="capex-label">Remaining:</td>
+                  <td class="capex-value" id="capex-remaining-value"></td>
+                </tr>
+              </table>
+            </div>
+          <% else %>
+            <span class="no-capex">No CAPEX entries available for current year</span>
+            <% if User.current.allowed_to?(:manage_capex, @project) %>
+              <br><em class="info">
+                <%= link_to 'Create CAPEX Entry', new_project_capex_path(@project), 
+                          class: 'capex-create-link', target: '_blank' %> to enable budget tracking
+              </em>
+            <% end %>
+          <% end %>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.check_box :notify_manager, class: 'form-control-checkbox' %>
+          <%= form.label :notify_manager, l(:field_notify_manager) %>
+          <em class="info"><%= l(:text_notify_manager_info) %></em>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
+          <%= form.label :notes, l(:label_additional_notes) %>
+          <%= form.text_area :notes, rows: 4, cols: 60, placeholder: l(:text_additional_notes_placeholder), class: 'form-control' %>
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <div id="tab-attachments" class="tab-pane tabbed-form" style="display: none;">
+    <div class="box tabular attachment-fields">
+      <div class="form-row">
+        <p>
+          <%= form.label :attachment, l(:label_attachment_plural) %>
+          <%= form.file_field :attachments, multiple: true, class: 'attachments-field form-control' %>
+          <em class="info"><%= l(:text_attachment_info) %></em>
+        </p>
+      </div>
+      
+      <% if purchase_request.attachments.any? %>
+        <div class="existing-attachments">
+          <h3><%= l(:label_existing_attachments) %></h3>
+          <ul>
+            <% purchase_request.attachments.each do |attachment| %>
+              <li>
+                <%= link_to_attachment attachment, class: 'icon icon-attachment' %>
+                <span class="size">(<%= number_to_human_size(attachment.filesize) %>)</span>
+                <span class="author"><%= attachment.author.name %>, <%= format_time(attachment.created_on) %></span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="pr-form-actions">
+    <% if purchase_request.new_record? %>
+      <%= form.submit defined?(button_label) ? button_label : l(:button_create), class: 'pr-button pr-button-primary' %>
+    <% else %>
+      <%= form.submit defined?(button_label) ? button_label : l(:button_save), class: 'pr-button pr-button-primary' %>
+    <% end %>
+    <%= link_to l(:button_cancel), defined?(cancel_path) ? cancel_path : project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
+
+<% content_for :header_tags do %>
+  <style>
+    /* Header styling */
+    .purchase-request-header {
+      margin-bottom: 20px;
+    }
+    
+    .purchase-request-header h2 {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .request-id {
+      font-size: 0.9em;
+      color: #777;
+      margin-left: 10px;
+    }
+    
+    .request-meta {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      color: white;
+      font-size: 12px;
+      text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    }
+    
+    .last-updated {
+      color: #666;
+      font-size: 0.9em;
+    }
+    
+    /* Purchase request title */
+    .purchase-request-title {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .purchase-request-title h3 {
+      margin: 0;
+      color: #333;
+      font-size: 1.4em;
+    }
+    
+    /* Tab styling */
+    .tabs {
+      margin-bottom: 15px;
+    }
+    
+    .tabs ul {
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .tabs ul li {
+      margin-right: 5px;
+    }
+    
+    .tabs ul li a {
+      display: block;
+      padding: 8px 15px;
+      text-decoration: none;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 3px 3px 0 0;
+      color: #555;
+    }
+    
+    .tabs ul li.selected a {
+      background-color: #fff;
+      border-color: #ddd;
+      border-bottom-color: #fff;
+      color: #333;
+      position: relative;
+      bottom: -1px;
+      font-weight: bold;
+    }
+    
+    /* Form styling */
+    .purchase-request-edit-container {
+      background-color: #fff;
+      border-radius: 4px;
+    }
+    
+    .form-row {
+      margin-bottom: 15px;
+    }
+    
+    .form-control {
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .form-control:focus {
+      border-color: #66afe9;
+      outline: 0;
+      box-shadow: 0 0 8px rgba(102, 175, 233, 0.6);
+    }
+    
+    .form-control-checkbox {
+      margin-right: 5px;
+    }
+    
+    /* Currency input styling */
+    .currency-wrapper {
+      position: relative;
+      display: block;
+      width: 100%;
+    }
+    
+    .currency-symbol {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      color: #666;
+      font-weight: bold;
+    }
+    
+    .currency-field {
+      padding-left: 25px !important;
+    }
+    
+    /* Button styling */
+    .button-action {
+      display: inline-block;
+      padding: 5px 10px;
+      margin-left: 5px;
+      border-radius: 3px;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+    }
+    
+    .button-highlight {
+      background-color: #f5f5f5;
+    }
+    
+    .form-actions {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+    
+    .button-positive {
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .button-positive:hover {
+      background-color: #45a049;
+    }
+    
+    .button-negative {
+      background-color: #f44336;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      margin-left: 10px;
+      text-decoration: none;
+      display: inline-block;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .button-negative:hover {
+      background-color: #da190b;
+    }
+    
+    /* Helper text */
+    .info {
+      display: block;
+      color: #888;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    
+    /* Required field indicator */
+    .required {
+      color: #d00;
+      font-weight: bold;
+    }
+    
+    /* Existing attachments styling */
+    .existing-attachments {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 3px;
+    }
+    
+    .existing-attachments h3 {
+      margin-top: 0;
+      font-size: 1.1em;
+      color: #333;
+    }
+    
+    .existing-attachments ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .existing-attachments li {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .existing-attachments .size {
+      color: #888;
+      font-size: 0.9em;
+    }
+    
+    .existing-attachments .author {
+      color: #555;
+      font-size: 0.9em;
+      margin-left: 10px;
+    }
+    
+    /* Box styling improvements */
+    .box.tabular {
+      padding: 15px;
+      margin-bottom: 0;
+    }
+    
+    .box.tabular p {
+      padding: 5px 0;
+      margin-bottom: 8px;
+    }
+
+    .currency-price-wrapper {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    
+    .currency-select-wrapper {
+      margin-right: 10px;
+    }
+    
+    .currency-select {
+      min-width: 100px;
+    }
+    
+    .price-field {
+      flex: 1;
+    }
+
+    /* Vendor selector styling */
+    .vendor-selector {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .vendor-select {
+      min-width: 250px;
+    }
+    
+    .vendor-details {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border-radius: 3px;
+      border-left: 3px solid #3498db;
+    }
+    
+    .vendor-info-table {
+      width: 100%;
+    }
+    
+    .vendor-label {
+      width: 120px;
+      color: #666;
+      font-weight: bold;
+      padding: 3px 0;
+      vertical-align: top;
+    }
+    
+    .vendor-value {
+      padding: 3px 0;
+    }
+  </style>
+<% end %>
+
+<%= javascript_tag do %>
+$(document).ready(function() {
+  // Initialize wiki editor
+  $('#purchase_request_description').addClass('wiki-edit');
+  
+  // Show confirmation if user attempts to leave page with unsaved changes
+  var formChanged = false;
+  
+  $('#purchase-request-form input, #purchase-request-form textarea, #purchase-request-form select').change(function() {
+    formChanged = true;
+  });
+  
+  $(window).on('beforeunload', function() {
+    if (formChanged) {
+      return '<%= l(:text_unsaved_changes_confirmation) %>';
+    }
+  });
+  
+  // Submit button disables form changed flag
+  $('#purchase-request-form input[type="submit"]').click(function() {
+    formChanged = false;
+  });
+});
+<% end %>

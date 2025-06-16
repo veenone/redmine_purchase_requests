@@ -1,0 +1,888 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'capex', plugin: 'redmine_purchase_requests' %>
+  <style>
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .dashboard-card {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.1);
+      overflow: hidden;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .dashboard-card:hover {
+      box-shadow: 0 3px 8px rgba(0,0,0,.15);
+    }
+
+    .dashboard-card-header {
+      background-color: #f5f5f5;
+      padding: 12px 15px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .dashboard-card-header h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .dashboard-card-body {
+      padding: 15px;
+    }
+
+    .summary-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-box {
+      flex: 1;
+      min-width: 200px;
+      margin: 0 10px;
+      text-align: center;
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      border: 1px solid #dee2e6;
+    }
+
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+      color: #28a745;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-currency {
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    .dashboard-table th,
+    .dashboard-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .dashboard-table th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .dashboard-table tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .status-total { background-color: #28a745; }
+    .status-utilized { background-color: #ffc107; }
+    .status-remaining { background-color: #17a2b8; }
+    .status-overbudget { background-color: #dc3545; }
+
+    .utilization-bar {
+      width: 100%;
+      height: 20px;
+      background-color: #e9ecef;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 5px 0;
+    }
+
+    .utilization-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
+      transition: width 0.3s ease;
+    }
+
+    .currency-breakdown {
+      margin-top: 20px;
+    }
+
+    .currency-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .currency-item {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #dee2e6;
+      text-align: center;
+    }
+
+    .currency-header {
+      font-weight: bold;
+      color: #495057;
+      margin-bottom: 10px;
+    }
+
+    .currency-amount {
+      font-size: 18px;
+      color: #007bff;
+      font-weight: bold;
+    }
+
+    .tpc-grouping {
+      margin-top: 30px;
+    }
+
+    .tpc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 15px;
+    }
+
+    .tpc-card {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .tpc-header {
+      background: #f8f9fa;
+      padding: 15px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .tpc-code {
+      font-weight: bold;
+      color: #495057;
+      font-size: 16px;
+    }
+
+    .tpc-body {
+      padding: 15px;
+    }
+
+    .tpc-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .tpc-stat {
+      text-align: center;
+    }
+
+    .tpc-stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .tpc-stat-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .capex-table-section {
+      margin-top: 30px;
+    }
+
+    .capex-dashboard {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .capex-dashboard th,
+    .capex-dashboard td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .capex-dashboard th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .capex-dashboard tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    .text-danger {
+      color: #dc3545 !important;
+    }
+
+    .currency-code {
+      font-size: 11px;
+      color: #777;
+      background-color: #f5f5f5;
+      padding: 1px 4px;
+      border-radius: 2px;
+      margin-left: 3px;
+    }
+
+    .utilization-text {
+      font-size: 12px;
+      margin-left: 5px;
+    }
+
+    .pr-link {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .pr-link:hover {
+      text-decoration: underline;
+    }
+
+    .no-prs {
+      color: #999;
+    }
+
+    .no-capex-data {
+      text-align: center;
+      padding: 40px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .conversion-note {
+      font-size: 11px;
+      color: #888;
+      font-style: italic;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* Native Chart Styles for CAPEX */
+    .capex-chart {
+      margin: 15px 0;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 5px;
+    }
+
+    .capex-donut-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin: 10px 0;
+    }
+
+    .capex-donut {
+      width: 140px;
+      height: 140px;
+      position: relative;
+    }
+
+    .capex-donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 12px;
+      color: #333;
+    }
+
+    .capex-bar-chart {
+      display: flex;
+      align-items: flex-end;
+      height: 120px;
+      margin: 10px 0;
+      padding: 10px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+      gap: 8px;
+    }
+
+    .capex-quarter-bar {
+      background: linear-gradient(to top, #28a745, #20c997);
+      border-radius: 3px 3px 0 0;
+      position: relative;
+      flex: 1;
+      min-height: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .capex-quarter-bar:hover {
+      background: linear-gradient(to top, #20c997, #17a2b8);
+      transform: scaleY(1.05);
+    }
+
+    .capex-quarter-label {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: #666;
+      font-weight: bold;
+    }
+
+    .capex-quarter-value {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: #333;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+      .summary-stats {
+        flex-direction: column;
+      }
+      
+      .stat-box {
+        margin: 5px 0;
+      }
+      
+      .dashboard-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+<% end %>
+
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/capex/dashboard.html.erb %>
+<% html_title "CAPEX Dashboard - #{@project.name}" %>
+
+<div class="contextual">
+  <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-back"></span> Back to CAPEX List
+  <% end %>
+  
+  <% if User.current.allowed_to?(:manage_capex, @project) %>
+    <%= link_to new_project_capex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+      <span class="icon icon-add"></span> New CAPEX Entry
+    <% end %>
+  <% end %>
+</div>
+
+<h2>CAPEX Dashboard - <%= @current_year %></h2>
+
+<%= form_tag dashboard_project_capex_index_path(@project), method: :get, local: true do %>
+  <fieldset class="filters">
+    <legend>Year Filter</legend>
+    <%= select_tag 'year', 
+                   options_for_select((2020..2030).map { |y| [y, y] }, @current_year), 
+                   onchange: 'this.form.submit()' %>
+  </fieldset>
+<% end %>
+
+<% if @capex_entries.any? %>
+  <!-- Summary Cards -->
+  <div class="summary-stats">
+    <div class="stat-box">
+      <div class="stat-number">
+        <% if @use_exchange_rates %>
+          <%= helpers.capex_currency_symbol(@default_currency) %>
+          <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @default_currency %></span>
+        <% elsif @currency_breakdown.keys.length == 1 %>
+          <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+          <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @currency_breakdown.keys.first %></span>
+        <% else %>
+          Multi-Currency
+        <% end %>
+      </div>
+      <div class="stat-label">
+        Total CAPEX Budget
+        <% if @use_exchange_rates %>
+          <span class="conversion-note">(Converted to <%= @default_currency %>)</span>
+        <% end %>
+      </div>
+    </div>
+    
+    <div class="stat-box">
+      <div class="stat-number stat-currency">
+        <% if @use_exchange_rates %>
+          <%= helpers.capex_currency_symbol(@default_currency) %>
+          <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @default_currency %></span>
+        <% elsif @currency_breakdown.keys.length == 1 %>
+          <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+          <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @currency_breakdown.keys.first %></span>
+        <% else %>
+          Multi-Currency
+        <% end %>
+      </div>
+      <div class="stat-label">Total Utilized (<%= @utilization_percentage %>%)</div>
+      <div class="utilization-bar">
+        <div class="utilization-fill" style="width: <%= @utilization_percentage %>%"></div>
+      </div>
+    </div>
+    
+    <div class="stat-box">
+      <div class="stat-number">
+        <% if @use_exchange_rates %>
+          <%= helpers.capex_currency_symbol(@default_currency) %>
+          <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @default_currency %></span>
+        <% elsif @currency_breakdown.keys.length == 1 %>
+          <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+          <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @currency_breakdown.keys.first %></span>
+        <% else %>
+          Multi-Currency
+        <% end %>
+      </div>
+      <div class="stat-label">Total Remaining (<%= (100 - @utilization_percentage).round(2) %>%)</div>
+    </div>
+    
+    <div class="stat-box">
+      <div class="stat-number"><%= @capex_entries.count %></div>
+      <div class="stat-label">Active CAPEX Entries</div>
+    </div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-container">
+    <!-- Budget Utilization Overview -->
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h3>Budget Utilization Overview</h3>
+      </div>
+      <div class="dashboard-card-body">
+        <!-- Native Donut Chart -->
+        <div class="capex-donut-container">
+          <div class="capex-donut" id="utilization-donut-chart">
+            <!-- SVG Donut Chart will be generated here -->
+            <div class="capex-donut-center">
+              <div style="font-weight: bold; font-size: 14px;"><%= @utilization_percentage %>%</div>
+              <div style="font-size: 10px; color: #666;">Utilized</div>
+            </div>
+          </div>
+          <div style="flex: 1;">
+            <table class="dashboard-table">
+              <tr>
+                <td><span class="status-indicator status-utilized"></span>Utilized</td>
+                <td class="stat-currency">
+                  <% if @use_exchange_rates %>
+                    <%= helpers.capex_currency_symbol(@default_currency) %>
+                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+                    (<%= @utilization_percentage %>%)
+                  <% elsif @currency_breakdown.keys.length == 1 %>
+                    <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+                    (<%= @utilization_percentage %>%)
+                  <% else %>
+                    Multi-Currency (<%= @utilization_percentage %>%)
+                  <% end %>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="status-indicator status-remaining"></span>Remaining</td>
+                <td class="stat-currency">
+                  <% if @use_exchange_rates %>
+                    <%= helpers.capex_currency_symbol(@default_currency) %>
+                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
+                    (<%= (100 - @utilization_percentage).round(2) %>%)
+                  <% elsif @currency_breakdown.keys.length == 1 %>
+                    <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
+                    (<%= (100 - @utilization_percentage).round(2) %>%)
+                  <% else %>
+                    Multi-Currency (<%= (100 - @utilization_percentage).round(2) %>%)
+                  <% end %>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quarterly Distribution -->
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h3>Quarterly Distribution</h3>
+      </div>
+      <div class="dashboard-card-body">
+        <!-- Native Bar Chart -->
+        <div class="capex-bar-chart" id="quarterly-bar-chart">
+          <!-- Quarterly bars will be generated here -->
+        </div>
+        
+        <table class="dashboard-table">
+          <tr>
+            <th>Quarter</th>
+            <th>Budget</th>
+          </tr>
+          <tr>
+            <td>Q1</td>
+            <td class="stat-currency">
+              <% if @use_exchange_rates %>
+                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+              <% elsif @currency_breakdown.keys.length == 1 %>
+                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+                <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+              <% else %>
+                <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <td>Q2</td>
+            <td class="stat-currency">
+              <% if @use_exchange_rates %>
+                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+              <% elsif @currency_breakdown.keys.length == 1 %>
+                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+                <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+              <% else %>
+                <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <td>Q3</td>
+            <td class="stat-currency">
+              <% if @use_exchange_rates %>
+                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+              <% elsif @currency_breakdown.keys.length == 1 %>
+                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+                <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+              <% else %>
+                <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+              <% end %>
+            </td>
+          </tr>
+          <tr>
+            <td>Q4</td>
+            <td class="stat-currency">
+              <% if @use_exchange_rates %>
+                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+              <% elsif @currency_breakdown.keys.length == 1 %>
+                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+                <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+              <% else %>
+                <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+              <% end %>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TPC Code Grouping -->
+  <% if @tpc_grouping && @tpc_grouping.any? %>
+    <div class="tpc-grouping">
+      <h3>Budget by TPC Code</h3>
+      <div class="tpc-grid">
+        <% @tpc_grouping.each do |tpc_code, data| %>
+          <div class="tpc-card">
+            <div class="tpc-header">
+              <div class="tpc-code"><%= tpc_code %></div>
+            </div>
+            <div class="tpc-body">
+              <div class="tpc-stats">
+                <div class="tpc-stat">
+                  <div class="tpc-stat-value">
+                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
+                  </div>
+                  <div class="tpc-stat-label">Total Budget</div>
+                </div>
+                <div class="tpc-stat">
+                  <div class="tpc-stat-value">
+                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
+                  </div>
+                  <div class="tpc-stat-label">Utilized</div>
+                </div>
+                <div class="tpc-stat">
+                  <div class="tpc-stat-value"><%= data[:entries_count] %></div>
+                  <div class="tpc-stat-label">Entries</div>
+                </div>
+              </div>
+              <div class="utilization-bar">
+                <div class="utilization-fill" style="width: <%= data[:utilization_percentage] %>%"></div>
+              </div>
+              <div style="text-align: center; margin-top: 10px; font-size: 14px; color: #666;">
+                <%= data[:utilization_percentage] %>% Utilized
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Currency Breakdown (if multi-currency) -->
+  <% if @currency_breakdown.keys.length > 1 %>
+    <div class="currency-breakdown">
+      <h3>Budget by Currency</h3>
+      <div class="currency-grid">
+        <% @currency_breakdown.each do |currency, amount| %>
+          <div class="currency-item">
+            <div class="currency-header"><%= currency %></div>
+            <div class="currency-amount">
+              <%= Capex.new(currency: currency).currency_symbol %>
+              <%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- CAPEX Entries Table -->
+  <div class="capex-table-section">
+    <h3>CAPEX Entries Details</h3>
+    <div class="autoscroll">
+      <table class="list capex-dashboard">
+        <thead>
+          <tr>
+            <th>TPC Code</th>
+            <th>Description</th>
+            <th>Budget</th>
+            <th>Utilized</th>
+            <th>Remaining</th>
+            <th>Utilization</th>
+            <th>Linked PRs</th>
+            <th class="buttons">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @capex_entries.each do |capex| %>
+            <tr class="<%= cycle('odd', 'even') %>">
+              <td class="tpc-code">
+                <strong><%= capex.tpc_code %></strong>
+              </td>
+              <td class="description">
+                <%= truncate(capex.description, length: 80) %>
+              </td>
+              <td class="budget">
+                <span class="currency-amount">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.total_amount, precision: 2, delimiter: ',') %>
+                  <span class="currency-code"><%= capex.currency %></span>
+                </span>
+              </td>
+              <td class="utilized">
+                <span class="currency-amount">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.utilized_amount, precision: 2, delimiter: ',') %>
+                </span>
+              </td>
+              <td class="remaining">
+                <span class="currency-amount <%= 'text-danger' if capex.remaining_amount < 0 %>">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount, precision: 2, delimiter: ',') %>
+                </span>
+              </td>
+              <td class="utilization">
+                <div class="utilization-bar" style="width: 80px; height: 15px;">
+                  <div class="utilization-fill" style="width: <%= [capex.utilization_percentage, 100].min %>%"></div>
+                </div>
+                <span class="utilization-text"><%= capex.utilization_percentage %>%</span>
+              </td>
+              <td class="linked-prs">
+                <% pr_count = capex.purchase_requests.count %>
+                <% if pr_count > 0 %>
+                  <%= link_to "#{pr_count} PR#{'s' if pr_count != 1}", 
+                            project_capex_path(@project, capex), 
+                            class: 'pr-link' %>
+                <% else %>
+                  <span class="no-prs">-</span>
+                <% end %>
+              </td>
+              <td class="buttons">
+                <%= link_to project_capex_path(@project, capex), 
+                          class: 'icon icon-zoom-in', 
+                          title: 'View' %>
+                <% if User.current.allowed_to?(:manage_capex, @project) %>
+                  <%= link_to edit_project_capex_path(@project, capex), 
+                            class: 'icon icon-edit', 
+                            title: 'Edit' %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+<% else %>
+  <div class="no-capex-data">
+    <h3>No CAPEX Data for <%= @current_year %></h3>
+    <p>There are no CAPEX entries for the selected year.</p>
+    
+    <% if User.current.allowed_to?(:manage_capex, @project) %>
+      <p>
+        <%= link_to new_project_capex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+          <span class="icon icon-add"></span> Create First CAPEX Entry
+        <% end %>
+      </p>
+    <% end %>
+  </div>
+<% end %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  <% if @capex_entries.any? %>
+    // Generate CAPEX Utilization Donut Chart
+    generateCapexDonutChart('utilization-donut-chart', {
+      utilized: <%= @total_utilized %>,
+      remaining: <%= @total_remaining %>,
+      percentage: <%= @utilization_percentage %>
+    });
+    
+    // Generate Quarterly Bar Chart
+    generateCapexBarChart('quarterly-bar-chart', [
+      { label: 'Q1', value: <%= @quarterly_data[:q1] %> },
+      { label: 'Q2', value: <%= @quarterly_data[:q2] %> },
+      { label: 'Q3', value: <%= @quarterly_data[:q3] %> },
+      { label: 'Q4', value: <%= @quarterly_data[:q4] %> }
+    ]);
+  <% end %>
+});
+
+// Function to generate CAPEX donut chart using SVG
+function generateCapexDonutChart(containerId, data) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  const size = 140;
+  const outerRadius = size / 2 - 10;
+  const innerRadius = outerRadius * 0.6;
+  const centerX = size / 2;
+  const centerY = size / 2;
+  
+  // Create SVG
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+  
+  const total = data.utilized + data.remaining;
+  if (total === 0) return;
+  
+  // Utilized arc
+  const utilizedPercentage = data.utilized / total;
+  const utilizedAngle = utilizedPercentage * 2 * Math.PI;
+  
+  if (utilizedPercentage > 0) {
+    const path1 = createDonutPath(centerX, centerY, outerRadius, innerRadius, 0, utilizedAngle);
+    const utilizedPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    utilizedPath.setAttribute('d', path1);
+    utilizedPath.setAttribute('fill', '#ffc107');
+    utilizedPath.setAttribute('stroke', '#fff');
+    utilizedPath.setAttribute('stroke-width', '2');
+    svg.appendChild(utilizedPath);
+  }
+  
+  // Remaining arc
+  const remainingPercentage = data.remaining / total;
+  if (remainingPercentage > 0) {
+    const path2 = createDonutPath(centerX, centerY, outerRadius, innerRadius, utilizedAngle, 2 * Math.PI);
+    const remainingPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    remainingPath.setAttribute('d', path2);
+    remainingPath.setAttribute('fill', '#17a2b8');
+    remainingPath.setAttribute('stroke', '#fff');
+    remainingPath.setAttribute('stroke-width', '2');
+    svg.appendChild(remainingPath);
+  }
+  
+  container.insertBefore(svg, container.firstChild);
+}
+
+// Helper function to create donut path
+function createDonutPath(centerX, centerY, outerRadius, innerRadius, startAngle, endAngle) {
+  const x1 = centerX + outerRadius * Math.cos(startAngle);
+  const y1 = centerY + outerRadius * Math.sin(startAngle);
+  const x2 = centerX + outerRadius * Math.cos(endAngle);
+  const y2 = centerY + outerRadius * Math.sin(endAngle);
+  
+  const x3 = centerX + innerRadius * Math.cos(endAngle);
+  const y3 = centerY + innerRadius * Math.sin(endAngle);
+  const x4 = centerX + innerRadius * Math.cos(startAngle);
+  const y4 = centerY + innerRadius * Math.sin(startAngle);
+  
+  const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+  
+  return [
+    `M ${x1} ${y1}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+    `L ${x3} ${y3}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
+    'Z'
+  ].join(' ');
+}
+
+// Function to generate CAPEX quarterly bar chart
+function generateCapexBarChart(containerId, data) {
+  const container = document.getElementById(containerId);
+  if (!container || !data.length) return;
+  
+  // Clear existing content
+  container.innerHTML = '';
+  
+  // Find max value for scaling
+  const maxValue = Math.max(...data.map(item => item.value));
+  if (maxValue === 0) return;
+  
+  data.forEach((item, index) => {
+    const barHeight = (item.value / maxValue) * 80; // Max height 80px
+    
+    const bar = document.createElement('div');
+    bar.className = 'capex-quarter-bar';
+    bar.style.height = barHeight + 'px';
+    
+    // Add value label
+    const valueLabel = document.createElement('div');
+    valueLabel.className = 'capex-quarter-value';
+    valueLabel.textContent = item.value.toLocaleString();
+    bar.appendChild(valueLabel);
+    
+    // Add quarter label
+    const quarterLabel = document.createElement('div');
+    quarterLabel.className = 'capex-quarter-label';
+    quarterLabel.textContent = item.label;
+    bar.appendChild(quarterLabel);
+    
+    // Add hover effect
+    bar.title = `${item.label}: ${item.value.toLocaleString()}`;
+    
+    container.appendChild(bar);
+  });
+}
+</script>

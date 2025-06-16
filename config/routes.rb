@@ -14,6 +14,13 @@ Rails.application.routes.draw do
         get 'manage'
       end
     end
+    
+    # Add CAPEX management routes  
+    resources :capex, path: 'capex', as: 'capex' do
+      collection do
+        get 'dashboard'
+      end
+    end
   end
 
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]

@@ -2,7 +2,8 @@
 <% if controller_name == 'purchase_requests' || 
       controller_name == 'vendors' || 
       controller_name == 'project_vendors' ||
-      controller_name == 'purchase_request_statuses' %>
+      controller_name == 'purchase_request_statuses' ||
+      controller_name == 'capex' %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
   <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   
@@ -10,8 +11,18 @@
     <%= stylesheet_link_tag 'purchase_request_vendors', plugin: 'redmine_purchase_requests' %>
   <% end %>
   
+  <% if controller_name == 'capex' %>
+    <%= stylesheet_link_tag 'capex', plugin: 'redmine_purchase_requests' %>
+  <% end %>
+  
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <% if action_name == 'dashboard' %>
+  
+  <% if controller_name == 'capex' %>
+    <%= javascript_include_tag 'capex', plugin: 'redmine_purchase_requests' %>
+  <% end %>
+  
+  <% if (controller_name == 'purchase_requests' && action_name == 'dashboard') || 
+        (controller_name == 'capex' && action_name == 'dashboard') %>
     <%= javascript_include_tag 'apexcharts', plugin: 'redmine_purchase_requests' %>
   <% end %>
 <% end %>

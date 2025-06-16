@@ -3,8 +3,8 @@
 Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
-  description 'A plugin for managing purchase requests in Redmine'
-  version '0.0.8' # Increment version number
+  description 'A comprehensive plugin for managing purchase requests and CAPEX budgets in Redmine'
+  version '1.0.0' # Major version with CAPEX functionality
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -18,6 +18,9 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
     permission :view_purchase_request_vendors, { project_vendors: [:index] }
     permission :manage_purchase_request_vendors, { project_vendors: [:manage] }
+    permission :view_capex, { capex: [:index, :show] }
+    permission :manage_capex, { capex: [:new, :create, :edit, :update, :destroy] }
+    permission :view_capex_dashboard, { capex: [:dashboard] }
   end
   
   # Fix project menu items
@@ -38,6 +41,18 @@ Redmine::Plugin.register :redmine_purchase_requests do
        caption: :label_vendors,
        param: :project_id,
        parent: :purchase_requests
+       
+  menu :project_menu, :capex,
+       { controller: 'capex', action: 'index' },
+       caption: 'CAPEX',
+       param: :project_id,
+       parent: :purchase_requests
+       
+  menu :project_menu, :capex_dashboard,
+       { controller: 'capex', action: 'dashboard' },
+       caption: 'CAPEX Dashboard',
+       param: :project_id,
+       parent: :purchase_requests
   
   # Add settings page with empty exchange_rates hash
   settings default: {
@@ -49,7 +64,11 @@ Redmine::Plugin.register :redmine_purchase_requests do
     'show_exchange_rates' => '0',
     'exchange_rates' => {},  # Initialize exchange_rates as an empty hash
     'allow_custom_vendors' => '1',
-    'vendors' => []  # Initialize vendors as an empty array
+    'vendors' => [],  # Initialize vendors as an empty array
+    'capex_enabled' => '1',
+    'capex_auto_link' => '0',
+    'capex_currency_validation' => '1',
+    'capex_quarterly_validation' => '1'
   }, partial: 'settings/purchase_request_settings'
 end
 
@@ -80,6 +99,6 @@ Rails.application.config.to_prepare do
   
   # Load other dependencies
   require_dependency 'redmine_purchase_requests/hooks'
-  require_dependency 'redmine_purchase_requests/patches/models_patch'
+  require_dependency 'redmine_purchase_requests/patches/project_patch'
   require_dependency 'redmine_purchase_requests/patches/user_patch'
 end

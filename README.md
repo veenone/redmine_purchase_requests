@@ -7,6 +7,7 @@ A comprehensive plugin for managing purchase requests within Redmine. This plugi
 ## Features
 
 - **Complete Purchase Request Management**: Create, view, edit, and delete purchase requests
+- **CAPEX Management**: Comprehensive Capital Expenditure tracking and budget management
 - **Customizable Statuses**: Define your own purchase request statuses with custom colors and workflows
 - **Project-level Vendor Management**: Access vendor information directly from project interfaces
 - **Global Vendor Database**: Centralized vendor data accessible across all projects
@@ -16,6 +17,9 @@ A comprehensive plugin for managing purchase requests within Redmine. This plugi
 - **File Attachments**: Attach supporting documents to purchase requests
 - **Priority Levels**: Assign priority levels (Low, Normal, High, Urgent) to requests
 - **Multi-currency Support**: Handle different currencies with exchange rate calculations
+- **Budget Tracking**: Link purchase requests to CAPEX entries for comprehensive budget tracking
+- **Quarterly Distribution**: Track quarterly budget distribution and cashout amounts
+- **CAPEX Dashboard**: Visual analytics and reporting for CAPEX utilization and trends
 - **Notification System**: Optional notifications for managers when new requests are created
 - **Search & Filter**: Find requests by status or keyword
 - **Dashboard**: View purchase request statistics and trends with visual charts
@@ -49,6 +53,33 @@ The plugin now includes a comprehensive vendor management system with the follow
 - **Vendor Details**: Track vendor name, ID, address, contact information, and more
 - **Vendor Selection**: Select vendors from a dropdown in purchase request forms
 - **Custom Vendors**: Option to enter custom vendors if needed
+
+## CAPEX Management
+
+The plugin includes a comprehensive CAPEX (Capital Expenditure) management system:
+
+### Features
+- **CAPEX Entry Creation**: Create and manage CAPEX entries with year, TPC codes, and budget amounts
+- **Quarterly Distribution**: Track budget distribution across Q1-Q4 with automatic validation
+- **Multi-currency Support**: Handle CAPEX budgets in different currencies
+- **Budget Tracking**: Link purchase requests to CAPEX entries for real-time budget utilization
+- **Dashboard Analytics**: Visual charts and statistics for CAPEX utilization and trends
+- **Alerts System**: Automatic alerts for budget thresholds and over-budget situations
+
+### Usage
+1. **Enable CAPEX**: Go to Administration → Plugins → Purchase Requests → Configure → CAPEX tab
+2. **Create CAPEX Entries**: Navigate to project → CAPEX → New CAPEX Entry
+3. **Link Purchase Requests**: Select CAPEX entries when creating purchase requests
+4. **Monitor Usage**: Use the CAPEX Dashboard to track budget utilization
+
+### CAPEX Fields
+- **Year**: Budget year (e.g., 2025)
+- **TPC Code**: Total Project Cost code for tracking
+- **Description**: Brief description of the capital expenditure
+- **Total Amount**: Total budget amount
+- **Currency**: Budget currency
+- **Quarterly Distribution**: Q1, Q2, Q3, Q4 amounts (must sum to total)
+- **Utilization Tracking**: Automatic calculation of used vs. remaining budget
 - **Vendor Management UI**: CRUD interface for administrators to manage vendors
 - **Migration Tool**: One-click migration from settings-based vendors to database records
 

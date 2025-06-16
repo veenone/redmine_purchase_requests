@@ -1,0 +1,503 @@
+/* CAPEX Management Styles */
+
+/* CAPEX Dashboard */
+.capex-dashboard {
+  margin: 20px 0;
+}
+
+.capex-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.capex-stat-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.capex-stat-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.capex-stat-value {
+  font-size: 2em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.capex-stat-label {
+  font-size: 0.9em;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.capex-stat-card.budget {
+  border-left: 4px solid #2196F3;
+}
+
+.capex-stat-card.utilized {
+  border-left: 4px solid #4CAF50;
+}
+
+.capex-stat-card.remaining {
+  border-left: 4px solid #FF9800;
+}
+
+.capex-stat-card.utilization {
+  border-left: 4px solid #9C27B0;
+}
+
+/* CAPEX Charts */
+.capex-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.capex-chart-container {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.capex-chart-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
+  text-align: center;
+}
+
+/* CAPEX Form */
+.capex-form {
+  background: #fff;
+  border-radius: 6px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.capex-quarterly-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.capex-quarterly-field {
+  position: relative;
+}
+
+.capex-quarterly-field label {
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.capex-quarterly-field input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.capex-quarterly-field input:focus {
+  border-color: #2196F3;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.capex-total-validation {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.capex-total-validation.valid {
+  background: #e8f5e8;
+  border-color: #4CAF50;
+  color: #2e7d32;
+}
+
+.capex-total-validation.invalid {
+  background: #ffebee;
+  border-color: #f44336;
+  color: #c62828;
+}
+
+.capex-auto-distribute {
+  margin: 15px 0;
+  text-align: center;
+}
+
+.capex-auto-distribute button {
+  background: #2196F3;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.capex-auto-distribute button:hover {
+  background: #1976D2;
+}
+
+/* CAPEX Table */
+.capex-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.capex-table th {
+  background: #f5f5f5;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 2px solid #ddd;
+}
+
+.capex-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.capex-table tr:hover {
+  background: #f9f9f9;
+}
+
+/* CAPEX Progress Bars */
+.capex-progress {
+  background: #f0f0f0;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  position: relative;
+  margin: 5px 0;
+}
+
+.capex-progress-bar {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.capex-progress-bar.low {
+  background: #4CAF50;
+}
+
+.capex-progress-bar.medium {
+  background: #FF9800;
+}
+
+.capex-progress-bar.high {
+  background: #f44336;
+}
+
+.capex-progress-bar.over {
+  background: #9C27B0;
+}
+
+/* CAPEX Badges */
+.capex-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.capex-badge.active {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.capex-badge.completed {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.capex-badge.cancelled {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.capex-badge.on-hold {
+  background: #fff8e1;
+  color: #ef6c00;
+}
+
+/* CAPEX Alerts */
+.capex-alerts {
+  margin: 20px 0;
+}
+
+.capex-alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.capex-alert.warning {
+  background: #fff8e1;
+  border-left: 4px solid #ff9800;
+  color: #ef6c00;
+}
+
+.capex-alert.danger {
+  background: #ffebee;
+  border-left: 4px solid #f44336;
+  color: #c62828;
+}
+
+.capex-alert.info {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  color: #1565c0;
+}
+
+.capex-alert-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* CAPEX Details */
+.capex-details {
+  background: #fff;
+  border-radius: 6px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.capex-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.capex-detail-item {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.capex-detail-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.capex-detail-label {
+  font-weight: bold;
+  color: #555;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.capex-detail-value {
+  color: #333;
+  font-size: 14px;
+}
+
+/* CAPEX Currency Display */
+.capex-currency {
+  font-weight: bold;
+  color: #2196F3;
+}
+
+.capex-amount {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+/* CAPEX Linked Requests */
+.capex-linked-requests {
+  margin: 20px 0;
+}
+
+.capex-linked-requests h4 {
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.linked-request-item {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: between;
+  align-items: center;
+}
+
+.linked-request-info {
+  flex-grow: 1;
+}
+
+.linked-request-title {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.linked-request-meta {
+  font-size: 12px;
+  color: #666;
+}
+
+.linked-request-amount {
+  font-weight: bold;
+  color: #2196F3;
+  margin-left: 15px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .capex-stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .capex-charts {
+    grid-template-columns: 1fr;
+  }
+  
+  .capex-quarterly-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .capex-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* CAPEX Search and Filters */
+.capex-filters {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin: 20px 0;
+}
+
+.capex-filter-row {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.capex-filter-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+}
+
+.capex-filter-field label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.capex-filter-field select,
+.capex-filter-field input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* CAPEX Action Buttons */
+.capex-actions {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.capex-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s ease;
+}
+
+.capex-btn.primary {
+  background: #2196F3;
+  color: white;
+}
+
+.capex-btn.primary:hover {
+  background: #1976D2;
+}
+
+.capex-btn.secondary {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.capex-btn.secondary:hover {
+  background: #e8e8e8;
+}
+
+.capex-btn.danger {
+  background: #f44336;
+  color: white;
+}
+
+.capex-btn.danger:hover {
+  background: #d32f2f;
+}
+
+/* Form validation styling */
+.capex-form .field_with_errors input {
+  border-color: #f44336;
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2);
+}
+
+.capex-form .error-message {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 5px;
+}

@@ -1,0 +1,318 @@
+<div class="contextual">
+  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+    <span class="icon icon-add"></span> <%= l(:label_new_purchase_request) %>
+  <% end %>
+</div>
+
+<h2><%= l(:label_purchase_requests) %></h2>
+
+<% if @purchase_requests.empty? %>
+  <div class="nodata">
+    <p><%= l(:label_no_data) %></p>
+    <p><%= l(:label_create_first_purchase_request, link: link_to(l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon')).html_safe %></p>
+  </div>
+<% else %>
+  <%= form_tag(project_purchase_requests_path(@project), method: :get, id: "purchase-requests-form") do %>
+    <fieldset class="filters">
+      <legend><%= l(:label_filter_plural) %></legend>
+      <div class="filter-options">
+        <label for="status"><%= l(:field_status) %>:</label>
+        <%= select_tag 'status_id', 
+                       options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, params[:status_id]), 
+                       include_blank: l(:label_all),
+                       onchange: 'this.form.submit()' %>
+        
+        <label for="search"><%= l(:label_search) %>:</label>
+        <%= text_field_tag 'search', params[:search], size: 30 %>
+        
+        <%= submit_tag l(:button_apply), name: nil, class: 'pr-button pr-button-secondary small' %>
+        <% if params[:status_id].present? || params[:search].present? %>
+          <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+            <span class="icon icon-reload"></span> <%= l(:button_clear) %>
+          <% end %>
+        <% end %>
+      </div>
+    </fieldset>
+  <% end %>
+
+  <div class="autoscroll">
+    <table class="list purchase-requests">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th><%= l(:field_title) %></th>
+          <th><%= l(:field_status) %></th>
+          <th><%= l(:field_author) %></th>
+          <th><%= l(:field_estimated_price) %></th>
+          <th><%= l(:field_capex_entry) %></th>
+          <th><%= l(:field_created_on) %></th>
+          <th><%= l(:field_updated_on) %></th>
+          <th class="buttons"><%= l(:label_action) %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @purchase_requests.each do |purchase_request| %>
+          <tr class="<%= cycle('odd', 'even') %> <%= purchase_request.status.is_closed? ? 'closed' : '' %>">
+            <td class="id"><%= link_to purchase_request.id, project_purchase_request_path(@project, purchase_request) %></td>
+            <td class="title">
+              <%= link_to purchase_request.title, project_purchase_request_path(@project, purchase_request) %>
+              <% if purchase_request.description.present? %>
+                <div class="tooltip"><span class="tip-icon">ℹ️</span>
+                  <span class="tooltip-text"><%= h(truncate(purchase_request.description, length: 100)) %></span>
+                </div>
+              <% end %>
+            </td>
+            <td class="status">
+              <span class="status-badge" style="background-color: <%= purchase_request.status.color.presence || '#777777' %>">
+                <%= purchase_request.status.name %>
+              </span>
+            </td>
+            <td class="author">
+              <%= link_to_user purchase_request.user %>
+            </td>
+            <td class="price">
+              <% if purchase_request.estimated_price.present? %>
+                <span class="price-value">
+                  <% 
+                    # Get the correct currency symbol for this purchase request
+                    symbol_map = {
+                      'USD' => '$',
+                      'EUR' => '€',
+                      'GBP' => '£',
+                      'JPY' => '¥',
+                      'CAD' => 'C$',
+                      'AUD' => 'A$',
+                      'CHF' => 'CHF',
+                      'CNY' => '¥',
+                      'SEK' => 'kr',
+                      'NZD' => 'NZ$',
+                      'MXN' => 'Mex$',
+                      'SGD' => 'S$',
+                      'HKD' => 'HK$',
+                      'IDR' => 'Rp',
+                      'NOK' => 'kr',
+                      'KRW' => '₩',
+                      'TRY' => '₺',
+                      'RUB' => '₽',
+                      'INR' => '₹',
+                      'BRL' => 'R$',
+                      'ZAR' => 'R'
+                    }
+                    currency_code = purchase_request.currency
+                    symbol = symbol_map[currency_code] || currency_code
+                  %>
+                  <%= symbol %><%= number_with_precision(purchase_request.estimated_price, precision: 2, delimiter: ',') %>
+                  <span class="currency-code"><%= purchase_request.currency %></span>
+                </span>
+              <% else %>
+                <span class="no-price">-</span>
+              <% end %>
+            </td>
+            <td class="capex-entry">
+              <% if purchase_request.capex.present? %>
+                <%= link_to purchase_request.capex.display_name, 
+                          project_capex_path(@project, purchase_request.capex),
+                          class: 'capex-link',
+                          title: "#{purchase_request.capex.tpc_code} - #{purchase_request.capex.year}" %>
+                <div class="capex-mini-info">
+                  <span class="capex-utilization <%= 'over-budget' if purchase_request.capex.utilization_percentage > 100 %>">
+                    <%= purchase_request.capex.utilization_percentage.round(1) %>%
+                  </span>
+                </div>
+              <% else %>
+                <span class="no-capex">-</span>
+              <% end %>
+            </td>
+            <td class="created-on"><%= format_time(purchase_request.created_at) %></td>
+            <td class="updated-on"><%= format_time(purchase_request.updated_at) %></td>
+            <td class="buttons">
+              <%= link_to project_purchase_request_path(@project, purchase_request), 
+                          class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
+                          title: l(:button_view) do %>
+                <span class="icon icon-magnifier"></span>
+                <span class="button-text"><%= l(:button_view) %></span>
+              <% end %>
+              <%= link_to edit_project_purchase_request_path(@project, purchase_request), 
+                          class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
+                          title: l(:button_edit) do %>
+                <span class="icon icon-edit"></span>
+                <span class="button-text"><%= l(:button_edit) %></span>
+              <% end %>
+              <%= link_to project_purchase_request_path(@project, purchase_request), 
+                          method: :delete, 
+                          data: { confirm: l(:text_are_you_sure) }, 
+                          class: 'pr-button pr-button-danger pr-button-icon pr-button-icon-only small', 
+                          title: l(:button_delete) do %>
+                <span class="icon icon-del"></span>
+                <span class="button-text"><%= l(:button_delete) %></span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if @purchase_request_count > @limit %>
+    <span class="pagination">
+      <%= pagination_links_full @pages, @purchase_request_count, per_page: @limit %>
+    </span>
+  <% end %>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .purchase-requests .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: white;
+    font-size: 12px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  }
+  
+  .purchase-requests .closed {
+    color: #999;
+  }
+  
+  .purchase-requests .price {
+    white-space: nowrap;
+  }
+  
+  .purchase-requests .price-value {
+    font-weight: 500;
+  }
+  
+  .purchase-requests .currency-code {
+    display: inline-block;
+    font-size: 11px;
+    color: #777;
+    background-color: #f5f5f5;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-left: 3px;
+    vertical-align: middle;
+  }
+  
+  .purchase-requests .no-price {
+    color: #999;
+  }
+  
+  /* CAPEX column styling */
+  .purchase-requests .capex-entry {
+    font-size: 13px;
+  }
+  
+  .purchase-requests .capex-link {
+    color: #2196f3;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .purchase-requests .capex-link:hover {
+    text-decoration: underline;
+  }
+  
+  .purchase-requests .capex-mini-info {
+    margin-top: 2px;
+  }
+  
+  .purchase-requests .capex-utilization {
+    font-size: 11px;
+    font-weight: bold;
+    color: #4caf50;
+  }
+  
+  .purchase-requests .capex-utilization.over-budget {
+    color: #f44336;
+  }
+  
+  .purchase-requests .no-capex {
+    color: #999;
+    font-style: italic;
+  }
+  
+  .purchase-requests .author a {
+    color: #555;
+  }
+  
+  .purchase-requests .author a:hover {
+    text-decoration: underline;
+  }
+  
+  .filter-options {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .tooltip {
+    position: relative;
+    display: inline-block;
+    margin-left: 5px;
+  }
+  
+  .tooltip .tooltip-text {
+    visibility: hidden;
+    width: 250px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -125px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  .tooltip .tip-icon {
+    font-size: 14px;
+    color: #777;
+    cursor: help;
+  }
+  
+  .title a {
+    font-weight: bold;
+  }
+  
+  .button-small {
+    padding: 2px 10px;
+    font-size: 12px;
+  }
+
+  .purchase-requests .price .created-on .updated-on {
+    text-align: left;
+  }
+</style>
+<% end %>
+
+<%= javascript_tag do %>
+$(document).ready(function() {
+  // Add hover effect for rows
+  $('.purchase-requests tbody tr').hover(
+    function() { $(this).addClass('hover'); },
+    function() { $(this).removeClass('hover'); }
+  );
+  
+  // Make entire row clickable
+  $('.purchase-requests tbody tr').css('cursor', 'pointer').click(function(e) {
+    if (!$(e.target).is('a') && !$(e.target).is('input') && !$(e.target).parent().is('a')) {
+      window.location = '<%= project_purchase_requests_path(@project) %>/' + $(this).find('td.id a').text();
+    }
+  });
+});
+<% end %>

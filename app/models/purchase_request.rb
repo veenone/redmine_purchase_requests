@@ -2,6 +2,7 @@ class PurchaseRequest < ActiveRecord::Base
   belongs_to :user
   belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
   belongs_to :vendor, optional: true
+  belongs_to :capex, optional: true
   
   # Include the attachable module from Redmine
   include Redmine::Acts::Attachable
@@ -11,7 +12,7 @@ class PurchaseRequest < ActiveRecord::Base
   if Redmine::VERSION::MAJOR < 5
     attr_accessible :title, :description, :status_id, :product_url, 
                    :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
-                   :notify_manager, :notes, :currency
+                   :notify_manager, :notes, :currency, :capex_id
   end
   
   validates :title, presence: true

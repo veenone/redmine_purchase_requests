@@ -1,7 +1,11 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/show.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
+
+<%# Assets are loaded via hooks - no need for direct includes %>
 
 <% html_title "#{l(:label_purchase_request)} ##{@purchase_request.id}: #{h(@purchase_request.title)}" %>
 
@@ -157,6 +161,34 @@
                     <% if @purchase_request.currency != Setting.plugin_redmine_purchase_requests['default_currency'] %>
                       <span class="currency-badge"><%= @purchase_request.currency %></span>
                     <% end %>
+                  </span>
+                </div>
+              <% end %>
+              
+              <% if @purchase_request.capex.present? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:field_capex_entry) %>:</span>
+                  <span class="value">
+                    <%= link_to @purchase_request.capex.display_name, 
+                              project_capex_path(@project, @purchase_request.capex),
+                              class: 'capex-link' %>
+                    <div class="capex-details-display">
+                      <div><strong><%= l(:field_capex_year) %>:</strong> <%= @purchase_request.capex.year %></div>
+                      <div><strong><%= l(:field_capex_tpc_code) %>:</strong> <%= @purchase_request.capex.tpc_code %></div>
+                      <div><strong><%= l(:field_capex_total_amount) %>:</strong> 
+                        <%= helpers.format_price(@purchase_request.capex.total_amount, @purchase_request.capex.currency) %>
+                      </div>
+                      <div><strong><%= l(:field_capex_remaining_amount) %>:</strong> 
+                        <span class="<%= @purchase_request.capex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
+                          <%= helpers.format_price(@purchase_request.capex.remaining_amount, @purchase_request.capex.currency) %>
+                        </span>
+                      </div>
+                      <div><strong><%= l(:field_capex_utilization_percentage) %>:</strong> 
+                        <span class="utilization-percentage">
+                          <%= @purchase_request.capex.utilization_percentage.round(1) %>%
+                        </span>
+                      </div>
+                    </div>
                   </span>
                 </div>
               <% end %>
@@ -439,6 +471,45 @@
   
   .vendor-details-display div {
     margin: 3px 0;
+  }
+  
+  /* CAPEX details display styling */
+  .capex-details-display {
+    margin-top: 5px;
+    padding: 8px;
+    background-color: #f0f8ff;
+    border-radius: 3px;
+    border-left: 3px solid #2196f3;
+    font-size: 0.9em;
+  }
+  
+  .capex-details-display div {
+    margin: 3px 0;
+  }
+  
+  .capex-link {
+    color: #2196f3;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  .capex-link:hover {
+    text-decoration: underline;
+  }
+  
+  .over-budget {
+    color: #f44336;
+    font-weight: bold;
+  }
+  
+  .remaining-budget {
+    color: #4caf50;
+    font-weight: bold;
+  }
+  
+  .utilization-percentage {
+    font-weight: bold;
+    color: #ff9800;
   }
 </style>
 

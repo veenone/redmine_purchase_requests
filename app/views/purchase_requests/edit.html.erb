@@ -1,8 +1,11 @@
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/edit.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
+
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/edit.html.erb %>
+<%# Assets are loaded via hooks - no need for direct includes %>
 
 <% @purchase_request = PurchaseRequest.find(params[:id]) %>
 <% html_title "#{l(:label_edit_purchase_request)} ##{@purchase_request.id}: #{h(@purchase_request.title)}" %>
