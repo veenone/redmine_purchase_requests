@@ -91,7 +91,29 @@ class Capex < ActiveRecord::Base
     else currency
     end
   end
-  
+
+  def as_json(options = {})
+    {
+      id: id,
+      project_id: project_id,
+      year: year,
+      description: description,
+      tpc_code: tpc_code,
+      total_amount: total_amount,
+      currency: currency,
+      currency_symbol: currency_symbol,
+      q1_amount: q1_amount,
+      q2_amount: q2_amount,
+      q3_amount: q3_amount,
+      q4_amount: q4_amount,
+      utilized_amount: utilized_amount,
+      remaining_amount: remaining_amount,
+      utilization_percentage: utilization_percentage,
+      notes: notes,
+      display_name: display_name
+    }
+  end
+
   private
   
   def quarterly_amounts_sum_equals_total

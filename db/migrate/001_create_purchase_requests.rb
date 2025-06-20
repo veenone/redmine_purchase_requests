@@ -1,11 +1,11 @@
 class CreatePurchaseRequests < ActiveRecord::Migration[6.0]
-  def change
+  def up
     # Drop tables if they exist
-    drop_table :purchase_requests if table_exists?(:purchase_requests)
-    drop_table :purchase_request_statuses if table_exists?(:purchase_request_statuses)
+    drop_table :purchase_requests, if_exists: true
+    drop_table :purchase_request_statuses, if_exists: true
     
     # First create the statuses table
-    create_table :purchase_request_statuses, :id :bigint do |t|
+    create_table :purchase_request_statuses, id: :bigint do |t|
       t.string :name, null: false
       t.integer :position, default: 1
       t.boolean :is_default, default: false
@@ -31,5 +31,10 @@ class CreatePurchaseRequests < ActiveRecord::Migration[6.0]
       
       t.timestamps
     end
+  end
+  
+  def down
+    drop_table :purchase_requests, if_exists: true
+    drop_table :purchase_request_statuses, if_exists: true
   end
 end

@@ -1,6 +1,6 @@
 # Redmine Purchase Requests Plugin Migration
 # This migration adds CAPEX association support to purchase requests
-class RedminePurchaseRequestsAddCapexToPurchaseRequests < ActiveRecord::Migration[5.2]
+class AddCapexToPurchaseRequests < ActiveRecord::Migration[5.2]
   def up
     # Add CAPEX ID column to purchase_requests table for linking to CAPEX records
     unless column_exists?(:purchase_requests, :capex_id)
