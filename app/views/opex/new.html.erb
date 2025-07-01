@@ -1,0 +1,63 @@
+<%# New OPEX Entry %>
+<h2><%= l(:label_new_opex) %></h2>
+
+<%= form_for [@project, @opex], url: project_opex_index_path(@project), html: { class: 'opex-form' } do |f| %>
+  <div class="box tabular">
+    <p>
+      <%= f.label :year, l(:field_opex_year) %><span class="required">*</span>
+      <%= f.number_field :year, min: 2000, max: 2100, required: true, value: @opex.year %>
+    </p>
+    <p>
+      <%= f.label :opex_code, l(:field_opex_code) %><span class="required">*</span>
+      <%= f.text_field :opex_code, required: true %>
+    </p>
+    <p>
+      <%= f.label :description, l(:field_opex_description) %><span class="required">*</span>
+      <%= f.text_field :description, required: true %>
+    </p>
+    <p>
+      <%= f.label :total_amount, l(:field_opex_total_amount) %><span class="required">*</span>
+      <%= f.number_field :total_amount, step: 0.01, min: 0, required: true %>
+    </p>
+    <p>
+      <%= f.label :currency, l(:field_opex_currency) %><span class="required">*</span>
+      <%= f.text_field :currency, required: true, value: @opex.currency %>
+    </p>
+    <p>
+      <%= f.label :category_id, l(:field_opex_category) %><span class="required">*</span>
+      <%= f.collection_select :category_id, OpexCategory.all, :id, :name, { prompt: 'Select a category' }, { required: true } %>
+    </p>
+    <p>
+      <%= f.label :q1_amount, l(:field_opex_q1_amount) %>
+      <%= f.number_field :q1_amount, step: 0.01, min: 0 %>
+    </p>
+    <p>
+      <%= f.label :q2_amount, l(:field_opex_q2_amount) %>
+      <%= f.number_field :q2_amount, step: 0.01, min: 0 %>
+    </p>
+    <p>
+      <%= f.label :q3_amount, l(:field_opex_q3_amount) %>
+      <%= f.number_field :q3_amount, step: 0.01, min: 0 %>
+    </p>
+    <p>
+      <%= f.label :q4_amount, l(:field_opex_q4_amount) %>
+      <%= f.number_field :q4_amount, step: 0.01, min: 0 %>
+    </p>
+    <p>
+      <%= f.label :cost_center, l(:field_opex_cost_center) %>
+      <%= f.text_field :cost_center %>
+    </p>
+    <p>
+      <%= f.label :notes, l(:field_opex_notes) %>
+      <%= f.text_area :notes, rows: 3 %>
+    </p>
+  </div>
+  <div class="pr-form-actions">
+    <%= f.submit l(:button_create), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel), project_opex_index_path(@project), class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
+
+<style>
+.opex-form .box.tabular p { margin-bottom: 12px; }
+</style>

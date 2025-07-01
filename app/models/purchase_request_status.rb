@@ -2,12 +2,15 @@ class PurchaseRequestStatus < ActiveRecord::Base
   has_many :purchase_requests
 
   validates :name, presence: true, uniqueness: true
+  validates :position, presence: true, numericality: { greater_than: 0 }
+  validates :color, presence: true, format: { with: /\A#[0-9A-Fa-f]{6}\z/, message: "must be a valid hex color" }
 
+  # Ensure only one default status exists
+  before_save :ensure_single_default
+  
   # Add the sorted class method
   def self.sorted
-    order(:position)  # Assuming there's a position column to sort by
-    # or use another column like:
-    # order(:name)
+    order(:position)
   end
   
   # Returns the default status for new purchase requests
@@ -19,5 +22,12 @@ class PurchaseRequestStatus < ActiveRecord::Base
     default_status || order(:position).first
   end
   
-  # Define any additional status-related logic here
+  private
+  
+  def ensure_single_default
+    if is_default?
+      # If this status is being set as default, unset all other defaults
+      PurchaseRequestStatus.where.not(id: id).update_all(is_default: false)
+    end
+  end
 end

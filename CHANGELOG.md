@@ -5,6 +5,44 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-07-01
+
+### Added
+- **OPEX Management System**: Complete Operational Expenditure tracking and management
+- OPEX entry creation with categories, quarterly distribution, and multi-currency support
+- **OPEX Categories Configuration**: Admin interface in plugin settings to manage OPEX categories
+- OPEX category management (add/delete) directly from plugin configuration page
+- OPEX dashboard with analytics, category breakdowns, and utilization tracking
+- Database migrations for OPEX tables and category relationships
+- OPEX model with proper validations and quarterly amount calculations
+- OPEX controller with full CRUD operations and dashboard functionality
+- OPEX views (index, new, dashboard) with professional styling
+- **Enhanced Vendor Management**: CSV/JSON import/export functionality for vendors
+- Vendor import/export UI with template download and data validation
+- **Improved Purchase Request Forms**: Enhanced validation and field management
+- **CAPEX Integration**: OPEX category requirement for new CAPEX creation
+- Comprehensive translations for all OPEX and vendor management features
+- Foreign key relationships between OPEX entries and categories
+- Enhanced error handling and user feedback for all new features
+
+### Enhanced
+- Purchase request model with stronger validations and enhanced field handling
+- CAPEX and OPEX forms now require OPEX category selection from configured categories
+- Plugin settings now include dedicated OPEX category management tab
+- Improved settings controller patch to handle OPEX category operations
+- Enhanced database structure with proper foreign key constraints
+- Updated routing for OPEX and vendor management features
+- Improved localization with missing translation labels added
+
+### Fixed
+- Resolved route helper issues in plugin settings context
+- Fixed OPEX category dropdown population from database
+- Corrected collection_select validation requirements
+- Fixed template errors in vendor management pages
+- Resolved database column conflicts in OPEX model
+- Fixed redirect issues after OPEX creation
+- Proper handling of required fields in forms
+
 ## [1.0.0] - 2025-06-15
 
 ### Added

@@ -7,7 +7,12 @@ class PurchaseRequestStatusesController < ApplicationController
   end
   
   def new
-    @status = PurchaseRequestStatus.new
+    @status = PurchaseRequestStatus.new(
+      position: (PurchaseRequestStatus.maximum(:position) || 0) + 1,
+      color: '#777777',
+      is_closed: false,
+      is_default: false
+    )
   end
   
   def create

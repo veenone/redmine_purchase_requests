@@ -5,6 +5,10 @@
   <%= link_to new_vendor_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
     <span class="icon icon-add"></span> <%= l(:label_vendor_new) %>
   <% end %>
+  
+  <%= link_to export_vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-download"></span> <%= l(:label_vendor_import_export) %>
+  <% end %>
 </div>
 
 <h2><%= l(:label_global_vendor_settings) %></h2>

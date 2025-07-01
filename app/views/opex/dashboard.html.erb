@@ -1,0 +1,56 @@
+<%# OPEX Dashboard %>
+<h2><%= l(:label_opex_dashboard) %></h2>
+
+<div class="box opex-dashboard-box">
+  <h3><%= l(:label_opex_overview) %> (<%= @year %>)</h3>
+  <ul class="opex-stats">
+    <li><strong><%= l(:label_total_capex_budget) %>:</strong> <%= number_to_currency(@total_budget, unit: @project.try(:default_currency) || 'USD') %></li>
+    <li><strong><%= l(:label_utilized_budget) %>:</strong> <%= number_to_currency(@utilized_budget, unit: @project.try(:default_currency) || 'USD') %></li>
+    <li><strong><%= l(:label_remaining_budget) %>:</strong> <%= number_to_currency(@remaining_budget, unit: @project.try(:default_currency) || 'USD') %></li>
+    <li><strong><%= l(:label_average_utilization) %>:</strong> <%= @average_utilization %>%</li>
+  </ul>
+
+  <h4><%= l(:label_opex_by_category) %></h4>
+  <table class="list">
+    <thead>
+      <tr>
+        <th><%= l(:field_opex_category) %></th>
+        <th><%= l(:label_total_cost) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @category_data.each do |category, amount| %>
+        <tr>
+          <td><%= category.to_s.humanize %></td>
+          <td><%= number_to_currency(amount, unit: @project.try(:default_currency) || 'USD') %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <h4><%= l(:label_opex_quarterly_breakdown) %></h4>
+  <table class="list">
+    <thead>
+      <tr>
+        <th>Quarter</th>
+        <th><%= l(:label_total_cost) %></th>
+        <th><%= l(:label_utilized_budget) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @quarterly_data.each do |q| %>
+        <tr>
+          <td><%= q[:quarter] %></td>
+          <td><%= number_to_currency(q[:budgeted], unit: @project.try(:default_currency) || 'USD') %></td>
+          <td><%= number_to_currency(q[:utilized], unit: @project.try(:default_currency) || 'USD') %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<style>
+.opex-dashboard-box { margin: 20px 0; }
+.opex-stats { list-style: none; padding: 0; margin: 0 0 20px 0; }
+.opex-stats li { margin-bottom: 6px; }
+</style>

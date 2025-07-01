@@ -1,0 +1,162 @@
+<div class="contextual">
+  <%= link_to vendors_path, class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-back"></span> <%= l(:button_back) %>
+  <% end %>
+</div>
+
+<h2><%= l(:label_vendor_import_export) %></h2>
+
+<div class="box">
+  <div class="import-export-container">
+    <!-- Export Section -->
+    <div class="export-section">
+      <h3><span class="icon icon-download"></span> <%= l(:label_export_vendors) %></h3>
+      <p class="info"><%= l(:text_vendor_export_info) %></p>
+      
+      <div class="export-options">
+        <%= link_to vendors_export_path(format: :csv), 
+                    class: 'pr-button pr-button-primary pr-button-icon', 
+                    method: :get do %>
+          <span class="icon icon-file"></span> <%= l(:button_export_csv) %>
+        <% end %>
+        
+        <%= link_to vendors_export_path(format: :json), 
+                    class: 'pr-button pr-button-secondary pr-button-icon', 
+                    method: :get do %>
+          <span class="icon icon-file"></span> <%= l(:button_export_json) %>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- Import Section -->
+    <div class="import-section">
+      <h3><span class="icon icon-upload"></span> <%= l(:label_import_vendors) %></h3>
+      <p class="info"><%= l(:text_vendor_import_info) %></p>
+      
+      <div class="import-requirements">
+        <h4>Import Requirements:</h4>
+        <ul>
+          <li><%= l(:text_vendor_import_format) %></li>
+          <li><%= l(:text_vendor_import_requirements) %></li>
+        </ul>
+      </div>
+      
+      <%= form_with url: vendors_import_path, local: true, multipart: true, class: 'import-form' do |f| %>
+        <div class="file-input-container">
+          <%= f.file_field :file, 
+                          accept: '.csv,.json',
+                          required: true,
+                          class: 'file-input' %>
+          <label for="file" class="file-label">
+            <span class="icon icon-attachment"></span>
+            Choose File
+          </label>
+        </div>
+        
+        <div class="import-actions">
+          <%= f.submit l(:button_import_file), 
+                      class: 'pr-button pr-button-success pr-button-icon' %>
+          
+          <%= link_to vendors_import_template_path(format: :csv), 
+                      class: 'pr-button pr-button-outline pr-button-icon' do %>
+            <span class="icon icon-download"></span> <%= l(:button_download_template) %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+  .import-export-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin: 20px 0;
+  }
+  
+  .export-section, .import-section {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+  }
+  
+  .export-section h3, .import-section h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+  }
+  
+  .export-options, .import-actions {
+    margin-top: 15px;
+  }
+  
+  .export-options .pr-button {
+    margin-right: 10px;
+  }
+  
+  .import-requirements {
+    background: #fff;
+    padding: 15px;
+    border-left: 4px solid #007bff;
+    margin: 15px 0;
+  }
+  
+  .import-requirements h4 {
+    margin-top: 0;
+    color: #007bff;
+  }
+  
+  .import-requirements ul {
+    margin-bottom: 0;
+  }
+  
+  .file-input-container {
+    position: relative;
+    margin: 15px 0;
+  }
+  
+  .file-input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  
+  .file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #fff;
+    border: 2px dashed #007bff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  
+  .file-label:hover {
+    background: #f8f9fa;
+    border-color: #0056b3;
+  }
+  
+  .import-actions .pr-button {
+    margin-right: 10px;
+  }
+  
+  .info {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 15px;
+  }
+  
+  @media (max-width: 768px) {
+    .import-export-container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

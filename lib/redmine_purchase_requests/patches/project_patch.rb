@@ -5,6 +5,7 @@ module RedminePurchaseRequests
         base.class_eval do
           has_many :purchase_requests, dependent: :destroy
           has_many :capex, dependent: :destroy
+          has_many :opex, class_name: 'Opex', dependent: :destroy
           
           # Add safe navigation method for CAPEX
           def capex_entries

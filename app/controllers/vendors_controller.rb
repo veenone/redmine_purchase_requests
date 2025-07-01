@@ -117,6 +117,63 @@ class VendorsController < ApplicationController
     end
   end
   
+  def export
+    @vendors = find_vendors
+    
+    respond_to do |format|
+      format.csv do
+        send_data generate_csv(@vendors), 
+                  filename: "vendors_export_#{Date.current.strftime('%Y%m%d')}.csv",
+                  type: 'text/csv'
+      end
+      format.json do
+        send_data @vendors.to_json(except: [:created_at, :updated_at]),
+                  filename: "vendors_export_#{Date.current.strftime('%Y%m%d')}.json",
+                  type: 'application/json'
+      end
+    end
+  end
+  
+  def import
+    unless params[:file]
+      flash[:error] = l(:error_no_file_selected)
+      redirect_to vendors_path
+      return
+    end
+    
+    file = params[:file]
+    
+    begin
+      case file.content_type
+      when 'text/csv', 'application/vnd.ms-excel'
+        import_from_csv(file)
+      when 'application/json'
+        import_from_json(file)
+      else
+        flash[:error] = l(:error_unsupported_file_format)
+        redirect_to vendors_path
+        return
+      end
+      
+      flash[:notice] = l(:notice_vendors_imported_successfully)
+    rescue => e
+      flash[:error] = l(:error_vendor_import_failed, error: e.message)
+    end
+    
+    redirect_to vendors_path
+  end
+  
+  def import_template
+    respond_to do |format|
+      format.csv do
+        csv_data = generate_template_csv
+        send_data csv_data,
+                  filename: "vendor_import_template.csv",
+                  type: 'text/csv'
+      end
+    end
+  end
+  
   private
   
   def find_vendor
@@ -125,23 +182,138 @@ class VendorsController < ApplicationController
     render_404
   end
   
-  def vendor_params
-    params.require(:vendor).permit(:name, :vendor_id, :address, :phone, :contact_person, :email)
+  def find_vendors
+    Vendor.sorted
   end
   
-  def find_vendors
-    vendors = Vendor.sorted
+  def vendor_params
+    params.require(:vendor).permit(:name, :email, :phone, :website, :address, :contact_person, :notes, :is_active)
+  end
+  
+  def generate_csv(vendors)
+    require 'csv'
     
-    # Apply search filter if present
-    if params[:search].present?
-      begin
-        vendors = vendors.search(params[:search])
-      rescue => e
-        Rails.logger.error "Error searching vendors: #{e.message}"
-        flash.now[:error] = l(:error_searching_vendors)
+    CSV.generate(headers: true) do |csv|
+      csv << [
+        l(:field_name),
+        l(:field_email), 
+        l(:field_phone),
+        l(:field_website),
+        l(:field_address),
+        l(:field_contact_person),
+        l(:field_notes),
+        l(:field_is_active)
+      ]
+      
+      vendors.each do |vendor|
+        csv << [
+          vendor.name,
+          vendor.email,
+          vendor.phone,
+          vendor.website,
+          vendor.address,
+          vendor.contact_person,
+          vendor.notes,
+          vendor.is_active? ? 'Yes' : 'No'
+        ]
+      end
+    end
+  end
+  
+  def generate_template_csv
+    require 'csv'
+    
+    CSV.generate(headers: true) do |csv|
+      csv << [
+        l(:field_name),
+        l(:field_email), 
+        l(:field_phone),
+        l(:field_website),
+        l(:field_address),
+        l(:field_contact_person),
+        l(:field_notes),
+        l(:field_is_active)
+      ]
+      
+      # Add sample row
+      csv << [
+        'Sample Vendor Inc.',
+        'contact@samplevendor.com',
+        '+1-555-0123',
+        'https://www.samplevendor.com',
+        '123 Business St, City, State 12345',
+        'John Smith',
+        'Reliable supplier for office equipment',
+        'Yes'
+      ]
+    end
+  end
+  
+  def import_from_csv(file)
+    require 'csv'
+    
+    imported_count = 0
+    updated_count = 0
+    errors = []
+    
+    CSV.foreach(file.path, headers: true, encoding: 'utf-8') do |row|
+      next if row[l(:field_name)].blank?
+      
+      vendor_data = {
+        name: row[l(:field_name)],
+        email: row[l(:field_email)],
+        phone: row[l(:field_phone)],
+        website: row[l(:field_website)],
+        address: row[l(:field_address)],
+        contact_person: row[l(:field_contact_person)],
+        notes: row[l(:field_notes)],
+        is_active: row[l(:field_is_active)].to_s.downcase.in?(['yes', 'true', '1'])
+      }
+      
+      existing_vendor = Vendor.find_by(name: vendor_data[:name])
+      
+      if existing_vendor
+        if existing_vendor.update(vendor_data)
+          updated_count += 1
+        else
+          errors << "Row #{row.line_number}: #{existing_vendor.errors.full_messages.join(', ')}"
+        end
+      else
+        vendor = Vendor.new(vendor_data)
+        if vendor.save
+          imported_count += 1
+        else
+          errors << "Row #{row.line_number}: #{vendor.errors.full_messages.join(', ')}"
+        end
       end
     end
     
-    vendors
+    if errors.any?
+      raise "Import completed with errors: #{errors.join('; ')}. Imported: #{imported_count}, Updated: #{updated_count}"
+    end
+    
+    flash[:notice] = l(:notice_vendors_imported, count: imported_count, updated: updated_count)
+  end
+  
+  def import_from_json(file)
+    data = JSON.parse(file.read)
+    imported_count = 0
+    updated_count = 0
+    
+    data.each do |vendor_data|
+      next if vendor_data['name'].blank?
+      
+      existing_vendor = Vendor.find_by(name: vendor_data['name'])
+      
+      if existing_vendor
+        existing_vendor.update!(vendor_data.except('id', 'created_at', 'updated_at'))
+        updated_count += 1
+      else
+        Vendor.create!(vendor_data.except('id', 'created_at', 'updated_at'))
+        imported_count += 1
+      end
+    end
+    
+    flash[:notice] = l(:notice_vendors_imported, count: imported_count, updated: updated_count)
   end
 end

@@ -21,6 +21,16 @@ Rails.application.routes.draw do
         get 'dashboard'
       end
     end
+    
+    # Add OPEX management routes  
+    resources :opex, path: 'opex', as: 'opex' do
+      collection do
+        get 'dashboard'
+      end
+    end
+    
+    # Add OPEX categories management routes
+    resources :opex_categories, only: [:create, :edit, :update, :destroy]
   end
 
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
@@ -30,6 +40,9 @@ Rails.application.routes.draw do
     collection do
       get 'autocomplete'
       post 'migrate_from_settings'
+      get 'export'
+      post 'import'
+      get 'import_template'
     end
   end
 end

@@ -215,6 +215,14 @@
       
       <div class="form-row">
         <p>
+          <%= form.label :category_id, l(:field_opex_category) %> <span class="required">*</span>
+          <%= form.collection_select :category_id, OpexCategory.all, :id, :name, { include_blank: false }, { required: true, class: 'form-control' } %>
+          <em class="info"><%= l(:text_opex_category_info) %></em>
+        </p>
+      </div>
+      
+      <div class="form-row">
+        <p>
           <%= form.check_box :notify_manager, class: 'form-control-checkbox' %>
           <%= form.label :notify_manager, l(:field_notify_manager) %>
           <em class="info"><%= l(:text_notify_manager_info) %></em>

@@ -7,7 +7,8 @@ module PurchaseRequestSettingsHelper
       {name: 'statuses', partial: 'settings/purchase_request_statuses', label: :label_purchase_request_statuses},
       {name: 'currency', partial: 'settings/purchase_request_currency', label: :label_currency_settings},
       {name: 'vendors', partial: 'settings/purchase_request_vendors', label: :label_vendor_settings},
-      {name: 'capex', partial: 'settings/purchase_request_capex', label: :label_capex_settings}
+      {name: 'capex', partial: 'settings/purchase_request_capex', label: :label_capex_settings},
+      {name: 'opex_categories', partial: 'settings/purchase_request_opex_categories', label: :label_opex_category_settings}
     ]
   end
   

@@ -3,8 +3,8 @@
 Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
-  description 'A comprehensive plugin for managing purchase requests and CAPEX budgets in Redmine'
-  version '1.0.0' # Major version with CAPEX functionality
+  description 'A comprehensive plugin for managing purchase requests, CAPEX budgets, OPEX management, and vendor operations in Redmine'
+  version '1.1.0' # Added OPEX management and OPEX categories configuration
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -21,6 +21,9 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_capex, { capex: [:index, :show] }
     permission :manage_capex, { capex: [:new, :create, :edit, :update, :destroy] }
     permission :view_capex_dashboard, { capex: [:dashboard] }
+    permission :view_opex, { opex: [:index, :show] }
+    permission :manage_opex, { opex: [:new, :create, :edit, :update, :destroy] }
+    permission :view_opex_dashboard, { opex: [:dashboard] }
   end
   
   # Fix project menu items
@@ -51,6 +54,18 @@ Redmine::Plugin.register :redmine_purchase_requests do
   menu :project_menu, :capex_dashboard,
        { controller: 'capex', action: 'dashboard' },
        caption: 'CAPEX Dashboard',
+       param: :project_id,
+       parent: :purchase_requests
+       
+  menu :project_menu, :opex,
+       { controller: 'opex', action: 'index' },
+       caption: 'OPEX',
+       param: :project_id,
+       parent: :purchase_requests
+       
+  menu :project_menu, :opex_dashboard,
+       { controller: 'opex', action: 'dashboard' },
+       caption: 'OPEX Dashboard',
        param: :project_id,
        parent: :purchase_requests
   

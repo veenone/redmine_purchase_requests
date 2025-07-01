@@ -1,0 +1,30 @@
+<%# OPEX Category Management Tab for Plugin Settings %>
+<h3><%= l(:label_opex_category_settings) %></h3>
+
+<div id="opex-category-management">
+  <table class="list opex-categories-table">
+    <thead>
+      <tr>
+        <th><%= l(:field_opex_category_name) %></th>
+        <th><%= l(:label_actions) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% OpexCategory.all.each do |category| %>
+        <tr>
+          <td><%= category.name %></td>
+          <td>
+            <%= link_to l(:button_delete), plugin_settings_path('redmine_purchase_requests', tab: 'opex_categories', delete_category: category.id), method: :post, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-del' %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <h4><%= l(:label_add_new_opex_category) %></h4>
+  <%= form_with url: plugin_settings_path('redmine_purchase_requests', tab: 'opex_categories'), method: :post, local: true, html: { class: 'opex-category-form' } do |f| %>
+    <span><%= l(:field_opex_category_name) %></span>
+    <%= f.text_field 'opex_category[name]', required: true, maxlength: 100 %>
+    <%= f.submit l(:button_add), class: 'icon icon-add' %>
+  <% end %>
+</div>

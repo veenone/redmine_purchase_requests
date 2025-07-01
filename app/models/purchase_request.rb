@@ -3,6 +3,8 @@ class PurchaseRequest < ActiveRecord::Base
   belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
   belongs_to :vendor, optional: true
   belongs_to :capex, optional: true
+  belongs_to :opex, optional: true
+  belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
   
   # Include the attachable module from Redmine
   include Redmine::Acts::Attachable
@@ -15,11 +17,25 @@ class PurchaseRequest < ActiveRecord::Base
                    :notify_manager, :notes, :currency, :capex_id
   end
   
-  validates :title, presence: true
+  validates :title, presence: true, length: { minimum: 5, maximum: 255 }
+  validates :description, length: { minimum: 10, allow_blank: true }
   validates :status_id, presence: true
+  validates :estimated_price, numericality: { greater_than: 0, allow_blank: true }
   validates :product_url, format: { with: /\Ahttps?:\/\/.*\z/i, 
                                    allow_blank: true,
                                    message: :invalid_url }
+  validates :due_date, comparison: { greater_than: Date.current, allow_blank: true }
+  validates :currency, inclusion: { 
+    in: %w[USD EUR GBP JPY CAD AUD CHF CNY SEK NZD MXN SGD HKD IDR NOK KRW TRY RUB INR BRL ZAR],
+    allow_blank: true
+  }
+  validates :priority, inclusion: { in: %w[low normal high urgent] }
+  validates :category_id, presence: true, if: :capex_id?
+  
+  # Custom validations
+  validate :vendor_presence_check
+  validate :business_justification_for_high_value
+  validate :capex_or_opex_consistency
   
   # Add any additional scopes or validations as needed
   scope :open, -> { joins(:status).where(purchase_request_statuses: { is_closed: false }) }
@@ -48,30 +64,59 @@ class PurchaseRequest < ActiveRecord::Base
   end
   
   # Return the vendor name (for backward compatibility)
-  def vendor
-    if vendor_id.present? && (v = Vendor.find_by(id: vendor_id))
-      v.name
-    else
-      read_attribute(:vendor)
+  def vendor_name
+    vendor.present? ? vendor.name : read_attribute(:vendor)
+  end
+  
+  # Enhanced priority handling
+  def priority_color
+    case priority
+    when 'low' then '#28a745'
+    when 'normal' then '#007bff'
+    when 'high' then '#fd7e14'
+    when 'urgent' then '#dc3545'
+    else '#6c757d'
     end
   end
   
-  # Set the vendor by name or ID
-  def vendor=(value)
-    if value.is_a?(Integer) || value.to_i.to_s == value.to_s
-      # It's an ID
-      self.vendor_id = value
-    else
-      # It's a name
-      write_attribute(:vendor, value)
-      # Try to find a matching vendor
-      v = Vendor.find_by(name: value)
-      self.vendor_id = v.id if v
+  def priority_icon
+    case priority
+    when 'low' then 'icon-arrow-down'
+    when 'normal' then 'icon-arrow-right'
+    when 'high' then 'icon-arrow-up'
+    when 'urgent' then 'icon-warning'
+    else 'icon-info'
     end
   end
   
-  # Method for checking if manager should be notified
-  def notify_manager?
-    notify_manager
+  # Budget allocation methods
+  def budget_source
+    return "CAPEX: #{capex.description}" if capex.present?
+    return "OPEX: #{opex.description}" if opex.present?
+    "General Budget"
+  end
+  
+  def is_high_value?
+    estimated_price.present? && estimated_price > 1000
+  end
+  
+  private
+  
+  def vendor_presence_check
+    if vendor_id.blank? && read_attribute(:vendor).blank?
+      errors.add(:base, I18n.t('error_vendor_required'))
+    end
+  end
+  
+  def business_justification_for_high_value
+    if is_high_value? && (description.blank? || description.length < 50)
+      errors.add(:description, I18n.t('error_business_justification_required'))
+    end
+  end
+  
+  def capex_or_opex_consistency
+    if capex.present? && opex.present?
+      errors.add(:base, I18n.t('error_cannot_link_both_capex_opex'))
+    end
   end
 end

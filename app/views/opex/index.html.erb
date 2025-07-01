@@ -1,0 +1,50 @@
+<%# OPEX Index Page %>
+<div class="contextual">
+  <%= link_to new_project_opex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+    <span class="icon icon-add"></span> <%= l(:label_new_opex) %>
+  <% end %>
+</div>
+
+<h2><%= l(:label_opex_entries) %></h2>
+
+<% if @opex_entries.any? %>
+  <table class="list opex-list">
+    <thead>
+      <tr>
+        <th><%= l(:field_opex_year) %></th>
+        <th><%= l(:field_opex_code) %></th>
+        <th><%= l(:field_opex_description) %></th>
+        <th><%= l(:field_opex_total_amount) %></th>
+        <th><%= l(:field_opex_currency) %></th>
+        <th><%= l(:field_opex_category) %></th>
+        <th><%= l(:field_opex_status) %></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @opex_entries.each do |opex| %>
+        <tr>
+          <td><%= opex.year %></td>
+          <td><%= opex.opex_code %></td>
+          <td><%= opex.description %></td>
+          <td><%= number_to_currency(opex.total_amount, unit: opex.currency) %></td>
+          <td><%= opex.currency %></td>
+          <td><%= opex.category_display %></td>
+          <td><span style="color: <%= opex.status_color %>"><%= opex.status.humanize %></span></td>
+          <td>
+            <%= link_to l(:button_show), project_opex_path(@project, opex), class: 'icon icon-show' %>
+            <%= link_to l(:button_edit), edit_project_opex_path(@project, opex), class: 'icon icon-edit' %>
+            <%= link_to l(:button_delete), project_opex_path(@project, opex), method: :delete, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-del' %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="nodata"><%= l(:label_no_opex_entries) %></p>
+<% end %>
+
+<style>
+.opex-list th, .opex-list td { padding: 8px; }
+.nodata { color: #888; font-style: italic; }
+</style>

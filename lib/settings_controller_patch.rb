@@ -12,6 +12,30 @@ module SettingsControllerPatch
 
   def plugin_with_purchase_requests
     if params[:id] == 'redmine_purchase_requests' && request.post? && params[:settings]
+      # Handle OPEX category management
+      if params[:opex_category]
+        category = OpexCategory.new(name: params[:opex_category][:name])
+        if category.save
+          flash[:notice] = l(:notice_successful_create)
+        else
+          flash[:error] = category.errors.full_messages.join(', ')
+        end
+        redirect_to plugin_settings_path('redmine_purchase_requests', tab: 'opex_categories')
+        return
+      end
+      
+      # Handle OPEX category deletion
+      if params[:delete_category]
+        category = OpexCategory.find(params[:delete_category])
+        if category.destroy
+          flash[:notice] = l(:notice_successful_delete)
+        else
+          flash[:error] = category.errors.full_messages.join(', ')
+        end
+        redirect_to plugin_settings_path('redmine_purchase_requests', tab: 'opex_categories')
+        return
+      end
+      
       # Process exchange rates from individual fields to a hash
       exchange_rates = {}
       capex_exchange_rates = {}

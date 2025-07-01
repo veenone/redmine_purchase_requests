@@ -2,6 +2,7 @@ class Capex < ActiveRecord::Base
   self.table_name = 'capex'
   
   belongs_to :project
+  belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
   has_many :purchase_requests, dependent: :nullify
   
   validates :year, presence: true, 
@@ -15,6 +16,7 @@ class Capex < ActiveRecord::Base
   }
   validates :q1_amount, :q2_amount, :q3_amount, :q4_amount, 
             presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :category_id, presence: true
   
   validate :quarterly_amounts_sum_equals_total
   validate :unique_tpc_code_per_project_year

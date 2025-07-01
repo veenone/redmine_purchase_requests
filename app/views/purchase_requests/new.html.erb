@@ -10,29 +10,80 @@
   <% end %>
 </div>
 
-<div class="purchase-request-header">
-  <h2><%= l(:label_new_purchase_request) %></h2>
-  <div class="form-instructions">
-    <p><%= l(:text_new_purchase_request_instructions) %></p>
-  </div>
-</div>
-
-<div class="box purchase-request-edit-container">
-  <div class="tabs">
-    <ul>
-      <li class="selected"><a href="#tab-general" class="tab-selector" data-tab="tab-general"><%= l(:label_general) %></a></li>
-      <li><a href="#tab-details" class="tab-selector" data-tab="tab-details"><%= l(:label_details) %></a></li>
-      <li><a href="#tab-attachments" class="tab-selector" data-tab="tab-attachments"><%= l(:label_attachment_plural) %></a></li>
-    </ul>
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2><%= l(:label_new_purchase_request) %></h2>
+      <div class="pr-form-subtitle">
+        <span class="icon icon-info"></span>
+        <%= l(:text_new_purchase_request_subtitle) %>
+      </div>
+    </div>
+    <div class="pr-form-progress">
+      <div class="pr-progress-indicator">
+        <div class="pr-progress-step active" data-step="1">
+          <div class="pr-step-number">1</div>
+          <div class="pr-step-label"><%= l(:label_basic_info) %></div>
+        </div>
+        <div class="pr-progress-step" data-step="2">
+          <div class="pr-step-number">2</div>
+          <div class="pr-step-label"><%= l(:label_product_details) %></div>
+        </div>
+        <div class="pr-progress-step" data-step="3">
+          <div class="pr-step-number">3</div>
+          <div class="pr-step-label"><%= l(:label_attachments_review) %></div>
+        </div>
+      </div>
+    </div>
   </div>
   
-  <div class="purchase-request-form tab-content" id="tab-content">
-    <%= render partial: 'form', locals: {
-      purchase_request: @purchase_request,
-      form_url: project_purchase_requests_path(@project),
-      button_label: l(:button_create),
-      cancel_path: project_purchase_requests_path(@project)
-    } %>
+  <div class="pr-form-instructions">
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <h4><%= l(:label_before_you_begin) %></h4>
+        <p><%= l(:text_purchase_request_guidelines) %></p>
+        <ul class="pr-checklist">
+          <li><%= l(:text_check_budget_approval) %></li>
+          <li><%= l(:text_check_vendor_requirements) %></li>
+          <li><%= l(:text_prepare_specifications) %></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="box pr-form-box">
+    <div class="pr-tabs">
+      <ul class="pr-tab-nav">
+        <li class="pr-tab-item active">
+          <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
+            <span class="icon icon-edit"></span>
+            <%= l(:label_basic_information) %>
+          </a>
+        </li>
+        <li class="pr-tab-item">
+          <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
+            <span class="icon icon-package"></span>
+            <%= l(:label_product_details) %>
+          </a>
+        </li>
+        <li class="pr-tab-item">
+          <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments">
+            <span class="icon icon-attachment"></span>
+            <%= l(:label_attachments_and_notes) %>
+          </a>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="pr-form-content">
+      <%= render partial: 'form', locals: {
+        purchase_request: @purchase_request,
+        form_url: project_purchase_requests_path(@project),
+        button_label: l(:button_create_request),
+        cancel_path: project_purchase_requests_path(@project)
+      } %>
+    </div>
   </div>
 </div>
 

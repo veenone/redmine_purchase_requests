@@ -28,6 +28,7 @@ class CreatePurchaseRequests < ActiveRecord::Migration[6.0]
       t.date :due_date
       t.boolean :notify_manager, default: false
       t.text :notes
+      t.bigint :category_id, null: false
       
       t.timestamps
     end
