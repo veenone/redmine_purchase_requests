@@ -32,7 +32,7 @@ en:
   label_priority_normal: "Normal"
   label_priority_high: "High"
   label_priority_urgent: "Urgent"
-  button_create: "Create Request"
+  button_create_request: "Create Request"
   button_cancel: "Cancel"
   button_back: "Back to List"
   button_show: "View"
@@ -343,7 +343,7 @@ en:
   text_opex_description_info: "Brief description of the operational expenditure"
   text_opex_total_amount_info: "Total budget amount for this OPEX entry"
   text_opex_quarterly_info: "Quarterly distribution of the budget (must sum to total amount)"
-  text_opex_category_info: "Category of operational expenditure for better tracking"
+  text_opex_category_info: "Select the OPEX category this purchase request belongs to"
   text_opex_cost_center_info: "Cost center or department responsible for this expense"
   text_opex_form_validation: "Please ensure quarterly amounts sum to the total amount"
   text_opex_dashboard_info: "Overview of OPEX entries, utilization, and budget tracking"
@@ -398,10 +398,11 @@ en:
   error_invalid_price: "Estimated price must be a positive number"
   error_invalid_url_format: "Product URL must be a valid web address (http:// or https://)"
   error_future_due_date: "Due date cannot be in the past"
-  error_vendor_required: "Please select a vendor or enter a custom vendor name"
+  error_vendor_required: "Vendor is required. Please select a vendor or enter a custom vendor name."
   error_currency_not_supported: "Selected currency is not supported"
-  error_business_justification_required: "A detailed business justification is required for high-value purchases (over $1,000)"
-  error_cannot_link_both_capex_opex: "A purchase request cannot be linked to both CAPEX and OPEX entries"
+  error_business_justification_required: "Business justification is required for high-value purchases. Please provide a detailed description (minimum 50 characters)."
+  error_cannot_link_both_capex_opex: "Cannot link to both CAPEX and OPEX entries. Please select only one."
+  error_opex_category_required: "OPEX category is required. Please select a category."
   
   # Professional Form Styling
   label_required_fields: "Required fields are marked with *"
@@ -437,4 +438,68 @@ en:
   label_opex_category_settings: "OPEX Category Settings"
   label_add_new_opex_category: "Add New OPEX Category"
   field_opex_category_name: "Category Name"
-  text_opex_category_info: "Select the OPEX category for budget classification"
+  text_opex_category_info: "Select the OPEX category this purchase request belongs to"
+
+  field_vendor_name: "Vendor Name"
+  field_vendor_id: "Vendor ID"
+  label_vendor_new: "New Vendor"
+  label_vendor_search: "Search Vendor"
+  label_vendor_management: "Vendor Management"
+  text_global_vendor_management_info: "Global Vendor Management"
+  text_vendor_management_info: "Manage vendors globally across all projects. Add, edit, or remove vendors as needed."
+  
+  # OPEX Dashboard Labels
+  label_total_opex_budget: "Total OPEX Budget"
+  label_opex_by_year: "OPEX by Year"
+  label_opex_by_currency: "OPEX by Currency"
+  label_opex_utilization_trend: "Utilization Trend"
+  label_top_opex_entries: "Top OPEX Entries"
+  label_recent_opex_activity: "Recent OPEX Activity"
+  label_opex_alerts: "OPEX Alerts"
+  
+  # OPEX Status
+  label_opex_status_active: "Active"
+  label_opex_status_completed: "Completed"
+  label_opex_status_cancelled: "Cancelled"
+  label_opex_status_on_hold: "On Hold"
+  
+  # OPEX Validations and Messages
+  error_opex_quarterly_sum_mismatch: "Quarterly amounts must sum to the total amount"
+  error_opex_code_taken: "OPEX Code has already been taken for this year"
+  error_opex_invalid_year: "Year must be a valid 4-digit year"
+  error_opex_negative_amount: "Amount cannot be negative"
+  error_opex_quarterly_negative: "Quarterly amounts cannot be negative"
+  
+  label_select_opex_category: "Select an OPEX category..."
+  
+  # Additional form labels and help text
+  label_before_you_begin: "Before You Begin"
+  text_purchase_request_guidelines: "Follow these guidelines to ensure your request is processed efficiently:"
+  text_check_budget_approval: "Check if budget approval is required for this purchase"
+  text_check_vendor_requirements: "Verify vendor requirements and preferred suppliers"
+  text_prepare_specifications: "Prepare detailed specifications and documentation"
+  label_attachments_review: "Attachments & Review"
+  label_enter_custom_vendor: "Enter custom vendor name"
+  label_use_custom_vendor: "Use custom vendor"
+  field_vendor_id: "Vendor ID"
+  field_contact_person: "Contact Person"
+  field_phone: "Phone"
+  field_email: "Email"
+  field_address: "Address"
+  
+  # Budget Type Selection
+  label_budget_type: "Budget Type"
+  label_capex_entry: "CAPEX Entry"
+  label_opex_entry: "OPEX Entry" 
+  label_select_capex_entry: "Select a CAPEX entry..."
+  label_select_opex_entry: "Select an OPEX entry..."
+  label_no_budget_tracking: "No Budget Tracking"
+  label_create_capex_entry: "Create CAPEX Entry"
+  label_create_opex_entry: "Create OPEX Entry"
+  
+  # Budget Type Help Text
+  text_budget_type_info: "Choose whether this purchase should be tracked under CAPEX (capital expenditure) or OPEX (operational expenditure)"
+  text_capex_selection_info: "Link to a CAPEX entry for capital expenditure tracking and budget monitoring"
+  text_opex_selection_info: "Link to an OPEX entry for operational expenditure tracking and budget monitoring"
+  text_no_capex_entries_available: "No CAPEX entries available for the current year"
+  text_no_opex_entries_available: "No OPEX entries available for the current year"

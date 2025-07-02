@@ -238,6 +238,34 @@
       background-color: #f9f9f9;
     }
 
+    /* Column width adjustments */
+    .capex-dashboard .tpc-code {
+      width: 12%;
+    }
+
+    .capex-dashboard .description {
+      width: 25%;
+    }
+
+    .capex-dashboard .budget,
+    .capex-dashboard .utilized,
+    .capex-dashboard .remaining {
+      width: 12%;
+    }
+
+    .capex-dashboard .utilization {
+      width: 10%;
+    }
+
+    .capex-dashboard .linked-prs {
+      width: 8%;
+    }
+
+    .capex-dashboard .buttons {
+      width: 140px;
+      min-width: 140px;
+    }
+
     .text-danger {
       color: #dc3545 !important;
     }
@@ -283,6 +311,47 @@
       font-style: italic;
       display: block;
       margin-top: 3px;
+    }
+
+    /* Actions column styling */
+    .buttons {
+      width: 140px;
+      min-width: 140px;
+      text-align: left;
+      white-space: nowrap;
+      padding-left: 8px !important;
+    }
+
+    .buttons a {
+      display: inline-block;
+      margin: 0 6px 2px 0;
+      padding: 4px 8px;
+      border-radius: 3px;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+      font-size: 11px;
+      border: 1px solid transparent;
+      line-height: 1.2;
+    }
+
+    .buttons a:hover {
+      background-color: #e6f3ff;
+      border-color: #b3d9ff;
+    }
+
+    .buttons .icon {
+      width: 12px;
+      height: 12px;
+      background-repeat: no-repeat;
+      background-position: center;
+      margin-right: 4px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* Ensure actions wrap to new line if needed */
+    .buttons {
+      line-height: 1.4;
     }
 
     /* Native Chart Styles for CAPEX */
@@ -725,14 +794,20 @@
                 <% end %>
               </td>
               <td class="buttons">
-                <%= link_to project_capex_path(@project, capex), 
-                          class: 'icon icon-zoom-in', 
-                          title: 'View' %>
-                <% if User.current.allowed_to?(:manage_capex, @project) %>
-                  <%= link_to edit_project_capex_path(@project, capex), 
-                            class: 'icon icon-edit', 
-                            title: 'Edit' %>
-                <% end %>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <%= link_to project_capex_path(@project, capex), class: 'icon icon-zoom-in', title: 'View CAPEX' do %>
+                    <span>&nbsp;&nbsp;&nbsp;View</span>
+                  <% end %>
+                  <% if User.current.allowed_to?(:manage_capex, @project) %>
+                    &nbsp;&nbsp;&nbsp;<%= link_to edit_project_capex_path(@project, capex), class: 'icon icon-edit', title: 'Edit CAPEX' do %>
+                      <span>&nbsp;&nbsp;&nbsp;Edit</span>
+                    <% end %>
+                    &nbsp;&nbsp;<%= link_to project_capex_path(@project, capex), method: :delete, 
+                               data: { confirm: 'Are you sure?' }, class: 'icon icon-del', title: 'Delete CAPEX' do %>
+                      <span>&nbsp;&nbsp;&nbsp;Delete</span>
+                    <% end %>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>

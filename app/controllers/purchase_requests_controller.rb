@@ -38,6 +38,12 @@ class PurchaseRequestsController < ApplicationController
     @purchase_request = @project.purchase_requests.new(purchase_request_params)
     @purchase_request.user = User.current
     
+    # Handle vendor assignment properly
+    handle_vendor_assignment
+    
+    # Handle budget type mutual exclusion
+    handle_budget_type_selection
+    
     # Set default status if none provided
     if @purchase_request.status_id.nil? && PurchaseRequestStatus.count > 0
       @purchase_request.status = PurchaseRequestStatus.default || PurchaseRequestStatus.first
@@ -64,6 +70,12 @@ class PurchaseRequestsController < ApplicationController
   end
   
   def update
+    # Handle vendor assignment properly
+    handle_vendor_assignment
+    
+    # Handle budget type mutual exclusion
+    handle_budget_type_selection
+    
     if @purchase_request.update(purchase_request_params)
       # Handle attachments using Redmine's attachment system
       attachments = Attachment.attach_files(@purchase_request, params[:attachments])
@@ -436,11 +448,49 @@ class PurchaseRequestsController < ApplicationController
   end
   
   def purchase_request_params
-    params.require(:purchase_request).permit(
+    # Build permitted params dynamically based on available columns
+    permitted = [
       :title, :description, :status_id, :product_url, 
-      :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
-      :notify_manager, :notes, :currency, :capex_id
-    )
+      :estimated_price, :priority, :due_date, 
+      :notify_manager, :notes, :currency, :capex_id, :opex_id
+    ]
+    
+    # Add category_id only if the column exists
+    if PurchaseRequest.column_names.include?('category_id')
+      permitted << :category_id
+    end
+    
+    params.require(:purchase_request).permit(permitted)
+  end
+  
+  def handle_vendor_assignment
+    # Handle vendor assignment - either vendor_id for existing vendor or vendor for custom vendor name
+    if params[:purchase_request][:vendor_id].present? && params[:purchase_request][:vendor_id] != ""
+      @purchase_request.vendor_id = params[:purchase_request][:vendor_id]
+      @purchase_request.vendor = nil  # Clear custom vendor name if using vendor_id
+    elsif params[:purchase_request][:vendor].present? && params[:purchase_request][:vendor] != ""
+      @purchase_request.vendor = params[:purchase_request][:vendor]
+      @purchase_request.vendor_id = nil  # Clear vendor_id if using custom vendor name
+    else
+      # Both are blank - clear both fields
+      @purchase_request.vendor_id = nil
+      @purchase_request.vendor = nil
+    end
+  end
+  
+  def handle_budget_type_selection
+    # Handle budget type mutual exclusion based on form selection
+    budget_type = params[:budget_type]
+    
+    case budget_type
+    when 'capex'
+      @purchase_request.opex_id = nil
+    when 'opex'
+      @purchase_request.capex_id = nil
+    when 'none'
+      @purchase_request.capex_id = nil
+      @purchase_request.opex_id = nil
+    end
   end
 end
 

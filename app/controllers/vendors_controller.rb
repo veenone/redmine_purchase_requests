@@ -121,6 +121,7 @@ class VendorsController < ApplicationController
     @vendors = find_vendors
     
     respond_to do |format|
+      format.html { redirect_to import_export_vendors_path }
       format.csv do
         send_data generate_csv(@vendors), 
                   filename: "vendors_export_#{Date.current.strftime('%Y%m%d')}.csv",
@@ -172,6 +173,10 @@ class VendorsController < ApplicationController
                   type: 'text/csv'
       end
     end
+  end
+  
+  def import_export
+    # Display the import/export page
   end
   
   private

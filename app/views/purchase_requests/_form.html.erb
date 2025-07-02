@@ -3,6 +3,131 @@
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
   <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <style>
+    .budget-details {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+    }
+    
+    .budget-info-table {
+      width: 100%;
+      font-size: 12px;
+    }
+    
+    .budget-info-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .budget-label {
+      font-weight: bold;
+      color: #495057;
+      width: 30%;
+    }
+    
+    .budget-value {
+      color: #007bff;
+    }
+    
+    .no-budget-entry {
+      color: #6c757d;
+      font-style: italic;
+    }
+    
+    .budget-create-link {
+      color: #28a745;
+      text-decoration: none;
+    }
+    
+    .budget-create-link:hover {
+      text-decoration: underline;
+    }
+    
+    .form-row .form-control {
+      max-width: 400px;
+    }
+    
+    .form-section {
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+      background-color: #fafafa;
+    }
+    
+    .form-section-title {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 10px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .budget-type-selector {
+      margin: 10px 0;
+    }
+
+    .budget-type-container {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      background-color: #fff;
+    }
+
+    .budget-option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #f8f9fa;
+      cursor: pointer;
+    }
+
+    .budget-option:hover {
+      background-color: #e9ecef;
+    }
+
+    .budget-option:last-child {
+      margin-bottom: 0;
+    }
+
+    .budget-type-radio {
+      margin-right: 10px;
+    }
+
+    .budget-type-option {
+      font-weight: normal;
+      color: #333;
+      cursor: pointer;
+    }
+
+    .budget-type-label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .budget-type-container {
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+
+    .form-section .form-row {
+      margin-bottom: 15px;
+    }
+
+    .form-section .form-row:last-child {
+      margin-bottom: 0;
+    }
+  </style>
 <% end %>
 
 <%= form_with(model: purchase_request, 
@@ -21,7 +146,7 @@
     </div>
   <% end %>
   
-  <div id="tab-general" class="tab-pane tabbed-form">
+  <div id="tab-general" class="tab-pane tabbed-form active">
     <div class="box tabular general-fields">
       <div class="form-row">
         <p>
@@ -68,6 +193,8 @@
           <em class="info"><%= l(:text_due_date_info) %></em>
         </p>
       </div>
+      
+
     </div>
   </div>
   
@@ -100,6 +227,7 @@
       <div class="form-row">
         <p>
           <%= form.label :vendor, l(:field_vendor) %>
+        </p>
           <% 
             vendors = Vendor.sorted 
             allow_custom = Setting.plugin_redmine_purchase_requests['allow_custom_vendors'] == '1'
@@ -117,6 +245,7 @@
               end
           %>
             <div class="vendor-selector">
+              <p>
               <% if Redmine::VERSION::MAJOR >= 4 %>
                 <%= form.select :vendor_id, 
                               vendors.collect{|v| [v.name, v.id]},
@@ -139,6 +268,7 @@
                                 class: 'custom-vendor-checkbox' %>
                 <%= label_tag 'custom_vendor', l(:label_use_custom_vendor), class: 'checkbox-label' %>
               <% end %>
+              </p>
             </div>
             
             <div class="vendor-details" style="display: none;">
@@ -172,52 +302,154 @@
         </p>
       </div>
       
-      <div class="form-row">
-        <p>
-          <%= form.label :capex_id, 'CAPEX Entry' %>
-          <% 
-            capex_entries = @project.capex.for_year(Date.current.year).ordered if @project
-            if capex_entries && capex_entries.any?
-          %>
-            <%= form.select :capex_id, 
-                          options_from_collection_for_select(capex_entries, :id, :display_name, purchase_request.capex_id),
-                          { include_blank: 'No CAPEX Entry' },
-                          { class: 'capex-select form-control' } %>
-            <em class="info">Link this purchase request to a specific CAPEX entry for budget tracking</em>
-            
-            <div class="capex-details" style="display: none;">
-              <table class="capex-info-table">
-                <tr id="capex-year-row" style="display: none;">
-                  <td class="capex-label">Year:</td>
-                  <td class="capex-value" id="capex-year-value"></td>
-                </tr>
-                <tr id="capex-budget-row" style="display: none;">
-                  <td class="capex-label">Total Budget:</td>
-                  <td class="capex-value" id="capex-budget-value"></td>
-                </tr>
-                <tr id="capex-remaining-row" style="display: none;">
-                  <td class="capex-label">Remaining:</td>
-                  <td class="capex-value" id="capex-remaining-value"></td>
-                </tr>
-              </table>
+      <!-- Budget Section -->
+      <div class="form-section">
+        <div class="form-section-title">Budget Tracking</div>
+        
+        <!-- Budget Type Selection -->
+        <div class="form-row">
+          <div class="budget-type-container">
+            <span class="budget-type-label"><%= l(:label_budget_type) %> <span class="required">*</span></span>
+            <div class="budget-type-selector">
+              <div class="budget-option">
+                <%= radio_button_tag 'budget_type', 'capex', purchase_request.capex_id.present?, 
+                                   class: 'budget-type-radio', id: 'budget_type_capex' %>
+                <span class="budget-type-option">CAPEX (Capital Expenditure)</span>
+              </div>
+              
+              <div class="budget-option">
+                <%= radio_button_tag 'budget_type', 'opex', purchase_request.opex_id.present?, 
+                                   class: 'budget-type-radio', id: 'budget_type_opex' %>
+                <span class="budget-type-option">OPEX (Operational Expenditure)</span>
+              </div>
+              
+              <div class="budget-option">
+                <%= radio_button_tag 'budget_type', 'none', purchase_request.capex_id.blank? && purchase_request.opex_id.blank?, 
+                                   class: 'budget-type-radio', id: 'budget_type_none' %>
+                <span class="budget-type-option"><%= l(:label_no_budget_tracking) %></span>
+              </div>
             </div>
-          <% else %>
-            <span class="no-capex">No CAPEX entries available for current year</span>
-            <% if User.current.allowed_to?(:manage_capex, @project) %>
-              <br><em class="info">
-                <%= link_to 'Create CAPEX Entry', new_project_capex_path(@project), 
-                          class: 'capex-create-link', target: '_blank' %> to enable budget tracking
-              </em>
+            <em class="info"><%= l(:text_budget_type_info) %></em>
+          </div>
+        </div>
+        
+        <!-- CAPEX Selection -->
+        <div class="form-row budget-section-capex" id="capex-section" style="display: none;">
+          <p>
+            <%= form.label :capex_id, l(:label_capex_entry) %>
+            <% 
+              capex_entries = @project.capex.for_year(Date.current.year).ordered if @project
+              if capex_entries && capex_entries.any?
+            %>
+              <%= form.select :capex_id, 
+                            options_from_collection_for_select(capex_entries, :id, :display_name, purchase_request.capex_id),
+                            { include_blank: l(:label_select_capex_entry) },
+                            { class: 'form-control', id: 'purchase_request_capex_id' } %>
+              <em class="info"><%= l(:text_capex_selection_info) %></em>
+              
+              <div class="budget-details" id="capex-details" style="display: none;">
+                <table class="budget-info-table">
+                  <tr>
+                    <td class="budget-label"><%= l(:field_capex_year) %>:</td>
+                    <td class="budget-value" id="capex-year-value"></td>
+                  </tr>
+                  <tr>
+                    <td class="budget-label"><%= l(:field_capex_total_amount) %>:</td>
+                    <td class="budget-value" id="capex-budget-value"></td>
+                  </tr>
+                  <tr>
+                    <td class="budget-label"><%= l(:field_capex_remaining_amount) %>:</td>
+                    <td class="budget-value" id="capex-remaining-value"></td>
+                  </tr>
+                  <tr>
+                    <td class="budget-label"><%= l(:field_capex_description) %>:</td>
+                    <td class="budget-value" id="capex-description-value"></td>
+                  </tr>
+                </table>
+              </div>
+            <% else %>
+              <div class="no-budget-entry">
+                <span class="no-entries-message"><%= l(:text_no_capex_entries_available) %></span>
+                <% if User.current.allowed_to?(:manage_capex, @project) %>
+                  <br><em class="info">
+                    <%= link_to l(:label_create_capex_entry), new_project_capex_path(@project), 
+                              class: 'budget-create-link', target: '_blank' %>
+                  </em>
+                <% end %>
+              </div>
             <% end %>
-          <% end %>
-        </p>
+          </p>
+        </div>
+        
+        <!-- OPEX Selection -->
+        <div class="form-row budget-section-opex" id="opex-section" style="display: none;">
+          <p>
+            <%= form.label :opex_id, l(:label_opex_entry) %>
+            <% 
+              opex_entries = @project.opex.for_year(Date.current.year).ordered if @project
+              if opex_entries && opex_entries.any?
+            %>
+              <%= form.select :opex_id, 
+                            options_from_collection_for_select(opex_entries, :id, :display_name, purchase_request.opex_id),
+                            { include_blank: l(:label_select_opex_entry) },
+                            { class: 'form-control', id: 'purchase_request_opex_id' } %>
+              <em class="info"><%= l(:text_opex_selection_info) %></em>
+              
+              <!-- OPEX Category Selection -->
+              <div class="form-row" style="margin-top: 15px;">
+                <p>
+                  <%= form.label :category_id, l(:field_opex_category) %> <span class="required">*</span>
+                  <%= form.collection_select :category_id, OpexCategory.all, :id, :name, 
+                                           { prompt: l(:label_select_opex_category) }, 
+                                           { required: true, class: 'form-control', id: 'purchase_request_category_id' } %>
+                  <em class="info"><%= l(:text_opex_category_info) %></em>
+                </p>
+              </div>
+              
+              <div class="budget-details" id="opex-details" style="display: none;">
+                <table class="budget-info-table">
+                  <tr>
+                    <td class="budget-label"><%= l(:field_opex_year) %>:</td>
+                    <td class="budget-value" id="opex-year-value"></td>
+                  </tr>
+                  <tr>
+                    <td class="budget-label"><%= l(:field_opex_total_amount) %>:</td>
+                    <td class="budget-value" id="opex-budget-value"></td>
+                  </tr>
+                  <tr>
+                    <td class="budget-label"><%= l(:field_opex_remaining_amount) %>:</td>
+                    <td class="budget-value" id="opex-remaining-value"></td>
+                  </tr>
+                  <tr>
+                    <td class="budget-label"><%= l(:field_opex_description) %>:</td>
+                    <td class="budget-value" id="opex-description-value"></td>
+                  </tr>
+                </table>
+              </div>
+            <% else %>
+              <div class="no-budget-entry">
+                <span class="no-entries-message"><%= l(:text_no_opex_entries_available) %></span>
+                <% if User.current.allowed_to?(:manage_opex, @project) %>
+                  <br><em class="info">
+                    <%= link_to l(:label_create_opex_entry), new_project_opex_path(@project), 
+                              class: 'budget-create-link', target: '_blank' %>
+                  </em>
+                <% end %>
+              </div>
+            <% end %>
+          </p>
+        </div>
       </div>
-      
+    </div>
+  </div>
+  
+  <div id="tab-attachments" class="tab-pane tabbed-form" style="display: none;">
+    <div class="box tabular attachment-fields">
       <div class="form-row">
         <p>
-          <%= form.label :category_id, l(:field_opex_category) %> <span class="required">*</span>
-          <%= form.collection_select :category_id, OpexCategory.all, :id, :name, { include_blank: false }, { required: true, class: 'form-control' } %>
-          <em class="info"><%= l(:text_opex_category_info) %></em>
+          <%= form.label :notes, l(:label_additional_notes) %>
+          <%= form.text_area :notes, rows: 6, cols: 60, placeholder: l(:text_additional_notes_placeholder), class: 'form-control' %>
+          <em class="info">Add any additional information, specifications, or requirements for this purchase request.</em>
         </p>
       </div>
       
@@ -229,17 +461,6 @@
         </p>
       </div>
       
-      <div class="form-row">
-        <p>
-          <%= form.label :notes, l(:label_additional_notes) %>
-          <%= form.text_area :notes, rows: 4, cols: 60, placeholder: l(:text_additional_notes_placeholder), class: 'form-control' %>
-        </p>
-      </div>
-    </div>
-  </div>
-  
-  <div id="tab-attachments" class="tab-pane tabbed-form" style="display: none;">
-    <div class="box tabular attachment-fields">
       <div class="form-row">
         <p>
           <%= form.label :attachment, l(:label_attachment_plural) %>
@@ -262,6 +483,20 @@
           </ul>
         </div>
       <% end %>
+      
+      <div class="form-instructions">
+        <div class="form-section">
+          <div class="form-section-title">Final Review</div>
+          <p><strong>Before submitting your purchase request, please review:</strong></p>
+          <ul>
+            <li>All required fields are filled correctly</li>
+            <li>Product specifications and vendor information are accurate</li>
+            <li>Budget allocation is appropriate (CAPEX vs OPEX)</li>
+            <li>Any supporting documents are attached</li>
+            <li>Manager notification is set as needed</li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -277,3 +512,157 @@
 
 
 <%# Assets and styles are loaded via hooks - no need for direct includes %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Tab functionality
+  function showTab(targetTabId) {
+    // Hide all tab panes
+    var tabPanes = document.querySelectorAll('.tab-pane');
+    tabPanes.forEach(function(pane) {
+      pane.style.display = 'none';
+    });
+    
+    // Remove active class from all tabs
+    var tabs = document.querySelectorAll('.pr-tab');
+    tabs.forEach(function(tab) {
+      tab.classList.remove('active');
+    });
+    
+    // Show target tab and mark as active
+    var targetTab = document.getElementById(targetTabId);
+    var targetLink = document.querySelector('[href="#' + targetTabId + '"]');
+    
+    if (targetTab) targetTab.style.display = 'block';
+    if (targetLink) targetLink.classList.add('active');
+  }
+  
+  // Tab click handlers
+  var tabLinks = document.querySelectorAll('.pr-tabs a');
+  tabLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var targetTabId = this.getAttribute('href').substring(1);
+      showTab(targetTabId);
+    });
+  });
+  
+  // Show first tab by default
+  showTab('tab-general');
+  
+  // Budget type radio button functionality
+  var budgetTypeRadios = document.querySelectorAll('.budget-type-radio');
+  var capexSection = document.getElementById('capex-section');
+  var opexSection = document.getElementById('opex-section');
+  var capexSelect = document.getElementById('purchase_request_capex_id');
+  var opexSelect = document.getElementById('purchase_request_opex_id');
+  
+  function toggleBudgetSections() {
+    var selectedType = document.querySelector('.budget-type-radio:checked');
+    
+    if (selectedType) {
+      if (selectedType.value === 'capex') {
+        capexSection.style.display = 'block';
+        opexSection.style.display = 'none';
+        if (opexSelect) opexSelect.value = '';
+      } else if (selectedType.value === 'opex') {
+        opexSection.style.display = 'block';
+        capexSection.style.display = 'none';
+        if (capexSelect) capexSelect.value = '';
+      } else {
+        capexSection.style.display = 'none';
+        opexSection.style.display = 'none';
+        if (capexSelect) capexSelect.value = '';
+        if (opexSelect) opexSelect.value = '';
+      }
+    }
+  }
+  
+  // Budget type change handlers
+  budgetTypeRadios.forEach(function(radio) {
+    radio.addEventListener('change', toggleBudgetSections);
+  });
+
+  // Add click handlers for budget options to make the entire div clickable
+  var budgetOptions = document.querySelectorAll('.budget-option');
+  budgetOptions.forEach(function(option) {
+    option.addEventListener('click', function() {
+      var radio = this.querySelector('.budget-type-radio');
+      if (radio) {
+        radio.checked = true;
+        toggleBudgetSections();
+      }
+    });
+  });
+  
+  // Initialize budget sections on page load
+  toggleBudgetSections();
+  
+  // Budget tracking functionality
+  var capexDetails = document.getElementById('capex-details');
+  var opexDetails = document.getElementById('opex-details');
+  
+  // Handle CAPEX selection changes
+  if (capexSelect && capexDetails) {
+    capexSelect.addEventListener('change', function() {
+      if (this.value) {
+        // In a real implementation, you would fetch data via AJAX
+        // For now, we'll show the details container
+        capexDetails.style.display = 'block';
+      } else {
+        capexDetails.style.display = 'none';
+      }
+    });
+  }
+  
+  // Handle OPEX selection changes
+  if (opexSelect && opexDetails) {
+    opexSelect.addEventListener('change', function() {
+      if (this.value) {
+        // In a real implementation, you would fetch data via AJAX
+        // For now, we'll show the details container
+        opexDetails.style.display = 'block';
+      } else {
+        opexDetails.style.display = 'none';
+      }
+    });
+  }
+  
+  // Initialize budget details on page load
+  if (capexSelect && capexSelect.value && capexDetails) {
+    capexDetails.style.display = 'block';
+  }
+  if (opexSelect && opexSelect.value && opexDetails) {
+    opexDetails.style.display = 'block';
+  }
+  
+  // Form validation
+  function validateForm() {
+    var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
+    
+    if (selectedBudgetType && selectedBudgetType.value !== 'none') {
+      if (selectedBudgetType.value === 'capex' && (!capexSelect || !capexSelect.value)) {
+        alert('Please select a CAPEX entry when CAPEX budget type is selected.');
+        return false;
+      }
+      if (selectedBudgetType.value === 'opex' && (!opexSelect || !opexSelect.value)) {
+        alert('Please select an OPEX entry when OPEX budget type is selected.');
+        return false;
+      }
+    }
+    
+    return true;
+  }
+  
+  // Attach validation to form submit
+  var form = document.querySelector('.pr-form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      if (!validateForm()) {
+        e.preventDefault();
+        return false;
+      }
+    });
+  }
+});
+</script>

@@ -92,6 +92,181 @@
     margin-bottom: 20px;
   }
   
+  .pr-form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .pr-form-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
+  }
+  
+  .pr-form-title h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+  
+  .pr-form-subtitle {
+    display: flex;
+    align-items: center;
+    opacity: 0.9;
+    font-size: 14px;
+  }
+  
+  .pr-form-subtitle .icon {
+    margin-right: 8px;
+  }
+  
+  .pr-progress-indicator {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 20px;
+  }
+  
+  .pr-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+  
+  .pr-progress-step.active {
+    opacity: 1;
+  }
+  
+  .pr-step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .pr-progress-step.active .pr-step-number {
+    background: rgba(255,255,255,0.3);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+  }
+  
+  .pr-step-label {
+    font-size: 12px;
+    text-align: center;
+  }
+  
+  .pr-form-instructions {
+    background: #e8f4fd;
+    border: 1px solid #bee5eb;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .pr-alert {
+    border-radius: 4px;
+    padding: 0;
+  }
+  
+  .pr-alert-info {
+    background-color: transparent;
+    border: none;
+  }
+  
+  .pr-alert-content h4 {
+    margin: 0 0 10px 0;
+    color: #0c5460;
+    font-size: 16px;
+  }
+  
+  .pr-alert-content p {
+    margin: 0 0 10px 0;
+    color: #0c5460;
+  }
+  
+  .pr-checklist {
+    margin: 0;
+    padding-left: 20px;
+    color: #0c5460;
+  }
+  
+  .pr-checklist li {
+    margin-bottom: 5px;
+  }
+  
+  .pr-form-box {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+  }
+  
+  .pr-tabs {
+    background: #f8f9fa;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .pr-tab-nav {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .pr-tab-item {
+    flex: 1;
+  }
+  
+  .pr-tab-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px 10px;
+    text-decoration: none;
+    color: #495057;
+    border-right: 1px solid #ddd;
+    transition: all 0.3s;
+    background: transparent;
+  }
+  
+  .pr-tab-item:last-child .pr-tab-link {
+    border-right: none;
+  }
+  
+  .pr-tab-item.active .pr-tab-link {
+    background: white;
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+    font-weight: 600;
+  }
+  
+  .pr-tab-link:hover {
+    background: #e9ecef;
+    color: #007bff;
+  }
+  
+  .pr-tab-item.active .pr-tab-link:hover {
+    background: white;
+  }
+  
+  .pr-tab-link .icon {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+  }
+  
+  .pr-form-content {
+    padding: 0;
+  }
+  
   .form-instructions {
     margin-top: 10px;
     color: #555;
@@ -102,208 +277,822 @@
     border-radius: 2px;
   }
   
-  .tabs {
-    margin-bottom: 15px;
+  /* Tab content styling */
+  .tab-pane {
+    display: none;
+    padding: 20px;
   }
   
-  .tabs ul {
-    display: flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .tabs ul li {
-    margin-right: 5px;
-  }
-  
-  .tabs ul li a {
+  .tab-pane.active {
     display: block;
-    padding: 8px 15px;
-    text-decoration: none;
-    border: 1px solid transparent;
-    border-bottom: none;
-    border-radius: 3px 3px 0 0;
-    color: #555;
   }
   
-  .tabs ul li.selected a {
-    background-color: #fff;
-    border-color: #ddd;
-    border-bottom-color: #fff;
+  .tabbed-form .box {
+    border: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+  
+  /* Form styling */
+  .form-row {
+    margin-bottom: 20px;
+  }
+  
+  .form-row p {
+    margin: 0;
+  }
+  
+  .form-row label {
+    display: block;
+    font-weight: 600;
     color: #333;
-    position: relative;
-    bottom: -1px;
-    font-weight: bold;
+    margin-bottom: 5px;
   }
   
-  .currency-wrapper {
-    position: relative;
-    display: inline-block;
+  .form-control {
+    width: 100%;
+    max-width: 500px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
   }
   
-  .currency-symbol {
-    position: absolute;
-    top: 50%;
-    left: 10px;
-    transform: translateY(-50%);
-    color: #666;
+  .form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
   }
   
-  .currency-field {
-    padding-left: 25px;
+  .required {
+    color: #dc3545;
   }
-  
-  .purchase-request-form .required {
-    color: #d00;
-    font-weight: bold;
-  }
-  
-  /* Using shared styles from purchase_request_buttons.css */
   
   .info {
     display: block;
-    color: #888;
-    font-size: 0.9em;
-    margin-top: 2px;
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+    font-style: italic;
   }
   
-  .box.tabular p {
-    padding: 5px 0;
-    margin-bottom: 8px;
+  /* Button styling */
+  .pr-form-actions {
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #ddd;
+    text-align: right;
   }
   
-  .button-action {
-    margin-left: 5px;
+  .pr-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
   }
   
-  .button-highlight {
-    opacity: 0.8;
+  .pr-button-primary {
+    background: #007bff;
+    color: white;
   }
   
-  .attachment-instructions {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 3px;
-    border-left: 3px solid #607d8b;
+  .pr-button-primary:hover {
+    background: #0056b3;
+    color: white;
   }
   
-  .attachment-instructions h4 {
-    margin-top: 0;
+  .pr-button-cancel {
+    background: #6c757d;
+    color: white;
+  }
+  
+  .pr-button-cancel:hover {
+    background: #545b62;
+    color: white;
+  }
+  
+  /* Form sections */
+  .form-section {
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fafafa;
+  }
+  
+  .form-section-title {
+    font-weight: bold;
     color: #333;
-    font-size: 1em;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #007bff;
+    font-size: 16px;
   }
   
-  .attachment-instructions ul {
-    margin: 10px 0 0 0;
-    padding-left: 20px;
-    color: #666;
+  /* Budget details styling */
+  .budget-details {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    border-left: 4px solid #007bff;
   }
-
+  
+  .budget-info-table {
+    width: 100%;
+    font-size: 13px;
+  }
+  
+  .budget-info-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .budget-label {
+    font-weight: 600;
+    color: #495057;
+    width: 30%;
+  }
+  
+  .budget-value {
+    color: #007bff;
+    font-weight: 500;
+  }
+  
+  /* Budget Type Selector Styling */
+  .budget-type-label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .budget-type-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+  }
+  
+  .budget-type-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: normal;
+    margin-bottom: 0;
+  }
+  
+  .budget-type-option:hover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+  }
+  
+  .budget-type-radio {
+    margin-right: 10px;
+    transform: scale(1.2);
+  }
+  
+  .budget-type-radio:checked + .budget-type-option {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+    font-weight: 600;
+  }
+  
+  /* Budget section visibility */
+  .budget-section-capex,
+  .budget-section-opex {
+    transition: all 0.3s ease;
+  }
+  
+  .budget-section-capex.active,
+  .budget-section-opex.active {
+    display: block !important;
+  }
+  
+  /* No budget entries styling */
+  .no-budget-entry {
+    padding: 15px;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+  
+  .no-entries-message {
+    color: #856404;
+    font-style: italic;
+  }
+  
+  /* File Upload Styling */
+  .attachments-field {
+    padding: 12px;
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .attachments-field:hover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+  }
+  
+  .attachments-field:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+  }
+  
+  /* Existing attachments styling */
+  .existing-attachments {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+  }
+  
+  .existing-attachments h3 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 16px;
+  }
+  
+  .existing-attachments ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .existing-attachments li {
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .existing-attachments li:last-child {
+    border-bottom: none;
+  }
+  
+  .size, .author {
+    font-size: 12px;
+    color: #6c757d;
+    margin-left: 10px;
+  }
+  
+  /* Form section improvements */
+  .form-instructions .form-section {
+    margin-top: 0;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+  }
+  
+  .form-instructions .form-section-title {
+    border-bottom: 1px solid #dee2e6;
+    color: #0c5460;
+  }
+  
+  .form-instructions p {
+    margin: 10px 0;
+    color: #0c5460;
+  }
+  
+  .form-instructions ul {
+    color: #0c5460;
+    margin: 10px 0;
+    padding-left: 20px;
+  }
+  
+  .form-instructions li {
+    margin-bottom: 5px;
+  }
+  
+  /* Currency and price field styling */
   .currency-price-wrapper {
     display: flex;
-    gap: 10px;
     align-items: center;
-    margin-top: 5px;
+    gap: 10px;
+  }
+  
+  .currency-select-wrapper {
+    flex-shrink: 0;
   }
   
   .currency-select {
-    min-width: 150px;
-    flex: 0 0 auto;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    min-width: 80px;
   }
   
   .price-field {
     flex: 1;
-    min-width: 100px;
-  }
-
-  .form-layout {
-    width: 100%;
-    border-collapse: collapse;
+    max-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
   }
   
-  .form-layout th {
-    text-align: right;
-    padding-right: 15px;
-    vertical-align: top;
-    width: 25%;
-    padding-top: 8px;
+  /* Vendor selector styling */
+  .vendor-selector {
+    margin-bottom: 10px;
+  }
+  
+  .custom-vendor-checkbox {
+    margin-top: 10px;
+    margin-right: 5px;
+  }
+  
+  .checkbox-label {
     font-weight: normal;
+    display: inline !important;
+    margin-left: 5px;
   }
   
-  .form-layout td {
-    vertical-align: top;
-    padding-bottom: 10px;
-    width: 75%;
-  }
-
-  .tab-content {
+  .vendor-input {
     margin-top: 10px;
   }
   
-  .tabbed-form {
-    display: none;
+  .vendor-details {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
   }
   
-  #tab-general.tabbed-form {
-    display: block;
+  .vendor-info-table {
+    width: 100%;
+    font-size: 13px;
+  }
+  
+  .vendor-info-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .vendor-label {
+    font-weight: 600;
+    color: #495057;
+    width: 30%;
+  }
+  
+  .vendor-value {
+    color: #007bff;
+  }
+  
+  /* Checkbox styling */
+  .form-control-checkbox {
+    margin-right: 8px;
+    transform: scale(1.2);
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .pr-form-container {
+      margin: 0 10px;
+    }
+    
+    .pr-progress-indicator {
+      gap: 10px;
+    }
+    
+    .pr-step-label {
+      font-size: 10px;
+    }
+    
+    .pr-tab-link {
+      padding: 12px 8px;
+      font-size: 13px;
+    }
+    
+    .form-control {
+      max-width: 100%;
+    }
   }
 </style>
 
-<%= javascript_tag do %>
-$(document).ready(function() {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
   // Tab functionality
-  $('.tab-selector').click(function(e) {
-    e.preventDefault();
-    var tabId = $(this).data('tab');
-    
-    // Hide all tabbed forms
-    $('.tabbed-form').hide();
-    
-    // Show the selected tab content
-    $('#' + tabId).show();
-    
-    // Update tab selection
-    $('.tabs ul li').removeClass('selected');
-    $(this).parent('li').addClass('selected');
-    
-    return false;
+  const tabLinks = document.querySelectorAll('.pr-tab-link');
+  const tabPanes = document.querySelectorAll('.tab-pane');
+  const progressSteps = document.querySelectorAll('.pr-progress-step');
+  
+  // Initialize first tab as active
+  if (tabPanes.length > 0) {
+    tabPanes[0].classList.add('active');
+  }
+  
+  tabLinks.forEach((link, index) => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Remove active class from all tabs and panes
+      tabLinks.forEach(l => l.parentElement.classList.remove('active'));
+      tabPanes.forEach(pane => pane.classList.remove('active'));
+      progressSteps.forEach(step => step.classList.remove('active'));
+      
+      // Add active class to clicked tab and corresponding pane
+      this.parentElement.classList.add('active');
+      const targetId = this.getAttribute('data-tab');
+      const targetPane = document.getElementById(targetId);
+      if (targetPane) {
+        targetPane.classList.add('active');
+      }
+      
+      // Update progress indicator
+      if (progressSteps[index]) {
+        progressSteps[index].classList.add('active');
+      }
+    });
   });
   
-  // Initialize tab content - first tab is shown by default
-  // The general tab is shown by default and others should be hidden
-  $('.tabbed-form').not('#tab-general').hide();
+  // Form validation and enhancement
+  const form = document.getElementById('purchase-request-form');
+  if (form) {
+    // Add form validation
+    form.addEventListener('submit', function(e) {
+      const requiredFields = form.querySelectorAll('[required]');
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          field.style.borderColor = '#dc3545';
+          isValid = false;
+        } else {
+          field.style.borderColor = '#ddd';
+        }
+      });
+      
+      if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+      }
+    });
+    
+    // Real-time validation
+    const requiredFields = form.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+      field.addEventListener('blur', function() {
+        if (!this.value.trim()) {
+          this.style.borderColor = '#dc3545';
+        } else {
+          this.style.borderColor = '#28a745';
+        }
+      });
+      
+      field.addEventListener('input', function() {
+        if (this.value.trim()) {
+          this.style.borderColor = '#ddd';
+        }
+      });
+    });
+  }
   
-  // Add smooth hover effects for buttons
-  $('.button-action').hover(
-    function() { $(this).addClass('button-highlight'); },
-    function() { $(this).removeClass('button-highlight'); }
-  );
+  // Budget tracking functionality
+  const capexSelect = document.getElementById('purchase_request_capex_id');
+  const opexSelect = document.getElementById('purchase_request_opex_id');
+  const capexDetails = document.getElementById('capex-details');
+  const opexDetails = document.getElementById('opex-details');
+  const capexSection = document.getElementById('capex-section');
+  const opexSection = document.getElementById('opex-section');
   
-  // Focus on the most important field when the page loads
-  $('#purchase_request_title').focus();
+  // Budget type radio buttons
+  const budgetTypeRadios = document.querySelectorAll('.budget-type-radio');
   
-  // Initialize any JS-based controls
-  $('#purchase_request_description').addClass('wiki-edit');
-  
-  // Show confirmation if user attempts to leave page with unsaved changes
-  var formChanged = false;
-  
-  $('#purchase-request-form input, #purchase-request-form textarea, #purchase-request-form select').change(function() {
-    formChanged = true;
+  // Handle budget type selection
+  budgetTypeRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      const selectedType = this.value;
+      
+      // Hide all sections first
+      if (capexSection) capexSection.style.display = 'none';
+      if (opexSection) opexSection.style.display = 'none';
+      
+      // Clear selections
+      if (capexSelect) capexSelect.value = '';
+      if (opexSelect) opexSelect.value = '';
+      
+      // Hide details
+      if (capexDetails) capexDetails.style.display = 'none';
+      if (opexDetails) opexDetails.style.display = 'none';
+      
+      // Show the selected section
+      if (selectedType === 'capex' && capexSection) {
+        capexSection.style.display = 'block';
+        capexSection.classList.add('active');
+        if (opexSection) opexSection.classList.remove('active');
+      } else if (selectedType === 'opex' && opexSection) {
+        opexSection.style.display = 'block';
+        opexSection.classList.add('active');
+        if (capexSection) capexSection.classList.remove('active');
+      } else {
+        // No budget tracking selected
+        if (capexSection) capexSection.classList.remove('active');
+        if (opexSection) opexSection.classList.remove('active');
+      }
+    });
   });
   
-  $(window).on('beforeunload', function() {
-    if (formChanged) {
-      return '<%= l(:text_unsaved_changes_confirmation) %>';
+  // Handle CAPEX selection changes
+  if (capexSelect && capexDetails) {
+    capexSelect.addEventListener('change', function() {
+      if (this.value) {
+        capexDetails.style.display = 'block';
+        
+        // In a real implementation, you would fetch CAPEX data via AJAX
+        // For now, we'll show placeholder data
+        const yearValue = document.getElementById('capex-year-value');
+        const budgetValue = document.getElementById('capex-budget-value');
+        const remainingValue = document.getElementById('capex-remaining-value');
+        const descriptionValue = document.getElementById('capex-description-value');
+        
+        if (yearValue) yearValue.textContent = new Date().getFullYear();
+        if (budgetValue) budgetValue.textContent = 'Budget data will be loaded...';
+        if (remainingValue) remainingValue.textContent = 'Remaining budget...';
+        if (descriptionValue) descriptionValue.textContent = 'CAPEX description...';
+      } else {
+        capexDetails.style.display = 'none';
+      }
+    });
+  }
+  
+  // Handle OPEX selection changes
+  if (opexSelect && opexDetails) {
+    opexSelect.addEventListener('change', function() {
+      if (this.value) {
+        opexDetails.style.display = 'block';
+        
+        // In a real implementation, you would fetch OPEX data via AJAX
+        // For now, we'll show placeholder data
+        const yearValue = document.getElementById('opex-year-value');
+        const budgetValue = document.getElementById('opex-budget-value');
+        const remainingValue = document.getElementById('opex-remaining-value');
+        const descriptionValue = document.getElementById('opex-description-value');
+        
+        if (yearValue) yearValue.textContent = new Date().getFullYear();
+        if (budgetValue) budgetValue.textContent = 'Budget data will be loaded...';
+        if (remainingValue) remainingValue.textContent = 'Remaining budget...';
+        if (descriptionValue) descriptionValue.textContent = 'OPEX description...';
+      } else {
+        opexDetails.style.display = 'none';
+      }
+    });
+  }
+  
+  // Initialize budget type selection on page load
+  function initializeBudgetType() {
+    const hasCapex = capexSelect && capexSelect.value;
+    const hasOpex = opexSelect && opexSelect.value;
+    
+    if (hasCapex) {
+      const capexRadio = document.getElementById('budget_type_capex');
+      if (capexRadio) {
+        capexRadio.checked = true;
+        capexRadio.dispatchEvent(new Event('change'));
+      }
+      if (capexDetails) capexDetails.style.display = 'block';
+    } else if (hasOpex) {
+      const opexRadio = document.getElementById('budget_type_opex');
+      if (opexRadio) {
+        opexRadio.checked = true;
+        opexRadio.dispatchEvent(new Event('change'));
+      }
+      if (opexDetails) opexDetails.style.display = 'block';
+    } else {
+      const noneRadio = document.getElementById('budget_type_none');
+      if (noneRadio) {
+        noneRadio.checked = true;
+        noneRadio.dispatchEvent(new Event('change'));
+      }
     }
-  });
+  }
   
-  // Submit button disables form changed flag
-  $('#purchase-request-form input[type="submit"]').click(function() {
-    formChanged = false;
+  // Initialize on page load
+  initializeBudgetType();
+  
+  // File upload enhancement
+  const attachmentField = document.querySelector('.attachments-field');
+  if (attachmentField) {
+    attachmentField.addEventListener('change', function() {
+      const fileCount = this.files.length;
+      if (fileCount > 0) {
+        this.style.borderColor = '#28a745';
+        this.style.backgroundColor = '#d4edda';
+      } else {
+        this.style.borderColor = '#dee2e6';
+        this.style.backgroundColor = '#f8f9fa';
+      }
+    });
+  }
+  
+  // Vendor selection functionality
+  const vendorSelect = document.querySelector('.vendor-select');
+  const customVendorCheckbox = document.querySelector('.custom-vendor-checkbox');
+  const vendorInput = document.querySelector('.vendor-input');
+  const vendorDetails = document.querySelector('.vendor-details');
+  
+  if (customVendorCheckbox && vendorInput && vendorSelect) {
+    customVendorCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        vendorSelect.style.display = 'none';
+        vendorInput.style.display = 'block';
+        vendorInput.focus();
+        vendorSelect.value = '';
+        if (vendorDetails) vendorDetails.style.display = 'none';
+      } else {
+        vendorSelect.style.display = 'block';
+        vendorInput.style.display = 'none';
+        vendorInput.value = '';
+      }
+    });
+    
+    // Initialize state based on current values
+    if (vendorInput.value.trim() && !vendorSelect.value) {
+      customVendorCheckbox.checked = true;
+      vendorSelect.style.display = 'none';
+      vendorInput.style.display = 'block';
+    }
+  }
+  
+  // Vendor details display
+  if (vendorSelect && vendorDetails) {
+    vendorSelect.addEventListener('change', function() {
+      if (this.value) {
+        // In a real implementation, you would fetch vendor details via AJAX
+        // For now, we'll just show/hide the details container
+        vendorDetails.style.display = 'block';
+        
+        // Mock vendor data display
+        const vendorId = document.getElementById('vendor-id-value');
+        const vendorAddress = document.getElementById('vendor-address-value');
+        const vendorContact = document.getElementById('vendor-contact-value');
+        const vendorPhone = document.getElementById('vendor-phone-value');
+        const vendorEmail = document.getElementById('vendor-email-value');
+        
+        if (vendorId) {
+          vendorId.textContent = this.value;
+          document.getElementById('vendor-id-row').style.display = 'table-row';
+        }
+        
+        // You would populate these from actual vendor data
+        if (vendorAddress) {
+          vendorAddress.textContent = 'Address information would be fetched from database';
+          document.getElementById('vendor-address-row').style.display = 'table-row';
+        }
+      } else {
+        vendorDetails.style.display = 'none';
+        // Hide all vendor detail rows
+        ['vendor-id-row', 'vendor-address-row', 'vendor-contact-row', 'vendor-phone-row', 'vendor-email-row'].forEach(rowId => {
+          const row = document.getElementById(rowId);
+          if (row) row.style.display = 'none';
+        });
+      }
+    });
+    
+    // Initialize vendor details on page load
+    if (vendorSelect.value) {
+      vendorDetails.style.display = 'block';
+    }
+  }
+  
+  // Currency and price field styling
+  const currencySelect = document.querySelector('.currency-select');
+  const priceField = document.querySelector('.price-field');
+  
+  if (currencySelect && priceField) {
+    currencySelect.addEventListener('change', function() {
+      priceField.focus();
+    });
+    
+    priceField.addEventListener('input', function() {
+      // Format the price as the user types
+      let value = this.value;
+      if (value && !isNaN(value)) {
+        // Ensure two decimal places for display
+        if (value.includes('.') && value.split('.')[1].length > 2) {
+          this.value = parseFloat(value).toFixed(2);
+        }
+      }
+    });
+  }
+  
+  // Tab validation - prevent moving to next tab if current tab has validation errors
+  const tabValidation = {
+    'tab-general': function() {
+      const titleField = document.getElementById('purchase_request_title');
+      const categoryField = document.getElementById('purchase_request_category_id');
+      const statusField = document.getElementById('purchase_request_status_id');
+      
+      let isValid = true;
+      const errors = [];
+      
+      if (!titleField || !titleField.value.trim()) {
+        errors.push('Title is required');
+        if (titleField) titleField.style.borderColor = '#dc3545';
+        isValid = false;
+      }
+      
+      if (!categoryField || !categoryField.value) {
+        errors.push('OPEX Category is required');
+        if (categoryField) categoryField.style.borderColor = '#dc3545';
+        isValid = false;
+      }
+      
+      if (!statusField || !statusField.value) {
+        errors.push('Status is required');
+        if (statusField) statusField.style.borderColor = '#dc3545';
+        isValid = false;
+      }
+      
+      return { isValid, errors };
+    },
+    
+    'tab-details': function() {
+      // Validate budget type selection
+      const budgetTypeRadios = document.querySelectorAll('.budget-type-radio');
+      const capexSelect = document.getElementById('purchase_request_capex_id');
+      const opexSelect = document.getElementById('purchase_request_opex_id');
+      
+      let isValid = true;
+      const errors = [];
+      
+      // Check if a budget type is selected
+      const selectedBudgetType = Array.from(budgetTypeRadios).find(radio => radio.checked);
+      
+      if (selectedBudgetType) {
+        const budgetType = selectedBudgetType.value;
+        
+        // If CAPEX is selected, ensure a CAPEX entry is chosen
+        if (budgetType === 'capex') {
+          if (!capexSelect || !capexSelect.value) {
+            errors.push('Please select a CAPEX entry or choose a different budget type');
+            if (capexSelect) capexSelect.style.borderColor = '#dc3545';
+            isValid = false;
+          }
+        }
+        
+        // If OPEX is selected, ensure an OPEX entry is chosen
+        if (budgetType === 'opex') {
+          if (!opexSelect || !opexSelect.value) {
+            errors.push('Please select an OPEX entry or choose a different budget type');
+            if (opexSelect) opexSelect.style.borderColor = '#dc3545';
+            isValid = false;
+          }
+        }
+      }
+      
+      return { isValid, errors };
+    },
+    
+    'tab-attachments': function() {
+      // Final validation before submission
+      return { isValid: true, errors: [] };
+    }
+  };
+  
+  // Update tab click handlers to include validation
+  tabLinks.forEach((link, index) => {
+    link.addEventListener('click', function(e) {
+      const currentActiveTab = document.querySelector('.pr-tab-item.active .pr-tab-link');
+      const currentTabId = currentActiveTab ? currentActiveTab.getAttribute('data-tab') : null;
+      
+      // Validate current tab before switching
+      if (currentTabId && tabValidation[currentTabId]) {
+        const validation = tabValidation[currentTabId]();
+        if (!validation.isValid) {
+          e.preventDefault();
+          alert('Please fix the following errors before proceeding:\n' + validation.errors.join('\n'));
+          return;
+        }
+      }
+      
+      // Continue with normal tab switching if validation passes
+      // The rest of the tab switching logic is already handled above
+    });
   });
 });
-<% end %>
+</script>

@@ -7,6 +7,8 @@ class OpexController < ApplicationController
   helper :purchase_requests
   include PurchaseRequestsHelper
   
+  helper_method :opex_currency_symbol
+  
   def index
     @year = params[:year] || Date.current.year
     @category = params[:category]
@@ -72,33 +74,79 @@ class OpexController < ApplicationController
   end
   
   def dashboard
-    @year = params[:year] || Date.current.year
-    @opex_entries = @project.opex.for_year(@year)
+    @current_year = (params[:year] || Date.current.year).to_i
+    @opex_entries = @project.opex.for_year(@current_year)
     
-    # Statistics
-    @total_budget = @opex_entries.sum(:total_amount)
-    @utilized_budget = @opex_entries.sum { |o| o.utilized_amount }
-    @remaining_budget = @total_budget - @utilized_budget
-    @average_utilization = @opex_entries.any? ? 
-      (@opex_entries.sum { |o| o.utilization_percentage } / @opex_entries.count).round(2) : 0
+    # Initialize variables
+    @total_budget = 0
+    @total_utilized = 0
+    @total_remaining = 0
+    @utilization_percentage = 0
+    @currency_breakdown = {}
+    @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
+    @category_grouping = {}
+    @use_exchange_rates = false
+    @default_currency = default_currency
     
-    # Category breakdown
-    @category_data = @opex_entries.joins(:opex_category).group('opex_categories.name').sum(:total_amount)
-    
-    # Monthly trends (quarterly breakdown)
-    @quarterly_data = (1..4).map do |quarter|
-      {
-        quarter: "Q#{quarter}",
-        budgeted: @opex_entries.sum("q#{quarter}_amount"),
-        utilized: @opex_entries.sum { |o| o.utilized_amount / 4 } # Simplified quarterly utilization
+    if @opex_entries.any?
+      # Currency breakdown and exchange rate settings
+      @currency_breakdown = @opex_entries.group(:currency).sum(:total_amount)
+      exchange_rates_settings = Setting.plugin_redmine_purchase_requests || {}
+      
+      if exchange_rates_settings['opex_exchange_rates'] && exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
+        @use_exchange_rates = true
+        year_rates = exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
+        
+        # Convert all amounts to default currency
+        @total_budget = @opex_entries.sum do |opex|
+          rate = year_rates[opex.currency] || 1
+          opex.total_amount * rate
+        end
+        
+        @total_utilized = @opex_entries.sum do |opex|
+          rate = year_rates[opex.currency] || 1
+          opex.utilized_amount * rate
+        end
+      else
+        @total_budget = @opex_entries.sum(:total_amount)
+        @total_utilized = @opex_entries.sum { |o| o.utilized_amount }
+      end
+      
+      @total_remaining = @total_budget - @total_utilized
+      @utilization_percentage = @total_budget > 0 ? ((@total_utilized / @total_budget) * 100).round(2) : 0
+      
+      # Quarterly breakdown
+      @quarterly_data = {
+        q1: @opex_entries.sum(:q1_amount),
+        q2: @opex_entries.sum(:q2_amount), 
+        q3: @opex_entries.sum(:q3_amount),
+        q4: @opex_entries.sum(:q4_amount)
       }
+      
+      # Category grouping (similar to TPC grouping in CAPEX)
+      @category_grouping = {}
+      category_names = @opex_entries.joins(:opex_category).distinct.pluck('opex_categories.name')
+      
+      category_names.each do |category_name|
+        category_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => category_name)
+        total_budget = category_entries.sum(:total_amount)
+        total_utilized = category_entries.sum { |o| o.utilized_amount }
+        entries_count = category_entries.count
+        utilization_percentage = total_budget > 0 ? ((total_utilized / total_budget) * 100).round(2) : 0
+        
+        # Get currency symbol from first entry in this category
+        first_opex = category_entries.first
+        currency_symbol = first_opex&.currency_symbol || '$'
+        
+        @category_grouping[category_name] = {
+          total_budget: total_budget,
+          total_utilized: total_utilized,
+          entries_count: entries_count,
+          utilization_percentage: utilization_percentage,
+          currency_symbol: currency_symbol
+        }
+      end
     end
-    
-    # Currency breakdown with conversion
-    @currency_data = calculate_currency_breakdown(@opex_entries, @year)
-    
-    # Top OPEX entries
-    @top_opex = @opex_entries.order(total_amount: :desc).limit(5)
   end
   
   private
@@ -147,5 +195,120 @@ class OpexController < ApplicationController
   
   def get_exchange_rates_for_year(year)
     Setting.plugin_redmine_purchase_requests || {}
+  end
+  
+  def opex_currency_symbol(currency)
+    case currency.to_s.upcase
+    when 'USD' then '$'
+    when 'EUR' then '€'
+    when 'GBP' then '£'
+    when 'JPY' then '¥'
+    when 'CAD' then 'C$'
+    when 'AUD' then 'A$'
+    when 'CHF' then 'CHF'
+    when 'CNY' then '¥'
+    when 'SEK' then 'kr'
+    when 'NOK' then 'kr'
+    when 'DKK' then 'kr'
+    when 'PLN' then 'zł'
+    when 'CZK' then 'Kč'
+    when 'HUF' then 'Ft'
+    when 'RUB' then '₽'
+    when 'BRL' then 'R$'
+    when 'MXN' then '$'
+    when 'INR' then '₹'
+    when 'KRW' then '₩'
+    when 'SGD' then 'S$'
+    when 'HKD' then 'HK$'
+    when 'NZD' then 'NZ$'
+    when 'ZAR' then 'R'
+    when 'TRY' then '₺'
+    when 'ILS' then '₪'
+    when 'AED' then 'د.إ'
+    when 'SAR' then '﷼'
+    when 'QAR' then 'ر.ق'
+    when 'KWD' then 'د.ك'
+    when 'BHD' then '.د.ب'
+    when 'OMR' then 'ر.ع.'
+    when 'JOD' then 'د.ا'
+    when 'LBP' then 'ل.ل'
+    when 'EGP' then 'ج.م'
+    when 'MAD' then 'د.م.'
+    when 'TND' then 'د.ت'
+    when 'DZD' then 'د.ج'
+    when 'LYD' then 'ل.د'
+    when 'SDG' then 'ج.س.'
+    when 'SOS' then 'Sh'
+    when 'ETB' then 'Br'
+    when 'KES' then 'Sh'
+    when 'UGX' then 'Sh'
+    when 'TZS' then 'Sh'
+    when 'RWF' then 'Fr'
+    when 'MWK' then 'MK'
+    when 'ZMW' then 'ZK'
+    when 'BWP' then 'P'
+    when 'SZL' then 'L'
+    when 'LSL' then 'L'
+    when 'NAD' then '$'
+    when 'MZN' then 'MT'
+    when 'MGA' then 'Ar'
+    when 'MUR' then '₨'
+    when 'SCR' then '₨'
+    when 'GMD' then 'D'
+    when 'SLL' then 'Le'
+    when 'LRD' then '$'
+    when 'GHS' then '₵'
+    when 'NGN' then '₦'
+    when 'XOF' then 'Fr'
+    when 'XAF' then 'Fr'
+    when 'CVE' then '$'
+    when 'STD' then 'Db'
+    when 'AOA' then 'Kz'
+    when 'CDF' then 'Fr'
+    when 'BIF' then 'Fr'
+    when 'DJF' then 'Fr'
+    when 'ERN' then 'Nfk'
+    when 'YER' then '﷼'
+    when 'IQD' then 'ع.د'
+    when 'IRR' then '﷼'
+    when 'AFN' then '؋'
+    when 'PKR' then '₨'
+    when 'BDT' then '৳'
+    when 'BTN' then 'Nu'
+    when 'LKR' then '₨'
+    when 'MVR' then '.ރ'
+    when 'NPR' then '₨'
+    when 'MMK' then 'Ks'
+    when 'LAK' then '₭'
+    when 'KHR' then '៛'
+    when 'VND' then '₫'
+    when 'THB' then '฿'
+    when 'MYR' then 'RM'
+    when 'BND' then '$'
+    when 'IDR' then 'Rp'
+    when 'PHP' then '₱'
+    when 'TWD' then 'NT$'
+    when 'MNT' then '₮'
+    when 'KZT' then '₸'
+    when 'KGS' then 'с'
+    when 'UZS' then 'сўм'
+    when 'TJS' then 'ЅМ'
+    when 'TMT' then 'T'
+    when 'AZN' then '₼'
+    when 'GEL' then '₾'
+    when 'AMD' then '֏'
+    when 'BYN' then 'Br'
+    when 'UAH' then '₴'
+    when 'MDL' then 'L'
+    when 'RON' then 'lei'
+    when 'BGN' then 'лв'
+    when 'RSD' then 'дин'
+    when 'MKD' then 'ден'
+    when 'ALL' then 'L'
+    when 'BAM' then 'КМ'
+    when 'HRK' then 'kn'
+    when 'EUR' then '€'
+    else '$'
+    end
   end
 end

@@ -14,13 +14,13 @@
       <p class="info"><%= l(:text_vendor_export_info) %></p>
       
       <div class="export-options">
-        <%= link_to vendors_export_path(format: :csv), 
+        <%= link_to export_vendors_path(format: :csv), 
                     class: 'pr-button pr-button-primary pr-button-icon', 
                     method: :get do %>
           <span class="icon icon-file"></span> <%= l(:button_export_csv) %>
         <% end %>
         
-        <%= link_to vendors_export_path(format: :json), 
+        <%= link_to export_vendors_path(format: :json), 
                     class: 'pr-button pr-button-secondary pr-button-icon', 
                     method: :get do %>
           <span class="icon icon-file"></span> <%= l(:button_export_json) %>
@@ -41,7 +41,7 @@
         </ul>
       </div>
       
-      <%= form_with url: vendors_import_path, local: true, multipart: true, class: 'import-form' do |f| %>
+      <%= form_with url: import_vendors_path, local: true, multipart: true, class: 'import-form' do |f| %>
         <div class="file-input-container">
           <%= f.file_field :file, 
                           accept: '.csv,.json',
@@ -57,7 +57,7 @@
           <%= f.submit l(:button_import_file), 
                       class: 'pr-button pr-button-success pr-button-icon' %>
           
-          <%= link_to vendors_import_template_path(format: :csv), 
+          <%= link_to import_template_vendors_path(format: :csv), 
                       class: 'pr-button pr-button-outline pr-button-icon' do %>
             <span class="icon icon-download"></span> <%= l(:button_download_template) %>
           <% end %>

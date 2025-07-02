@@ -14,7 +14,7 @@ class PurchaseRequest < ActiveRecord::Base
   if Redmine::VERSION::MAJOR < 5
     attr_accessible :title, :description, :status_id, :product_url, 
                    :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
-                   :notify_manager, :notes, :currency, :capex_id
+                   :notify_manager, :notes, :currency, :capex_id, :opex_id, :category_id
   end
   
   validates :title, presence: true, length: { minimum: 5, maximum: 255 }
@@ -30,7 +30,7 @@ class PurchaseRequest < ActiveRecord::Base
     allow_blank: true
   }
   validates :priority, inclusion: { in: %w[low normal high urgent] }
-  validates :category_id, presence: true, if: :capex_id?
+  # Note: category_id validation is handled in capex_or_opex_consistency method
   
   # Custom validations
   validate :vendor_presence_check
@@ -40,6 +40,11 @@ class PurchaseRequest < ActiveRecord::Base
   # Add any additional scopes or validations as needed
   scope :open, -> { joins(:status).where(purchase_request_statuses: { is_closed: false }) }
   scope :closed, -> { joins(:status).where(purchase_request_statuses: { is_closed: true }) }
+  
+  # Helper method to check if category_id column exists
+  def self.has_category_id_column?
+    column_names.include?('category_id')
+  end
   
   def formatted_price
     if estimated_price.present?
@@ -115,8 +120,13 @@ class PurchaseRequest < ActiveRecord::Base
   end
   
   def capex_or_opex_consistency
-    if capex.present? && opex.present?
-      errors.add(:base, I18n.t('error_cannot_link_both_capex_opex'))
+    if capex_id.present? && opex_id.present?
+      errors.add(:base, I18n.t('error_cannot_link_both_capex_opex', default: 'Cannot link to both CAPEX and OPEX entries. Please select only one.'))
+    end
+    
+    # Ensure category is selected only when OPEX is selected and category_id column exists
+    if opex_id.present? && self.class.has_category_id_column? && category_id.blank?
+      errors.add(:category_id, I18n.t('error_opex_category_required', default: 'OPEX category is required when OPEX is selected.'))
     end
   end
 end

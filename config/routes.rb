@@ -43,6 +43,7 @@ Rails.application.routes.draw do
       get 'export'
       post 'import'
       get 'import_template'
+      get 'import_export'
     end
   end
 end
