@@ -795,7 +795,7 @@
                 <% linked_prs = opex.purchase_requests %>
                 <% if linked_prs.any? %>
                   <% linked_prs.limit(3).each do |pr| %>
-                    <%= link_to "##{pr.id}", project_purchase_request_path(@project, pr), class: 'pr-link', title: pr.subject %>
+                    <%= link_to "##{pr.id}", project_purchase_request_path(@project, pr), class: 'pr-link', title: pr.title %>
                   <% end %>
                   <% if linked_prs.count > 3 %>
                     <span title="<%= linked_prs.count %> total PRs">+<%= linked_prs.count - 3 %></span>

@@ -1,5 +1,6 @@
 class PurchaseRequest < ActiveRecord::Base
   belongs_to :user
+  belongs_to :project
   belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
   belongs_to :vendor, optional: true
   belongs_to :capex, optional: true
@@ -14,7 +15,8 @@ class PurchaseRequest < ActiveRecord::Base
   if Redmine::VERSION::MAJOR < 5
     attr_accessible :title, :description, :status_id, :product_url, 
                    :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
-                   :notify_manager, :notes, :currency, :capex_id, :opex_id, :category_id
+                   :notify_manager, :notes, :currency, :capex_id, :opex_id, :category_id,
+                   :project_id
   end
   
   validates :title, presence: true, length: { minimum: 5, maximum: 255 }
@@ -22,8 +24,7 @@ class PurchaseRequest < ActiveRecord::Base
   validates :status_id, presence: true
   validates :estimated_price, numericality: { greater_than: 0, allow_blank: true }
   validates :product_url, format: { with: /\Ahttps?:\/\/.*\z/i, 
-                                   allow_blank: true,
-                                   message: :invalid_url }
+                                   allow_blank: true }
   validates :due_date, comparison: { greater_than: Date.current, allow_blank: true }
   validates :currency, inclusion: { 
     in: %w[USD EUR GBP JPY CAD AUD CHF CNY SEK NZD MXN SGD HKD IDR NOK KRW TRY RUB INR BRL ZAR],
@@ -108,14 +109,18 @@ class PurchaseRequest < ActiveRecord::Base
   private
   
   def vendor_presence_check
-    if vendor_id.blank? && read_attribute(:vendor).blank?
-      errors.add(:base, I18n.t('error_vendor_required'))
+    # Check if either vendor_id is present (for selected vendor) or vendor name is present (for custom vendor)
+    has_selected_vendor = vendor_id.present? && vendor_id.to_i > 0
+    has_custom_vendor = read_attribute(:vendor).present? && !read_attribute(:vendor).to_s.strip.empty?
+    
+    unless has_selected_vendor || has_custom_vendor
+      errors.add(:vendor, I18n.t('error_vendor_required', default: 'Vendor is required. Please select a vendor or enter a custom vendor name.'))
     end
   end
   
   def business_justification_for_high_value
     if is_high_value? && (description.blank? || description.length < 50)
-      errors.add(:description, I18n.t('error_business_justification_required'))
+      errors.add(:description, I18n.t('error_business_justification_required', default: 'Business justification is required for high-value purchases. Please provide a detailed description (minimum 50 characters).'))
     end
   end
   
@@ -126,7 +131,7 @@ class PurchaseRequest < ActiveRecord::Base
     
     # Ensure category is selected only when OPEX is selected and category_id column exists
     if opex_id.present? && self.class.has_category_id_column? && category_id.blank?
-      errors.add(:category_id, I18n.t('error_opex_category_required', default: 'OPEX category is required when OPEX is selected.'))
+      errors.add(:category_id, I18n.t('error_opex_category_required', default: 'OPEX category is required. Please select a category.'))
     end
   end
 end

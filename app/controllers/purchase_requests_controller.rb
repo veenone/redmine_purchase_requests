@@ -453,6 +453,7 @@ class PurchaseRequestsController < ApplicationController
       :title, :description, :status_id, :product_url, 
       :estimated_price, :priority, :due_date, 
       :notify_manager, :notes, :currency, :capex_id, :opex_id
+      # Note: vendor and vendor_id are excluded here and handled manually in handle_vendor_assignment
     ]
     
     # Add category_id only if the column exists
@@ -465,16 +466,21 @@ class PurchaseRequestsController < ApplicationController
   
   def handle_vendor_assignment
     # Handle vendor assignment - either vendor_id for existing vendor or vendor for custom vendor name
-    if params[:purchase_request][:vendor_id].present? && params[:purchase_request][:vendor_id] != ""
-      @purchase_request.vendor_id = params[:purchase_request][:vendor_id]
-      @purchase_request.vendor = nil  # Clear custom vendor name if using vendor_id
-    elsif params[:purchase_request][:vendor].present? && params[:purchase_request][:vendor] != ""
-      @purchase_request.vendor = params[:purchase_request][:vendor]
-      @purchase_request.vendor_id = nil  # Clear vendor_id if using custom vendor name
+    vendor_id_param = params[:purchase_request][:vendor_id]
+    vendor_param = params[:purchase_request][:vendor]
+    
+    if vendor_id_param.present? && vendor_id_param != "" && vendor_id_param != "0"
+      # Using existing vendor from database
+      @purchase_request.vendor_id = vendor_id_param.to_i
+      @purchase_request.write_attribute(:vendor, nil)  # Clear custom vendor name using write_attribute
+    elsif vendor_param.present? && vendor_param.strip != ""
+      # Using custom vendor name
+      @purchase_request.write_attribute(:vendor, vendor_param.strip)  # Set custom vendor name using write_attribute
+      @purchase_request.vendor_id = nil  # Clear vendor_id
     else
-      # Both are blank - clear both fields
+      # Neither provided - clear both (will trigger validation error)
       @purchase_request.vendor_id = nil
-      @purchase_request.vendor = nil
+      @purchase_request.write_attribute(:vendor, nil)  # Clear vendor name using write_attribute
     end
   end
   
@@ -491,57 +497,6 @@ class PurchaseRequestsController < ApplicationController
       @purchase_request.capex_id = nil
       @purchase_request.opex_id = nil
     end
-  end
-end
-
-class PurchaseRequest < ActiveRecord::Base
-  # Include the Acts::Attachable module from Redmine
-  include Redmine::Acts::Attachable
-  
-  belongs_to :user
-  belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
-  belongs_to :project
-  
-  # Define the model as attachable
-  acts_as_attachable
-  
-  # For Rails 3.x/4.x compatibility
-  if Redmine::VERSION::MAJOR < 5
-    attr_accessible :title, :description, :status_id, :product_url, 
-                  :estimated_price, :vendor, :priority, :due_date, 
-                  :notify_manager, :notes
-  end
-  
-  validates :title, presence: true
-  validates :status_id, presence: true
-  validates :product_url, format: { with: /\Ahttps?:\/\/.*\z/i, 
-                                  allow_blank: true,
-                                  message: :invalid_url }
-  
-  # Add any additional scopes or validations as needed
-  scope :open, -> { joins(:status).where(purchase_request_statuses: { is_closed: false }) }
-  scope :closed, -> { joins(:status).where(purchase_request_statuses: { is_closed: true }) }
-  
-  def formatted_price
-    if estimated_price.present?
-      "$#{'%.2f' % estimated_price}"
-    else
-      "-"
-    end
-  end
-  
-  # Simplified workflow methods
-  def open?
-    !status.is_closed?
-  end
-  
-  def closed?
-    status.is_closed?
-  end
-  
-  # Method for checking if manager should be notified
-  def notify_manager?
-    notify_manager
   end
 end
 

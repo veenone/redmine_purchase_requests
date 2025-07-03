@@ -1,0 +1,409 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'opex', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'opex', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/opex/show.html.erb %>
+<% html_title "OPEX: #{@opex.opex_code} - #{@project.name}" %>
+
+<div class="contextual">
+  <%= link_to project_opex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-back"></span> Back to OPEX List
+  <% end %>
+  
+  <% if User.current.allowed_to?(:manage_opex, @project) %>
+    <%= link_to edit_project_opex_path(@project, @opex), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-edit"></span> Edit
+    <% end %>
+    
+    <%= link_to project_opex_path(@project, @opex), 
+                method: :delete, 
+                data: { confirm: 'Are you sure you want to delete this OPEX entry?' }, 
+                class: 'pr-button pr-button-danger pr-button-icon' do %>
+      <span class="icon icon-del"></span> Delete
+    <% end %>
+  <% end %>
+</div>
+
+<h2><%= @opex.opex_code %> - <%= @opex.description %></h2>
+
+<div class="opex-details">
+  <div class="opex-overview">
+    <div class="opex-summary-cards">
+      <div class="summary-card total-budget">
+        <h3>Total Budget</h3>
+        <div class="amount">
+          <%= @opex.currency_symbol %><%= number_with_precision(@opex.total_amount, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @opex.currency %></span>
+        </div>
+      </div>
+      
+      <div class="summary-card utilized">
+        <h3>Utilized</h3>
+        <div class="amount">
+          <%= @opex.currency_symbol %><%= number_with_precision(@opex.utilized_amount, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @opex.currency %></span>
+        </div>
+        <div class="percentage"><%= @opex.utilization_percentage %>%</div>
+      </div>
+      
+      <div class="summary-card remaining">
+        <h3>Remaining</h3>
+        <div class="amount">
+          <%= @opex.currency_symbol %><%= number_with_precision(@opex.remaining_amount, precision: 2, delimiter: ',') %>
+          <span class="currency"><%= @opex.currency %></span>
+        </div>
+        <div class="percentage"><%= (100 - @opex.utilization_percentage).round(2) %>%</div>
+      </div>
+    </div>
+    
+    <div class="utilization-progress">
+      <h3>Budget Utilization</h3>
+      <div class="progress-bar-large">
+        <div class="progress-fill" style="width: <%= @opex.utilization_percentage %>%"></div>
+        <span class="progress-text"><%= @opex.utilization_percentage %>% Utilized</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="opex-info-grid">
+    <div class="info-section">
+      <h3>OPEX Information</h3>
+      <table class="details-table">
+        <tr>
+          <td class="label">Year:</td>
+          <td><%= @opex.year %></td>
+        </tr>
+        <tr>
+          <td class="label">OPEX Code:</td>
+          <td><%= @opex.opex_code %></td>
+        </tr>
+        <tr>
+          <td class="label">Description:</td>
+          <td><%= @opex.description %></td>
+        </tr>
+        <tr>
+          <td class="label">Category:</td>
+          <td><%= @opex.category_display %></td>
+        </tr>
+        <tr>
+          <td class="label">Total Amount:</td>
+          <td>
+            <%= @opex.currency_symbol %><%= number_with_precision(@opex.total_amount, precision: 2, delimiter: ',') %>
+            <span class="currency-code"><%= @opex.currency %></span>
+          </td>
+        </tr>
+        <% if @opex.cost_center.present? %>
+        <tr>
+          <td class="label">Cost Center:</td>
+          <td><%= @opex.cost_center %></td>
+        </tr>
+        <% end %>
+        <% if @opex.notes.present? %>
+        <tr>
+          <td class="label">Notes:</td>
+          <td><%= simple_format(@opex.notes) %></td>
+        </tr>
+        <% end %>
+      </table>
+    </div>
+    
+    <div class="quarterly-section">
+      <h3>Quarterly Distribution</h3>
+      <div class="quarterly-breakdown">
+        <% [1, 2, 3, 4].each do |quarter| %>
+          <div class="quarter-item">
+            <div class="quarter-header">Q<%= quarter %> <%= @opex.year %></div>
+            <div class="quarter-amount">
+              <%= @opex.currency_symbol %><%= number_with_precision(@opex.send("q#{quarter}_amount"), precision: 2, delimiter: ',') %>
+            </div>
+            <div class="quarter-percentage">
+              <%= @opex.quarterly_percentage(quarter) %>% of total
+            </div>
+            <div class="quarter-bar">
+              <div class="quarter-fill" style="width: <%= @opex.quarterly_percentage(quarter) %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if @linked_requests.any? %>
+  <div class="linked-purchase-requests">
+    <h3>Linked Purchase Requests (<%= @linked_requests.count %>)</h3>
+    
+    <div class="autoscroll">
+      <table class="list purchase-requests">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Author</th>
+            <th>Estimated Price</th>
+            <th>Created</th>
+            <th class="buttons">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @linked_requests.each do |pr| %>
+            <tr class="<%= cycle('odd', 'even') %>">
+              <td class="id">
+                <%= link_to pr.id, project_purchase_request_path(@project, pr) %>
+              </td>
+              <td class="title">
+                <%= link_to truncate(pr.title, length: 50), project_purchase_request_path(@project, pr) %>
+              </td>
+              <td class="status">
+                <span class="status-badge" style="background-color: <%= pr.status.color.presence || '#777777' %>">
+                  <%= pr.status.name %>
+                </span>
+              </td>
+              <td class="author">
+                <%= link_to_user pr.user %>
+              </td>
+              <td class="price">
+                <% if pr.estimated_price.present? %>
+                  <%= pr.currency == @opex.currency ? @opex.currency_symbol : pr.currency %>
+                  <%= number_with_precision(pr.estimated_price, precision: 2, delimiter: ',') %>
+                  <span class="currency-code"><%= pr.currency %></span>
+                <% else %>
+                  <span class="no-price">-</span>
+                <% end %>
+              </td>
+              <td class="created-on">
+                <%= format_time(pr.created_at) %>
+              </td>
+              <td class="buttons">
+                <%= link_to project_purchase_request_path(@project, pr), 
+                            class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
+                            title: 'View' do %>
+                  <span class="icon icon-magnifier"></span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="no-purchase-requests">
+    <h3>Linked Purchase Requests</h3>
+    <p class="nodata">No purchase requests are currently linked to this OPEX entry.</p>
+    
+    <% if User.current.allowed_to?(:add_purchase_requests, @project) %>
+      <p>
+        <%= link_to new_project_purchase_request_path(@project, opex_id: @opex.id), 
+                    class: 'pr-button pr-button-primary pr-button-icon' do %>
+          <span class="icon icon-add"></span> Create Purchase Request for this OPEX
+        <% end %>
+      </p>
+    <% end %>
+  </div>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .opex-details {
+    margin-top: 20px;
+  }
+  
+  .opex-summary-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .summary-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .summary-card h3 {
+    margin: 0 0 10px 0;
+    color: #666;
+    font-size: 14px;
+    font-weight: normal;
+  }
+  
+  .summary-card .amount {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .summary-card .currency {
+    font-size: 14px;
+    color: #777;
+    background-color: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 5px;
+  }
+  
+  .summary-card .percentage {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .summary-card.total-budget .amount {
+    color: #FF9800;
+  }
+  
+  .summary-card.utilized .amount {
+    color: #F44336;
+  }
+  
+  .summary-card.remaining .amount {
+    color: #4CAF50;
+  }
+  
+  .utilization-progress {
+    margin-bottom: 30px;
+  }
+  
+  .progress-bar-large {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    background-color: #f0f0f0;
+    border-radius: 15px;
+    overflow: hidden;
+  }
+  
+  .progress-bar-large .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FF9800, #FFC107);
+    transition: width 0.5s ease;
+  }
+  
+  .progress-bar-large .progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .opex-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .info-section h3,
+  .quarterly-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  .details-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .details-table td {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .details-table .label {
+    font-weight: bold;
+    color: #666;
+    width: 120px;
+    vertical-align: top;
+  }
+  
+  .quarterly-breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+  
+  .quarter-item {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .quarter-header {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  .quarter-amount {
+    font-size: 18px;
+    font-weight: bold;
+    color: #FF9800;
+    margin-bottom: 5px;
+  }
+  
+  .quarter-percentage {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  .quarter-bar {
+    height: 6px;
+    background-color: #e0e0e0;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  
+  .quarter-fill {
+    height: 100%;
+    background-color: #FF9800;
+    transition: width 0.3s ease;
+  }
+  
+  .linked-purchase-requests,
+  .no-purchase-requests {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: white;
+    font-size: 12px;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  }
+  
+  .currency-code {
+    display: inline-block;
+    font-size: 11px;
+    color: #777;
+    background-color: #f5f5f5;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-left: 3px;
+    vertical-align: middle;
+  }
+  
+  @media (max-width: 768px) {
+    .opex-summary-cards,
+    .opex-info-grid,
+    .quarterly-breakdown {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<% end %>

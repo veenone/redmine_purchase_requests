@@ -160,7 +160,7 @@
         <p>
           <%= form.label :description, l(:field_description) %>
           <%= form.text_area :description, rows: 6, cols: 60, class: 'wiki-edit form-control' %>
-          <em class="info"><%= l(:text_purchase_description_info) %></em>
+          <em class="info">Provide a detailed description. For purchases over $1,000, minimum 50 characters required for business justification.</em>
         </p>
       </div>
       
@@ -203,8 +203,8 @@
       <div class="form-row">
         <p>
           <%= form.label :product_url, l(:field_product_url) %>
-          <%= form.text_field :product_url, size: 60, class: 'form-control' %>
-          <em class="info"><%= l(:text_product_url_info) %> <%= l(:text_optional) %></em>
+          <%= form.text_field :product_url, size: 60, class: 'form-control', placeholder: 'https://example.com/product' %>
+          <em class="info">Product URL must start with http:// or https:// (optional)</em>
         </p>
       </div>
       

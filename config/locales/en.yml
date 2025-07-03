@@ -503,3 +503,33 @@ en:
   text_opex_selection_info: "Link to an OPEX entry for operational expenditure tracking and budget monitoring"
   text_no_capex_entries_available: "No CAPEX entries available for the current year"
   text_no_opex_entries_available: "No OPEX entries available for the current year"
+
+  # Rails ActiveRecord validation translations for better error messages
+  activerecord:
+    errors:
+      models:
+        purchase_request:
+          attributes:
+            title:
+              blank: "Title is required"
+              too_short: "Title is too short (minimum 5 characters)"
+              too_long: "Title is too long (maximum 255 characters)"
+            description:
+              too_short: "Description is too short (minimum 10 characters)"
+            status_id:
+              blank: "Status must be selected"
+            estimated_price:
+              not_a_number: "Estimated price must be a valid number"
+              greater_than: "Estimated price must be greater than 0"
+            product_url:
+              invalid: "Product URL must be a valid web address starting with http:// or https://"
+            vendor:
+              blank: "Vendor is required. Please select a vendor or enter a custom vendor name."
+            due_date:
+              after: "Due date cannot be in the past"
+            currency:
+              inclusion: "Selected currency is not supported"
+            priority:
+              inclusion: "Priority must be one of: low, normal, high, urgent"
+            category_id:
+              blank: "OPEX category is required when OPEX is selected"

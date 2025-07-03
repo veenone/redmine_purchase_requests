@@ -49,6 +49,35 @@ module PurchaseRequestsHelper
     
     symbol_map[currency_code] || currency_code
   end
+  
+  # Class method version for use in models
+  def self.currency_symbol(currency_code)
+    symbol_map = {
+      'USD' => '$',
+      'EUR' => '€',
+      'GBP' => '£',
+      'JPY' => '¥',
+      'CAD' => 'C$',
+      'AUD' => 'A$',
+      'CHF' => 'CHF',
+      'CNY' => '¥',
+      'SEK' => 'kr',
+      'NZD' => 'NZ$',
+      'MXN' => 'Mex$',
+      'SGD' => 'S$',
+      'HKD' => 'HK$',
+      'IDR' => 'Rp',
+      'NOK' => 'kr',
+      'KRW' => '₩',
+      'TRY' => '₺',
+      'RUB' => '₽',
+      'INR' => '₹',
+      'BRL' => 'R$',
+      'ZAR' => 'R'
+    }
+    
+    symbol_map[currency_code] || currency_code
+  end
 
   def enabled_currencies_for_select
     enabled_currencies = Setting.plugin_redmine_purchase_requests['enabled_currencies']
