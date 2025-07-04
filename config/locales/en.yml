@@ -208,7 +208,10 @@ en:
   notice_capex_updated: "CAPEX entry was successfully updated"
   notice_capex_deleted: "CAPEX entry was successfully deleted"
   error_capex_not_deleted: "CAPEX entry could not be deleted"
-  warning_capex_has_linked_requests: "This CAPEX entry has linked purchase requests"
+  error_tpc_code_blank_when_no_selection: "Legacy TPC code can't be blank when no TPC code is selected"
+  error_opex_code_blank_when_no_selection: "Legacy OPEX code can't be blank when no TPC code is selected"
+  text_tpc_code_field_info: "Select a TPC code from the dropdown OR enter a legacy TPC code, but not both"
+  text_legacy_tpc_code_disabled: "Legacy TPC code is disabled when a TPC code is selected above"
   
   # CAPEX Dashboard
   label_total_capex_budget: "Total CAPEX Budget"
@@ -533,3 +536,80 @@ en:
               inclusion: "Priority must be one of: low, normal, high, urgent"
             category_id:
               blank: "OPEX category is required when OPEX is selected"
+            tpc_code:
+              blank: "TPC Code is required when CAPEX is selected"
+  
+  # TPC Code Management
+  label_tpc_codes: "TPC Codes"
+  label_tpc_code: "TPC Code"
+  label_new_tpc_code: "New TPC Code"
+  label_edit_tpc_code: "Edit TPC Code"
+  label_show_tpc_code: "View TPC Code"
+  label_view_tpc_code: "View TPC Code Details"
+  label_delete_tpc_code: "Delete TPC Code"
+  label_tpc_code_management: "TPC Code Management"
+  label_manage_tpc_codes: "Manage TPC Codes"
+  label_no_tpc_codes: "No TPC codes found"
+  label_global_tpc_codes: "Global TPC Codes"
+  label_project_tpc_codes: "Project TPC Codes"
+  
+  # TPC Code Fields
+  field_tpc_number: "TPC Number"
+  field_tpc_owner_name: "Owner Name"
+  field_tpc_email: "Email Address"
+  field_tpc_description: "Description"
+  field_tpc_notes: "Notes"
+  field_tpc_is_active: "Active"
+  field_tpc_scope: "Scope"
+  field_tpc_linked_capex: "Linked CAPEX"
+  
+  # TPC Code Messages
+  notice_tpc_code_created: "TPC code was successfully created"
+  notice_tpc_code_updated: "TPC code was successfully updated"
+  notice_tpc_code_deleted: "TPC code was successfully deleted"
+  error_tpc_code_not_deleted: "TPC code could not be deleted"
+  error_tpc_code_has_linked_capex: "This TPC code has linked CAPEX entries and cannot be deleted"
+  text_tpc_code_delete_confirm: "Are you sure you want to delete this TPC code? This action cannot be undone."
+  text_tpc_code_delete_disabled: "Cannot delete - TPC code has linked CAPEX entries"
+  warning_tpc_code_has_linked_capex: "This TPC code has linked CAPEX entries"
+  
+  # TPC Code Help Text
+  text_tpc_number_info: "Unique TPC number for tracking and identification (e.g., TPC-2025-001)"
+  text_tpc_owner_name_info: "Full name of the person responsible for this TPC code"
+  text_tpc_email_info: "Email address of the TPC code owner for communication"
+  text_tpc_description_info: "Brief description of the TPC code purpose and scope"
+  text_tpc_notes_info: "Additional notes, comments, or special instructions"
+  text_tpc_code_management_info: "Manage TPC codes for project cost tracking and budget allocation"
+  text_global_tpc_code_info: "Global TPC codes are available to all projects"
+  text_project_tpc_code_info: "Project TPC codes are specific to this project only"
+  
+  # TPC Code Import/Export
+  label_export_tpc_codes: "Export TPC Codes"
+  label_import_tpc_codes: "Import TPC Codes"
+  label_tpc_code_import_export: "Import/Export TPC Codes"
+  text_tpc_code_export_info: "Export TPC code data to CSV or JSON format for backup or sharing"
+  text_tpc_code_import_info: "Import TPC code data from CSV or JSON files. Existing codes will be updated if found."
+  text_tpc_code_import_format: "CSV, JSON"
+  text_tpc_code_import_requirements: "Required fields: TPC Number, Owner Name, Email. Optional fields: Description, Active Status, Notes, Project Name"
+  error_tpc_code_import_failed: "Import failed: %{error}"
+  notice_tpc_codes_imported_successfully: "TPC codes imported successfully"
+  notice_tpc_codes_imported: "Import completed: %{count} new TPC codes created, %{updated} codes updated"
+  
+  # TPC Settings
+  label_tpc_settings: "TPC Code Settings"
+  label_tpc_global_enabled: "Enable Global TPC Codes"
+  label_tpc_auto_link: "Auto-link TPC Codes"
+  label_tpc_require_for_capex: "Require TPC Code for CAPEX"
+  label_tpc_require_for_opex: "Require TPC Code for OPEX"
+  label_tpc_management_overview: "TPC Management Overview"
+  label_manage_global_tpc_codes: "Manage Global TPC Codes"
+  
+  text_tpc_global_enabled_description: "Allow administrators to create global TPC codes accessible across all projects"
+  text_tpc_global_enabled_help: "When enabled, admin users can create TPC codes that are available to all projects. When disabled, only project-specific TPC codes are allowed."
+  text_tpc_auto_link_description: "Automatically suggest TPC codes when creating CAPEX/OPEX entries"
+  text_tpc_auto_link_help: "When enabled, the system will suggest relevant TPC codes based on project context and naming patterns."
+  text_tpc_require_for_capex_description: "Make TPC code selection mandatory when creating CAPEX entries"
+  text_tpc_require_for_capex_help: "When enabled, users must select a TPC code when creating new CAPEX entries."
+  text_tpc_require_for_opex_description: "Make TPC code selection mandatory when creating OPEX entries"
+  text_tpc_require_for_opex_help: "When enabled, users must select a TPC code when creating new OPEX entries."
+  text_tpc_management_description: "TPC (Total Project Cost) codes help track and organize project expenses across CAPEX and OPEX entries. Use them to consolidate costs, generate reports, and maintain better financial oversight."

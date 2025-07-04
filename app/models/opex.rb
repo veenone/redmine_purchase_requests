@@ -2,13 +2,13 @@ class Opex < ActiveRecord::Base
   self.table_name = 'opex'
   
   belongs_to :project
+  belongs_to :tpc_code, optional: true
   belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
   has_many :purchase_requests, dependent: :nullify
   
   validates :year, presence: true, 
             numericality: { greater_than: 2000, less_than_or_equal_to: 2100 }
   validates :description, presence: true, length: { minimum: 3, maximum: 255 }
-  validates :opex_code, presence: true, length: { minimum: 3, maximum: 50 }
   validates :total_amount, presence: true, 
             numericality: { greater_than: 0 }
   validates :currency, presence: true, inclusion: { 
@@ -20,6 +20,9 @@ class Opex < ActiveRecord::Base
   
   validate :quarterly_amounts_sum_equals_total
   validate :unique_opex_code_per_project_year
+  validate :opex_code_validation
+  
+  before_save :handle_tpc_code_assignment
   
   scope :for_year, ->(year) { where(year: year) }
   scope :for_project, ->(project) { where(project: project) }
@@ -218,6 +221,33 @@ class Opex < ActiveRecord::Base
     
     if existing.exists?
       errors.add(:opex_code, "has already been taken for this project and year")
+    end
+  end
+  
+  def opex_code_validation
+    # Check if TPC code is required based on plugin settings
+    require_tpc_for_opex = Setting.plugin_redmine_purchase_requests['tpc_require_for_opex'] == '1'
+    
+    # If a TPC code object is selected, no need for legacy OPEX code
+    if tpc_code_id.present?
+      # Clear legacy OPEX code if TPC code is selected
+      self.opex_code = nil if opex_code.present?
+    else
+      # If no TPC code selected, legacy OPEX code is required (or optional based on settings)
+      if require_tpc_for_opex || opex_code.present?
+        if opex_code.blank?
+          errors.add(:opex_code, "can't be blank when no TPC code is selected")
+        elsif opex_code.length < 3 || opex_code.length > 50
+          errors.add(:opex_code, "must be between 3 and 50 characters")
+        end
+      end
+    end
+  end
+  
+  def handle_tpc_code_assignment
+    # If a TPC code ID is provided, clear the legacy OPEX code
+    if tpc_code_id.present?
+      self.opex_code = nil
     end
   end
 end

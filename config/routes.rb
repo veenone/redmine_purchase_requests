@@ -1,6 +1,6 @@
 # Routes for purchase requests plugin
 
-Rails.application.routes.draw do
+RedmineApp::Application.routes.draw do
   resources :projects do
     resources :purchase_requests do
       collection do
@@ -31,6 +31,15 @@ Rails.application.routes.draw do
     
     # Add OPEX categories management routes
     resources :opex_categories, only: [:create, :edit, :update, :destroy]
+    
+    # Add TPC codes management routes (project-scoped)
+    resources :tpc_codes, path: 'tpc_codes' do
+      collection do
+        get 'import_export'
+        post 'import'
+        get 'export'
+      end
+    end
   end
 
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
@@ -46,4 +55,17 @@ Rails.application.routes.draw do
       get 'import_export'
     end
   end
+  
+  # Global TPC codes management
+  get 'tpc_codes', to: 'tpc_codes#global_index', as: 'global_tpc_codes'
+  get 'tpc_codes/new', to: 'tpc_codes#global_new', as: 'new_global_tpc_codes'
+  post 'tpc_codes', to: 'tpc_codes#global_create'
+  get 'tpc_codes/import_export', to: 'tpc_codes#global_import_export', as: 'import_export_global_tpc_codes'
+  post 'tpc_codes/import', to: 'tpc_codes#global_import', as: 'import_global_tpc_codes'
+  get 'tpc_codes/export', to: 'tpc_codes#global_export', as: 'export_global_tpc_codes'
+  get 'tpc_codes/:id', to: 'tpc_codes#global_show', as: 'global_tpc_code'
+  get 'tpc_codes/:id/edit', to: 'tpc_codes#global_edit', as: 'edit_global_tpc_code'
+  patch 'tpc_codes/:id', to: 'tpc_codes#global_update'
+  put 'tpc_codes/:id', to: 'tpc_codes#global_update'
+  delete 'tpc_codes/:id', to: 'tpc_codes#global_destroy'
 end

@@ -1,0 +1,279 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% html_title(@project ? "Import/Export TPC Codes - #{@project.name}" : "Import/Export Global TPC Codes") %>
+
+<div class="contextual">
+  <%= link_to (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), 
+              class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-back"></span> Back to TPC Codes
+  <% end %>
+</div>
+
+<h2><%= l(:label_tpc_code_import_export) %></h2>
+
+<div class="box">
+  <div class="import-export-container">
+    <!-- Export Section -->
+    <div class="export-section">
+      <h3><span class="icon icon-download"></span> <%= l(:label_export_tpc_codes) %></h3>
+      <p class="info"><%= l(:text_tpc_code_export_info) %></p>
+      <p><strong>TPC Codes to export:</strong> <%= @tpc_codes_count %></p>
+      
+      <div class="export-options">
+        <%= link_to (@project ? export_project_tpc_codes_path(@project, format: :csv) : export_global_tpc_codes_path(format: :csv)), 
+                    class: 'pr-button pr-button-primary pr-button-icon', 
+                    method: :get do %>
+          <span class="icon icon-file"></span> <%= l(:button_export_csv) %>
+        <% end %>
+        
+        <%= link_to (@project ? export_project_tpc_codes_path(@project, format: :json) : export_global_tpc_codes_path(format: :json)), 
+                    class: 'pr-button pr-button-secondary pr-button-icon', 
+                    method: :get do %>
+          <span class="icon icon-file"></span> <%= l(:button_export_json) %>
+        <% end %>
+      </div>
+    </div>
+    
+    <!-- Import Section -->
+    <div class="import-section">
+      <h3><span class="icon icon-upload"></span> <%= l(:label_import_tpc_codes) %></h3>
+      <p class="info"><%= l(:text_tpc_code_import_info) %></p>
+      
+      <div class="import-requirements">
+        <h4>Import Requirements:</h4>
+        <ul>
+          <li><strong>Supported formats:</strong> <%= l(:text_tpc_code_import_format) %></li>
+          <li><strong>Required fields:</strong> TPC Number, Owner Name, Email</li>
+          <li><strong>Optional fields:</strong> Description, Active Status, Notes<%= @project ? '' : ', Project Name' %></li>
+        </ul>
+      </div>
+      
+      <%= form_with url: (@project ? import_project_tpc_codes_path(@project) : import_global_tpc_codes_path), 
+                    method: :post, 
+                    multipart: true, 
+                    local: true, 
+                    html: { class: 'import-form' } do |f| %>
+        <div class="file-input-container">
+          <%= f.file_field :file, 
+                          accept: '.csv,.json',
+                          required: true,
+                          class: 'file-input' %>
+          <label for="tpc_code_file" class="file-label">
+            <span class="icon icon-attachment"></span>
+            Choose TPC codes file (CSV or JSON)
+          </label>
+        </div>
+        
+        <div class="import-actions">
+          <%= f.submit l(:button_import), class: 'pr-button pr-button-primary pr-button-icon' %>
+          <%= link_to 'Cancel', (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), 
+                      class: 'pr-button pr-button-cancel' %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Template Download Section -->
+<div class="box template-section">
+  <h3><span class="icon icon-file"></span> Download Template</h3>
+  <p class="info">Download a template file to see the expected format for importing TPC codes:</p>
+  
+  <div class="template-actions">
+    <%= link_to 'data:text/csv;charset=utf-8,' + 
+                URI.encode_www_form_component("tpc_number,tpc_owner_name,tpc_email,description,is_active,notes#{@project ? '' : ',project_name'}\nTPC-001,John Doe,john@example.com,Sample TPC Code,true,Sample notes#{@project ? '' : ',Demo Project'}"), 
+                download: 'tpc_codes_template.csv',
+                class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-file"></span> Download CSV Template
+    <% end %>
+    
+    <%= link_to 'data:application/json;charset=utf-8,' + 
+                URI.encode_www_form_component([{
+                  tpc_number: 'TPC-001',
+                  tpc_owner_name: 'John Doe', 
+                  tpc_email: 'john@example.com',
+                  description: 'Sample TPC Code',
+                  is_active: true,
+                  notes: 'Sample notes'
+                }.tap { |h| h[:project_name] = 'Demo Project' unless @project }].to_json),
+                download: 'tpc_codes_template.json',
+                class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-file"></span> Download JSON Template
+    <% end %>
+  </div>
+</div>
+
+<div class="import-export-help">
+  <h3>Import/Export Help</h3>
+  
+  <div class="help-section">
+    <h4>CSV Format</h4>
+    <ul>
+      <li>First row must contain column headers</li>
+      <li>TPC Number, Owner Name, and Email are required</li>
+      <li>Active column accepts: true/false, 1/0, yes/no, active/inactive</li>
+      <li>If Project column is empty<%= @project ? ', TPC code will be assigned to current project' : ', TPC code will be global' %></li>
+    </ul>
+  </div>
+  
+  <div class="help-section">
+    <h4>JSON Format</h4>
+    <ul>
+      <li>Must be a valid JSON array of objects</li>
+      <li>Each object represents one TPC code</li>
+      <li>Required fields: tpc_number, tpc_owner_name, tpc_email</li>
+      <li>Optional fields: description, is_active, notes<%= @project ? '' : ', project_name' %></li>
+    </ul>
+  </div>
+  
+  <div class="help-section">
+    <h4>Import Behavior</h4>
+    <ul>
+      <li>If a TPC code with the same number already exists in the same scope, it will be updated</li>
+      <li>If it doesn't exist, a new TPC code will be created</li>
+      <li>Invalid rows will be skipped and reported in the import results</li>
+      <li>Email addresses must be valid</li>
+    </ul>
+  </div>
+</div>
+
+<% content_for :header_tags do %>
+<style>
+  .import-export-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .export-section,
+  .import-section {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+  }
+  
+  .export-section h3,
+  .import-section h3 {
+    margin-top: 0;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .export-options,
+  .import-actions,
+  .template-actions {
+    margin-top: 15px;
+  }
+  
+  .export-options .pr-button,
+  .import-actions .pr-button,
+  .template-actions .pr-button {
+    margin-right: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .import-requirements {
+    background: #fff;
+    padding: 15px;
+    border-left: 4px solid #007bff;
+    margin: 15px 0;
+  }
+  
+  .import-requirements h4 {
+    margin-top: 0;
+    color: #007bff;
+  }
+  
+  .import-requirements ul {
+    margin-bottom: 0;
+  }
+  
+  .file-input-container {
+    position: relative;
+    margin: 15px 0;
+  }
+  
+  .file-input {
+    position: absolute;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  
+  .file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #fff;
+    border: 2px dashed #007bff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+  
+  .file-label:hover {
+    background: #f8f9fa;
+    border-color: #0056b3;
+  }
+  
+  .template-section {
+    margin-top: 20px;
+  }
+  
+  .template-section h3 {
+    margin-top: 0;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .info {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 15px;
+  }
+  
+  .import-export-help {
+    margin-top: 30px;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 6px;
+  }
+  
+  .import-export-help h3 {
+    margin-top: 0;
+    color: #333;
+  }
+  
+  .help-section {
+    margin-bottom: 20px;
+  }
+  
+  .help-section h4 {
+    color: #007bff;
+    margin-bottom: 10px;
+  }
+  
+  .help-section ul {
+    margin-bottom: 0;
+    padding-left: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .import-export-container {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<% end %>

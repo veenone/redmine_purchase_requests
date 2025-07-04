@@ -213,7 +213,7 @@ class CapexController < ApplicationController
   end
 
   def capex_params
-    params.require(:capex).permit(:year, :description, :tpc_code, :total_amount, 
+    params.require(:capex).permit(:year, :description, :tpc_code, :tpc_code_id, :total_amount, 
                                   :currency, :q1_amount, :q2_amount, :q3_amount, 
                                   :q4_amount, :notes)
   end

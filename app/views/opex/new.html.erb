@@ -8,8 +8,9 @@
       <%= f.number_field :year, min: 2000, max: 2100, required: true, value: @opex.year %>
     </p>
     <p>
-      <%= f.label :opex_code, l(:field_opex_code) %><span class="required">*</span>
-      <%= f.text_field :opex_code, required: true %>
+      <%= f.label :opex_code, l(:field_opex_code) %>
+      <%= f.text_field :opex_code, id: 'opex_opex_code' %>
+      <em class="info">Legacy OPEX code (only required if no TPC code is selected below)</em>
     </p>
     <p>
       <%= f.label :description, l(:field_opex_description) %><span class="required">*</span>
@@ -26,6 +27,15 @@
     <p>
       <%= f.label :category_id, l(:field_opex_category) %><span class="required">*</span>
       <%= f.collection_select :category_id, OpexCategory.all, :id, :name, { prompt: 'Select a category' }, { required: true } %>
+    </p>
+    <p>
+      <%= f.label :tpc_code_id, 'TPC Code' %>
+      <%= f.collection_select :tpc_code_id, 
+                               TpcCode.available_for_project(@project).active.ordered, 
+                               :id, :display_name, 
+                               { prompt: 'Select TPC Code (optional)' }, 
+                               { class: 'form-control', id: 'opex_tpc_code_id' } %>
+      <em class="info">Link this OPEX entry to a TPC code for tracking</em>
     </p>
     <p>
       <%= f.label :q1_amount, l(:field_opex_q1_amount) %>
@@ -60,4 +70,43 @@
 
 <style>
 .opex-form .box.tabular p { margin-bottom: 12px; }
+.opex-code-section.disabled { opacity: 0.6; }
+.opex-code-section.disabled input { background-color: #f5f5f5; color: #666; }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tpcCodeSelect = document.getElementById('opex_tpc_code_id');
+  const opexCodeInput = document.getElementById('opex_opex_code');
+  const opexCodeSection = opexCodeInput.closest('p');
+  const opexCodeLabel = opexCodeSection.querySelector('label');
+  
+  function updateOpexCodeFields() {
+    const tpcCodeSelected = tpcCodeSelect.value && tpcCodeSelect.value !== '';
+    
+    if (tpcCodeSelected) {
+      // TPC code is selected, disable legacy OPEX code
+      opexCodeSection.classList.add('disabled', 'opex-code-section');
+      opexCodeInput.disabled = true;
+      opexCodeInput.required = false;
+      opexCodeInput.value = '';
+      opexCodeLabel.classList.remove('required');
+    } else {
+      // No TPC code selected, enable legacy OPEX code
+      opexCodeSection.classList.remove('disabled');
+      opexCodeSection.classList.add('opex-code-section');
+      opexCodeInput.disabled = false;
+      opexCodeInput.required = true;
+      opexCodeLabel.classList.add('required');
+    }
+  }
+  
+  // Initialize on page load
+  updateOpexCodeFields();
+  
+  // Update when TPC code selection changes
+  if (tpcCodeSelect) {
+    tpcCodeSelect.addEventListener('change', updateOpexCodeFields);
+  }
+});
+</script>

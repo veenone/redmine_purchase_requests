@@ -286,6 +286,9 @@
 <div class="contextual">
   <%= link_to l(:label_purchase_requests), project_purchase_requests_path(@project), class: 'icon icon-list' %>
   <%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'icon icon-add' %>
+  <% if User.current.allowed_to?(:view_tpc_codes, @project) %>
+    <%= link_to l(:label_tpc_codes), project_tpc_codes_path(@project), class: 'icon icon-projects' %>
+  <% end %>
 </div>
 
 <div class="summary-stats">

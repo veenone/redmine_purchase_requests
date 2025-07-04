@@ -1,0 +1,161 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% is_new = @tpc_code.new_record? %>
+<% html_title(is_new ? "New TPC Code" : "Edit TPC Code") %>
+
+<h2><%= is_new ? "New TPC Code" : "Edit TPC Code" %></h2>
+
+<%= form_with model: @tpc_code, 
+                url: (@tpc_code.new_record? ? 
+                      (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path) :
+                      (@project ? project_tpc_code_path(@project, @tpc_code) : global_tpc_code_path(@tpc_code))),
+                method: (@tpc_code.new_record? ? :post : :patch),
+                local: true, 
+                html: { class: 'tpc-code-form' } do |f| %>
+  <% if @tpc_code.errors.any? %>
+    <div id="errorExplanation" class="errorExplanation">
+      <h3><%= l(:label_form_contains_errors, count: @tpc_code.errors.count) %></h3>
+      <ul>
+        <% @tpc_code.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="box tabular">
+    <p>
+      <%= f.label :tpc_number, class: 'required' %> <em class="required">*</em>
+      <%= f.text_field :tpc_number, required: true, size: 30, maxlength: 50 %>
+      <em class="info">Unique TPC number (e.g., TPC-2025-001)</em>
+    </p>
+    
+    <p>
+      <%= f.label :tpc_owner_name, class: 'required' %> <em class="required">*</em>
+      <%= f.text_field :tpc_owner_name, required: true, size: 40, maxlength: 100 %>
+      <em class="info">Full name of the TPC owner</em>
+    </p>
+    
+    <p>
+      <%= f.label :tpc_email, class: 'required' %> <em class="required">*</em>
+      <%= f.email_field :tpc_email, required: true, size: 40, maxlength: 255 %>
+      <em class="info">Email address of the TPC owner</em>
+    </p>
+    
+    <p>
+      <%= f.label :description %>
+      <%= f.text_area :description, rows: 3, cols: 60, maxlength: 1000 %>
+      <em class="info">Brief description of the TPC code purpose (optional)</em>
+    </p>
+    
+    <p>
+      <%= f.label :is_active %>
+      <%= f.check_box :is_active %>
+      <em class="info">Uncheck to deactivate this TPC code</em>
+    </p>
+    
+    <p>
+      <%= f.label :notes %>
+      <%= f.text_area :notes, rows: 4, cols: 60, maxlength: 2000 %>
+      <em class="info">Additional notes or comments (optional)</em>
+    </p>
+    
+    <% unless @project %>
+      <div class="global-notice">
+        <p><strong>Global TPC Code:</strong> This TPC code will be available to all projects.</p>
+      </div>
+    <% else %>
+      <div class="project-notice">
+        <p><strong>Project TPC Code:</strong> This TPC code will be specific to the "<%= @project.name %>" project.</p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.submit (is_new ? l(:button_create) : l(:button_save)), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel), 
+                (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), 
+                class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .tpc-code-form .box {
+    margin-bottom: 20px;
+  }
+  
+  .tpc-code-form p {
+    margin-bottom: 15px;
+  }
+  
+  .tpc-code-form label.required {
+    font-weight: bold;
+  }
+  
+  .tpc-code-form em.required {
+    color: #c53030;
+    font-style: normal;
+    font-weight: bold;
+  }
+  
+  .tpc-code-form em.info {
+    display: block;
+    margin-top: 5px;
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+  }
+  
+  .global-notice,
+  .project-notice {
+    background-color: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 15px;
+  }
+  
+  .global-notice p,
+  .project-notice p {
+    margin: 0;
+    color: #2c5aa0;
+  }
+  
+  .form-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+  }
+  
+  .form-actions .pr-button {
+    margin-right: 10px;
+  }
+  
+  #errorExplanation {
+    background-color: #ffe6e6;
+    border: 1px solid #ffb3b3;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  #errorExplanation h3 {
+    color: #c53030;
+    margin: 0 0 10px 0;
+  }
+  
+  #errorExplanation ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  
+  #errorExplanation li {
+    color: #c53030;
+    margin-bottom: 5px;
+  }
+</style>
+<% end %>

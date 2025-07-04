@@ -24,9 +24,19 @@
       </p>
       
       <p>
-        <%= form.label :tpc_code, 'TPC Code', class: 'required' %>
-        <%= form.text_field :tpc_code, required: true, size: 20, maxlength: 50 %>
-        <em class="info">Unique identifier for this CAPEX entry within the project and year</em>
+        <%= form.label :tpc_code_id, 'TPC Code' %>
+        <%= form.collection_select :tpc_code_id, 
+                                   TpcCode.available_for_project(@project).active.ordered, 
+                                   :id, :display_name, 
+                                   { prompt: 'Select TPC Code (optional)' }, 
+                                   { class: 'form-control', id: 'capex_tpc_code_id' } %>
+        <em class="info">Link this CAPEX entry to a TPC code for tracking</em>
+      </p>
+      
+      <p id="legacy_tpc_code_section">
+        <%= form.label :tpc_code, 'Legacy TPC Code' %>
+        <%= form.text_field :tpc_code, size: 20, maxlength: 50, id: 'capex_tpc_code' %>
+        <em class="info">Unique identifier for this CAPEX entry (only required if no TPC code is selected above)</em>
       </p>
       
       <p>
@@ -205,5 +215,49 @@ $(document).ready(function() {
   .actions {
     margin-top: 20px;
   }
+  
+  /* TPC Code conditional styling */
+  #legacy_tpc_code_section.disabled {
+    opacity: 0.6;
+  }
+  
+  #legacy_tpc_code_section.disabled input {
+    background-color: #f5f5f5;
+    color: #666;
+  }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tpcCodeSelect = document.getElementById('capex_tpc_code_id');
+  const legacyTpcSection = document.getElementById('legacy_tpc_code_section');
+  const legacyTpcInput = document.getElementById('capex_tpc_code');
+  const legacyTpcLabel = legacyTpcSection.querySelector('label');
+  
+  function updateTpcCodeFields() {
+    const tpcCodeSelected = tpcCodeSelect.value && tpcCodeSelect.value !== '';
+    
+    if (tpcCodeSelected) {
+      // TPC code is selected, disable legacy TPC code
+      legacyTpcSection.classList.add('disabled');
+      legacyTpcInput.disabled = true;
+      legacyTpcInput.required = false;
+      legacyTpcInput.value = '';
+      legacyTpcLabel.classList.remove('required');
+    } else {
+      // No TPC code selected, enable legacy TPC code
+      legacyTpcSection.classList.remove('disabled');
+      legacyTpcInput.disabled = false;
+      legacyTpcInput.required = true;
+      legacyTpcLabel.classList.add('required');
+    }
+  }
+  
+  // Initialize on page load
+  updateTpcCodeFields();
+  
+  // Update when TPC code selection changes
+  tpcCodeSelect.addEventListener('change', updateTpcCodeFields);
+});
+</script>
 <% end %>

@@ -1,0 +1,430 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% html_title(@project ? "TPC Codes - #{@project.name}" : "Global TPC Codes") %>
+
+<div class="contextual">
+  <% if @project %>
+    <%= link_to import_export_project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-package"></span> Import/Export
+    <% end %>
+    
+    <% if User.current.allowed_to?(:manage_tpc_codes, @project) %>
+      <%= link_to new_project_tpc_code_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+        <span class="icon icon-add"></span> New TPC Code
+      <% end %>
+    <% end %>
+  <% else %>
+    <%= link_to import_export_global_tpc_codes_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-package"></span> Import/Export
+    <% end %>
+    
+    <% if User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true) %>
+      <%= link_to new_global_tpc_codes_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
+        <span class="icon icon-add"></span> New TPC Code
+      <% end %>
+    <% end %>
+  <% end %>
+</div>
+
+<h2>
+  <%= @project ? "TPC Codes - #{@project.name}" : "Global TPC Codes" %>
+  <span class="count">(<%= @tpc_codes_count %>)</span>
+</h2>
+
+<% unless @project %>
+  <div class="info-box">
+    <p><strong>Global TPC Code Management</strong></p>
+    <p>Manage TPC codes globally across all projects. These codes can be used by any project in addition to their project-specific TPC codes.</p>
+  </div>
+<% end %>
+
+<div class="filters">
+  <%= form_with url: (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), method: :get, local: true, class: 'query-form' do |f| %>
+    <fieldset>
+      <legend>Filters</legend>
+      
+      <div class="filter-row">
+        <label for="search">Search:</label>
+        <%= f.text_field :search, value: params[:search], placeholder: "TPC number, owner name, email, or description" %>
+        
+        <label for="active">Status:</label>
+        <%= f.select :active, options_for_select([
+              ['All', ''],
+              ['Active Only', 'true'],
+              ['Inactive Only', 'false']
+            ], params[:active]), { include_blank: false } %>
+        
+        <%= f.submit 'Filter', class: 'pr-button pr-button-secondary small' %>
+        <% if params[:search].present? || params[:active].present? %>
+          <%= link_to 'Clear', (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), class: 'pr-button pr-button-cancel small' %>
+        <% end %>
+      </div>
+    </fieldset>
+  <% end %>
+</div>
+
+<% if @tpc_codes.any? %>
+  <div class="autoscroll">
+    <table class="list tpc-codes">
+      <thead>
+        <tr>
+          <th>TPC Number</th>
+          <th>Owner Name</th>
+          <th>Email</th>
+          <th>Description</th>
+          <% if @project %>
+            <th>Scope</th>
+          <% end %>
+          <th>Status</th>
+          <th>Linked CAPEX</th>
+          <th class="buttons">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @tpc_codes.each do |tpc_code| %>
+          <tr class="<%= cycle('odd', 'even') %> <%= 'inactive' unless tpc_code.is_active? %>">
+            <td class="tpc-number">
+              <strong><%= tpc_code.tpc_number %></strong>
+            </td>
+            <td class="owner-name">
+              <%= tpc_code.tpc_owner_name %>
+            </td>
+            <td class="email">
+              <%= mail_to tpc_code.tpc_email, tpc_code.tpc_email, encode: 'hex' %>
+            </td>
+            <td class="description">
+              <%= truncate(tpc_code.description, length: 80) %>
+            </td>
+            <% if @project %>
+              <td class="scope">
+                <span class="scope-badge <%= tpc_code.global? ? 'global' : 'project' %>">
+                  <%= tpc_code.scope_display %>
+                </span>
+              </td>
+            <% end %>
+            <td class="status">
+              <span class="status-badge <%= tpc_code.is_active? ? 'active' : 'inactive' %>">
+                <%= tpc_code.status_display %>
+              </span>
+            </td>
+            <td class="linked-count">
+              <% if tpc_code.linked_capex_count > 0 %>
+                <span class="count-badge"><%= tpc_code.linked_capex_count %></span>
+              <% else %>
+                <span class="no-links">0</span>
+              <% end %>
+            </td>
+            <td class="buttons">
+              <%= link_to (@project ? project_tpc_code_path(@project, tpc_code) : global_tpc_code_path(tpc_code)), 
+                          class: 'pr-button pr-button-secondary pr-button-icon small', 
+                          title: l(:label_view_tpc_code) do %>
+                <span class="icon icon-magnifier"></span> <%= l(:button_view) %>
+              <% end %>
+              
+              <% can_edit = @project ? User.current.allowed_to?(:manage_tpc_codes, @project) : (User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true)) %>
+              <% if can_edit && (@project || tpc_code.global?) %>
+                <%= link_to (@project ? edit_project_tpc_code_path(@project, tpc_code) : edit_global_tpc_code_path(tpc_code)), 
+                            class: 'pr-button pr-button-primary pr-button-icon small', 
+                            title: l(:label_edit_tpc_code) do %>
+                  <span class="icon icon-edit"></span> <%= l(:button_edit) %>
+                <% end %>
+                
+                <% if tpc_code.can_be_deleted? %>
+                  <%= link_to (@project ? project_tpc_code_path(@project, tpc_code) : global_tpc_code_path(tpc_code)), 
+                              method: :delete,
+                              data: { confirm: l(:text_tpc_code_delete_confirm) },
+                              class: 'pr-button pr-button-danger pr-button-icon small', 
+                              title: l(:label_delete_tpc_code) do %>
+                    <span class="icon icon-del"></span> <%= l(:button_delete) %>
+                  <% end %>
+                <% else %>
+                  <span class="pr-button pr-button-disabled pr-button-icon small" 
+                        title="<%= l(:text_tpc_code_delete_disabled) %>">
+                    <span class="icon icon-del"></span> <%= l(:button_delete) %>
+                  </span>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  
+  <% if @tpc_codes_pages %>
+    <div class="pagination-wrapper">
+      <%= pagination_links_full @tpc_codes_pages %>
+    </div>
+  <% end %>
+  
+<% else %>
+  <div class="no-data">
+    <% if params[:search].present? || params[:active].present? %>
+      <p class="nodata">No TPC codes match the current filters.</p>
+      <%= link_to 'Show all TPC codes', (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), class: 'pr-button pr-button-secondary' %>
+    <% else %>
+      <p class="nodata">No TPC codes have been created yet.</p>
+      <% can_create = @project ? User.current.allowed_to?(:manage_tpc_codes, @project) : User.current.admin? %>
+      <% if can_create %>
+        <p>
+          <%= link_to (@project ? new_project_tpc_code_path(@project) : new_global_tpc_codes_path), 
+                      class: 'pr-button pr-button-primary pr-button-icon' do %>
+            <span class="icon icon-add"></span> Create your first TPC code
+          <% end %>
+        </p>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .tpc-codes .inactive {
+    opacity: 0.6;
+  }
+  
+  .scope-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .scope-badge.global {
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .scope-badge.project {
+    background-color: #FF9800;
+    color: white;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .status-badge.active {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .status-badge.inactive {
+    background-color: #9E9E9E;
+    color: white;
+  }
+  
+  .count-badge {
+    display: inline-block;
+    background-color: #2196F3;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 18px;
+    text-align: center;
+  }
+  
+  .no-links {
+    color: #999;
+    font-style: italic;
+  }
+  
+  .info-box {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .info-box p {
+    margin: 0 0 10px 0;
+  }
+  
+  .info-box p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .filters {
+    margin-bottom: 20px;
+  }
+  
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .filter-row label {
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  
+  .filter-row input[type="text"] {
+    min-width: 200px;
+  }
+  
+  .filter-row select {
+    min-width: 120px;
+  }
+  
+  /* Action buttons styling */
+  .tpc-codes table.list td.buttons {
+    white-space: nowrap;
+    min-width: 200px;
+  }
+  
+  .tpc-codes table.list td.buttons .pr-button {
+    margin: 0 2px 2px 0;
+    font-size: 11px;
+    padding: 4px 8px;
+    line-height: 1.2;
+  }
+  
+  .tpc-codes table.list td.buttons .pr-button .icon {
+    margin-right: 4px;
+  }
+  
+  .tpc-codes table.list td.buttons .pr-button-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Ensure action buttons are properly displayed */
+  .tpc-codes table.list th.buttons {
+    text-align: center;
+    min-width: 200px;
+  }
+  
+  /* Improved table styling */
+  .tpc-codes table.list {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+  }
+  
+  .tpc-codes table.list thead th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: none;
+    position: relative;
+  }
+  
+  .tpc-codes table.list thead th:first-child {
+    border-top-left-radius: 8px;
+  }
+  
+  .tpc-codes table.list thead th:last-child {
+    border-top-right-radius: 8px;
+  }
+  
+  .tpc-codes table.list tbody tr {
+    transition: background-color 0.2s ease;
+  }
+  
+  .tpc-codes table.list tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  .tpc-codes table.list tbody tr.odd {
+    background-color: #ffffff;
+  }
+  
+  .tpc-codes table.list tbody tr.even {
+    background-color: #f9f9f9;
+  }
+  
+  .tpc-codes table.list tbody tr.inactive {
+    opacity: 0.7;
+    background-color: #f5f5f5;
+  }
+  
+  .tpc-codes table.list tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+  }
+  
+  .tpc-codes table.list tbody tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .tpc-codes table.list .tpc-number strong {
+    color: #007bff;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+  }
+  
+  .tpc-codes table.list .owner-name {
+    font-weight: 500;
+  }
+  
+  .tpc-codes table.list .email a {
+    color: #666;
+    text-decoration: none;
+  }
+  
+  .tpc-codes table.list .email a:hover {
+    color: #007bff;
+    text-decoration: underline;
+  }
+  
+  .tpc-codes table.list .description {
+    max-width: 200px;
+    line-height: 1.4;
+  }
+  
+  /* Header styling */
+  h2 {
+    color: #333;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  h2 .count {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: normal;
+  }
+  
+  /* Contextual buttons styling */
+  .contextual {
+    margin-bottom: 20px;
+  }
+  
+  .contextual .pr-button {
+    margin: 0 5px 5px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .contextual .pr-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+</style>
+<% end %>

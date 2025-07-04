@@ -24,6 +24,8 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_opex, { opex: [:index, :show] }
     permission :manage_opex, { opex: [:new, :create, :edit, :update, :destroy] }
     permission :view_opex_dashboard, { opex: [:dashboard] }
+    permission :view_tpc_codes, { tpc_codes: [:index, :show] }
+    permission :manage_tpc_codes, { tpc_codes: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export] }
   end
   
   # Fix project menu items
@@ -68,6 +70,22 @@ Redmine::Plugin.register :redmine_purchase_requests do
        caption: 'OPEX Dashboard',
        param: :project_id,
        parent: :purchase_requests
+       
+  menu :project_menu, :tpc_codes,
+       { controller: 'tpc_codes', action: 'index' },
+       caption: 'TPC Codes',
+       param: :project_id,
+       parent: :purchase_requests
+  
+  # Add global TPC codes menu to top navigation
+  menu :top_menu, :global_tpc_codes,
+       { controller: 'tpc_codes', action: 'global_index' },
+       caption: 'TPC Codes',
+       if: Proc.new { 
+         User.current.logged? && 
+         (User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true)) &&
+         Setting.plugin_redmine_purchase_requests['tpc_global_enabled'] == '1'
+       }
   
   # Add settings page with empty exchange_rates hash
   settings default: {
@@ -83,7 +101,11 @@ Redmine::Plugin.register :redmine_purchase_requests do
     'capex_enabled' => '1',
     'capex_auto_link' => '0',
     'capex_currency_validation' => '1',
-    'capex_quarterly_validation' => '1'
+    'capex_quarterly_validation' => '1',
+    'tpc_global_enabled' => '1',
+    'tpc_auto_link' => '0',
+    'tpc_require_for_capex' => '0',
+    'tpc_require_for_opex' => '0'
   }, partial: 'settings/purchase_request_settings'
 end
 

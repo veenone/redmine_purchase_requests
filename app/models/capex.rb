@@ -2,13 +2,13 @@ class Capex < ActiveRecord::Base
   self.table_name = 'capex'
   
   belongs_to :project
+  belongs_to :tpc_code, optional: true
   belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
   has_many :purchase_requests, dependent: :nullify
   
   validates :year, presence: true, 
             numericality: { greater_than: 2000, less_than_or_equal_to: 2100 }
   validates :description, presence: true, length: { minimum: 3, maximum: 255 }
-  validates :tpc_code, presence: true, length: { minimum: 3, maximum: 50 }
   validates :total_amount, presence: true, 
             numericality: { greater_than: 0 }
   validates :currency, presence: true, inclusion: { 
@@ -20,6 +20,9 @@ class Capex < ActiveRecord::Base
   
   validate :quarterly_amounts_sum_equals_total
   validate :unique_tpc_code_per_project_year
+  validate :tpc_code_validation
+  
+  before_save :handle_tpc_code_assignment
   
   scope :for_year, ->(year) { where(year: year) }
   scope :for_project, ->(project) { where(project: project) }
@@ -128,6 +131,33 @@ class Capex < ActiveRecord::Base
     if project && Capex.where(project: project, year: year, tpc_code: tpc_code)
                       .where.not(id: id).exists?
       errors.add(:tpc_code, "must be unique per project and year")
+    end
+  end
+  
+  def tpc_code_validation
+    # Check if TPC code is required based on plugin settings
+    require_tpc_for_capex = Setting.plugin_redmine_purchase_requests['tpc_require_for_capex'] == '1'
+    
+    # If a TPC code object is selected, no need for legacy TPC code
+    if tpc_code_id.present?
+      # Clear legacy TPC code if TPC code is selected
+      self.tpc_code = nil if tpc_code.present?
+    else
+      # If no TPC code selected, legacy TPC code is required (or optional based on settings)
+      if require_tpc_for_capex || tpc_code.present?
+        if tpc_code.blank?
+          errors.add(:tpc_code, "can't be blank when no TPC code is selected")
+        elsif tpc_code.length < 3 || tpc_code.length > 50
+          errors.add(:tpc_code, "must be between 3 and 50 characters")
+        end
+      end
+    end
+  end
+  
+  def handle_tpc_code_assignment
+    # If a TPC code ID is provided, clear the legacy TPC code
+    if tpc_code_id.present?
+      self.tpc_code = nil
     end
   end
 end

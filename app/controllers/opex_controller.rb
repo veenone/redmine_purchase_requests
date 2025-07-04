@@ -164,7 +164,7 @@ class OpexController < ApplicationController
   end
   
   def opex_params
-    params.require(:opex).permit(:year, :description, :opex_code, :total_amount, :currency,
+    params.require(:opex).permit(:year, :description, :opex_code, :tpc_code_id, :total_amount, :currency,
                                  :q1_amount, :q2_amount, :q3_amount, :q4_amount, :category_id,
                                  :cost_center, :approved_by, :approved_at, :status, :notes)
   end

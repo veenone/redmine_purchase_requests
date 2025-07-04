@@ -1,0 +1,278 @@
+<%# TPC Configuration Settings %>
+<div class="tpc-settings-container">
+  <div class="settings-cards">
+    <!-- Global TPC Codes Setting -->
+    <div class="setting-card">
+      <div class="setting-header">
+        <h3><%= l(:label_tpc_global_enabled) %></h3>
+      </div>
+      <div class="setting-content">
+        <div class="setting-control">
+          <%= check_box_tag 'settings[tpc_global_enabled]', '1', 
+                           settings['tpc_global_enabled'] == '1', 
+                           { id: 'settings_tpc_global_enabled', class: 'setting-checkbox' } %>
+          <label for="settings_tpc_global_enabled" class="setting-label">
+            <%= l(:text_tpc_global_enabled_description) %>
+          </label>
+        </div>
+        <div class="setting-help">
+          <i class="icon icon-info"></i>
+          <%= l(:text_tpc_global_enabled_help) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto-link TPC Codes Setting -->
+    <div class="setting-card">
+      <div class="setting-header">
+        <h3><%= l(:label_tpc_auto_link) %></h3>
+      </div>
+      <div class="setting-content">
+        <div class="setting-control">
+          <%= check_box_tag 'settings[tpc_auto_link]', '1', 
+                           settings['tpc_auto_link'] == '1', 
+                           { id: 'settings_tpc_auto_link', class: 'setting-checkbox' } %>
+          <label for="settings_tpc_auto_link" class="setting-label">
+            <%= l(:text_tpc_auto_link_description) %>
+          </label>
+        </div>
+        <div class="setting-help">
+          <i class="icon icon-info"></i>
+          <%= l(:text_tpc_auto_link_help) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Require TPC for CAPEX Setting -->
+    <div class="setting-card">
+      <div class="setting-header">
+        <h3><%= l(:label_tpc_require_for_capex) %></h3>
+      </div>
+      <div class="setting-content">
+        <div class="setting-control">
+          <%= check_box_tag 'settings[tpc_require_for_capex]', '1', 
+                           settings['tpc_require_for_capex'] == '1', 
+                           { id: 'settings_tpc_require_for_capex', class: 'setting-checkbox' } %>
+          <label for="settings_tpc_require_for_capex" class="setting-label">
+            <%= l(:text_tpc_require_for_capex_description) %>
+          </label>
+        </div>
+        <div class="setting-help">
+          <i class="icon icon-info"></i>
+          <%= l(:text_tpc_require_for_capex_help) %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Require TPC for OPEX Setting -->
+    <div class="setting-card">
+      <div class="setting-header">
+        <h3><%= l(:label_tpc_require_for_opex) %></h3>
+      </div>
+      <div class="setting-content">
+        <div class="setting-control">
+          <%= check_box_tag 'settings[tpc_require_for_opex]', '1', 
+                           settings['tpc_require_for_opex'] == '1', 
+                           { id: 'settings_tpc_require_for_opex', class: 'setting-checkbox' } %>
+          <label for="settings_tpc_require_for_opex" class="setting-label">
+            <%= l(:text_tpc_require_for_opex_description) %>
+          </label>
+        </div>
+        <div class="setting-help">
+          <i class="icon icon-info"></i>
+          <%= l(:text_tpc_require_for_opex_help) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tpc-management-info">
+  <h3><i class="icon icon-projects"></i> <%= l(:label_tpc_management_overview) %></h3>
+  <p><%= l(:text_tpc_management_description) %></p>
+  
+  <div class="tpc-links">
+    <% if User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true) %>
+      <%= link_to global_tpc_codes_path, target: '_blank' do %>
+        <i class="icon icon-projects"></i>
+        <%= l(:label_manage_global_tpc_codes) %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .tpc-settings-container {
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .settings-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .setting-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+    overflow: hidden;
+  }
+  
+  .setting-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .setting-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 15px 20px;
+  }
+  
+  .setting-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .setting-content {
+    padding: 20px;
+  }
+  
+  .setting-control {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+  
+  .setting-checkbox {
+    margin: 2px 0 0 0 !important;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+  }
+  
+  .setting-label {
+    margin: 0 !important;
+    font-weight: 500;
+    color: #333;
+    line-height: 1.5;
+    cursor: pointer;
+    flex: 1;
+  }
+  
+  .setting-label:hover {
+    color: #007bff;
+  }
+  
+  .setting-help {
+    background: #f8f9ff;
+    border: 1px solid #d4edda;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 13px;
+    color: #155724;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .setting-help .icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+  
+  .tpc-management-info {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 25px;
+    margin-top: 30px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .tpc-management-info h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .tpc-management-info p {
+    margin: 0 0 20px 0;
+    line-height: 1.6;
+    opacity: 0.95;
+  }
+  
+  .tpc-links {
+    margin-top: 20px;
+  }
+  
+  .tpc-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white !important;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .tpc-links a:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+  }
+  
+  .tpc-links a .icon {
+    font-size: 16px;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .settings-cards {
+      grid-template-columns: 1fr;
+    }
+    
+    .setting-control {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+    
+    .setting-checkbox {
+      margin-top: 3px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .setting-card {
+      margin: 0 -10px;
+    }
+    
+    .setting-header,
+    .setting-content {
+      padding: 15px;
+    }
+    
+    .tpc-management-info {
+      margin: 20px -10px 0;
+      border-radius: 0;
+    }
+  }
+</style>

@@ -1,0 +1,352 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% html_title "TPC Code: #{@tpc_code.tpc_number}" %>
+
+<div class="contextual">
+  <%= link_to (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), 
+              class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-back"></span> Back to TPC Codes
+  <% end %>
+  
+  <% can_edit = @project ? User.current.allowed_to?(:manage_tpc_codes, @project) : User.current.admin? %>
+  <% if can_edit && (@project || @tpc_code.global?) %>
+    <%= link_to (@project ? edit_project_tpc_code_path(@project, @tpc_code) : edit_global_tpc_code_path(@tpc_code)), 
+                class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-edit"></span> Edit
+    <% end %>
+    
+    <% if @tpc_code.can_be_deleted? %>
+      <%= link_to (@project ? project_tpc_code_path(@project, @tpc_code) : global_tpc_code_path(@tpc_code)), 
+                  method: :delete, 
+                  data: { confirm: 'Are you sure you want to delete this TPC code?' }, 
+                  class: 'pr-button pr-button-danger pr-button-icon' do %>
+        <span class="icon icon-del"></span> Delete
+      <% end %>
+    <% end %>
+  <% end %>
+</div>
+
+<h2><%= @tpc_code.tpc_number %></h2>
+
+<div class="tpc-code-details">
+  <div class="tpc-overview">
+    <div class="tpc-summary-cards">
+      <div class="summary-card owner-info">
+        <h3>Owner Information</h3>
+        <div class="owner-name">
+          <strong><%= @tpc_code.tpc_owner_name %></strong>
+        </div>
+        <div class="owner-email">
+          <%= mail_to @tpc_code.tpc_email, @tpc_code.tpc_email, encode: 'hex' %>
+        </div>
+      </div>
+      
+      <div class="summary-card status-info">
+        <h3>Status & Scope</h3>
+        <div class="status">
+          <span class="status-badge <%= @tpc_code.is_active? ? 'active' : 'inactive' %>">
+            <%= @tpc_code.status_display %>
+          </span>
+        </div>
+        <div class="scope">
+          <span class="scope-badge <%= @tpc_code.global? ? 'global' : 'project' %>">
+            <%= @tpc_code.scope_display %>
+          </span>
+        </div>
+      </div>
+      
+      <div class="summary-card usage-info">
+        <h3>Usage</h3>
+        <div class="linked-count">
+          <span class="count-number"><%= @tpc_code.linked_capex_count %></span>
+          <span class="count-label">Linked CAPEX</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tpc-info-grid">
+    <div class="info-section">
+      <h3>TPC Code Information</h3>
+      <table class="details-table">
+        <tr>
+          <td class="label">TPC Number:</td>
+          <td><strong><%= @tpc_code.tpc_number %></strong></td>
+        </tr>
+        <tr>
+          <td class="label">Owner Name:</td>
+          <td><%= @tpc_code.tpc_owner_name %></td>
+        </tr>
+        <tr>
+          <td class="label">Email Address:</td>
+          <td><%= mail_to @tpc_code.tpc_email, @tpc_code.tpc_email, encode: 'hex' %></td>
+        </tr>
+        <tr>
+          <td class="label">Status:</td>
+          <td>
+            <span class="status-badge <%= @tpc_code.is_active? ? 'active' : 'inactive' %>">
+              <%= @tpc_code.status_display %>
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td class="label">Scope:</td>
+          <td>
+            <span class="scope-badge <%= @tpc_code.global? ? 'global' : 'project' %>">
+              <%= @tpc_code.scope_display %>
+            </span>
+          </td>
+        </tr>
+        <% if @tpc_code.description.present? %>
+        <tr>
+          <td class="label">Description:</td>
+          <td><%= simple_format(@tpc_code.description) %></td>
+        </tr>
+        <% end %>
+        <% if @tpc_code.notes.present? %>
+        <tr>
+          <td class="label">Notes:</td>
+          <td><%= simple_format(@tpc_code.notes) %></td>
+        </tr>
+        <% end %>
+        <tr>
+          <td class="label">Created:</td>
+          <td><%= format_time(@tpc_code.created_at) %></td>
+        </tr>
+        <tr>
+          <td class="label">Updated:</td>
+          <td><%= format_time(@tpc_code.updated_at) %></td>
+        </tr>
+      </table>
+    </div>
+    
+    <div class="usage-section">
+      <h3>Linked CAPEX Entries</h3>
+      <% if @tpc_code.capex.any? %>
+        <div class="linked-capex-list">
+          <% @tpc_code.capex.limit(10).each do |capex| %>
+            <div class="capex-item">
+              <div class="capex-info">
+                <strong><%= capex.tpc_code %></strong>
+                <span class="capex-description"><%= capex.description %></span>
+              </div>
+              <div class="capex-amount">
+                <%= capex.currency_symbol %><%= number_with_precision(capex.total_amount, precision: 2, delimiter: ',') %>
+                <span class="currency"><%= capex.currency %></span>
+              </div>
+            </div>
+          <% end %>
+          
+          <% if @tpc_code.capex.count > 10 %>
+            <div class="more-capex">
+              <em>... and <%= @tpc_code.capex.count - 10 %> more CAPEX entries</em>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="no-capex">No CAPEX entries are currently linked to this TPC code.</p>
+        
+        <% if @project && User.current.allowed_to?(:manage_capex, @project) %>
+          <p>
+            <%= link_to new_project_capex_path(@project, tpc_code_id: @tpc_code.id), 
+                        class: 'pr-button pr-button-primary pr-button-icon' do %>
+              <span class="icon icon-add"></span> Create CAPEX with this TPC Code
+            <% end %>
+          </p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% content_for :header_tags do %>
+<style>
+  .tpc-code-details {
+    margin-top: 20px;
+  }
+  
+  .tpc-summary-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .summary-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .summary-card h3 {
+    margin: 0 0 15px 0;
+    color: #666;
+    font-size: 14px;
+    font-weight: normal;
+  }
+  
+  .summary-card.owner-info .owner-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+  
+  .summary-card.owner-info .owner-email {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .summary-card.usage-info .count-number {
+    display: block;
+    font-size: 36px;
+    font-weight: bold;
+    color: #2196F3;
+    line-height: 1;
+  }
+  
+  .summary-card.usage-info .count-label {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .status-badge.active {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .status-badge.inactive {
+    background-color: #9E9E9E;
+    color: white;
+  }
+  
+  .scope-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+  
+  .scope-badge.global {
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .scope-badge.project {
+    background-color: #FF9800;
+    color: white;
+  }
+  
+  .tpc-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+  
+  .info-section h3,
+  .usage-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  .details-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .details-table td {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .details-table .label {
+    font-weight: bold;
+    color: #666;
+    width: 140px;
+    vertical-align: top;
+  }
+  
+  .linked-capex-list {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .capex-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .capex-item:last-child {
+    border-bottom: none;
+  }
+  
+  .capex-info strong {
+    display: block;
+    color: #333;
+  }
+  
+  .capex-description {
+    font-size: 13px;
+    color: #666;
+  }
+  
+  .capex-amount {
+    font-weight: bold;
+    color: #2196F3;
+  }
+  
+  .capex-amount .currency {
+    font-size: 12px;
+    color: #777;
+    background-color: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 2px;
+    margin-left: 5px;
+  }
+  
+  .more-capex {
+    padding: 10px 15px;
+    background-color: #f9f9f9;
+    border-top: 1px solid #eee;
+    text-align: center;
+    color: #666;
+  }
+  
+  .no-capex {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 15px;
+  }
+  
+  @media (max-width: 768px) {
+    .tpc-summary-cards,
+    .tpc-info-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<% end %>

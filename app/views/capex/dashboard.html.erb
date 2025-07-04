@@ -455,6 +455,12 @@
     <span class="icon icon-back"></span> Back to CAPEX List
   <% end %>
   
+  <% if User.current.allowed_to?(:view_tpc_codes, @project) %>
+    <%= link_to project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-projects"></span> TPC Codes
+    <% end %>
+  <% end %>
+  
   <% if User.current.allowed_to?(:manage_capex, @project) %>
     <%= link_to new_project_capex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
       <span class="icon icon-add"></span> New CAPEX Entry
