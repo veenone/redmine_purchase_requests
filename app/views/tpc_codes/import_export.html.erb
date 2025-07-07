@@ -8,7 +8,7 @@
 <div class="contextual">
   <%= link_to (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), 
               class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-back"></span> Back to TPC Codes
+    <span class="icon icon-cancel">Back to TPC Codes</span>
   <% end %>
 </div>
 
@@ -18,7 +18,7 @@
   <div class="import-export-container">
     <!-- Export Section -->
     <div class="export-section">
-      <h3><span class="icon icon-download"></span> <%= l(:label_export_tpc_codes) %></h3>
+      <h3><span class="icon icon-download"><%= l(:label_export_tpc_codes) %></span></h3>
       <p class="info"><%= l(:text_tpc_code_export_info) %></p>
       <p><strong>TPC Codes to export:</strong> <%= @tpc_codes_count %></p>
       
@@ -26,20 +26,20 @@
         <%= link_to (@project ? export_project_tpc_codes_path(@project, format: :csv) : export_global_tpc_codes_path(format: :csv)), 
                     class: 'pr-button pr-button-primary pr-button-icon', 
                     method: :get do %>
-          <span class="icon icon-file"></span> <%= l(:button_export_csv) %>
+          <span class="icon icon-file"><%= l(:button_export_csv) %></span>
         <% end %>
         
         <%= link_to (@project ? export_project_tpc_codes_path(@project, format: :json) : export_global_tpc_codes_path(format: :json)), 
                     class: 'pr-button pr-button-secondary pr-button-icon', 
                     method: :get do %>
-          <span class="icon icon-file"></span> <%= l(:button_export_json) %>
+          <span class="icon icon-file"><%= l(:button_export_json) %></span>
         <% end %>
       </div>
     </div>
     
     <!-- Import Section -->
     <div class="import-section">
-      <h3><span class="icon icon-upload"></span> <%= l(:label_import_tpc_codes) %></h3>
+      <h3><span class="icon icon-upload"><%= l(:label_import_tpc_codes) %></span></h3>
       <p class="info"><%= l(:text_tpc_code_import_info) %></p>
       
       <div class="import-requirements">
@@ -62,8 +62,7 @@
                           required: true,
                           class: 'file-input' %>
           <label for="tpc_code_file" class="file-label">
-            <span class="icon icon-attachment"></span>
-            Choose TPC codes file (CSV or JSON)
+            <span class="icon icon-attachment">Choose TPC codes file (CSV or JSON)</span>            
           </label>
         </div>
         
@@ -79,7 +78,7 @@
 
 <!-- Template Download Section -->
 <div class="box template-section">
-  <h3><span class="icon icon-file"></span> Download Template</h3>
+  <h3><span class="icon icon-file">Download Template</span> </h3>
   <p class="info">Download a template file to see the expected format for importing TPC codes:</p>
   
   <div class="template-actions">
@@ -87,7 +86,7 @@
                 URI.encode_www_form_component("tpc_number,tpc_owner_name,tpc_email,description,is_active,notes#{@project ? '' : ',project_name'}\nTPC-001,John Doe,john@example.com,Sample TPC Code,true,Sample notes#{@project ? '' : ',Demo Project'}"), 
                 download: 'tpc_codes_template.csv',
                 class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-file"></span> Download CSV Template
+      <span class="icon icon-file">Download CSV Template</span> 
     <% end %>
     
     <%= link_to 'data:application/json;charset=utf-8,' + 
@@ -101,7 +100,7 @@
                 }.tap { |h| h[:project_name] = 'Demo Project' unless @project }].to_json),
                 download: 'tpc_codes_template.json',
                 class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-file"></span> Download JSON Template
+      <span class="icon icon-file">Download JSON Template</span> 
     <% end %>
   </div>
 </div>

@@ -32,6 +32,13 @@ class PurchaseRequestsController < ApplicationController
   
   def new
     @purchase_request = @project.purchase_requests.build
+    
+    # Pre-fill CAPEX or OPEX if passed as parameters
+    if params[:capex_id].present?
+      @purchase_request.capex_id = params[:capex_id]
+    elsif params[:opex_id].present?
+      @purchase_request.opex_id = params[:opex_id]
+    end
   end
   
   def create
@@ -488,14 +495,27 @@ class PurchaseRequestsController < ApplicationController
     # Handle budget type mutual exclusion based on form selection
     budget_type = params[:budget_type]
     
+    # If budget_type is not explicitly set, infer it from the form data
+    if budget_type.blank?
+      if params[:purchase_request] && params[:purchase_request][:capex_id].present?
+        budget_type = 'capex'
+      elsif params[:purchase_request] && params[:purchase_request][:opex_id].present?
+        budget_type = 'opex'
+      end
+    end
+    
     case budget_type
     when 'capex'
       @purchase_request.opex_id = nil
+      # Clear category_id when CAPEX is selected (category is only for OPEX)
+      @purchase_request.category_id = nil if @purchase_request.respond_to?(:category_id=)
     when 'opex'
       @purchase_request.capex_id = nil
     when 'none'
       @purchase_request.capex_id = nil
       @purchase_request.opex_id = nil
+      # Clear category_id when no budget type is selected
+      @purchase_request.category_id = nil if @purchase_request.respond_to?(:category_id=)
     end
   end
 end

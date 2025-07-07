@@ -238,16 +238,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const tpcCodeSelected = tpcCodeSelect.value && tpcCodeSelect.value !== '';
     
     if (tpcCodeSelected) {
-      // TPC code is selected, disable legacy TPC code
+      // TPC code is selected, make legacy TPC code readonly and populate with selected TPC code
       legacyTpcSection.classList.add('disabled');
-      legacyTpcInput.disabled = true;
+      legacyTpcInput.readOnly = true;
       legacyTpcInput.required = false;
-      legacyTpcInput.value = '';
       legacyTpcLabel.classList.remove('required');
+      
+      // Get the selected TPC code text and set it as the value
+      const selectedOption = tpcCodeSelect.options[tpcCodeSelect.selectedIndex];
+      if (selectedOption && selectedOption.text) {
+        // Extract TPC number from display name (format: "TPC-XXX - Owner Name")
+        const tpcNumber = selectedOption.text.split(' - ')[0];
+        legacyTpcInput.value = tpcNumber;
+      }
     } else {
       // No TPC code selected, enable legacy TPC code
       legacyTpcSection.classList.remove('disabled');
-      legacyTpcInput.disabled = false;
+      legacyTpcInput.readOnly = false;
       legacyTpcInput.required = true;
       legacyTpcLabel.classList.add('required');
     }

@@ -714,8 +714,8 @@
 <div class="box">
   <p><%= l(:text_dashboard_info) %></p>
   <p>
-    <%= link_to l(:label_view_all_requests), project_purchase_requests_path(@project), class: 'button' %>
-    <%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'button button-positive' %>
+    <span class="icon icon-magnifier"><%= link_to l(:label_view_all_requests), project_purchase_requests_path(@project), class: 'button' %></span>
+    <span class="icon icon-add"><%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'button button-positive' %></span>
   </p>
 </div>
 

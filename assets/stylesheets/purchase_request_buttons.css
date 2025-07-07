@@ -24,7 +24,7 @@
   font-size: 14px;
   text-align: center;
   min-width: 100px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); */
 }
 
 .pr-button:hover {
@@ -39,7 +39,7 @@
 
 /* Button variations */
 .pr-button-primary {
-  background-color: #4CAF50;
+  /* background-color: #4CAF50; */
   color: white;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .pr-button-secondary {
-  background-color: #2196F3;
+  /* background-color: #2196F3; */
   color: white;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .pr-button-cancel {
-  background-color: #757575;
+  /* background-color: #757575; */
   color: white;
 }
 

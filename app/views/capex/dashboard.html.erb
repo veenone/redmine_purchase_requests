@@ -452,18 +452,18 @@
 
 <div class="contextual">
   <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-back"></span> Back to CAPEX List
+    <span class="icon icon-cancel">Back to CAPEX List</span> 
   <% end %>
   
   <% if User.current.allowed_to?(:view_tpc_codes, @project) %>
     <%= link_to project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-projects"></span> TPC Codes
+      <span class="icon icon-projects">TPC Codes</span> 
     <% end %>
   <% end %>
   
   <% if User.current.allowed_to?(:manage_capex, @project) %>
     <%= link_to new_project_capex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-      <span class="icon icon-add"></span> New CAPEX Entry
+      <span class="icon icon-add">New CAPEX Entry</span> 
     <% end %>
   <% end %>
 </div>
@@ -485,7 +485,7 @@
     <div class="stat-box">
       <div class="stat-number">
         <% if @use_exchange_rates %>
-          <%= helpers.capex_currency_symbol(@default_currency) %>
+          <%= capex_currency_symbol(@default_currency) %>
           <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
           <span class="currency"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
@@ -507,7 +507,7 @@
     <div class="stat-box">
       <div class="stat-number stat-currency">
         <% if @use_exchange_rates %>
-          <%= helpers.capex_currency_symbol(@default_currency) %>
+          <%= capex_currency_symbol(@default_currency) %>
           <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
           <span class="currency"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
@@ -527,7 +527,7 @@
     <div class="stat-box">
       <div class="stat-number">
         <% if @use_exchange_rates %>
-          <%= helpers.capex_currency_symbol(@default_currency) %>
+          <%= capex_currency_symbol(@default_currency) %>
           <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
           <span class="currency"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
@@ -570,7 +570,7 @@
                 <td><span class="status-indicator status-utilized"></span>Utilized</td>
                 <td class="stat-currency">
                   <% if @use_exchange_rates %>
-                    <%= helpers.capex_currency_symbol(@default_currency) %>
+                    <%= capex_currency_symbol(@default_currency) %>
                     <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
                     (<%= @utilization_percentage %>%)
                   <% elsif @currency_breakdown.keys.length == 1 %>
@@ -586,7 +586,7 @@
                 <td><span class="status-indicator status-remaining"></span>Remaining</td>
                 <td class="stat-currency">
                   <% if @use_exchange_rates %>
-                    <%= helpers.capex_currency_symbol(@default_currency) %>
+                    <%= capex_currency_symbol(@default_currency) %>
                     <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
                     (<%= (100 - @utilization_percentage).round(2) %>%)
                   <% elsif @currency_breakdown.keys.length == 1 %>
@@ -624,7 +624,7 @@
             <td>Q1</td>
             <td class="stat-currency">
               <% if @use_exchange_rates %>
-                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= capex_currency_symbol(@default_currency) %>
                 <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
               <% elsif @currency_breakdown.keys.length == 1 %>
                 <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
@@ -638,7 +638,7 @@
             <td>Q2</td>
             <td class="stat-currency">
               <% if @use_exchange_rates %>
-                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= capex_currency_symbol(@default_currency) %>
                 <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
               <% elsif @currency_breakdown.keys.length == 1 %>
                 <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
@@ -652,7 +652,7 @@
             <td>Q3</td>
             <td class="stat-currency">
               <% if @use_exchange_rates %>
-                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= capex_currency_symbol(@default_currency) %>
                 <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
               <% elsif @currency_breakdown.keys.length == 1 %>
                 <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
@@ -666,7 +666,7 @@
             <td>Q4</td>
             <td class="stat-currency">
               <% if @use_exchange_rates %>
-                <%= helpers.capex_currency_symbol(@default_currency) %>
+                <%= capex_currency_symbol(@default_currency) %>
                 <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
               <% elsif @currency_breakdown.keys.length == 1 %>
                 <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>

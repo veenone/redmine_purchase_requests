@@ -11,12 +11,12 @@
 <div class="contextual">
   <% if User.current.allowed_to?(:manage_capex, @project) %>
     <%= link_to new_project_capex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-      <span class="icon icon-add"></span> New CAPEX Entry
+      <span class="icon icon-add">New CAPEX Entry</span> 
     <% end %>
   <% end %>
   
   <%= link_to dashboard_project_capex_index_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-stats"></span> CAPEX Dashboard
+    <span class="icon icon-stats">CAPEX Dashboard</span> 
   <% end %>
 </div>
 
@@ -70,7 +70,7 @@
           <tr class="<%= cycle('odd', 'even') %>">
             <td class="year"><%= capex.capex_year %></td>
             <td class="tpc-code">
-              <%= link_to capex.tpc_code, project_capex_path(@project, capex), class: 'capex-link' %>
+              <%= link_to capex.tpc_code_display, project_capex_path(@project, capex), class: 'capex-link' %>
             </td>
             <td class="description">
               <%= truncate(capex.description, length: 50) %>
@@ -110,22 +110,22 @@
             </td>
             <td class="buttons">
               <%= link_to project_capex_path(@project, capex), 
-                          class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
+                          class: 'pr-button pr-button-secondary pr-button-icon', 
                           title: 'View' do %>
-                <span class="icon icon-magnifier"></span>
+                <span class="icon icon-magnifier">View</span>
               <% end %>
               <% if User.current.allowed_to?(:manage_capex, @project) %>
                 <%= link_to edit_project_capex_path(@project, capex), 
-                            class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
+                            class: 'pr-button pr-button-secondary pr-button-icon', 
                             title: 'Edit' do %>
-                  <span class="icon icon-edit"></span>
+                  <span class="icon icon-edit">Edit</span>
                 <% end %>
                 <%= link_to project_capex_path(@project, capex), 
                             method: :delete, 
                             data: { confirm: 'Are you sure?' }, 
-                            class: 'pr-button pr-button-danger pr-button-icon pr-button-icon-only small', 
+                            class: 'pr-button pr-button-secondary pr-button-icon', 
                             title: 'Delete' do %>
-                  <span class="icon icon-del"></span>
+                  <span class="icon icon-del">Delete</span>
                 <% end %>
               <% end %>
             </td>

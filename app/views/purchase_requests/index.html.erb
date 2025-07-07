@@ -5,81 +5,107 @@
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
+<% html_title("Purchase Requests - #{@project.name}") %>
+
 <div class="contextual">
-  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-    <span class="icon icon-add"></span> <%= l(:label_new_purchase_request) %>
+  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-icon' do %>
+    <span class="icon icon-add"><%= l(:label_new_purchase_request) %></span> 
+  <% end %>
+  
+  <%= link_to project_purchase_requests_path(@project, format: :csv), class: 'pr-button pr-button-icon' do %>
+    <span class="icon icon-download">Export CSV</span>
   <% end %>
 </div>
 
-<h2><%= l(:label_purchase_requests) %></h2>
+<h2>
+  <%= l(:label_purchase_requests) %> - <%= @project.name %>
+  <span class="count">(<%= @purchase_requests.count %>)</span>
+</h2>
+
+<div class="info-box">
+  <p><strong>Project Purchase Requests</strong></p>
+  <p>Manage purchase requests for <strong><%= @project.name %></strong>. Track requests from creation to completion with budget integration and status monitoring.</p>
+</div>
 
 <% if @purchase_requests.empty? %>
-  <div class="nodata">
-    <p><%= l(:label_no_data) %></p>
-    <p><%= l(:label_create_first_purchase_request, link: link_to(l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon')).html_safe %></p>
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <h3>No Purchase Requests Yet</h3>
+    <p>No purchase requests have been created for this project.</p>
+    <p>
+      <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-icon' do %>
+        <span class="icon icon-add"></span> Create First Purchase Request
+      <% end %>
+    </p>
   </div>
 <% else %>
-  <%= form_tag(project_purchase_requests_path(@project), method: :get, id: "purchase-requests-form") do %>
-    <fieldset class="filters">
-      <legend><%= l(:label_filter_plural) %></legend>
-      <div class="filter-options">
-        <label for="status"><%= l(:field_status) %>:</label>
-        <%= select_tag 'status_id', 
+  <div class="filters">
+    <%= form_with url: project_purchase_requests_path(@project), method: :get, local: true, class: 'query-form' do |f| %>
+      <fieldset>
+        <legend>Filters</legend>
+        
+        <div class="filter-row">
+          <label for="search">Search:</label>
+          <%= f.text_field :search, value: params[:search], placeholder: "Title, description, or ID" %>
+          
+          <label for="status_id">Status:</label>
+          <%= f.select :status_id, 
                        options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, params[:status_id]), 
-                       include_blank: l(:label_all),
-                       onchange: 'this.form.submit()' %>
-        
-        <label for="search"><%= l(:label_search) %>:</label>
-        <%= text_field_tag 'search', params[:search], size: 30 %>
-        
-        <%= submit_tag l(:button_apply), name: nil, class: 'pr-button pr-button-secondary small' %>
-        <% if params[:status_id].present? || params[:search].present? %>
-          <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-            <span class="icon icon-reload"></span> <%= l(:button_clear) %>
+                       { include_blank: 'All Statuses' } %>
+          
+          <%= f.submit 'Filter', class: 'pr-button pr-button-secondary small' %>
+          <% if params[:status_id].present? || params[:search].present? %>
+            <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel small' %>
           <% end %>
-        <% end %>
-      </div>
-    </fieldset>
-  <% end %>
+        </div>
+      </fieldset>
+    <% end %>
+  </div>
 
   <div class="autoscroll">
     <table class="list purchase-requests">
       <thead>
         <tr>
-          <th>#</th>
-          <th><%= l(:field_title) %></th>
-          <th><%= l(:field_status) %></th>
-          <th><%= l(:field_author) %></th>
-          <th><%= l(:field_estimated_price) %></th>
-          <th><%= l(:field_capex_entry) %></th>
-          <th><%= l(:field_created_on) %></th>
-          <th><%= l(:field_updated_on) %></th>
-          <th class="buttons"><%= l(:label_action) %></th>
+          <th class="id-column">ID</th>
+          <th class="title-column">Title</th>
+          <th class="status-column">Status</th>
+          <th class="author-column">Author</th>
+          <th class="price-column">Estimated Price</th>
+          <th class="capex-column">CAPEX Entry</th>
+          <th class="date-column">Created</th>
+          <th class="date-column">Updated</th>
+          <th class="actions-column">Actions</th>
         </tr>
       </thead>
       <tbody>
         <% @purchase_requests.each do |purchase_request| %>
           <tr class="<%= cycle('odd', 'even') %> <%= purchase_request.status.is_closed? ? 'closed' : '' %>">
-            <td class="id"><%= link_to purchase_request.id, project_purchase_request_path(@project, purchase_request) %></td>
+            <td class="id">
+              <strong>
+                <%= link_to "##{purchase_request.id}", project_purchase_request_path(@project, purchase_request), class: 'pr-id-link' %>
+              </strong>
+            </td>
             <td class="title">
-              <%= link_to purchase_request.title, project_purchase_request_path(@project, purchase_request) %>
+              <%= link_to purchase_request.title, project_purchase_request_path(@project, purchase_request), class: 'pr-title-link' %>
               <% if purchase_request.description.present? %>
-                <div class="tooltip"><span class="tip-icon">ℹ️</span>
-                  <span class="tooltip-text"><%= h(truncate(purchase_request.description, length: 100)) %></span>
+                <div class="description-preview">
+                  <%= truncate(strip_tags(purchase_request.description), length: 60) %>
                 </div>
               <% end %>
             </td>
             <td class="status">
-              <span class="status-badge" style="background-color: <%= purchase_request.status.color.presence || '#777777' %>">
+              <span class="status-badge <%= purchase_request.status.is_closed? ? 'closed' : 'open' %>" 
+                    style="background-color: <%= purchase_request.status.color.presence || '#777777' %>">
                 <%= purchase_request.status.name %>
               </span>
             </td>
             <td class="author">
+              <%= avatar(purchase_request.user, size: "16") %>
               <%= link_to_user purchase_request.user %>
             </td>
             <td class="price">
               <% if purchase_request.estimated_price.present? %>
-                <span class="price-value">
+                <div class="price-display">
                   <% 
                     # Get the correct currency symbol for this purchase request
                     symbol_map = {
@@ -92,51 +118,60 @@
                     currency_code = purchase_request.currency
                     symbol = symbol_map[currency_code] || currency_code
                   %>
-                  <%= symbol %><%= number_with_precision(purchase_request.estimated_price, precision: 2, delimiter: ',') %>
+                  <span class="price-amount">
+                    <%= symbol %><%= number_with_precision(purchase_request.estimated_price, precision: 2, delimiter: ',') %>
+                  </span>
                   <span class="currency-code"><%= purchase_request.currency %></span>
-                </span>
+                </div>
               <% else %>
-                <span class="no-price">-</span>
+                <span class="no-data">Not specified</span>
               <% end %>
             </td>
             <td class="capex-entry">
               <% if purchase_request.capex.present? %>
-                <%= link_to purchase_request.capex.display_name, 
-                          project_capex_path(@project, purchase_request.capex),
-                          class: 'capex-link',
-                          title: "#{purchase_request.capex.tpc_code} - #{purchase_request.capex.year}" %>
-                <div class="capex-mini-info">
-                  <span class="capex-utilization <%= 'over-budget' if purchase_request.capex.utilization_percentage > 100 %>">
+                <div class="capex-link-container">
+                  <%= link_to purchase_request.capex.display_name, 
+                            project_capex_path(@project, purchase_request.capex),
+                            class: 'capex-link',
+                            title: "#{purchase_request.capex.tpc_code} - #{purchase_request.capex.year}" %>
+                  <div class="capex-utilization-badge <%= 'over-budget' if purchase_request.capex.utilization_percentage > 100 %>">
                     <%= purchase_request.capex.utilization_percentage.round(1) %>%
-                  </span>
+                  </div>
                 </div>
               <% else %>
-                <span class="no-capex">-</span>
+                <span class="no-data">Not linked</span>
               <% end %>
             </td>
-            <td class="created-on"><%= format_time(purchase_request.created_at) %></td>
-            <td class="updated-on"><%= format_time(purchase_request.updated_at) %></td>
+            <td class="created-on">
+              <span class="date-display">
+                <%= format_time(purchase_request.created_at) %>
+              </span>
+            </td>
+            <td class="updated-on">
+              <span class="date-display">
+                <%= format_time(purchase_request.updated_at) %>
+              </span>
+            </td>
             <td class="buttons">
-              <%= link_to project_purchase_request_path(@project, purchase_request), 
-                          class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
-                          title: l(:button_view) do %>
-                <span class="icon icon-magnifier"></span>
-                <span class="button-text"><%= l(:button_view) %></span>
-              <% end %>
-              <%= link_to edit_project_purchase_request_path(@project, purchase_request), 
-                          class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
-                          title: l(:button_edit) do %>
-                <span class="icon icon-edit"></span>
-                <span class="button-text"><%= l(:button_edit) %></span>
-              <% end %>
-              <%= link_to project_purchase_request_path(@project, purchase_request), 
-                          method: :delete, 
-                          data: { confirm: l(:text_are_you_sure) }, 
-                          class: 'pr-button pr-button-danger pr-button-icon pr-button-icon-only small', 
-                          title: l(:button_delete) do %>
-                <span class="icon icon-del"></span>
-                <span class="button-text"><%= l(:button_delete) %></span>
-              <% end %>
+              <div class="action-buttons">
+                <%= link_to project_purchase_request_path(@project, purchase_request), 
+                            class: 'pr-button pr-button-secondary pr-button-icon small', 
+                            title: 'View Details' do %>
+                  <span class="icon icon-magnifier">View</span>
+                <% end %>
+                <%= link_to edit_project_purchase_request_path(@project, purchase_request), 
+                            class: 'pr-button pr-button-secondary pr-button-icon small', 
+                            title: 'Edit Request' do %>
+                  <span class="icon icon-edit">Edit</span>
+                <% end %>
+                <%= link_to project_purchase_request_path(@project, purchase_request), 
+                            method: :delete, 
+                            data: { confirm: 'Are you sure you want to delete this purchase request?' }, 
+                            class: 'pr-button pr-button-secondary pr-button-icon small', 
+                            title: 'Delete Request' do %>
+                  <span class="icon icon-del">Delete</span>
+                <% end %>
+              </div>
             </td>
           </tr>
         <% end %>
@@ -144,9 +179,335 @@
     </table>
   </div>
 
-  <% if @purchase_request_count > @limit %>
-    <span class="pagination">
+  <% if defined?(@purchase_request_count) && @purchase_request_count && @purchase_request_count > @limit %>
+    <div class="pagination-wrapper">
       <%= pagination_links_full @pages, @purchase_request_count, per_page: @limit %>
-    </span>
+    </div>
   <% end %>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .info-box {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .info-box p {
+    margin: 0 0 10px 0;
+  }
+  
+  .info-box p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .count {
+    color: #666;
+    font-weight: normal;
+    font-size: 0.9em;
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+  
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+  }
+  
+  .empty-state h3 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .empty-state p {
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  .filters {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  
+  .filters fieldset {
+    border: none;
+    margin: 0;
+    padding: 20px;
+  }
+  
+  .filters legend {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    padding: 0;
+  }
+  
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .filter-row label {
+    font-weight: bold;
+    white-space: nowrap;
+  }
+  
+  .filter-row input[type="text"],
+  .filter-row select {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    min-width: 150px;
+  }
+  
+  .list.purchase-requests {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .list.purchase-requests thead th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #ddd;
+    padding: 12px 8px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .list.purchase-requests tbody td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+  
+  .list.purchase-requests tbody tr:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .list.purchase-requests tbody tr.closed {
+    opacity: 0.7;
+  }
+  
+  .id-column { width: 60px; }
+  .title-column { width: 250px; }
+  .status-column { width: 120px; }
+  .author-column { width: 120px; }
+  .price-column { width: 130px; }
+  .capex-column { width: 150px; }
+  .date-column { width: 110px; }
+  .actions-column { width: 140px; }
+  
+  .pr-id-link {
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: none;
+  }
+  
+  .pr-id-link:hover {
+    text-decoration: underline;
+  }
+  
+  .pr-title-link {
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .pr-title-link:hover {
+    color: #007bff;
+    text-decoration: underline;
+  }
+  
+  .description-preview {
+    color: #666;
+    font-size: 12px;
+    margin-top: 4px;
+    font-style: italic;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    min-width: 60px;
+    text-align: center;
+  }
+  
+  .status-badge.closed {
+    opacity: 0.8;
+  }
+  
+  .price-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .price-amount {
+    font-weight: bold;
+    color: #28a745;
+  }
+  
+  .currency-code {
+    font-size: 10px;
+    color: #666;
+    text-transform: uppercase;
+  }
+  
+  .capex-link-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .capex-link {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 12px;
+  }
+  
+  .capex-link:hover {
+    text-decoration: underline;
+  }
+  
+  .capex-utilization-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background-color: #28a745;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  
+  .capex-utilization-badge.over-budget {
+    background-color: #dc3545;
+  }
+  
+  .date-display {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  .no-data {
+    color: #999;
+    font-style: italic;
+    font-size: 12px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+  
+  .pr-button-small {
+    padding: 4px 6px;
+    font-size: 11px;
+    min-width: auto;
+    background: none !important;
+    border: 1px solid #ddd;
+    color: #333 !important;
+    text-decoration: none;
+  }
+
+  .pr-button-secondary {
+    background: none !important;   
+    border: none;   
+    text-decoration: none;
+    padding: 6px 12px;    
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: none;
+  }
+  
+  .pr-button-small:hover {
+    background: #f5f5f5 !important;
+    border-color: #999;
+    color: #000 !important;
+  }
+  
+  .pr-button-small.pr-button-danger {
+    border-color: #dc3545;
+    color: #dc3545 !important;
+  }
+  
+  .pr-button-small.pr-button-danger:hover {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+  }
+  
+  .pagination-wrapper {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  h2 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  /* Contextual buttons styling */
+  .contextual .pr-button {
+    background: none !important;
+    color: #333 !important;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: none; !important;
+  }
+  
+  .contextual .pr-button:hover {
+    background: #f5f5f5 !important;
+    border-color: #999;
+    color: #000 !important;
+  }
+  
+  /* Filter buttons styling */
+  .filter-row .pr-button {
+    background: none !important;
+    border: 1px solid #ddd;
+    color: #333 !important;
+    text-decoration: none;
+  }
+  
+  .filter-row .pr-button:hover {
+    background: #f5f5f5 !important;
+    border-color: #999;
+    color: #000 !important;
+  }
+  
+  .filter-row .pr-button.pr-button-cancel {
+    border-color: #dc3545;
+    color: #dc3545 !important;
+  }
+  
+  .filter-row .pr-button.pr-button-cancel:hover {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+  }
+</style>
 <% end %>

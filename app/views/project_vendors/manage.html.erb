@@ -1,0 +1,330 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/project_vendors/manage.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% html_title("Vendor Management - #{@project.name}") %>
+
+<div class="contextual">
+  <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-list"></span> Back to Vendor List
+  <% end %>
+  
+  <%= link_to import_export_vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-package"></span> Import/Export
+  <% end %>
+  
+  <% if User.current.admin? || User.current.allowed_to?(:manage_vendors, nil, global: true) %>
+    <%= link_to new_project_vendor_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+      <span class="icon icon-add"></span> New Project Vendor
+    <% end %>
+    
+    <%= link_to new_vendor_path, class: 'pr-button pr-button-outline pr-button-icon' do %>
+      <span class="icon icon-add"></span> New Global Vendor
+    <% end %>
+  <% end %>
+</div>
+
+<h2>
+  Vendor Management - <%= @project.name %>
+  <span class="count">(<%= @total_vendors %>)</span>
+</h2>
+
+<div class="info-box">
+  <p><strong>Project Vendor Management</strong></p>
+  <p>Manage vendors available for this project. This includes both global vendors (available to all projects) and project-specific vendors (if any).</p>
+</div>
+
+<!-- Vendor Statistics -->
+<div class="vendor-stats-grid">
+  <div class="stat-box">
+    <div class="stat-number"><%= @total_vendors %></div>
+    <div class="stat-label">Total Available Vendors</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-number"><%= @active_vendors %></div>
+    <div class="stat-label">Active Vendors</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-number"><%= @global_vendors %></div>
+    <div class="stat-label">Global Vendors</div>
+  </div>
+  
+  <div class="stat-box">
+    <div class="stat-number"><%= @project_specific_vendors %></div>
+    <div class="stat-label">Project-Specific Vendors</div>
+  </div>
+</div>
+
+<!-- Management Actions -->
+<div class="management-actions">
+  <h3>Management Actions</h3>
+  
+  <div class="action-grid">
+    <div class="action-card">
+      <h4>View & Edit Vendors</h4>
+      <p>Browse all vendors available for this project, view details, and edit vendor information.</p>
+      <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-primary' do %>
+        <span class="icon icon-list"></span> View Vendor List
+      <% end %>
+    </div>
+    
+    <div class="action-card">
+      <h4>Create Project Vendor</h4>
+      <p>Add a new vendor specifically for this project. Project vendors are only available within this project context.</p>
+      <%= link_to new_project_vendor_path(@project), class: 'pr-button pr-button-success' do %>
+        <span class="icon icon-add"></span> Create Project Vendor
+      <% end %>
+    </div>
+    
+    <div class="action-card">
+      <h4>Create Global Vendor</h4>
+      <p>Add a new global vendor available to all projects. Global vendors can be used across the entire system.</p>
+      <%= link_to new_vendor_path, class: 'pr-button pr-button-primary' do %>
+        <span class="icon icon-add"></span> Create Global Vendor
+      <% end %>
+    </div>
+    
+    <div class="action-card">
+      <h4>Import/Export Vendors</h4>
+      <p>Import vendors from CSV file or export current vendor list for backup or sharing.</p>
+      <%= link_to import_export_vendors_path, class: 'pr-button pr-button-secondary' do %>
+        <span class="icon icon-package"></span> Import/Export
+      <% end %>
+    </div>
+    
+    <div class="action-card">
+      <h4>Global Vendor Management</h4>
+      <p>Access the global vendor management interface to manage vendors across all projects.</p>
+      <%= link_to vendors_path, class: 'pr-button pr-button-outline' do %>
+        <span class="icon icon-settings"></span> Global Management
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Vendor List -->
+<div class="quick-vendor-list">
+  <h3>Recently Used Vendors</h3>
+  
+  <% if @vendors.any? %>
+    <div class="vendor-preview-grid">
+      <% @vendors.limit(6).each do |vendor| %>
+        <div class="vendor-preview-card">
+          <div class="vendor-header">
+            <strong><%= vendor.name %></strong>
+            <span class="scope-badge global">GLOBAL</span>
+          </div>
+          
+          <div class="vendor-info">
+            <% if vendor.email.present? %>
+              <div class="vendor-email"><%= vendor.email %></div>
+            <% end %>
+            <% if vendor.phone.present? %>
+              <div class="vendor-phone"><%= vendor.phone %></div>
+            <% end %>
+          </div>
+          
+          <div class="vendor-actions">
+            <%= link_to vendor_path(vendor), class: 'pr-button pr-button-small' do %>
+              <span class="icon icon-magnifier"></span> View
+            <% end %>
+            
+            <% if User.current.admin? || User.current.allowed_to?(:manage_vendors, nil, global: true) %>
+              <%= link_to edit_vendor_path(vendor), class: 'pr-button pr-button-small pr-button-primary' do %>
+                <span class="icon icon-edit"></span> Edit
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+    <div class="view-all-link">
+      <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-secondary' do %>
+        View All <%= @total_vendors %> Vendors
+      <% end %>
+    </div>
+  <% else %>
+    <div class="no-vendors">
+      <p class="nodata">No vendors are currently available for this project.</p>
+      <%= link_to new_vendor_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
+        <span class="icon icon-add"></span> Create your first vendor
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<% content_for :header_tags do %>
+<style>
+  .info-box {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .info-box p {
+    margin: 0 0 10px 0;
+  }
+  
+  .info-box p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .vendor-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .stat-box {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 10px;
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .management-actions {
+    margin-bottom: 30px;
+  }
+  
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+  }
+  
+  .action-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .action-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+  }
+  
+  .action-card p {
+    margin: 0 0 15px 0;
+    color: #666;
+    line-height: 1.4;
+  }
+  
+  .vendor-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+  }
+  
+  .vendor-preview-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .vendor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .vendor-header strong {
+    color: #333;
+  }
+  
+  .scope-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .vendor-info {
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .vendor-email, .vendor-phone {
+    margin-bottom: 5px;
+  }
+  
+  .vendor-actions {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .pr-button-small {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  
+  .view-all-link {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .no-vendors {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  
+  h3 {
+    color: #333;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  h2 {
+    color: #333;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  h2 .count {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: normal;
+  }
+</style>
+<% end %>

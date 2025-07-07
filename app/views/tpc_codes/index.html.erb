@@ -8,22 +8,22 @@
 <div class="contextual">
   <% if @project %>
     <%= link_to import_export_project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-package"></span> Import/Export
+      <span class="icon icon-package">Import/Export</span> 
     <% end %>
     
     <% if User.current.allowed_to?(:manage_tpc_codes, @project) %>
       <%= link_to new_project_tpc_code_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-        <span class="icon icon-add"></span> New TPC Code
+        <span class="icon icon-add">New TPC Code</span> 
       <% end %>
     <% end %>
   <% else %>
     <%= link_to import_export_global_tpc_codes_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-package"></span> Import/Export
+      <span class="icon icon-package">Import/Export</span> 
     <% end %>
     
     <% if User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true) %>
       <%= link_to new_global_tpc_codes_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-        <span class="icon icon-add"></span> New TPC Code
+        <span class="icon icon-add">New TPC Code</span> 
       <% end %>
     <% end %>
   <% end %>
@@ -87,7 +87,12 @@
         <% @tpc_codes.each do |tpc_code| %>
           <tr class="<%= cycle('odd', 'even') %> <%= 'inactive' unless tpc_code.is_active? %>">
             <td class="tpc-number">
-              <strong><%= tpc_code.tpc_number %></strong>
+              <strong>
+                <%= link_to tpc_code.tpc_number, 
+                            (@project ? project_tpc_code_path(@project, tpc_code) : global_tpc_code_path(tpc_code)),
+                            class: 'tpc-number-link',
+                            title: "View details for #{tpc_code.tpc_number}" %>
+              </strong>
             </td>
             <td class="owner-name">
               <%= tpc_code.tpc_owner_name %>
@@ -121,7 +126,7 @@
               <%= link_to (@project ? project_tpc_code_path(@project, tpc_code) : global_tpc_code_path(tpc_code)), 
                           class: 'pr-button pr-button-secondary pr-button-icon small', 
                           title: l(:label_view_tpc_code) do %>
-                <span class="icon icon-magnifier"></span> <%= l(:button_view) %>
+                <span class="icon icon-magnifier"> <%= l(:button_view) %></span>
               <% end %>
               
               <% can_edit = @project ? User.current.allowed_to?(:manage_tpc_codes, @project) : (User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true)) %>
@@ -129,7 +134,7 @@
                 <%= link_to (@project ? edit_project_tpc_code_path(@project, tpc_code) : edit_global_tpc_code_path(tpc_code)), 
                             class: 'pr-button pr-button-primary pr-button-icon small', 
                             title: l(:label_edit_tpc_code) do %>
-                  <span class="icon icon-edit"></span> <%= l(:button_edit) %>
+                  <span class="icon icon-edit"> <%= l(:button_edit) %> </span>
                 <% end %>
                 
                 <% if tpc_code.can_be_deleted? %>
@@ -138,7 +143,7 @@
                               data: { confirm: l(:text_tpc_code_delete_confirm) },
                               class: 'pr-button pr-button-danger pr-button-icon small', 
                               title: l(:label_delete_tpc_code) do %>
-                    <span class="icon icon-del"></span> <%= l(:button_delete) %>
+                    <span class="icon icon-del"> <%= l(:button_delete) %> </span>
                   <% end %>
                 <% else %>
                   <span class="pr-button pr-button-disabled pr-button-icon small" 
@@ -239,6 +244,28 @@
   .no-links {
     color: #999;
     font-style: italic;
+  }
+  
+  /* TPC Code number links */
+  .tpc-number-link {
+    color: #2196F3;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s ease;
+  }
+  
+  .tpc-number-link:hover {
+    color: #1976D2;
+    text-decoration: underline;
+  }
+  
+  .tpc-number-link:visited {
+    color: #2196F3;
+  }
+  
+  /* Table styling enhancements */
+  .tpc-codes .tpc-number {
+    cursor: pointer;
   }
   
   .info-box {
@@ -418,7 +445,7 @@
   
   .contextual .pr-button {
     margin: 0 5px 5px 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     transition: all 0.2s ease;
   }
   

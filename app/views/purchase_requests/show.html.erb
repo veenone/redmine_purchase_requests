@@ -12,57 +12,90 @@
 <div class="contextual">
   <% if User.current.allowed_to?(:edit_purchase_requests, @project) %>
     <%= link_to edit_project_purchase_request_path(@project, @purchase_request), class: 'pr-button pr-button-secondary pr-button-icon small', title: l(:button_edit) do %>
-      <span class="icon icon-edit"></span> <%= l(:button_edit) %>
+      <span class="icon icon-edit"><%= l(:button_edit) %></span> 
     <% end %>
   <% end %>
   <% if User.current.allowed_to?(:delete_purchase_requests, @project) %>
     <%= link_to project_purchase_request_path(@project, @purchase_request), 
               method: :delete, 
               data: { confirm: l(:text_are_you_sure) }, 
-              class: 'pr-button pr-button-danger pr-button-icon small', 
+              class: 'pr-button pr-button-secondary pr-button-icon small', 
               title: l(:button_delete) do %>
-      <span class="icon icon-del"></span> <%= l(:button_delete) %>
+      <span class="icon icon-del"><%= l(:button_delete) %></span>
     <% end %>
   <% end %>
   <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back_to_list) do %>
-    <span class="icon icon-back"></span> <%= l(:button_back_to_list) %>
+    <span class="icon icon-cancel"><%= l(:button_back_to_list) %></span>
   <% end %>
 </div>
 
-<div class="purchase-request-header">
-  <h2>
-    <%= l(:label_purchase_request) %>
-    <span class="request-id">#<%= @purchase_request.id %></span>
-  </h2>
-  <div class="request-meta">
-    <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
-      <%= @purchase_request.status.name %>
-    </span>
-    <span class="priority-badge <%= @purchase_request.priority %>">
-      <%= l("label_priority_#{@purchase_request.priority}".to_sym) %>
-    </span>
-    <span class="last-updated">
-      <%= l(:label_last_updated) %>: <%= format_time(@purchase_request.updated_at) %>
-    </span>
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2>
+        <%= l(:label_purchase_request) %>
+        <span class="request-id">#<%= @purchase_request.id %></span>
+      </h2>
+      <div class="pr-form-subtitle">
+        <span class="icon icon-info"></span>
+        <%= l(:text_purchase_request_details) %>
+      </div>
+    </div>
+    <div class="pr-form-status">
+      <div class="pr-status-info">
+        <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
+          <%= @purchase_request.status.name %>
+        </span>
+        <span class="priority-badge <%= @purchase_request.priority %>">
+          <%= l("label_priority_#{@purchase_request.priority}".to_sym) %>
+        </span>
+        <span class="last-updated">
+          <%= l(:label_last_updated) %>: <%= format_time(@purchase_request.updated_at) %>
+        </span>
+      </div>
+    </div>
   </div>
-</div>
+  
+  <div class="pr-form-instructions">
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <h4><%= l(:label_request_details) %></h4>
+        <div class="pr-request-title">
+          <strong><%= h(@purchase_request.title) %></strong>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<div class="box purchase-request-show-container">
-  <div class="purchase-request-title">
-    <h3><%= h(@purchase_request.title) %></h3>
-  </div>
-  
-  <div class="tabs">
-    <ul>
-      <li class="selected"><a href="#tab-general" class="tab-selector" data-tab="tab-general"><%= l(:label_general) %></a></li>
-      <li><a href="#tab-details" class="tab-selector" data-tab="tab-details"><%= l(:label_details) %></a></li>
-      <% if @purchase_request.attachments.any? %>
-        <li><a href="#tab-attachments" class="tab-selector" data-tab="tab-attachments"><%= l(:label_attachment_plural) %></a></li>
-      <% end %>
-    </ul>
-  </div>
-  
-  <div class="purchase-request-content tab-content" id="tab-content">
+  <div class="box pr-form-box">
+    <div class="pr-tabs">
+      <ul class="pr-tab-nav">
+        <li class="pr-tab-item active">
+          <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
+            <span class="icon icon-info"></span>
+            <%= l(:label_general) %>
+          </a>
+        </li>
+        <li class="pr-tab-item">
+          <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
+            <span class="icon icon-package"></span>
+            <%= l(:label_details) %>
+          </a>
+        </li>
+        <% if @purchase_request.attachments.any? %>
+          <li class="pr-tab-item">
+            <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments">
+              <span class="icon icon-attachment"></span>
+              <%= l(:label_attachment_plural) %>
+            </a>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+    
+    <div class="pr-form-content">
+      <div class="purchase-request-content tab-content" id="tab-content">
     <div id="tab-general" class="tabbed-form">
       <div class="purchase-meta">
         <div class="meta-item">
@@ -176,11 +209,11 @@
                       <div><strong><%= l(:field_capex_year) %>:</strong> <%= @purchase_request.capex.year %></div>
                       <div><strong><%= l(:field_capex_tpc_code) %>:</strong> <%= @purchase_request.capex.tpc_code %></div>
                       <div><strong><%= l(:field_capex_total_amount) %>:</strong> 
-                        <%= helpers.format_price(@purchase_request.capex.total_amount, @purchase_request.capex.currency) %>
+                        <%= format_price(@purchase_request.capex.total_amount, @purchase_request.capex.currency) %>
                       </div>
                       <div><strong><%= l(:field_capex_remaining_amount) %>:</strong> 
                         <span class="<%= @purchase_request.capex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
-                          <%= helpers.format_price(@purchase_request.capex.remaining_amount, @purchase_request.capex.currency) %>
+                          <%= format_price(@purchase_request.capex.remaining_amount, @purchase_request.capex.currency) %>
                         </span>
                       </div>
                       <div><strong><%= l(:field_capex_utilization_percentage) %>:</strong> 
@@ -230,12 +263,27 @@
         <%= l(:button_back_to_list) %>
       <% end %>
     </div>
+    </div>
   </div>
+</div>
 </div>
 
 <style>
-  .purchase-request-header {
+  .pr-form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .pr-form-header {
     margin-bottom: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 20px;
+  }
+  
+  .pr-form-title h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    color: #333;
   }
   
   .request-id {
@@ -243,8 +291,19 @@
     font-size: 0.9em;
   }
   
-  .request-meta {
-    margin-top: 10px;
+  .pr-form-subtitle {
+    color: #666;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .pr-form-status {
+    margin-top: 15px;
+  }
+  
+  .pr-status-info {
     display: flex;
     align-items: center;
     gap: 15px;
@@ -253,19 +312,20 @@
   
   .status-badge {
     display: inline-block;
-    padding: 3px 8px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 4px;
     color: white;
     font-size: 12px;
+    font-weight: 500;
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
   }
   
   .priority-badge {
     display: inline-block;
-    padding: 3px 8px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 4px;
     font-size: 12px;
-    background-color: #f0f0f0;
+    font-weight: 500;
   }
   
   .priority-badge.low {
@@ -281,6 +341,94 @@
   .priority-badge.high {
     background-color: #fff8e1;
     color: #ff8f00;
+  }
+  
+  .priority-badge.urgent {
+    background-color: #ffebee;
+    color: #d32f2f;
+  }
+  
+  .last-updated {
+    color: #666;
+    font-size: 0.9em;
+  }
+  
+  .pr-form-instructions {
+    margin-bottom: 20px;
+  }
+  
+  .pr-alert {
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .pr-alert-info {
+    background-color: #f0f8ff;
+    border-color: #b3d9ff;
+    color: #1a5490;
+  }
+  
+  .pr-alert-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .pr-request-title {
+    font-size: 14px;
+    margin-top: 8px;
+    padding: 8px;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 4px;
+  }
+  
+  .pr-form-box {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .pr-tabs {
+    border-bottom: 1px solid #ddd;
+    background-color: #f8f9fa;
+  }
+  
+  .pr-tab-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+  }
+  
+  .pr-tab-item {
+    margin: 0;
+  }
+  
+  .pr-tab-link {
+    display: block;
+    padding: 12px 20px;
+    color: #666;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .pr-tab-item.active .pr-tab-link,
+  .pr-tab-link:hover {
+    color: #333;
+    border-bottom-color: #0078d4;
+    background-color: white;
+  }
+  
+  .pr-form-content {
+    padding: 20px;
   }
   
   .priority-badge.urgent {
@@ -515,8 +663,8 @@
 
 <%= javascript_tag do %>
 $(document).ready(function() {
-  // Tab functionality
-  $('.tab-selector').click(function(e) {
+  // Modern tab functionality
+  $('.pr-tab-link').click(function(e) {
     e.preventDefault();
     var tabId = $(this).data('tab');
     
@@ -527,8 +675,8 @@ $(document).ready(function() {
     $('#' + tabId).show();
     
     // Update tab selection
-    $('.tabs ul li').removeClass('selected');
-    $(this).parent('li').addClass('selected');
+    $('.pr-tab-item').removeClass('active');
+    $(this).parent('.pr-tab-item').addClass('active');
     
     return false;
   });
@@ -538,7 +686,7 @@ $(document).ready(function() {
   $('#tab-general').show();
   
   // Add smooth hover effects for buttons
-  $('.button-action').hover(
+  $('.pr-button').hover(
     function() { $(this).addClass('button-highlight'); },
     function() { $(this).removeClass('button-highlight'); }
   );

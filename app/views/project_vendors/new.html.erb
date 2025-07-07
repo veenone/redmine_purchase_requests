@@ -1,27 +1,37 @@
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/new.html.erb %>
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/project_vendors/new.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
-<% html_title("New Global Vendor") %>
+<% html_title("New Project Vendor - #{@project.name}") %>
 
 <div class="contextual">
-  <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-cancel">Back to Vendor List</span> 
+  <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-list">Back to Vendor List</span> 
+  <% end %>
+  
+  <%= link_to vendors_path, class: 'pr-button pr-button-outline pr-button-icon' do %>
+    <span class="icon icon-settings">Global Vendors</span> 
   <% end %>
 </div>
 
 <h2>
-  New Global Vendor
+  New Project Vendor - <%= @project.name %>
 </h2>
 
 <div class="info-box">
-  <p><strong>Creating Global Vendor</strong></p>
-  <p>This vendor will be available to all projects in the system. Global vendors can be used by any project and managed centrally.</p>
+  <p><strong>Creating Project-Specific Vendor</strong></p>
+  <p>This vendor will be associated with the <strong><%= @project.name %></strong> project. 
+     <%= if Vendor.column_names.include?('project_id')
+          "It will only be available for use within this project."
+        else
+          "Note: Project-specific vendors require database migration. This vendor will be created as a global vendor for now."
+        end %>
+  </p>
 </div>
 
-<%= form_with model: @vendor, local: true, html: { class: 'vendor-form' } do |f| %>
+<%= form_with model: [@project, @vendor], local: true, html: { class: 'vendor-form' } do |f| %>
   <% if @vendor.errors.any? %>
     <div id="errorExplanation" class="errorExplanation">
       <h2><%= pluralize(@vendor.errors.count, "error") %> prohibited this vendor from being saved:</h2>
@@ -103,19 +113,27 @@
         </div>
       </div>
       
-      <div class="project-scope-indicator">
-        <div class="scope-badge global">GLOBAL</div>
-        <span>This vendor will be available to all projects in the system</span>
-      </div>
+      <% if Vendor.column_names.include?('project_id') %>
+        <%= f.hidden_field :project_id, value: @project.id %>
+        <div class="project-scope-indicator">
+          <div class="scope-badge project">PROJECT</div>
+          <span>This vendor will be specific to the <strong><%= @project.name %></strong> project</span>
+        </div>
+      <% else %>
+        <div class="project-scope-indicator">
+          <div class="scope-badge global">GLOBAL</div>
+          <span>This vendor will be created as a global vendor (available to all projects)</span>
+        </div>
+      <% end %>
     </div>
   </div>
 
   <div class="form-actions">
-    <%= f.submit "Create Global Vendor", class: 'pr-button pr-button-primary pr-button-icon' do %>
-      <span class="icon icon-add">Create Global Vendor</span>
+    <%= f.submit "Create Project Vendor", class: 'pr-button pr-button-primary pr-button-icon' do %>
+      <span class="icon icon-add"> Create Project Vendor</span>
     <% end %>
     
-    <%= link_to vendors_path, class: 'pr-button pr-button-secondary' do %>
+    <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-secondary' do %>
       Cancel
     <% end %>
   </div>

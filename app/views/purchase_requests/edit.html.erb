@@ -12,54 +12,101 @@
 
 <div class="contextual">
   <%= link_to project_purchase_request_path(@project, @purchase_request), class: 'pr-button pr-button-secondary pr-button-icon small', title: l(:button_show) do %>
-    <span class="icon icon-magnifier"></span> <%= l(:button_show) %>
+    <span class="icon icon-magnifier"><%= l(:button_show) %></span> 
   <% end %>
   <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back_to_list) do %>
-    <span class="icon icon-back"></span> <%= l(:button_back_to_list) %>
+    <span class="icon icon-cancel"><%= l(:button_back_to_list) %></span> 
   <% end %>
 </div>
 
-<div class="purchase-request-header">
-  <h2>
-    <%= l(:label_edit_purchase_request) %>
-    <span class="request-id">#<%= @purchase_request.id %></span>
-  </h2>
-  <div class="request-meta">
-    <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
-      <%= @purchase_request.status.name %>
-    </span>
-    <span class="last-updated">
-      <%= l(:label_last_updated) %>: <%= format_time(@purchase_request.updated_at) %>
-    </span>
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2>
+        <%= l(:label_edit_purchase_request) %>
+        <span class="request-id">#<%= @purchase_request.id %></span>
+      </h2>
+      <div class="pr-form-subtitle">
+        <span class="icon icon-info"></span>
+        <%= l(:text_edit_purchase_request_subtitle) %>
+      </div>
+    </div>
+    <div class="pr-form-status">
+      <div class="pr-status-info">
+        <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
+          <%= @purchase_request.status.name %>
+        </span>
+        <span class="last-updated">
+          <%= l(:label_last_updated) %>: <%= format_time(@purchase_request.updated_at) %>
+        </span>
+      </div>
+    </div>
   </div>
-</div>
+  
+  <div class="pr-form-instructions">
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <h4><%= l(:label_editing_request) %></h4>
+        <p><%= l(:text_edit_purchase_request_guidelines) %></p>
+        <div class="pr-request-title">
+          <strong><%= h(@purchase_request.title) %></strong>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<div class="box purchase-request-edit-container">
-  <div class="purchase-request-title">
-    <h3><%= h(@purchase_request.title) %></h3>
-  </div>
-  
-  <div class="tabs">
-    <ul>
-      <li class="selected"><a href="#tab-general" class="tab-selector" data-tab="tab-general"><%= l(:label_general) %></a></li>
-      <li><a href="#tab-details" class="tab-selector" data-tab="tab-details"><%= l(:label_details) %></a></li>
-      <li><a href="#tab-attachments" class="tab-selector" data-tab="tab-attachments"><%= l(:label_attachment_plural) %></a></li>
-    </ul>
-  </div>
-  
-  <div class="purchase-request-form tab-content" id="tab-content">
-    <%= render partial: 'form', locals: {
-      purchase_request: @purchase_request,
-      form_url: project_purchase_request_path(@project, @purchase_request),
-      button_label: l(:button_save),
-      cancel_path: project_purchase_request_path(@project, @purchase_request)
-    } %>
+  <div class="box pr-form-box">
+    <div class="pr-tabs">
+      <ul class="pr-tab-nav">
+        <li class="pr-tab-item active">
+          <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
+            <span class="icon icon-edit"></span>
+            <%= l(:label_basic_information) %>
+          </a>
+        </li>
+        <li class="pr-tab-item">
+          <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
+            <span class="icon icon-package"></span>
+            <%= l(:label_product_details) %>
+          </a>
+        </li>
+        <li class="pr-tab-item">
+          <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments">
+            <span class="icon icon-attachment"></span>
+            <%= l(:label_attachments_and_notes) %>
+          </a>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="pr-form-content">
+      <%= render partial: 'form', locals: {
+        purchase_request: @purchase_request,
+        form_url: project_purchase_request_path(@project, @purchase_request),
+        button_label: l(:button_save),
+        cancel_path: project_purchase_request_path(@project, @purchase_request)
+      } %>
+    </div>
   </div>
 </div>
 
 <style>
-  .purchase-request-header {
+  .pr-form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .pr-form-header {
     margin-bottom: 20px;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 20px;
+  }
+  
+  .pr-form-title h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    color: #333;
   }
   
   .request-id {
@@ -67,8 +114,19 @@
     font-size: 0.9em;
   }
   
-  .request-meta {
-    margin-top: 10px;
+  .pr-form-subtitle {
+    color: #666;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .pr-form-status {
+    margin-top: 15px;
+  }
+  
+  .pr-status-info {
     display: flex;
     align-items: center;
     gap: 15px;
@@ -76,10 +134,11 @@
   
   .status-badge {
     display: inline-block;
-    padding: 3px 8px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 4px;
     color: white;
     font-size: 12px;
+    font-weight: 500;
   }
   
   .last-updated {
@@ -87,17 +146,90 @@
     font-size: 0.9em;
   }
   
-  .purchase-request-title {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+  .pr-form-instructions {
+    margin-bottom: 20px;
   }
   
-  .purchase-request-title h3 {
+  .pr-alert {
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .pr-alert-info {
+    background-color: #f0f8ff;
+    border-color: #b3d9ff;
+    color: #1a5490;
+  }
+  
+  .pr-alert-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .pr-alert-content p {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+  }
+  
+  .pr-request-title {
+    font-size: 13px;
+    margin-top: 8px;
+    padding: 8px;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 4px;
+  }
+  
+  .pr-form-box {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .pr-tabs {
+    border-bottom: 1px solid #ddd;
+    background-color: #f8f9fa;
+  }
+  
+  .pr-tab-nav {
+    list-style: none;
     margin: 0;
-    color: #333;
+    padding: 0;
+    display: flex;
   }
   
+  .pr-tab-item {
+    margin: 0;
+  }
+  
+  .pr-tab-link {
+    display: block;
+    padding: 12px 20px;
+    color: #666;
+    text-decoration: none;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .pr-tab-item.active .pr-tab-link,
+  .pr-tab-link:hover {
+    color: #333;
+    border-bottom-color: #0078d4;
+    background-color: white;
+  }
+  
+  .pr-form-content {
+    padding: 20px;
+  }
+  
+  /* Form styling consistency */
   .required {
     color: #d00;
     font-weight: bold;
@@ -120,21 +252,11 @@
     padding-left: 25px;
   }
   
-  .button-highlight {
-    opacity: 0.8;
-  }
-  
   .existing-attachments {
     margin-top: 15px;
     padding: 10px;
     background-color: #f9f9f9;
     border-radius: 3px;
-  }
-  
-  /* Using shared styles from purchase_request_buttons.css */
-  
-  .button-negative:hover {
-    background-color: #da190b;
   }
   
   .info {
@@ -196,8 +318,8 @@
 
 <%= javascript_tag do %>
 $(document).ready(function() {
-  // Tab functionality
-  $('.tab-selector').click(function(e) {
+  // Modern tab functionality
+  $('.pr-tab-link').click(function(e) {
     e.preventDefault();
     var tabId = $(this).data('tab');
     
@@ -208,18 +330,17 @@ $(document).ready(function() {
     $('#' + tabId).show();
     
     // Update tab selection
-    $('.tabs ul li').removeClass('selected');
-    $(this).parent('li').addClass('selected');
+    $('.pr-tab-item').removeClass('active');
+    $(this).parent('.pr-tab-item').addClass('active');
     
     return false;
   });
   
   // Initialize tab content - first tab is shown by default
-  // The general tab is shown by default and others should be hidden
   $('.tabbed-form').not('#tab-general').hide();
   
   // Add smooth hover effects for buttons
-  $('.button-action').hover(
+  $('.pr-button').hover(
     function() { $(this).addClass('button-highlight'); },
     function() { $(this).removeClass('button-highlight'); }
   );

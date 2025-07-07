@@ -11,10 +11,11 @@
       <tr>
         <th><%= l(:field_vendor_name) %></th>
         <th><%= l(:field_vendor_id) %></th>
-        <th><%= l(:field_address) %></th>
+        <th><%= l(:field_email) %></th>
         <th><%= l(:field_phone) %></th>
         <th><%= l(:field_contact_person) %></th>
-        <th><%= l(:field_email) %></th>
+        <th><%= l(:field_website) %></th>
+        <th><%= l(:field_is_active) %></th>
         <% if admin_actions %>
           <th class="buttons"><%= l(:label_action) %></th>
         <% end %>
@@ -23,14 +24,30 @@
     <tbody>
       <% vendors.each do |vendor| %>
         <tr>
-          <td><%= vendor.name %></td>
+          <td>
+            <%= link_to vendor.name, vendor_path(vendor), class: 'vendor-name-link' %>
+          </td>
           <td><%= vendor.vendor_id %></td>
-          <td><%= vendor.address %></td>
+          <td><%= vendor.email %></td>
           <td><%= vendor.phone %></td>
           <td><%= vendor.contact_person %></td>
-          <td><%= vendor.email %></td>
+          <td>
+            <% if vendor.website.present? %>
+              <%= link_to vendor.website, vendor.website, target: '_blank' %>
+            <% end %>
+          </td>
+          <td>
+            <span class="<%= vendor.is_active? ? 'status-active' : 'status-inactive' %>">
+              <%= vendor.is_active? ? l(:label_active) : l(:label_inactive) %>
+            </span>
+          </td>
           <% if admin_actions %>
             <td class="buttons">
+              <%= link_to vendor_path(vendor), 
+                        class: 'pr-button pr-button-secondary pr-button-icon small',
+                        title: l(:button_show) do %>
+                <span class="icon icon-zoom-in"></span>
+              <% end %>
               <%= link_to edit_vendor_path(vendor), 
                         class: 'pr-button pr-button-secondary pr-button-icon small',
                         title: l(:button_edit) do %>

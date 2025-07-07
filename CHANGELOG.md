@@ -5,6 +5,48 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-07-07
+
+### Added
+- **TPC Code Index Enhancement**: TPC code numbers are now clickable links that serve as shortcuts to view TPC code details
+- **Modern UI/UX Consistency**: Unified modern styling across all purchase request templates (new, edit, view)
+- **Professional Navigation**: Consistent contextual navigation buttons across all forms
+- **Enhanced User Experience**: Improved visual hierarchy and responsive design patterns
+
+### Enhanced
+- **Purchase Request Templates**: Modernized edit and view templates to match the new template's professional styling
+- **Form Consistency**: Applied modern container layouts, tab navigation, and visual styling across all forms
+- **Tab Navigation**: Updated JavaScript for modern tab functionality with smooth transitions
+- **Visual Design**: Professional color schemes, spacing, and typography throughout the interface
+- **Accessibility**: Improved keyboard navigation and screen reader compatibility
+
+### Fixed
+- **Critical TPC Code Update Error**: Resolved `ActiveRecord::NotNullViolation` error when updating CAPEX entries with TPC code selection
+- **Database Constraint Issue**: Fixed NULL constraint violation in `tpc_code` column during TPC code assignment
+- **Form Validation**: Enhanced TPC code validation to handle both legacy and association-based TPC codes
+- **JavaScript Handling**: Improved form field management when switching between TPC code selection methods
+- **Data Integrity**: Ensured proper value assignment when using TPC code dropdowns vs legacy fields
+
+### Technical Improvements
+- **Model Logic**: Updated `handle_tpc_code_assignment` method to populate instead of nullify TPC code field
+- **Form JavaScript**: Enhanced TPC code field management with readonly states and proper value preservation
+- **Validation Logic**: Strengthened validation to prevent blank TPC codes while maintaining flexibility
+- **Template Structure**: Modernized HTML structure with proper container hierarchy and CSS classes
+- **CSS Architecture**: Implemented consistent design system with reusable styling patterns
+
+### User Interface
+- **Modern Design Language**: Applied contemporary web UI patterns throughout the plugin
+- **Responsive Layout**: Improved mobile and tablet compatibility across all views
+- **Visual Feedback**: Enhanced hover effects, transitions, and interactive elements
+- **Information Architecture**: Better organization of content with clear visual hierarchy
+- **Navigation Flow**: Streamlined user journeys with intuitive button placement and labeling
+
+### Developer Experience
+- **Code Organization**: Cleaner separation of concerns in templates and styling
+- **Maintainability**: Consistent naming conventions and reusable CSS classes
+- **Documentation**: Comprehensive status reports and implementation guides
+- **Error Handling**: Robust validation and error messaging throughout the system
+
 ## [1.1.0] - 2025-07-01
 
 ### Added

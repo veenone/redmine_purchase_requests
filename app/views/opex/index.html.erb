@@ -1,7 +1,7 @@
 <%# OPEX Index Page %>
 <div class="contextual">
   <%= link_to new_project_opex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-    <span class="icon icon-add"></span> <%= l(:label_new_opex) %>
+    <span class="icon icon-add"><%= l(:label_new_opex) %></span>
   <% end %>
 </div>
 
@@ -32,7 +32,7 @@
           <td><%= opex.category_display %></td>
           <td><span style="color: <%= opex.status_color %>"><%= opex.status.humanize %></span></td>
           <td>
-            <%= link_to l(:button_show), project_opex_path(@project, opex), class: 'icon icon-show' %>
+            <%= link_to l(:button_show), project_opex_path(@project, opex), class: 'icon icon-magnifier' %>
             <%= link_to l(:button_edit), edit_project_opex_path(@project, opex), class: 'icon icon-edit' %>
             <%= link_to l(:button_delete), project_opex_path(@project, opex), method: :delete, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-del' %>
           </td>

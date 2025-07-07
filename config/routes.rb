@@ -9,7 +9,7 @@ RedmineApp::Application.routes.draw do
     end
     
     # Add project-scoped vendor management
-    resources :vendors, only: [:index], controller: 'project_vendors' do
+    resources :vendors, only: [:index, :new, :create], controller: 'project_vendors' do
       collection do
         get 'manage'
       end
@@ -45,7 +45,7 @@ RedmineApp::Application.routes.draw do
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
   
   # Keep global vendors for data storage
-  resources :vendors, except: [:show] do
+  resources :vendors do
     collection do
       get 'autocomplete'
       post 'migrate_from_settings'

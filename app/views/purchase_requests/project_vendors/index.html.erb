@@ -2,9 +2,9 @@
 <% html_title "Vendors" %>
 
 <div class="contextual">
-  <% if User.current.allowed_to?(:manage_purchase_request_vendors, @project) %>
+  <% if User.current.allowed_to?(:manage_project_vendors, @project) %>
     <%= link_to manage_project_vendors_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-edit"></span> Manage Vendors
+      <span class="icon icon-edit">Manage Vendors</span> 
     <% end %>
   <% end %>
 </div>
@@ -38,12 +38,12 @@
 <% else %>
   <p class="nodata">No vendors found</p>
   
-  <% if User.current.allowed_to?(:manage_purchase_request_vendors, @project) %>
+  <% if User.current.allowed_to?(:manage_project_vendors, @project) %>
     <div class="box">
       <p>There are no vendors in the system yet.</p>
       <p>
         <%= link_to manage_project_vendors_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add"></span> Add Vendor
+          <span class="icon icon-add">Add Vendor</span> 
         <% end %>
       </p>
     </div>

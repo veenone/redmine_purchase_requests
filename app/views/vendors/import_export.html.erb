@@ -1,6 +1,6 @@
 <div class="contextual">
   <%= link_to vendors_path, class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-back"></span> <%= l(:button_back) %>
+    <span class="icon icon-cancel"><%= l(:button_back) %></span> 
   <% end %>
 </div>
 
@@ -10,27 +10,27 @@
   <div class="import-export-container">
     <!-- Export Section -->
     <div class="export-section">
-      <h3><span class="icon icon-download"></span> <%= l(:label_export_vendors) %></h3>
+      <h3><span class="icon icon-download"><%= l(:label_export_vendors) %></span> </h3>
       <p class="info"><%= l(:text_vendor_export_info) %></p>
       
       <div class="export-options">
         <%= link_to export_vendors_path(format: :csv), 
                     class: 'pr-button pr-button-primary pr-button-icon', 
                     method: :get do %>
-          <span class="icon icon-file"></span> <%= l(:button_export_csv) %>
+          <span class="icon icon-file"><%= l(:button_export_csv) %></span> 
         <% end %>
         
         <%= link_to export_vendors_path(format: :json), 
                     class: 'pr-button pr-button-secondary pr-button-icon', 
                     method: :get do %>
-          <span class="icon icon-file"></span> <%= l(:button_export_json) %>
+          <span class="icon icon-file"><%= l(:button_export_json) %></span> 
         <% end %>
       </div>
     </div>
     
     <!-- Import Section -->
     <div class="import-section">
-      <h3><span class="icon icon-upload"></span> <%= l(:label_import_vendors) %></h3>
+      <h3><span class="icon icon-upload"><%= l(:label_import_vendors) %></span> </h3>
       <p class="info"><%= l(:text_vendor_import_info) %></p>
       
       <div class="import-requirements">
@@ -48,8 +48,7 @@
                           required: true,
                           class: 'file-input' %>
           <label for="file" class="file-label">
-            <span class="icon icon-attachment"></span>
-            Choose File
+            <span class="icon icon-attachment">Choose File</span>            
           </label>
         </div>
         
@@ -59,7 +58,7 @@
           
           <%= link_to import_template_vendors_path(format: :csv), 
                       class: 'pr-button pr-button-outline pr-button-icon' do %>
-            <span class="icon icon-download"></span> <%= l(:button_download_template) %>
+            <span class="icon icon-download"><%= l(:button_download_template) %></span> 
           <% end %>
         </div>
       <% end %>

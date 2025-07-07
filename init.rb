@@ -4,7 +4,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
   description 'A comprehensive plugin for managing purchase requests, CAPEX budgets, OPEX management, and vendor operations in Redmine'
-  version '1.1.0' # Added OPEX management and OPEX categories configuration
+  version '1.2.0' # Enhanced UI/UX modernization, TPC code improvements, and critical bug fixes
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -16,8 +16,8 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :delete_purchase_requests, { purchase_requests: [:destroy] }
     permission :manage_purchase_request_settings, { purchase_request_settings: [:index] }
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
-    permission :view_purchase_request_vendors, { project_vendors: [:index] }
-    permission :manage_purchase_request_vendors, { project_vendors: [:manage] }
+    permission :view_project_vendors, { project_vendors: [:index, :show] }
+    permission :manage_project_vendors, { project_vendors: [:manage, :new, :create, :edit, :update, :destroy] }
     permission :view_capex, { capex: [:index, :show] }
     permission :manage_capex, { capex: [:new, :create, :edit, :update, :destroy] }
     permission :view_capex_dashboard, { capex: [:dashboard] }
@@ -26,6 +26,12 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_opex_dashboard, { opex: [:dashboard] }
     permission :view_tpc_codes, { tpc_codes: [:index, :show] }
     permission :manage_tpc_codes, { tpc_codes: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export] }
+    
+    # Global permissions (outside project context but grouped under purchase_requests module)
+    permission :view_global_vendors, { vendors: [:index, :show, :autocomplete] }, global: true
+    permission :manage_global_vendors, { vendors: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export, :import_template, :migrate_from_settings] }, global: true
+    permission :view_global_tpc_codes, { tpc_codes: [:global_index, :show] }, global: true
+    permission :manage_global_tpc_codes, { tpc_codes: [:global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import, :global_export, :global_import_export] }, global: true
   end
   
   # Fix project menu items
@@ -83,8 +89,17 @@ Redmine::Plugin.register :redmine_purchase_requests do
        caption: 'TPC Codes',
        if: Proc.new { 
          User.current.logged? && 
-         (User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true)) &&
+         (User.current.admin? || User.current.allowed_to?(:view_global_tpc_codes, nil, global: true)) &&
          Setting.plugin_redmine_purchase_requests['tpc_global_enabled'] == '1'
+       }
+       
+  # Add global vendor management menu to top navigation
+  menu :top_menu, :global_vendors,
+       { controller: 'vendors', action: 'index' },
+       caption: 'Vendor Management',
+       if: Proc.new { 
+         User.current.logged? && 
+         (User.current.admin? || User.current.allowed_to?(:manage_global_vendors, nil, global: true))
        }
   
   # Add settings page with empty exchange_rates hash

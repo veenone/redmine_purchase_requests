@@ -31,4 +31,19 @@
     <%= f.label :email, l(:field_email) %>
     <%= f.email_field :email, size: 40 %>
   </p>
+  
+  <p>
+    <%= f.label :website, l(:field_website) %>
+    <%= f.url_field :website, size: 40 %>
+  </p>
+  
+  <p>
+    <%= f.label :notes, l(:field_notes) %>
+    <%= f.text_area :notes, rows: 3, cols: 40 %>
+  </p>
+  
+  <p>
+    <%= f.check_box :is_active %>
+    <%= f.label :is_active, l(:field_is_active) %>
+  </p>
 </div>

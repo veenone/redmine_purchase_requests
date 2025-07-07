@@ -10,19 +10,19 @@
 
 <div class="contextual">
   <%= link_to project_opex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-back"></span> Back to OPEX List
+    <span class="icon icon-cancel">Back to OPEX List</span> 
   <% end %>
   
   <% if User.current.allowed_to?(:manage_opex, @project) %>
     <%= link_to edit_project_opex_path(@project, @opex), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-edit"></span> Edit
+      <span class="icon icon-edit">Edit</span> 
     <% end %>
     
     <%= link_to project_opex_path(@project, @opex), 
                 method: :delete, 
                 data: { confirm: 'Are you sure you want to delete this OPEX entry?' }, 
                 class: 'pr-button pr-button-danger pr-button-icon' do %>
-      <span class="icon icon-del"></span> Delete
+      <span class="icon icon-del">Delete</span> 
     <% end %>
   <% end %>
 </div>
@@ -179,10 +179,11 @@
                 <%= format_time(pr.created_at) %>
               </td>
               <td class="buttons">
+              <span class="icon icon-magnifier">
                 <%= link_to project_purchase_request_path(@project, pr), 
                             class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
-                            title: 'View' do %>
-                  <span class="icon icon-magnifier"></span>
+                            title: 'View' do %>view
+                  </span>
                 <% end %>
               </td>
             </tr>
@@ -200,7 +201,7 @@
       <p>
         <%= link_to new_project_purchase_request_path(@project, opex_id: @opex.id), 
                     class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add"></span> Create Purchase Request for this OPEX
+          <span class="icon icon-add">Create Purchase Request for this OPEX</span> 
         <% end %>
       </p>
     <% end %>

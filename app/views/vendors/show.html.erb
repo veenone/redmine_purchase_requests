@@ -1,0 +1,243 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/show.html.erb %>
+<% html_title "#{l(:label_vendor)}: #{@vendor.name}" %>
+
+<div class="contextual">
+  <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-cancel"><%= l(:label_back_to_vendor_list) %></span> 
+  <% end %>
+  
+  <%= link_to edit_vendor_path(@vendor), class: 'pr-button pr-button-primary pr-button-icon' do %>
+    <span class="icon icon-edit"> <%= l(:button_edit) %></span> 
+  <% end %>
+  
+  <%= link_to vendor_path(@vendor), 
+            method: :delete, 
+            data: { confirm: l(:text_are_you_sure) }, 
+            class: 'pr-button pr-button-danger pr-button-icon' do %>
+    <span class="icon icon-del"> <%= l(:button_delete) %></span> 
+  <% end %>
+</div>
+
+<h2>
+  <%= l(:label_vendor) %>: <%= @vendor.name %>
+  <span class="vendor-status <%= @vendor.is_active? ? 'status-active' : 'status-inactive' %>">
+    (<%= @vendor.is_active? ? l(:label_active) : l(:label_inactive) %>)
+  </span>
+</h2>
+
+<div class="vendor-details">
+  <div class="splitcontent">
+    <div class="splitcontentleft">
+      <div class="box">
+        <h3><%= l(:label_vendor_information) %></h3>
+        
+        <table class="vendor-info-table">
+          <tr>
+            <th><%= l(:field_vendor_name) %>:</th>
+            <td><%= @vendor.name %></td>
+          </tr>
+          
+          <% if @vendor.vendor_id.present? %>
+          <tr>
+            <th><%= l(:field_vendor_id) %>:</th>
+            <td><%= @vendor.vendor_id %></td>
+          </tr>
+          <% end %>
+          
+          <% if @vendor.email.present? %>
+          <tr>
+            <th><%= l(:field_email) %>:</th>
+            <td><%= mail_to @vendor.email %></td>
+          </tr>
+          <% end %>
+          
+          <% if @vendor.phone.present? %>
+          <tr>
+            <th><%= l(:field_phone) %>:</th>
+            <td><%= @vendor.phone %></td>
+          </tr>
+          <% end %>
+          
+          <% if @vendor.website.present? %>
+          <tr>
+            <th><%= l(:field_website) %>:</th>
+            <td><%= link_to @vendor.website, @vendor.website, target: '_blank' %></td>
+          </tr>
+          <% end %>
+          
+          <% if @vendor.contact_person.present? %>
+          <tr>
+            <th><%= l(:field_contact_person) %>:</th>
+            <td><%= @vendor.contact_person %></td>
+          </tr>
+          <% end %>
+          
+          <% if @vendor.address.present? %>
+          <tr>
+            <th><%= l(:field_address) %>:</th>
+            <td><%= simple_format(@vendor.address) %></td>
+          </tr>
+          <% end %>
+          
+          <tr>
+            <th><%= l(:field_is_active) %>:</th>
+            <td>
+              <span class="<%= @vendor.is_active? ? 'status-active' : 'status-inactive' %>">
+                <%= @vendor.is_active? ? l(:label_active) : l(:label_inactive) %>
+              </span>
+            </td>
+          </tr>
+        </table>
+        
+        <% if @vendor.notes.present? %>
+        <div class="vendor-notes">
+          <h4><%= l(:field_notes) %></h4>
+          <div class="notes-content">
+            <%= simple_format(@vendor.notes) %>
+          </div>
+        </div>
+        <% end %>
+      </div>
+    </div>
+    
+    <div class="splitcontentright">
+      <div class="box">
+        <h3><%= l(:label_associated_purchase_requests) %></h3>
+        
+        <% if @purchase_requests.any? %>
+          <table class="list purchase-requests">
+            <thead>
+              <tr>
+                <th><%= l(:field_title) %></th>
+                <th><%= l(:field_project) %></th>
+                <th><%= l(:field_status) %></th>
+                <th><%= l(:field_created_on) %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @purchase_requests.each do |pr| %>
+                <tr>
+                  <td>
+                    <%= link_to pr.title, project_purchase_request_path(pr.project, pr) if pr.project %>
+                  </td>
+                  <td>
+                    <%= link_to pr.project.name, project_path(pr.project) if pr.project %>
+                  </td>
+                  <td>
+                    <span class="status-badge">
+                      <%= pr.status.name if pr.status %>
+                    </span>
+                  </td>
+                  <td><%= format_date(pr.created_at) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+          
+          <% if @vendor.purchase_requests.count > 10 %>
+            <p class="pagination-info">
+              <%= l(:text_showing_x_of_y, 
+                    count: @purchase_requests.size, 
+                    total: @vendor.purchase_requests.count) %>
+            </p>
+          <% end %>
+        <% else %>
+          <p class="nodata"><%= l(:label_no_purchase_requests_for_vendor) %></p>
+        <% end %>
+      </div>
+      
+      <div class="box">
+        <h3><%= l(:label_vendor_statistics) %></h3>
+        
+        <ul class="vendor-stats">
+          <li>
+            <strong><%= l(:label_total_purchase_requests) %>:</strong>
+            <%= @vendor.purchase_requests.count %>
+          </li>
+          <li>
+            <strong><%= l(:label_vendor_member_since) %>:</strong>
+            <%= format_date(@vendor.created_at) %>
+          </li>
+          <li>
+            <strong><%= l(:label_last_updated) %>:</strong>
+            <%= format_date(@vendor.updated_at) %>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% content_for :header_tags do %>
+  <style>
+    .vendor-details .vendor-info-table {
+      width: 100%;
+      margin-bottom: 1em;
+    }
+    .vendor-details .vendor-info-table th {
+      text-align: left;
+      padding: 0.5em 1em 0.5em 0;
+      width: 30%;
+      font-weight: bold;
+    }
+    .vendor-details .vendor-info-table td {
+      padding: 0.5em 0;
+    }
+    .vendor-status {
+      font-size: 0.9em;
+      font-weight: normal;
+    }
+    .status-active {
+      color: #469449;
+    }
+    .status-inactive {
+      color: #d9534f;
+    }
+    .vendor-notes {
+      margin-top: 1em;
+    }
+    .notes-content {
+      background: #f8f9fa;
+      padding: 1em;
+      border-radius: 4px;
+      border-left: 4px solid #007cba;
+    }
+    .vendor-stats {
+      list-style: none;
+      padding: 0;
+    }
+    .vendor-stats li {
+      padding: 0.5em 0;
+      border-bottom: 1px solid #eee;
+    }
+    .vendor-stats li:last-child {
+      border-bottom: none;
+    }
+    .status-badge {
+      padding: 0.2em 0.6em;
+      border-radius: 3px;
+      background: #f0f0f0;
+      font-size: 0.9em;
+    }
+    .pagination-info {
+      font-style: italic;
+      color: #666;
+      margin-top: 1em;
+    }
+  </style>
+<% end %>
+
+<% content_for :sidebar do %>
+  <h3><%= l(:label_vendor_actions) %></h3>
+  <ul>
+    <li><%= link_to l(:button_edit), edit_vendor_path(@vendor) %></li>
+    <li><%= link_to l(:label_back_to_vendor_list), vendors_path %></li>
+    <li><%= link_to l(:label_vendor_new), new_vendor_path %></li>
+  </ul>
+  
+  <h3><%= l(:label_vendor_export) %></h3>
+  <ul>
+    <li><%= link_to l(:label_export_csv), export_vendors_path(format: :csv) %></li>
+    <li><%= link_to l(:label_export_json), export_vendors_path(format: :json) %></li>
+  </ul>
+<% end %>

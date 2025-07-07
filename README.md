@@ -34,7 +34,7 @@ A comprehensive plugin for managing purchase requests within Redmine. This plugi
 
 2. Navigate to the Redmine root directory and run the following command to migrate the database:
    ```
-   bundle exec rake redmine:plugins:migrate RAILS_ENV=production
+   bundle exec rake redmine:plugins:migrate RAILS_ENV=production NAME=redmine_purchase_requests
    ```
 
 3. Restart your Redmine application.
@@ -90,6 +90,10 @@ To migrate existing vendors from the plugin settings to the database:
 3. Click the "Migrate Vendors" button to transfer existing vendors to the database
 
 Once migrated, you can manage vendors through the dedicated vendor management interface.
+
+## Changelog
+
+See detailed [Changelog](CHANGELOG.md)
 
 ## Upgrade Notes
 

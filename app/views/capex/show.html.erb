@@ -10,19 +10,19 @@
 
 <div class="contextual">
   <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-back"></span> Back to CAPEX List
+    <span class="icon icon-cancel">Back to CAPEX List</span> 
   <% end %>
   
   <% if User.current.allowed_to?(:manage_capex, @project) %>
     <%= link_to edit_project_capex_path(@project, @capex), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-edit"></span> Edit
+      <span class="icon icon-edit">Edit</span> 
     <% end %>
     
     <%= link_to project_capex_path(@project, @capex), 
                 method: :delete, 
                 data: { confirm: 'Are you sure you want to delete this CAPEX entry?' }, 
                 class: 'pr-button pr-button-danger pr-button-icon' do %>
-      <span class="icon icon-del"></span> Delete
+      <span class="icon icon-del">Delete</span> 
     <% end %>
   <% end %>
 </div>
@@ -190,7 +190,7 @@
       <p>
         <%= link_to new_project_purchase_request_path(@project, capex_id: @capex.id), 
                     class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add"></span> Create Purchase Request for this CAPEX
+          <span class="icon icon-add">Create Purchase Request for this CAPEX</span> 
         <% end %>
       </p>
     <% end %>

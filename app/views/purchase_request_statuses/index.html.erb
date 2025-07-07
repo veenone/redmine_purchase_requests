@@ -1,6 +1,6 @@
 <div class="contextual">
   <%= link_to new_purchase_request_status_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-    <span class="icon icon-add"></span> <%= l(:label_status_new) %>
+    <span class="icon icon-add"><%= l(:label_status_new) %></span> 
   <% end %>
 </div>
 
@@ -30,13 +30,13 @@
         <td><%= checked_image status.is_default? if status.respond_to?(:is_default?) %></td>
         <td class="buttons">
           <%= link_to edit_purchase_request_status_path(status), class: 'pr-button pr-button-secondary pr-button-icon small' do %>
-            <span class="icon icon-edit"></span> <%= l(:button_edit) %>
+            <span class="icon icon-edit"><%= l(:button_edit) %></span> 
           <% end %>
           <%= link_to purchase_request_status_path(status), 
                     method: :delete,
                     data: { confirm: l(:text_are_you_sure) },
                     class: 'pr-button pr-button-danger pr-button-icon small' do %>
-            <span class="icon icon-del"></span> <%= l(:button_delete) %>
+            <span class="icon icon-del"><%= l(:button_delete) %></span> 
           <% end %>
         </td>
       </tr>
@@ -45,7 +45,7 @@
 </table>
 
 <%= link_to plugin_settings_path('redmine_purchase_requests'), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-  <span class="icon icon-back"></span> <%= l(:button_back) %>
+  <span class="icon icon-cancel"><%= l(:button_back) %></span> 
 <% end %>
 
 <style>

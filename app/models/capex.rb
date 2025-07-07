@@ -2,8 +2,7 @@ class Capex < ActiveRecord::Base
   self.table_name = 'capex'
   
   belongs_to :project
-  belongs_to :tpc_code, optional: true
-  belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
+  belongs_to :tpc_code_record, class_name: 'TpcCode', foreign_key: 'tpc_code_id', optional: true
   has_many :purchase_requests, dependent: :nullify
   
   validates :year, presence: true, 
@@ -16,7 +15,6 @@ class Capex < ActiveRecord::Base
   }
   validates :q1_amount, :q2_amount, :q3_amount, :q4_amount, 
             presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :category_id, presence: true
   
   validate :quarterly_amounts_sum_equals_total
   validate :unique_tpc_code_per_project_year
@@ -62,8 +60,20 @@ class Capex < ActiveRecord::Base
     (utilized_amount / total_amount * 100).round(2)
   end
   
+  def tpc_code_display
+    if tpc_code_id.present? && tpc_code_record.present?
+      # Use the association to get the TPC code number (just the number for table display)
+      tpc_code_record.tpc_number
+    elsif tpc_code.present?
+      # Use the legacy string field
+      tpc_code
+    else
+      "No TPC Code"
+    end
+  end
+  
   def display_name
-    "#{tpc_code} - #{description} (#{year})"
+    "#{tpc_code_display} - #{description} (#{year})"
   end
   
   def capex_year
@@ -138,26 +148,40 @@ class Capex < ActiveRecord::Base
     # Check if TPC code is required based on plugin settings
     require_tpc_for_capex = Setting.plugin_redmine_purchase_requests['tpc_require_for_capex'] == '1'
     
-    # If a TPC code object is selected, no need for legacy TPC code
-    if tpc_code_id.present?
-      # Clear legacy TPC code if TPC code is selected
-      self.tpc_code = nil if tpc_code.present?
-    else
-      # If no TPC code selected, legacy TPC code is required (or optional based on settings)
-      if require_tpc_for_capex || tpc_code.present?
-        if tpc_code.blank?
-          errors.add(:tpc_code, "can't be blank when no TPC code is selected")
-        elsif tpc_code.length < 3 || tpc_code.length > 50
-          errors.add(:tpc_code, "must be between 3 and 50 characters")
-        end
-      end
+    # TPC code field is required by database constraint, so always validate it
+    if tpc_code.blank?
+      errors.add(:tpc_code, "can't be blank")
+      return
+    end
+    
+    # Additional length validation
+    if tpc_code.length < 3 || tpc_code.length > 50
+      errors.add(:tpc_code, "must be between 3 and 50 characters")
+    end
+    
+    # If no TPC code ID is selected and TPC codes are required, ensure legacy TPC code is provided
+    if tpc_code_id.blank? && require_tpc_for_capex && tpc_code.blank?
+      errors.add(:base, "A TPC code must be selected or a legacy TPC code must be provided")
     end
   end
   
   def handle_tpc_code_assignment
-    # If a TPC code ID is provided, clear the legacy TPC code
+    # If a TPC code ID is provided, use the TPC code number from the association
     if tpc_code_id.present?
-      self.tpc_code = nil
+      if tpc_code_record.present?
+        # Use the TPC code number from the associated record
+        self.tpc_code = tpc_code_record.tpc_number
+      else
+        # If TPC code ID is invalid, clear it and keep existing tpc_code
+        self.tpc_code_id = nil
+      end
+    end
+    
+    # Ensure tpc_code is never blank (database constraint requires a value)
+    if tpc_code.blank?
+      # If both tpc_code and tpc_code_id are blank, this is an error condition
+      # This should be caught by validation, but ensure we have a value for the database
+      errors.add(:tpc_code, "cannot be blank") unless errors.any?
     end
   end
 end

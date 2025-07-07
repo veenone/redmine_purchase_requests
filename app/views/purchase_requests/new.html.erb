@@ -6,7 +6,7 @@
 
 <div class="contextual">
   <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back_to_list) do %>
-    <span class="icon icon-back"></span> <%= l(:button_back_to_list) %>
+    <span class="icon icon-cancel"><%= l(:button_back_to_list) %></span> 
   <% end %>
 </div>
 
@@ -370,12 +370,12 @@
   }
   
   .pr-button-cancel {
-    background: #6c757d;
+    # background: #6c757d;
     color: white;
   }
   
   .pr-button-cancel:hover {
-    background: #545b62;
+    # background: #545b62;
     color: white;
   }
   

@@ -9,8 +9,8 @@
 <% html_title "Edit CAPEX Entry - #{@capex.tpc_code} - #{@project.name}" %>
 
 <div class="contextual">
-  <%= link_to project_capex_path(@project, @capex), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-back"></span> Back to CAPEX Details
+  <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel">Back to CAPEX List</span> 
   <% end %>
 </div>
 

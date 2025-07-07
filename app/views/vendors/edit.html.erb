@@ -1,13 +1,284 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/edit.html.erb %>
-<% html_title l(:label_vendor_edit) %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
 
-<h2><%= l(:label_vendor_edit) %></h2>
+<% html_title("Edit Global Vendor - #{@vendor.name}") %>
 
-<%= form_with(model: @vendor, local: true) do |f| %>
-  <%= render partial: 'form', locals: { f: f } %>
+<div class="contextual">
+  <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-cancel">Back to Vendor List</span> 
+  <% end %>
   
-  <div class="pr-form-actions">
-    <%= f.submit l(:button_save), class: 'pr-button pr-button-primary' %>
-    <%= link_to l(:button_cancel), vendors_path, class: 'pr-button pr-button-cancel' %>
+  <%= link_to @vendor, class: 'pr-button pr-button-outline pr-button-icon' do %>
+    <span class="icon icon-magnifier">View Vendor</span> 
+  <% end %>
+</div>
+
+<h2>
+  Edit Global Vendor - <%= @vendor.name %>
+</h2>
+
+<div class="info-box">
+  <p><strong>Editing Global Vendor</strong></p>
+  <p>This vendor is available to all projects in the system. Changes will affect all projects using this vendor.</p>
+</div>
+
+<%= form_with model: @vendor, local: true, html: { class: 'vendor-form' } do |f| %>
+  <% if @vendor.errors.any? %>
+    <div id="errorExplanation" class="errorExplanation">
+      <h2><%= pluralize(@vendor.errors.count, "error") %> prohibited this vendor from being saved:</h2>
+      <ul>
+        <% @vendor.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="vendor-form-container">
+    <div class="vendor-form-section">
+      <h3>Basic Information</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :name, class: 'required' %>
+          <%= f.text_field :name, required: true, class: 'form-control' %>
+          <small class="form-help">The name of the vendor or company</small>
+        </div>
+        
+        <div class="form-group">
+          <%= f.label :vendor_id %>
+          <%= f.text_field :vendor_id, class: 'form-control' %>
+          <small class="form-help">Optional vendor ID or code</small>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :email %>
+          <%= f.email_field :email, class: 'form-control' %>
+          <small class="form-help">Primary contact email</small>
+        </div>
+        
+        <div class="form-group">
+          <%= f.label :phone %>
+          <%= f.telephone_field :phone, class: 'form-control' %>
+          <small class="form-help">Primary contact phone number</small>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <%= f.label :contact_person %>
+          <%= f.text_field :contact_person, class: 'form-control' %>
+          <small class="form-help">Name of primary contact person</small>
+        </div>
+        
+        <div class="form-group">
+          <%= f.label :website %>
+          <%= f.url_field :website, class: 'form-control' %>
+          <small class="form-help">Company website URL</small>
+        </div>
+      </div>
+    </div>
+    
+    <div class="vendor-form-section">
+      <h3>Additional Information</h3>
+      
+      <div class="form-group">
+        <%= f.label :address %>
+        <%= f.text_area :address, rows: 3, class: 'form-control' %>
+        <small class="form-help">Company address</small>
+      </div>
+      
+      <div class="form-group">
+        <%= f.label :notes %>
+        <%= f.text_area :notes, rows: 4, class: 'form-control' %>
+        <small class="form-help">Additional notes or comments about this vendor</small>
+      </div>
+      
+      <div class="form-group">
+        <div class="checkbox-group">
+          <%= f.check_box :is_active %>
+          <%= f.label :is_active, "Active vendor" %>
+          <small class="form-help">Uncheck to mark vendor as inactive</small>
+        </div>
+      </div>
+      
+      <div class="project-scope-indicator">
+        <div class="scope-badge global">GLOBAL</div>
+        <span>This vendor is available to all projects in the system</span>
+      </div>
+    </div>
   </div>
+
+  <div class="form-actions">
+    <%= f.submit "Update Global Vendor", class: 'pr-button pr-button-primary pr-button-icon' do %>
+      <span class="icon icon-save">Update Global Vendor</span>
+    <% end %>
+    
+    <%= link_to vendors_path, class: 'pr-button pr-button-secondary' do %>
+      Cancel
+    <% end %>
+  </div>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .info-box {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .info-box p {
+    margin: 0 0 10px 0;
+  }
+  
+  .info-box p:last-child {
+    margin-bottom: 0;
+  }
+  
+  .vendor-form-container {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  
+  .vendor-form-section {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .vendor-form-section:last-child {
+    border-bottom: none;
+  }
+  
+  .vendor-form-section h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+  }
+  
+  .form-group label.required::after {
+    content: " *";
+    color: #d9534f;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    # box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+  
+  .form-help {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .checkbox-group input[type="checkbox"] {
+    margin: 0;
+  }
+  
+  .project-scope-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 15px;
+  }
+  
+  .scope-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .scope-badge.global {
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .scope-badge.project {
+    background-color: #FF9800;
+    color: white;
+  }
+  
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .errorExplanation {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  
+  .errorExplanation h2 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+  }
+  
+  .errorExplanation ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  
+  h2 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+</style>
 <% end %>

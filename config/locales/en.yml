@@ -81,7 +81,9 @@ en:
   text_attachment_types_allowed: "Allowed file types: PDF, DOC, XLS, JPG, PNG"
   text_attachment_naming: "Use descriptive filenames for easier identification"
   text_are_you_sure: "Are you sure?"
-  
+  text_edit_purchase_request_subtitle: "Edit the details of your purchase request below. Make sure to review all fields before saving."
+  label_editing_request: "Editing Purchase Request" 
+
   # Dashboard Translations
   label_purchase_request_dashboard: "Purchase Request Dashboard"
   label_total_requests: "Total Requests"
@@ -613,3 +615,43 @@ en:
   text_tpc_require_for_opex_description: "Make TPC code selection mandatory when creating OPEX entries"
   text_tpc_require_for_opex_help: "When enabled, users must select a TPC code when creating new OPEX entries."
   text_tpc_management_description: "TPC (Total Project Cost) codes help track and organize project expenses across CAPEX and OPEX entries. Use them to consolidate costs, generate reports, and maintain better financial oversight."
+  
+  # Additional vendor localization keys
+  label_active: "Active"
+  label_inactive: "Inactive"
+  
+  # Project vendor management
+  text_project_vendor_management_info: "Manage vendors for this project. Vendors are shared globally across all projects but can be filtered and managed from this interface."
+  text_project_vendor_info: "This page shows all available vendors that can be used for purchase requests in this project."
+  text_vendor_management_global_note: "Vendors are managed globally and shared across all projects. Changes made here will affect all projects."
+  text_vendor_management_sidebar_info: "Use this interface to manage vendors, import/export vendor data, and configure vendor settings for your projects."
+  text_vendor_import_export_info: "Import vendor data from CSV or JSON files, or export existing vendor data for backup or sharing with other systems."
+  label_vendor_manage: "Manage Vendors"
+  label_vendor_management: "Vendor Management" 
+  label_vendor: "Vendor"
+  label_vendor_information: "Vendor Information"
+  label_vendor_actions: "Vendor Actions"
+  label_vendor_list: "Vendor List"
+  label_back_to_vendor_list: "Back to Vendor List"
+  label_open_import_export: "Open Import/Export"
+  label_no_vendors_configured: "No vendors have been configured yet."
+  label_no_vendors_found: "No vendors found matching your search criteria."
+  error_searching_vendors: "Error occurred while searching vendors."
+  
+  # Vendor detail view
+  label_associated_purchase_requests: "Associated Purchase Requests"
+  label_no_purchase_requests_for_vendor: "No purchase requests have been associated with this vendor yet."
+  label_vendor_statistics: "Vendor Statistics"
+  label_total_purchase_requests: "Total Purchase Requests"
+  label_vendor_member_since: "Vendor Since"
+  label_last_updated: "Last Updated"
+  label_vendor_export: "Export Vendor Data"
+  label_export_csv: "Export as CSV"
+  label_export_json: "Export as JSON"
+  text_showing_x_of_y: "Showing %{count} of %{total} records"
+  label_request_details: "Request Details"
+  
+  # Notice messages
+  notice_vendor_created: "Vendor was successfully created."
+  notice_vendor_updated: "Vendor was successfully updated."
+  notice_vendor_deleted: "Vendor was successfully deleted."

@@ -559,21 +559,36 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function toggleBudgetSections() {
     var selectedType = document.querySelector('.budget-type-radio:checked');
+    var categorySelect = document.getElementById('purchase_request_category_id');
     
     if (selectedType) {
       if (selectedType.value === 'capex') {
         capexSection.style.display = 'block';
         opexSection.style.display = 'none';
         if (opexSelect) opexSelect.value = '';
+        // Remove required attribute from category when CAPEX is selected
+        if (categorySelect) {
+          categorySelect.removeAttribute('required');
+          categorySelect.value = '';
+        }
       } else if (selectedType.value === 'opex') {
         opexSection.style.display = 'block';
         capexSection.style.display = 'none';
         if (capexSelect) capexSelect.value = '';
+        // Add required attribute to category when OPEX is selected
+        if (categorySelect) {
+          categorySelect.setAttribute('required', 'required');
+        }
       } else {
         capexSection.style.display = 'none';
         opexSection.style.display = 'none';
         if (capexSelect) capexSelect.value = '';
         if (opexSelect) opexSelect.value = '';
+        // Remove required attribute from category when no budget type is selected
+        if (categorySelect) {
+          categorySelect.removeAttribute('required');
+          categorySelect.value = '';
+        }
       }
     }
   }
@@ -596,7 +611,26 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Initialize budget sections on page load
+  initializeBudgetType();
   toggleBudgetSections();
+  
+  // Function to initialize budget type based on pre-selected values
+  function initializeBudgetType() {
+    var capexSelected = capexSelect && capexSelect.value;
+    var opexSelected = opexSelect && opexSelect.value;
+    
+    if (capexSelected) {
+      document.getElementById('budget_type_capex').checked = true;
+    } else if (opexSelected) {
+      document.getElementById('budget_type_opex').checked = true;
+    } else {
+      // Check if any budget type is already selected, if not default to 'none'
+      var anyChecked = document.querySelector('.budget-type-radio:checked');
+      if (!anyChecked) {
+        document.getElementById('budget_type_none').checked = true;
+      }
+    }
+  }
   
   // Budget tracking functionality
   var capexDetails = document.getElementById('capex-details');
@@ -639,15 +673,22 @@ document.addEventListener('DOMContentLoaded', function() {
   // Form validation
   function validateForm() {
     var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
+    var categorySelect = document.getElementById('purchase_request_category_id');
     
     if (selectedBudgetType && selectedBudgetType.value !== 'none') {
       if (selectedBudgetType.value === 'capex' && (!capexSelect || !capexSelect.value)) {
         alert('Please select a CAPEX entry when CAPEX budget type is selected.');
         return false;
       }
-      if (selectedBudgetType.value === 'opex' && (!opexSelect || !opexSelect.value)) {
-        alert('Please select an OPEX entry when OPEX budget type is selected.');
-        return false;
+      if (selectedBudgetType.value === 'opex') {
+        if (!opexSelect || !opexSelect.value) {
+          alert('Please select an OPEX entry when OPEX budget type is selected.');
+          return false;
+        }
+        if (!categorySelect || !categorySelect.value) {
+          alert('Please select an OPEX category when OPEX budget type is selected.');
+          return false;
+        }
       }
     }
     

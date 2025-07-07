@@ -1,8 +1,8 @@
 class VendorsController < ApplicationController
   layout 'admin'
   
-  before_action :require_admin, except: [:autocomplete]
-  before_action :find_vendor, only: [:edit, :update, :destroy]
+  before_action :require_admin_or_vendor_permission
+  before_action :find_vendor, only: [:show, :edit, :update, :destroy]
   
   def index
     @vendors = find_vendors
@@ -10,14 +10,30 @@ class VendorsController < ApplicationController
   
   def new
     @vendor = Vendor.new
+    
+    # Set project context if accessed from project
+    if params[:project_id].present?
+      @project = Project.find(params[:project_id])
+      @vendor.project_id = @project.id
+    end
   end
   
   def create
     @vendor = Vendor.new(vendor_params)
     
+    # Set project context if accessed from project
+    if params[:project_id].present?
+      @project = Project.find(params[:project_id])
+      @vendor.project_id = @project.id
+    end
+    
     if @vendor.save
       flash[:notice] = l(:notice_vendor_created)
-      redirect_to vendors_path
+      if @project
+        redirect_to project_vendors_path(@project)
+      else
+        redirect_to vendors_path
+      end
     else
       render :new
     end
@@ -42,6 +58,11 @@ class VendorsController < ApplicationController
       flash[:error] = l(:error_vendor_not_deleted)
     end
     redirect_to vendors_path
+  end
+  
+  def show
+    # @vendor is set by before_action
+    @purchase_requests = @vendor.purchase_requests.includes(:project).limit(10)
   end
   
   # Migrate vendors from settings to database
@@ -181,6 +202,23 @@ class VendorsController < ApplicationController
   
   private
   
+  def require_admin_or_vendor_permission
+    if action_name == 'autocomplete'
+      # Allow autocomplete for any logged in user
+      require_login
+    elsif %w[index show].include?(action_name)
+      # Allow view actions for users with view permission
+      unless User.current.admin? || User.current.allowed_to?(:view_global_vendors, nil, global: true)
+        deny_access
+      end
+    else
+      # Require manage permission for create/edit/delete actions
+      unless User.current.admin? || User.current.allowed_to?(:manage_global_vendors, nil, global: true)
+        deny_access
+      end
+    end
+  end
+  
   def find_vendor
     @vendor = Vendor.find(params[:id])
   rescue ActiveRecord::RecordNotFound
@@ -188,11 +226,27 @@ class VendorsController < ApplicationController
   end
   
   def find_vendors
-    Vendor.sorted
+    vendors = Vendor.sorted
+    
+    # Apply search filter
+    if params[:search].present?
+      vendors = vendors.search(params[:search])
+    end
+    
+    # Apply active status filter
+    if params[:active].present?
+      if params[:active] == 'true'
+        vendors = vendors.where(is_active: true)
+      elsif params[:active] == 'false'
+        vendors = vendors.where(is_active: false)
+      end
+    end
+    
+    vendors
   end
   
   def vendor_params
-    params.require(:vendor).permit(:name, :email, :phone, :website, :address, :contact_person, :notes, :is_active)
+    params.require(:vendor).permit(:name, :vendor_id, :email, :phone, :website, :address, :contact_person, :notes, :is_active, :project_id)
   end
   
   def generate_csv(vendors)
