@@ -278,6 +278,7 @@ en:
   text_are_you_sure: "Are you sure?"
   
   label_new_purchase_request: "New Purchase Request"
+  text_purchase_request_details: "Please provide detailed information about your purchase request. Required fields are marked with an asterisk (*)."
   
   # OPEX Management
   label_opex: "OPEX"
@@ -655,3 +656,30 @@ en:
   notice_vendor_created: "Vendor was successfully created."
   notice_vendor_updated: "Vendor was successfully updated."
   notice_vendor_deleted: "Vendor was successfully deleted."
+  
+  # Quarterly Allocation
+  label_quarterly_allocation: "Quarterly Allocation"
+  field_allocated_quarter: "Allocated Quarter"
+  field_allocated_amount: "Allocated Amount"
+  label_quarter_1: "Quarter 1 (Q1)"
+  label_quarter_2: "Quarter 2 (Q2)"
+  label_quarter_3: "Quarter 3 (Q3)"
+  label_quarter_4: "Quarter 4 (Q4)"
+  label_no_specific_quarter: "No specific quarter"
+  label_allocation_impact: "Allocation Impact"
+  field_selected_quarter: "Selected Quarter"
+  field_original_quarter_budget: "Original Quarter Budget"
+  field_remaining_quarter_budget: "Remaining Quarter Budget"
+  warning_over_allocation: "Warning: Over-allocation detected!"
+  
+  text_quarterly_allocation_info: "Specify which quarter this purchase should be allocated to from the selected budget entry. This will impact the quarterly distribution of the CAPEX or OPEX budget."
+  text_allocated_quarter_info: "Select the specific quarter when this purchase should be allocated from the budget."
+  text_allocated_amount_info: "Enter the amount to allocate from the selected quarter's budget."
+  text_allocated_amount_placeholder: "Enter allocation amount"
+  text_over_allocation_warning: "The allocated amount exceeds the available budget for the selected quarter. This will result in a negative remaining balance."
+  
+  # Quarterly allocation errors
+  error_allocated_amount_required: "Allocated amount is required when specifying a quarter."
+  error_allocated_quarter_required: "Quarter selection is required when specifying an allocated amount."
+  error_budget_required_for_allocation: "A CAPEX or OPEX budget entry must be selected when specifying quarterly allocation."
+  error_allocation_exceeds_price: "Allocated amount cannot exceed the estimated price."

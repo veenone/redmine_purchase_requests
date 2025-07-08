@@ -127,14 +127,69 @@
     .form-section .form-row:last-child {
       margin-bottom: 0;
     }
+    
+    /* Quarterly Allocation Styles */
+    .quarterly-allocation-section {
+      margin-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      padding-top: 20px;
+    }
+    
+    .quarterly-allocation-info {
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f0f8ff;
+      border-left: 3px solid #2196f3;
+      border-radius: 3px;
+    }
+    
+    .quarterly-allocation-fields {
+      margin-top: 15px;
+    }
+    
+    .quarterly-impact-preview {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+    }
+    
+    .allocation-impact-details {
+      margin-top: 10px;
+    }
+    
+    .allocation-warning {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      color: #856404;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .allocation-warning .icon {
+      color: #fd7e14;
+    }
+    
+    .budget-value.over-allocated {
+      color: #dc3545;
+      font-weight: bold;
+    }
+    
+    .budget-value.within-budget {
+      color: #28a745;
+      font-weight: bold;
+    }
   </style>
 <% end %>
 
-<%= form_with(model: purchase_request, 
+<%= form_for purchase_request, 
                url: defined?(form_url) ? form_url : nil,
-               local: true, 
-               multipart: true, 
-               id: 'purchase-request-form') do |form| %>
+               html: { multipart: true, id: 'purchase-request-form' } do |form| %>
   <% if purchase_request.errors.any? %>
     <div id="error_explanation" class="flash error">
       <h3><%= l(:label_form_contains_errors, count: purchase_request.errors.count) %></h3>
@@ -439,6 +494,78 @@
             <% end %>
           </p>
         </div>
+        
+        <!-- Quarterly Allocation Section -->
+        <div class="form-row quarterly-allocation-section" id="quarterly-allocation-section" style="display: none;">
+          <div class="form-section">
+            <div class="form-section-title"><%= l(:label_quarterly_allocation) %></div>
+            <p class="quarterly-allocation-info">
+              <em class="info"><%= l(:text_quarterly_allocation_info) %></em>
+            </p>
+            
+            <div class="quarterly-allocation-fields">
+              <div class="form-row" style="display: flex; gap: 20px; align-items: flex-end;">
+                <div style="flex: 1;">
+                  <p>
+                    <%= form.label :allocated_quarter, l(:field_allocated_quarter) %>
+                    <%= form.select :allocated_quarter, 
+                                  [[l(:label_quarter_1), 1], 
+                                   [l(:label_quarter_2), 2], 
+                                   [l(:label_quarter_3), 3], 
+                                   [l(:label_quarter_4), 4]], 
+                                  { include_blank: l(:label_no_specific_quarter) },
+                                  { class: 'form-control', id: 'purchase_request_allocated_quarter' } %>
+                    <em class="info"><%= l(:text_allocated_quarter_info) %></em>
+                  </p>
+                </div>
+                
+                <div style="flex: 1;">
+                  <p>
+                    <%= form.label :allocated_amount, l(:field_allocated_amount) %>
+                    <%= form.number_field :allocated_amount, 
+                                        step: 0.01, 
+                                        min: 0,
+                                        placeholder: l(:text_allocated_amount_placeholder),
+                                        class: 'form-control', 
+                                        id: 'purchase_request_allocated_amount' %>
+                    <em class="info"><%= l(:text_allocated_amount_info) %></em>
+                  </p>
+                </div>
+              </div>
+              
+              <div class="quarterly-impact-preview" id="quarterly-impact-preview" style="display: none;">
+                <div class="form-section">
+                  <div class="form-section-title"><%= l(:label_allocation_impact) %></div>
+                  <div class="allocation-impact-details">
+                    <table class="budget-info-table">
+                      <tr>
+                        <td class="budget-label"><%= l(:field_selected_quarter) %>:</td>
+                        <td class="budget-value" id="impact-quarter-value"></td>
+                      </tr>
+                      <tr>
+                        <td class="budget-label"><%= l(:field_original_quarter_budget) %>:</td>
+                        <td class="budget-value" id="impact-original-value"></td>
+                      </tr>
+                      <tr>
+                        <td class="budget-label"><%= l(:field_allocated_amount) %>:</td>
+                        <td class="budget-value" id="impact-allocated-value"></td>
+                      </tr>
+                      <tr>
+                        <td class="budget-label"><%= l(:field_remaining_quarter_budget) %>:</td>
+                        <td class="budget-value" id="impact-remaining-value"></td>
+                      </tr>
+                    </table>
+                    <div class="allocation-warning" id="allocation-warning" style="display: none;">
+                      <span class="icon icon-exclamation"></span>
+                      <strong><%= l(:warning_over_allocation) %></strong>
+                      <%= l(:text_over_allocation_warning) %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -670,6 +797,258 @@ document.addEventListener('DOMContentLoaded', function() {
     opexDetails.style.display = 'block';
   }
   
+  // Initialize budget sections visibility on page load
+  initializeBudgetType();
+  toggleBudgetSections();
+  
+  // Load existing budget details if editing
+  if (capexSelect && capexSelect.value) {
+    loadCapexData(capexSelect.value);
+  }
+  if (opexSelect && opexSelect.value) {
+    loadOpexData(opexSelect.value);
+  }
+  
+  // Initialize quarterly allocation section
+  toggleQuarterlyAllocationSection();
+  
+  // Initialize quarterly impact preview if editing with allocation
+  if (allocatedQuarterSelect && allocatedQuarterSelect.value && 
+      allocatedAmountInput && allocatedAmountInput.value) {
+    updateQuarterlyImpactPreview();
+  }
+  
+  // Quarterly allocation functionality
+  var quarterlyAllocationSection = document.getElementById('quarterly-allocation-section');
+  var allocatedQuarterSelect = document.getElementById('purchase_request_allocated_quarter');
+  var allocatedAmountInput = document.getElementById('purchase_request_allocated_amount');
+  var quarterlyImpactPreview = document.getElementById('quarterly-impact-preview');
+  var allocationWarning = document.getElementById('allocation-warning');
+  
+  // Show/hide quarterly allocation section based on budget selection
+  function toggleQuarterlyAllocationSection() {
+    var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
+    var hasBudgetSelected = selectedBudgetType && selectedBudgetType.value !== 'none';
+    var hasBudgetEntry = (capexSelect && capexSelect.value) || (opexSelect && opexSelect.value);
+    
+    if (hasBudgetSelected && hasBudgetEntry) {
+      quarterlyAllocationSection.style.display = 'block';
+    } else {
+      quarterlyAllocationSection.style.display = 'none';
+      // Clear allocation fields when hiding
+      if (allocatedQuarterSelect) allocatedQuarterSelect.value = '';
+      if (allocatedAmountInput) allocatedAmountInput.value = '';
+      if (quarterlyImpactPreview) quarterlyImpactPreview.style.display = 'none';
+    }
+  }
+  
+  // Update quarterly impact preview
+  function updateQuarterlyImpactPreview() {
+    if (!allocatedQuarterSelect || !allocatedAmountInput || !quarterlyImpactPreview) return;
+    
+    var selectedQuarter = allocatedQuarterSelect.value;
+    var allocatedAmount = parseFloat(allocatedAmountInput.value) || 0;
+    
+    if (selectedQuarter && allocatedAmount > 0) {
+      // Get the currently selected budget entry
+      var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
+      
+      if (selectedBudgetType && selectedBudgetType.value === 'capex' && capexSelect && capexSelect.value) {
+        getCapexQuarterlyData(capexSelect.value, selectedQuarter)
+          .then(function(budgetData) {
+            displayQuarterlyImpact(selectedQuarter, budgetData, allocatedAmount);
+            quarterlyImpactPreview.style.display = 'block';
+          })
+          .catch(function(error) {
+            console.error('Error fetching CAPEX quarterly data:', error);
+            quarterlyImpactPreview.style.display = 'none';
+          });
+      } else if (selectedBudgetType && selectedBudgetType.value === 'opex' && opexSelect && opexSelect.value) {
+        getOpexQuarterlyData(opexSelect.value, selectedQuarter)
+          .then(function(budgetData) {
+            displayQuarterlyImpact(selectedQuarter, budgetData, allocatedAmount);
+            quarterlyImpactPreview.style.display = 'block';
+          })
+          .catch(function(error) {
+            console.error('Error fetching OPEX quarterly data:', error);
+            quarterlyImpactPreview.style.display = 'none';
+          });
+      } else {
+        quarterlyImpactPreview.style.display = 'none';
+      }
+    } else {
+      quarterlyImpactPreview.style.display = 'none';
+    }
+  }
+  
+  // Display quarterly impact information
+  function displayQuarterlyImpact(quarter, budgetData, allocatedAmount) {
+    var quarterValue = document.getElementById('impact-quarter-value');
+    var originalValue = document.getElementById('impact-original-value');
+    var allocatedValue = document.getElementById('impact-allocated-value');
+    var remainingValue = document.getElementById('impact-remaining-value');
+    
+    // Ensure all values are numeric
+    var originalAmount = parseFloat(budgetData.original) || 0;
+    var allocatedAmountNum = parseFloat(allocatedAmount) || 0;
+    var remaining = originalAmount - allocatedAmountNum;
+    
+    if (quarterValue) quarterValue.textContent = 'Q' + quarter;
+    if (originalValue) originalValue.textContent = formatCurrency(originalAmount, budgetData.currency);
+    if (allocatedValue) allocatedValue.textContent = formatCurrency(allocatedAmountNum, budgetData.currency);
+    
+    if (remainingValue) {
+      remainingValue.textContent = formatCurrency(remaining, budgetData.currency);
+      remainingValue.className = 'budget-value ' + (remaining < 0 ? 'over-allocated' : 'within-budget');
+    }
+    
+    // Show/hide allocation warning
+    if (allocationWarning) {
+      allocationWarning.style.display = remaining < 0 ? 'block' : 'none';
+    }
+  }
+  
+  // Get quarterly data from server via AJAX
+  function getCapexQuarterlyData(capexId, quarter) {
+    return new Promise(function(resolve, reject) {
+      if (!capexId || !quarter) {
+        resolve({ original: 0, currency: 'USD' });
+        return;
+      }
+      
+      var url = '/projects/<%= @project.id %>/capex/' + capexId + '/quarterly_data?quarter=' + quarter;
+      console.log('Fetching CAPEX quarterly data from:', url);
+      
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      
+      // Add CSRF token for Rails protection
+      var token = document.querySelector('meta[name="csrf-token"]');
+      if (token) {
+        xhr.setRequestHeader('X-CSRF-Token', token.getAttribute('content'));
+      }
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              var data = JSON.parse(xhr.responseText);
+              console.log('CAPEX quarterly data received:', data);
+              resolve(data);
+            } catch (e) {
+              console.error('Error parsing CAPEX response:', e);
+              reject(e);
+            }
+          } else {
+            console.error('CAPEX request failed with status:', xhr.status);
+            reject(new Error('Failed to fetch CAPEX data'));
+          }
+        }
+      };
+      
+      xhr.send();
+    });
+  }
+  
+  function getOpexQuarterlyData(opexId, quarter) {
+    return new Promise(function(resolve, reject) {
+      if (!opexId || !quarter) {
+        resolve({ original: 0, currency: 'USD' });
+        return;
+      }
+      
+      var url = '/projects/<%= @project.id %>/opex/' + opexId + '/quarterly_data?quarter=' + quarter;
+      console.log('Fetching OPEX quarterly data from:', url);
+      
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      
+      // Add CSRF token for Rails protection
+      var token = document.querySelector('meta[name="csrf-token"]');
+      if (token) {
+        xhr.setRequestHeader('X-CSRF-Token', token.getAttribute('content'));
+      }
+      
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              var data = JSON.parse(xhr.responseText);
+              console.log('OPEX quarterly data received:', data);
+              resolve(data);
+            } catch (e) {
+              console.error('Error parsing OPEX response:', e);
+              reject(e);
+            }
+          } else {
+            console.error('OPEX request failed with status:', xhr.status);
+            reject(new Error('Failed to fetch OPEX data'));
+          }
+        }
+      };
+      
+      xhr.send();
+    });
+  }
+  
+  // Format currency helper
+  function formatCurrency(amount, currency) {
+    var symbol = getCurrencySymbol(currency || 'USD');
+    var numericAmount = parseFloat(amount) || 0;
+    return symbol + numericAmount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+  }
+  
+  // Get currency symbol helper
+  function getCurrencySymbol(currency) {
+    var symbols = {
+      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$',
+      'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr', 'NZD': 'NZ$',
+      'MXN': 'Mex$', 'SGD': 'S$', 'HKD': 'HK$', 'IDR': 'Rp', 'NOK': 'kr',
+      'KRW': '₩', 'TRY': '₺', 'RUB': '₽', 'INR': '₹', 'BRL': 'R$', 'ZAR': 'R'
+    };
+    return symbols[currency] || currency;
+  }
+  
+  // Event listeners for quarterly allocation
+  if (allocatedQuarterSelect) {
+    allocatedQuarterSelect.addEventListener('change', updateQuarterlyImpactPreview);
+  }
+  if (allocatedAmountInput) {
+    allocatedAmountInput.addEventListener('input', updateQuarterlyImpactPreview);
+  }
+  
+  // Update quarterly allocation section when budget changes
+  budgetTypeRadios.forEach(function(radio) {
+    radio.addEventListener('change', function() {
+      toggleBudgetSections();
+      setTimeout(toggleQuarterlyAllocationSection, 100); // Small delay to ensure budget sections are updated
+    });
+  });
+  
+  if (capexSelect) {
+    capexSelect.addEventListener('change', function() {
+      toggleQuarterlyAllocationSection();
+      updateQuarterlyImpactPreview();
+    });
+  }
+  
+  if (opexSelect) {
+    opexSelect.addEventListener('change', function() {
+      toggleQuarterlyAllocationSection();
+      updateQuarterlyImpactPreview();
+    });
+  }
+  
+  // Initialize quarterly allocation section
+  setTimeout(function() {
+    toggleQuarterlyAllocationSection();
+    updateQuarterlyImpactPreview();
+  }, 200);
+  
   // Form validation
   function validateForm() {
     var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
@@ -687,6 +1066,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (!categorySelect || !categorySelect.value) {
           alert('Please select an OPEX category when OPEX budget type is selected.');
+          return false;
+        }
+      }
+    }
+    
+    // Validate quarterly allocation consistency
+    if (allocatedQuarterSelect && allocatedAmountInput) {
+      var hasQuarter = allocatedQuarterSelect.value;
+      var hasAmount = allocatedAmountInput.value && parseFloat(allocatedAmountInput.value) > 0;
+      
+      if (hasQuarter && !hasAmount) {
+        alert('Please enter an allocated amount when selecting a quarter.');
+        return false;
+      }
+      
+      if (hasAmount && !hasQuarter) {
+        alert('Please select a quarter when entering an allocated amount.');
+        return false;
+      }
+      
+      // Validate estimated price vs allocated amount
+      var estimatedPriceInput = document.getElementById('purchase_request_estimated_price');
+      if (hasAmount && estimatedPriceInput && estimatedPriceInput.value) {
+        var estimatedPrice = parseFloat(estimatedPriceInput.value);
+        var allocatedAmount = parseFloat(allocatedAmountInput.value);
+        
+        if (allocatedAmount > estimatedPrice) {
+          alert('Allocated amount cannot exceed the estimated price.');
           return false;
         }
       }

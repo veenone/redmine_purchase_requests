@@ -16,7 +16,7 @@ class PurchaseRequest < ActiveRecord::Base
     attr_accessible :title, :description, :status_id, :product_url, 
                    :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
                    :notify_manager, :notes, :currency, :capex_id, :opex_id, :category_id,
-                   :project_id
+                   :project_id, :allocated_quarter, :allocated_amount
   end
   
   validates :title, presence: true, length: { minimum: 5, maximum: 255 }
@@ -31,12 +31,15 @@ class PurchaseRequest < ActiveRecord::Base
     allow_blank: true
   }
   validates :priority, inclusion: { in: %w[low normal high urgent] }
+  validates :allocated_quarter, inclusion: { in: [1, 2, 3, 4], allow_blank: true }
+  validates :allocated_amount, numericality: { greater_than: 0, allow_blank: true }
   # Note: category_id validation is handled in capex_or_opex_consistency method
   
   # Custom validations
   validate :vendor_presence_check
   validate :business_justification_for_high_value
   validate :capex_or_opex_consistency
+  validate :quarterly_allocation_consistency
   
   # Add any additional scopes or validations as needed
   scope :open, -> { joins(:status).where(purchase_request_statuses: { is_closed: false }) }
@@ -47,10 +50,11 @@ class PurchaseRequest < ActiveRecord::Base
     column_names.include?('category_id')
   end
   
-  def formatted_price
-    if estimated_price.present?
+  def formatted_price(amount = nil)
+    price = amount || estimated_price
+    if price.present?
       symbol = PurchaseRequestsHelper.currency_symbol(currency || 'USD')
-      "#{symbol}#{'%.2f' % estimated_price}"
+      "#{symbol}#{'%.2f' % price}"
     else
       "-"
     end
@@ -106,6 +110,48 @@ class PurchaseRequest < ActiveRecord::Base
     estimated_price.present? && estimated_price > 1000
   end
   
+  # Quarterly allocation methods
+  def has_quarterly_allocation?
+    allocated_quarter.present? && allocated_amount.present?
+  end
+  
+  def quarter_name
+    return nil unless allocated_quarter.present?
+    "Q#{allocated_quarter}"
+  end
+  
+  def allocation_impact_on_budget
+    return {} unless has_quarterly_allocation? && (capex.present? || opex.present?)
+    
+    budget_entry = capex || opex
+    quarter_field = "q#{allocated_quarter}_amount"
+    original_quarter_amount = budget_entry.send(quarter_field)
+    new_quarter_amount = original_quarter_amount - (allocated_amount || 0)
+    
+    {
+      quarter: allocated_quarter,
+      quarter_name: quarter_name,
+      original_amount: original_quarter_amount,
+      allocated_amount: allocated_amount,
+      remaining_amount: new_quarter_amount,
+      is_over_allocated: new_quarter_amount < 0
+    }
+  end
+  
+  def budget_entry
+    capex || opex
+  end
+  
+  def budget_type
+    return 'capex' if capex.present?
+    return 'opex' if opex.present?
+    'none'
+  end
+  
+  def has_budget_assignment?
+    capex.present? || opex.present?
+  end
+
   private
   
   def vendor_presence_check
@@ -132,6 +178,27 @@ class PurchaseRequest < ActiveRecord::Base
     # Ensure category is selected only when OPEX is selected and category_id column exists
     if opex_id.present? && self.class.has_category_id_column? && category_id.blank?
       errors.add(:category_id, I18n.t('error_opex_category_required', default: 'OPEX category is required. Please select a category.'))
+    end
+  end
+  
+  def quarterly_allocation_consistency
+    # If quarterly allocation is specified, ensure both quarter and amount are provided
+    if allocated_quarter.present? && allocated_amount.blank?
+      errors.add(:allocated_amount, I18n.t('error_allocated_amount_required', default: 'Allocated amount is required when specifying a quarter.'))
+    end
+    
+    if allocated_amount.present? && allocated_quarter.blank?
+      errors.add(:allocated_quarter, I18n.t('error_allocated_quarter_required', default: 'Quarter selection is required when specifying an allocated amount.'))
+    end
+    
+    # If quarterly allocation is specified, ensure a budget entry (CAPEX or OPEX) is selected
+    if has_quarterly_allocation? && capex_id.blank? && opex_id.blank?
+      errors.add(:base, I18n.t('error_budget_required_for_allocation', default: 'A CAPEX or OPEX budget entry must be selected when specifying quarterly allocation.'))
+    end
+    
+    # Validate allocation amount doesn't exceed estimated price
+    if allocated_amount.present? && estimated_price.present? && allocated_amount > estimated_price
+      errors.add(:allocated_amount, I18n.t('error_allocation_exceeds_price', default: 'Allocated amount cannot exceed the estimated price.'))
     end
   end
 end

@@ -1,3 +1,5 @@
+require 'securerandom'
+
 class Opex < ActiveRecord::Base
   self.table_name = 'opex'
   
@@ -20,7 +22,6 @@ class Opex < ActiveRecord::Base
   
   validate :quarterly_amounts_sum_equals_total
   validate :unique_opex_code_per_project_year
-  validate :opex_code_validation
   
   before_save :handle_tpc_code_assignment
   
@@ -202,6 +203,13 @@ class Opex < ActiveRecord::Base
     "#{opex_code} - #{description.truncate(50)}"
   end
   
+  def quarterly_consumption(quarter)
+    # Calculate consumed amount for a specific quarter based on allocated purchase requests
+    purchase_requests.where(allocated_quarter: quarter)
+                    .where.not(allocated_amount: nil)
+                    .sum(:allocated_amount) || 0
+  end
+  
   private
   
   def quarterly_amounts_sum_equals_total
@@ -224,30 +232,19 @@ class Opex < ActiveRecord::Base
     end
   end
   
-  def opex_code_validation
-    # Check if TPC code is required based on plugin settings
-    require_tpc_for_opex = Setting.plugin_redmine_purchase_requests['tpc_require_for_opex'] == '1'
-    
-    # If a TPC code object is selected, no need for legacy OPEX code
-    if tpc_code_id.present?
-      # Clear legacy OPEX code if TPC code is selected
-      self.opex_code = nil if opex_code.present?
-    else
-      # If no TPC code selected, legacy OPEX code is required (or optional based on settings)
-      if require_tpc_for_opex || opex_code.present?
-        if opex_code.blank?
-          errors.add(:opex_code, "can't be blank when no TPC code is selected")
-        elsif opex_code.length < 3 || opex_code.length > 50
-          errors.add(:opex_code, "must be between 3 and 50 characters")
-        end
-      end
-    end
-  end
-  
   def handle_tpc_code_assignment
-    # If a TPC code ID is provided, clear the legacy OPEX code
+    # If a TPC code ID is provided, use the TPC number as opex_code
     if tpc_code_id.present?
-      self.opex_code = nil
+      if tpc_code.present?
+        self.opex_code = tpc_code.tpc_number
+      else
+        # Fallback if TPC code object is not yet loaded
+        tpc_obj = TpcCode.find_by(id: tpc_code_id)
+        self.opex_code = tpc_obj&.tpc_number || "TPC-#{tpc_code_id}"
+      end
+    elsif opex_code.blank?
+      # Generate a default opex_code if none provided and no TPC code
+      self.opex_code = "OPEX-#{year || Date.current.year}-#{SecureRandom.hex(4).upcase}"
     end
   end
 end

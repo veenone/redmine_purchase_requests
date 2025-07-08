@@ -54,6 +54,39 @@
         </div>
       </div>
     </div>
+    
+    <% if @purchase_request.capex.present? || @purchase_request.opex.present? %>
+      <div class="pr-alert pr-alert-success">
+        <span class="icon icon-info"></span>
+        <div class="pr-alert-content">
+          <h4>Current Budget Assignment</h4>
+          <% if @purchase_request.capex.present? %>
+            <p><strong>CAPEX:</strong> <%= @purchase_request.capex.display_name %> (<%= @purchase_request.capex.year %>)</p>
+            <div class="budget-info">
+              <span>Total: <%= format_price(@purchase_request.capex.total_amount, @purchase_request.capex.currency) %></span> |
+              <span>Remaining: <span class="<%= @purchase_request.capex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
+                <%= format_price(@purchase_request.capex.remaining_amount, @purchase_request.capex.currency) %>
+              </span></span>
+            </div>
+          <% elsif @purchase_request.opex.present? %>
+            <p><strong>OPEX:</strong> <%= @purchase_request.opex.display_name %> (<%= @purchase_request.opex.year %>)</p>
+            <div class="budget-info">
+              <span>Total: <%= format_price(@purchase_request.opex.total_amount, @purchase_request.opex.currency) %></span> |
+              <span>Remaining: <span class="<%= @purchase_request.opex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
+                <%= format_price(@purchase_request.opex.remaining_amount, @purchase_request.opex.currency) %>
+              </span></span>
+            </div>
+          <% end %>
+          
+          <% if @purchase_request.has_quarterly_allocation? %>
+            <div class="quarterly-info">
+              <strong>Quarterly Allocation:</strong> <%= @purchase_request.quarter_name %> - 
+              <%= @purchase_request.formatted_price(@purchase_request.allocated_amount) %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
   </div>
 
   <div class="box pr-form-box">
@@ -165,6 +198,12 @@
     color: #1a5490;
   }
   
+  .pr-alert-success {
+    background-color: #f0f8f0;
+    border-color: #b3d9b3;
+    color: #2e7d32;
+  }
+  
   .pr-alert-content h4 {
     margin: 0 0 8px 0;
     font-size: 14px;
@@ -174,6 +213,30 @@
   .pr-alert-content p {
     margin: 0 0 8px 0;
     font-size: 13px;
+  }
+  
+  .budget-info {
+    font-size: 12px;
+    margin-top: 5px;
+    color: #666;
+  }
+  
+  .quarterly-info {
+    font-size: 12px;
+    margin-top: 5px;
+    padding: 5px;
+    background-color: rgba(255,255,255,0.5);
+    border-radius: 3px;
+  }
+  
+  .over-budget {
+    color: #f44336;
+    font-weight: bold;
+  }
+  
+  .remaining-budget {
+    color: #4caf50;
+    font-weight: bold;
   }
   
   .pr-request-title {

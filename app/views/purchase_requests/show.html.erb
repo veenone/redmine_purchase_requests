@@ -225,6 +225,38 @@
                   </span>
                 </div>
               <% end %>
+              
+              <% if @purchase_request.has_quarterly_allocation? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:label_quarterly_allocation) %>:</span>
+                  <span class="value">
+                    <%= @purchase_request.quarter_name %> - <%= @purchase_request.formatted_price(@purchase_request.allocated_amount) %>
+                    <div class="quarterly-allocation-display">
+                      <% allocation_impact = @purchase_request.allocation_impact_on_budget %>
+                      <% if allocation_impact.any? %>
+                        <div><strong><%= l(:field_selected_quarter) %>:</strong> <%= allocation_impact[:quarter_name] %></div>
+                        <div><strong><%= l(:field_allocated_amount) %>:</strong> 
+                          <%= format_price(allocation_impact[:allocated_amount], @purchase_request.currency) %>
+                        </div>
+                        <div><strong><%= l(:field_original_quarter_budget) %>:</strong> 
+                          <%= format_price(allocation_impact[:original_amount], @purchase_request.currency) %>
+                        </div>
+                        <div><strong><%= l(:field_remaining_quarter_budget) %>:</strong> 
+                          <span class="<%= allocation_impact[:is_over_allocated] ? 'over-budget' : 'remaining-budget' %>">
+                            <%= format_price(allocation_impact[:remaining_amount], @purchase_request.currency) %>
+                          </span>
+                        </div>
+                        <% if allocation_impact[:is_over_allocated] %>
+                          <div class="allocation-warning-display">
+                            <span class="icon icon-exclamation"></span>
+                            <strong><%= l(:warning_over_allocation) %></strong>
+                          </div>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </span>
+                </div>
+              <% end %>
             </div>
           </div>
         </div>
@@ -658,6 +690,36 @@
   .utilization-percentage {
     font-weight: bold;
     color: #ff9800;
+  }
+  
+  /* Quarterly allocation display styling */
+  .quarterly-allocation-display {
+    margin-top: 5px;
+    padding: 8px;
+    background-color: #f0f8ff;
+    border-radius: 3px;
+    border-left: 3px solid #2196f3;
+    font-size: 0.9em;
+  }
+  
+  .quarterly-allocation-display div {
+    margin: 3px 0;
+  }
+  
+  .allocation-warning-display {
+    margin-top: 8px;
+    padding: 6px;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 3px;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .allocation-warning-display .icon {
+    color: #fd7e14;
   }
 </style>
 

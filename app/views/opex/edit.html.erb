@@ -1,4 +1,11 @@
-<%# Edit OPEX Entry %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= stylesheet_link_tag 'capex', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/opex/edit.html.erb %>
+<% html_title "Edit OPEX Entry - #{@project.name}" %>
 
 <div class="contextual">
   <%= link_to project_opex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
@@ -6,114 +13,407 @@
   <% end %>
 </div>
 
-<h2><%= l(:label_edit_opex) %></h2>
+<h2>Edit OPEX Entry</h2>
 
-<%= form_for [@project, @opex], url: project_opex_path(@project, @opex), method: :patch, html: { class: 'opex-form' } do |f| %>
-  <div class="box tabular">
-    <p>
-      <%= f.label :year, l(:field_opex_year) %><span class="required">*</span>
-      <%= f.number_field :year, min: 2000, max: 2100, required: true %>
-    </p>
-    <p>
-      <%= f.label :opex_code, l(:field_opex_code) %>
-      <%= f.text_field :opex_code, id: 'opex_opex_code' %>
-      <em class="info">Legacy OPEX code (only required if no TPC code is selected below)</em>
-    </p>
-    <p>
-      <%= f.label :description, l(:field_opex_description) %><span class="required">*</span>
-      <%= f.text_field :description, required: true %>
-    </p>
-    <p>
-      <%= f.label :total_amount, l(:field_opex_total_amount) %><span class="required">*</span>
-      <%= f.number_field :total_amount, step: 0.01, min: 0, required: true %>
-    </p>
-    <p>
-      <%= f.label :currency, l(:field_opex_currency) %><span class="required">*</span>
-      <%= f.text_field :currency, required: true %>
-    </p>
-    <p>
-      <%= f.label :category_id, l(:field_opex_category) %><span class="required">*</span>
-      <%= f.collection_select :category_id, OpexCategory.all, :id, :name, { prompt: 'Select a category' }, { required: true } %>
-    </p>
-    <p>
-      <%= f.label :tpc_code_id, 'TPC Code' %>
-      <%= f.collection_select :tpc_code_id, 
-                               TpcCode.available_for_project(@project).active.ordered, 
-                               :id, :display_name, 
-                               { prompt: 'Select TPC Code (optional)' }, 
-                               { class: 'form-control', id: 'opex_tpc_code_id' } %>
-      <em class="info">Link this OPEX entry to a TPC code for tracking</em>
-    </p>
-    <p>
-      <%= f.label :q1_amount, l(:field_opex_q1_amount) %>
-      <%= f.number_field :q1_amount, step: 0.01, min: 0 %>
-    </p>
-    <p>
-      <%= f.label :q2_amount, l(:field_opex_q2_amount) %>
-      <%= f.number_field :q2_amount, step: 0.01, min: 0 %>
-    </p>
-    <p>
-      <%= f.label :q3_amount, l(:field_opex_q3_amount) %>
-      <%= f.number_field :q3_amount, step: 0.01, min: 0 %>
-    </p>
-    <p>
-      <%= f.label :q4_amount, l(:field_opex_q4_amount) %>
-      <%= f.number_field :q4_amount, step: 0.01, min: 0 %>
-    </p>
-    <p>
-      <%= f.label :cost_center, l(:field_opex_cost_center) %>
-      <%= f.text_field :cost_center %>
-    </p>
-    <p>
-      <%= f.label :notes, l(:field_opex_notes) %>
-      <%= f.text_area :notes, rows: 3 %>
-    </p>
+<div class="pr-form-container">
+  <div class="pr-form-instructions">
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <h4>Edit OPEX Entry</h4>
+        <p>Update the details below to modify this OPEX budget entry. Quarterly amounts must sum to the total amount.</p>
+      </div>
+    </div>
   </div>
-  <div class="pr-form-actions">
-    <%= f.submit l(:button_save), class: 'pr-button pr-button-primary' %>
-    <%= link_to l(:button_cancel), project_opex_path(@project, @opex), class: 'pr-button pr-button-cancel' %>
-  </div>
-<% end %>
+
+  <%= form_for [@project, @opex], url: project_opex_path(@project, @opex), method: :patch, html: { class: 'pr-form' } do |f| %>
+    <div class="box pr-form-box">
+      <div class="pr-form-content">
+        <div class="pr-form-fields">
+          <div class="pr-field-group">
+            <div class="pr-field">
+              <%= f.label :year, l(:field_opex_year), class: 'pr-label required' %>
+              <%= f.number_field :year, min: 2000, max: 2100, required: true, value: @opex.year, class: 'pr-input' %>
+            </div>
+            
+            <div class="pr-field">
+              <%= f.label :description, l(:field_opex_description), class: 'pr-label required' %>
+              <%= f.text_field :description, required: true, class: 'pr-input' %>
+            </div>
+          </div>
+
+          <div class="pr-field-group">
+            <div class="pr-field">
+              <%= f.label :total_amount, l(:field_opex_total_amount), class: 'pr-label required' %>
+              <%= f.number_field :total_amount, step: 0.01, min: 0, required: true, class: 'pr-input' %>
+            </div>
+            
+            <div class="pr-field">
+              <%= f.label :currency, l(:field_opex_currency), class: 'pr-label required' %>
+              <%= f.select :currency, 
+                           options_for_select([
+                             ['USD - US Dollar', 'USD'], ['EUR - Euro', 'EUR'], ['GBP - British Pound', 'GBP'],
+                             ['JPY - Japanese Yen', 'JPY'], ['CAD - Canadian Dollar', 'CAD'], ['AUD - Australian Dollar', 'AUD'],
+                             ['CHF - Swiss Franc', 'CHF'], ['CNY - Chinese Yuan', 'CNY'], ['SEK - Swedish Krona', 'SEK'],
+                             ['NZD - New Zealand Dollar', 'NZD'], ['MXN - Mexican Peso', 'MXN'], ['SGD - Singapore Dollar', 'SGD'],
+                             ['HKD - Hong Kong Dollar', 'HKD'], ['IDR - Indonesian Rupiah', 'IDR'], ['NOK - Norwegian Krone', 'NOK'],
+                             ['KRW - South Korean Won', 'KRW'], ['TRY - Turkish Lira', 'TRY'], ['RUB - Russian Ruble', 'RUB'],
+                             ['INR - Indian Rupee', 'INR'], ['BRL - Brazilian Real', 'BRL'], ['ZAR - South African Rand', 'ZAR']
+                           ], @opex.currency), { required: true }, { class: 'pr-select' } %>
+            </div>
+          </div>
+
+          <div class="pr-field-group">
+            <div class="pr-field">
+              <%= f.label :category_id, l(:field_opex_category), class: 'pr-label required' %>
+              <%= f.collection_select :category_id, OpexCategory.all, :id, :name, 
+                                     { prompt: 'Select a category' }, 
+                                     { required: true, class: 'pr-select' } %>
+            </div>
+            
+            <div class="pr-field">
+              <%= f.label :tpc_code_id, 'TPC Code', class: 'pr-label' %>
+              <%= f.collection_select :tpc_code_id, 
+                                     TpcCode.available_for_project(@project).active.ordered, 
+                                     :id, :display_name, 
+                                     { prompt: 'Select TPC Code (optional)' }, 
+                                     { class: 'pr-select', id: 'opex_tpc_code_id' } %>
+              <em class="pr-field-info">Link this OPEX entry to a TPC code for tracking</em>
+            </div>
+          </div>
+
+          <div class="pr-field-group">
+            <div class="pr-field opex-code-field">
+              <%= f.label :opex_code, l(:field_opex_code), class: 'pr-label' %>
+              <%= f.text_field :opex_code, id: 'opex_opex_code', class: 'pr-input' %>
+              <em class="pr-field-info">Legacy OPEX code (only required if no TPC code is selected above)</em>
+            </div>
+            
+            <div class="pr-field">
+              <%= f.label :cost_center, l(:field_opex_cost_center), class: 'pr-label' %>
+              <%= f.text_field :cost_center, class: 'pr-input' %>
+            </div>
+          </div>
+
+          <div class="pr-quarterly-section">
+            <h3>Quarterly Distribution</h3>
+            <div class="pr-quarterly-info">
+              <span class="icon icon-info"></span>
+              <p>Distribute the total amount across quarters. The sum of all quarters must equal the total amount.</p>
+            </div>
+            
+            <div class="pr-quarterly-fields">
+              <div class="pr-field">
+                <%= f.label :q1_amount, l(:field_opex_q1_amount), class: 'pr-label' %>
+                <%= f.number_field :q1_amount, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
+              </div>
+              
+              <div class="pr-field">
+                <%= f.label :q2_amount, l(:field_opex_q2_amount), class: 'pr-label' %>
+                <%= f.number_field :q2_amount, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
+              </div>
+              
+              <div class="pr-field">
+                <%= f.label :q3_amount, l(:field_opex_q3_amount), class: 'pr-label' %>
+                <%= f.number_field :q3_amount, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
+              </div>
+              
+              <div class="pr-field">
+                <%= f.label :q4_amount, l(:field_opex_q4_amount), class: 'pr-label' %>
+                <%= f.number_field :q4_amount, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
+              </div>
+            </div>
+            
+            <div class="quarterly-validation">
+              <div class="validation-message" id="quarterly-validation"></div>
+            </div>
+          </div>
+
+          <div class="pr-field full-width">
+            <%= f.label :notes, l(:field_opex_notes), class: 'pr-label' %>
+            <%= f.text_area :notes, rows: 3, class: 'pr-textarea' %>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="pr-form-actions">
+      <%= f.submit l(:button_save), class: 'pr-button pr-button-primary' %>
+      <%= link_to l(:button_cancel), project_opex_path(@project, @opex), class: 'pr-button pr-button-cancel' %>
+    </div>
+  <% end %>
+</div>
 
 <style>
-.opex-form .box.tabular p { margin-bottom: 12px; }
-.opex-code-section.disabled { opacity: 0.6; }
-.opex-code-section.disabled input { background-color: #f5f5f5; color: #666; }
+  .pr-form-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .pr-form-instructions {
+    margin-bottom: 20px;
+  }
+  
+  .pr-alert {
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .pr-alert-info {
+    background-color: #f0f8ff;
+    border-color: #b3d9ff;
+    color: #1a5490;
+  }
+  
+  .pr-alert-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .pr-alert-content p {
+    margin: 0;
+    font-size: 14px;
+  }
+  
+  .pr-form-box {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .pr-form-content {
+    padding: 20px;
+  }
+  
+  .pr-form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .pr-field-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  
+  .pr-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .pr-field.full-width {
+    grid-column: 1 / -1;
+  }
+  
+  .pr-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+  }
+  
+  .pr-label.required::after {
+    content: ' *';
+    color: #e74c3c;
+  }
+  
+  .pr-input, .pr-select, .pr-textarea {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+  }
+  
+  .pr-input:focus, .pr-select:focus, .pr-textarea:focus {
+    outline: none;
+    border-color: #FF9800;
+    box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1);
+  }
+  
+  .pr-field-info {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .pr-quarterly-section {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 10px;
+  }
+  
+  .pr-quarterly-section h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+  }
+  
+  .pr-quarterly-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #fff3e0;
+    border-radius: 4px;
+    border-left: 4px solid #FF9800;
+  }
+  
+  .pr-quarterly-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .pr-quarterly-fields {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+  
+  .pr-quarterly-fields .pr-input {
+    width: 100%;
+    max-width: 120px;
+  }
+  
+  .quarterly-validation {
+    margin-top: 15px;
+  }
+  
+  .validation-message {
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  .validation-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .validation-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+  
+  .opex-code-field.disabled {
+    opacity: 0.6;
+  }
+  
+  .opex-code-field.disabled .pr-input {
+    background-color: #f5f5f5;
+    color: #666;
+  }
+  
+  .pr-form-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  
+  @media (max-width: 768px) {
+    .pr-field-group {
+      grid-template-columns: 1fr;
+    }
+    
+    .pr-quarterly-fields {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .pr-quarterly-fields {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const tpcCodeSelect = document.getElementById('opex_tpc_code_id');
   const opexCodeInput = document.getElementById('opex_opex_code');
-  const opexCodeSection = opexCodeInput.closest('p');
-  const opexCodeLabel = opexCodeSection.querySelector('label');
+  const opexCodeField = opexCodeInput.closest('.pr-field');
+  const opexCodeLabel = opexCodeField.querySelector('.pr-label');
+  
+  const totalAmountInput = document.querySelector('input[name="opex[total_amount]"]');
+  const quarterlyInputs = document.querySelectorAll('.quarterly-input');
+  const validationMessage = document.getElementById('quarterly-validation');
   
   function updateOpexCodeFields() {
     const tpcCodeSelected = tpcCodeSelect.value && tpcCodeSelect.value !== '';
     
     if (tpcCodeSelected) {
-      // TPC code is selected, disable legacy OPEX code
-      opexCodeSection.classList.add('disabled', 'opex-code-section');
+      // TPC code is selected, disable legacy OPEX code but don't clear it
+      opexCodeField.classList.add('disabled');
       opexCodeInput.disabled = true;
       opexCodeInput.required = false;
-      opexCodeInput.value = '';
       opexCodeLabel.classList.remove('required');
+      
+      // Set a placeholder indicating TPC code will be used
+      opexCodeInput.placeholder = 'TPC code will be used';
     } else {
       // No TPC code selected, enable legacy OPEX code
-      opexCodeSection.classList.remove('disabled');
-      opexCodeSection.classList.add('opex-code-section');
+      opexCodeField.classList.remove('disabled');
       opexCodeInput.disabled = false;
       opexCodeInput.required = true;
       opexCodeLabel.classList.add('required');
+      opexCodeInput.placeholder = 'Enter OPEX code or leave blank for auto-generation';
+    }
+  }
+  
+  function validateQuarterlyAmounts() {
+    const totalAmount = parseFloat(totalAmountInput.value) || 0;
+    let quarterlySum = 0;
+    
+    quarterlyInputs.forEach(function(input) {
+      quarterlySum += parseFloat(input.value) || 0;
+    });
+    
+    const difference = Math.abs(totalAmount - quarterlySum);
+    
+    if (totalAmount === 0) {
+      validationMessage.textContent = '';
+      validationMessage.className = 'validation-message';
+    } else if (difference < 0.01) { // Allow for small floating point differences
+      validationMessage.textContent = '✓ Quarterly amounts sum equals total amount';
+      validationMessage.className = 'validation-message success';
+    } else {
+      const shortfall = totalAmount - quarterlySum;
+      if (shortfall > 0) {
+        validationMessage.textContent = `⚠ Missing ${shortfall.toFixed(2)} from quarterly distribution`;
+      } else {
+        validationMessage.textContent = `⚠ Quarterly amounts exceed total by ${Math.abs(shortfall).toFixed(2)}`;
+      }
+      validationMessage.className = 'validation-message error';
     }
   }
   
   // Initialize on page load
   updateOpexCodeFields();
+  validateQuarterlyAmounts();
   
   // Update when TPC code selection changes
   if (tpcCodeSelect) {
     tpcCodeSelect.addEventListener('change', updateOpexCodeFields);
   }
+  
+  // Update validation when amounts change
+  if (totalAmountInput) {
+    totalAmountInput.addEventListener('input', validateQuarterlyAmounts);
+  }
+  
+  quarterlyInputs.forEach(function(input) {
+    input.addEventListener('input', validateQuarterlyAmounts);
+  });
 });
 </script>

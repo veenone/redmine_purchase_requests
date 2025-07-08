@@ -46,25 +46,36 @@
           <%= @opex.currency_symbol %><%= number_with_precision(@opex.utilized_amount, precision: 2, delimiter: ',') %>
           <span class="currency"><%= @opex.currency %></span>
         </div>
-        <div class="percentage"><%= @opex.utilization_percentage %>%</div>
+        <div class="percentage <%= @opex.utilization_percentage > 100 ? 'over-utilized' : '' %>">
+          <%= @opex.utilization_percentage %>%
+        </div>
       </div>
       
       <div class="summary-card remaining">
         <h3>Remaining</h3>
-        <div class="amount">
+        <div class="amount <%= @opex.remaining_amount < 0 ? 'over-budget' : '' %>">
           <%= @opex.currency_symbol %><%= number_with_precision(@opex.remaining_amount, precision: 2, delimiter: ',') %>
           <span class="currency"><%= @opex.currency %></span>
         </div>
-        <div class="percentage"><%= (100 - @opex.utilization_percentage).round(2) %>%</div>
+        <div class="percentage <%= @opex.remaining_amount < 0 ? 'over-budget' : '' %>">
+          <%= (100 - @opex.utilization_percentage).round(2) %>%
+        </div>
       </div>
     </div>
     
     <div class="utilization-progress">
       <h3>Budget Utilization</h3>
       <div class="progress-bar-large">
-        <div class="progress-fill" style="width: <%= @opex.utilization_percentage %>%"></div>
+        <div class="progress-fill <%= @opex.utilization_percentage > 100 ? 'over-utilized' : '' %>" 
+             style="width: <%= [@opex.utilization_percentage, 100].min %>%"></div>
         <span class="progress-text"><%= @opex.utilization_percentage %>% Utilized</span>
       </div>
+      <% if @opex.utilization_percentage > 100 %>
+        <div class="over-utilization-warning">
+          <span class="icon icon-exclamation"></span>
+          <strong>Warning:</strong> Budget utilization exceeds 100% by <%= (@opex.utilization_percentage - 100).round(2) %>%
+        </div>
+      <% end %>
     </div>
   </div>
 
@@ -111,6 +122,24 @@
     </div>
     
     <div class="quarterly-section">
+      <h3>Quarterly Consumption</h3>
+      <div class="quarterly-consumption">
+        <% [1, 2, 3, 4].each do |quarter| %>
+          <% quarterly_consumption = @opex.quarterly_consumption(quarter) %>
+          <div class="quarter-consumption-item">
+            <div class="quarter-header">Q<%= quarter %> <%= @opex.year %></div>
+            <div class="consumption-details">
+              <div class="consumption-amount">
+                Consumed: <%= @opex.currency_symbol %><%= number_with_precision(quarterly_consumption, precision: 2, delimiter: ',') %>
+              </div>
+              <div class="consumption-percentage">
+                <%= quarterly_consumption > 0 ? ((quarterly_consumption / @opex.send("q#{quarter}_amount")) * 100).round(2) : 0 %>% of Q<%= quarter %> budget
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      
       <h3>Quarterly Distribution</h3>
       <div class="quarterly-breakdown">
         <% [1, 2, 3, 4].each do |quarter| %>
@@ -145,6 +174,7 @@
             <th>Status</th>
             <th>Author</th>
             <th>Estimated Price</th>
+            <th>Proposed Quarter</th>
             <th>Created</th>
             <th class="buttons">Actions</th>
           </tr>
@@ -175,15 +205,25 @@
                   <span class="no-price">-</span>
                 <% end %>
               </td>
+              <td class="quarter">
+                <% if pr.has_quarterly_allocation? %>
+                  <span class="quarter-badge">Q<%= pr.allocated_quarter %></span>
+                  <div class="quarter-allocation">
+                    <%= pr.currency == @opex.currency ? @opex.currency_symbol : pr.currency %>
+                    <%= number_with_precision(pr.allocated_amount, precision: 2, delimiter: ',') %>
+                  </div>
+                <% else %>
+                  <span class="no-quarter">-</span>
+                <% end %>
+              </td>
               <td class="created-on">
                 <%= format_time(pr.created_at) %>
               </td>
               <td class="buttons">
-              <span class="icon icon-magnifier">
                 <%= link_to project_purchase_request_path(@project, pr), 
                             class: 'pr-button pr-button-secondary pr-button-icon pr-button-icon-only small', 
-                            title: 'View' do %>view
-                  </span>
+                            title: 'View' do %>
+                  <span class="icon icon-magnifier">view</span>
                 <% end %>
               </td>
             </tr>
@@ -265,8 +305,22 @@
     color: #F44336;
   }
   
+  .summary-card.utilized .percentage.over-utilized {
+    color: #f44336;
+    font-weight: bold;
+  }
+  
   .summary-card.remaining .amount {
     color: #4CAF50;
+  }
+  
+  .summary-card.remaining .amount.over-budget {
+    color: #f44336;
+  }
+  
+  .summary-card.remaining .percentage.over-budget {
+    color: #f44336;
+    font-weight: bold;
   }
   
   .utilization-progress {
@@ -286,6 +340,26 @@
     height: 100%;
     background: linear-gradient(90deg, #FF9800, #FFC107);
     transition: width 0.5s ease;
+  }
+  
+  .progress-bar-large .progress-fill.over-utilized {
+    background: linear-gradient(90deg, #f44336, #ff7043);
+  }
+  
+  .over-utilization-warning {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .over-utilization-warning .icon {
+    color: #fd7e14;
   }
   
   .progress-bar-large .progress-text {
@@ -333,6 +407,44 @@
     gap: 15px;
   }
   
+  .quarterly-consumption {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  
+  .quarter-consumption-item {
+    background: #fff3e0;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #ffcc80;
+    border-left: 4px solid #FF9800;
+  }
+  
+  .quarter-consumption-item .quarter-header {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+  }
+  
+  .consumption-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .consumption-amount {
+    font-size: 14px;
+    font-weight: bold;
+    color: #FF9800;
+  }
+  
+  .consumption-percentage {
+    font-size: 12px;
+    color: #666;
+  }
+  
   .quarter-item {
     background: #f9f9f9;
     padding: 15px;
@@ -370,6 +482,27 @@
     height: 100%;
     background-color: #FF9800;
     transition: width 0.3s ease;
+  }
+  
+  .quarter-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: #FF9800;
+    color: white;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  
+  .quarter-allocation {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+  }
+  
+  .no-quarter {
+    color: #999;
+    font-style: italic;
   }
   
   .linked-purchase-requests,

@@ -2,7 +2,9 @@ class OpexController < ApplicationController
   layout 'base'
   before_action :find_project
   before_action :find_opex, only: [:show, :edit, :update, :destroy]
-  before_action :authorize
+  before_action :authorize, except: [:quarterly_data, :dashboard_data]
+  before_action :check_quarterly_data_permission, only: [:quarterly_data]
+  skip_before_action :verify_authenticity_token, only: [:quarterly_data]
   
   helper :purchase_requests
   include PurchaseRequestsHelper
@@ -71,6 +73,34 @@ class OpexController < ApplicationController
       flash[:notice] = l(:notice_opex_deleted)
       redirect_to project_opex_index_path(@project)
     end
+  end
+  
+  # AJAX endpoint to get quarterly data for a specific OPEX entry
+  def quarterly_data
+    @opex = @project.opex.find(params[:id])
+    quarter = params[:quarter].to_i
+    
+    quarter_amount = case quarter
+    when 1 then @opex.q1_amount&.to_f || 0.0
+    when 2 then @opex.q2_amount&.to_f || 0.0
+    when 3 then @opex.q3_amount&.to_f || 0.0
+    when 4 then @opex.q4_amount&.to_f || 0.0
+    else 0.0
+    end
+    
+    data = {
+      original: quarter_amount,
+      currency: @opex.currency || 'USD',
+      opex_id: @opex.id,
+      quarter: quarter,
+      year: @opex.year,
+      description: @opex.description,
+      category: @opex.category.present? ? @opex.category.name : nil
+    }
+    
+    render json: data
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'OPEX entry not found' }, status: 404
   end
   
   def dashboard
@@ -149,6 +179,104 @@ class OpexController < ApplicationController
     end
   end
   
+  # AJAX endpoint to get dashboard data
+  def dashboard_data
+    @current_year = (params[:year] || Date.current.year).to_i
+    @opex_entries = @project.opex.for_year(@current_year)
+    
+    # Apply additional filters if present
+    if params[:category].present?
+      @opex_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => params[:category])
+    end
+    
+    if params[:currency].present?
+      @opex_entries = @opex_entries.where(currency: params[:currency])
+    end
+    
+    # Initialize variables
+    @total_budget = 0
+    @total_utilized = 0
+    @total_remaining = 0
+    @utilization_percentage = 0
+    @currency_breakdown = {}
+    @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
+    @category_grouping = {}
+    @use_exchange_rates = false
+    @default_currency = default_currency
+    
+    if @opex_entries.any?
+      # Currency breakdown and exchange rate settings
+      @currency_breakdown = @opex_entries.group(:currency).sum(:total_amount)
+      exchange_rates_settings = Setting.plugin_redmine_purchase_requests || {}
+      
+      if exchange_rates_settings['opex_exchange_rates'] && exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
+        @use_exchange_rates = true
+        year_rates = exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
+        
+        # Convert all amounts to default currency
+        @total_budget = @opex_entries.sum do |opex|
+          rate = year_rates[opex.currency] || 1
+          opex.total_amount * rate
+        end
+        
+        @total_utilized = @opex_entries.sum do |opex|
+          rate = year_rates[opex.currency] || 1
+          opex.utilized_amount * rate
+        end
+      else
+        @total_budget = @opex_entries.sum(:total_amount)
+        @total_utilized = @opex_entries.sum { |o| o.utilized_amount }
+      end
+      
+      @total_remaining = @total_budget - @total_utilized
+      @utilization_percentage = @total_budget > 0 ? ((@total_utilized / @total_budget) * 100).round(2) : 0
+      
+      # Quarterly breakdown
+      @quarterly_data = {
+        q1: @opex_entries.sum(:q1_amount),
+        q2: @opex_entries.sum(:q2_amount), 
+        q3: @opex_entries.sum(:q3_amount),
+        q4: @opex_entries.sum(:q4_amount)
+      }
+      
+      # Category grouping (similar to TPC grouping in CAPEX)
+      @category_grouping = {}
+      category_names = @opex_entries.joins(:opex_category).distinct.pluck('opex_categories.name')
+      
+      category_names.each do |category_name|
+        category_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => category_name)
+        total_budget = category_entries.sum(:total_amount)
+        total_utilized = category_entries.sum { |o| o.utilized_amount }
+        entries_count = category_entries.count
+        utilization_percentage = total_budget > 0 ? ((total_utilized / total_budget) * 100).round(2) : 0
+        
+        # Get currency symbol from first entry in this category
+        first_opex = category_entries.first
+        currency_symbol = first_opex&.currency_symbol || '$'
+        
+        @category_grouping[category_name] = {
+          total_budget: total_budget,
+          total_utilized: total_utilized,
+          entries_count: entries_count,
+          utilization_percentage: utilization_percentage,
+          currency_symbol: currency_symbol
+        }
+      end
+    end
+    
+    render json: {
+      total_budget: @total_budget,
+      total_utilized: @total_utilized,
+      total_remaining: @total_remaining,
+      utilization_percentage: @utilization_percentage,
+      quarterly_data: @quarterly_data,
+      currency_breakdown: @currency_breakdown,
+      category_grouping: @category_grouping,
+      use_exchange_rates: @use_exchange_rates,
+      default_currency: @default_currency
+    }
+  end
+
   private
   
   def find_project
@@ -309,6 +437,14 @@ class OpexController < ApplicationController
     when 'HRK' then 'kn'
     when 'EUR' then '€'
     else '$'
+    end
+  end
+  
+  def check_quarterly_data_permission
+    # Allow access if user can view purchase requests in this project
+    unless User.current.allowed_to?(:view_purchase_requests, @project)
+      render json: { error: 'Unauthorized' }, status: 403
+      return false
     end
   end
 end

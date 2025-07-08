@@ -98,14 +98,14 @@
               </span>
             </td>
             <td class="remaining-amount">
-              <span class="amount remaining">
+              <span class="amount <%= capex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>">
                 <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount, precision: 2, delimiter: ',') %>
               </span>
             </td>
             <td class="utilization-percentage">
               <div class="progress-bar">
-                <div class="progress-fill" style="width: <%= capex.utilization_percentage %>%"></div>
-                <span class="progress-text"><%= capex.utilization_percentage %>%</span>
+                <div class="progress-fill <%= 'over-utilized' if capex.utilization_percentage > 100 %>" style="width: <%= [capex.utilization_percentage, 100].min %>%"></div>
+                <span class="progress-text <%= 'over-utilized' if capex.utilization_percentage > 100 %>"><%= capex.utilization_percentage.round(1) %>%</span>
               </div>
             </td>
             <td class="buttons">
@@ -190,6 +190,10 @@
     transition: width 0.3s ease;
   }
   
+  .capex-entries .progress-fill.over-utilized {
+    background-color: #f44336;
+  }
+  
   .capex-entries .progress-text {
     position: absolute;
     top: 0;
@@ -204,6 +208,11 @@
     color: #333;
   }
   
+  .capex-entries .progress-text.over-utilized {
+    color: #f44336;
+    font-weight: bold;
+  }
+  
   .capex-entries .amount {
     font-weight: 500;
   }
@@ -214,6 +223,11 @@
   
   .capex-entries .amount.remaining {
     color: #4CAF50;
+  }
+  
+  .capex-entries .amount.over-budget {
+    color: #f44336;
+    font-weight: bold;
   }
   
   .capex-entries .currency-code {

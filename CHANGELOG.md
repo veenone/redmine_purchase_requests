@@ -5,15 +5,64 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2025-07-07
+## [1.3.2] - 2025-07-08
+
+### Fixed
+- **Routing Error**: Fixed "No route matches [GET] dashboard_data" error when creating new OPEX entries
+- **OPEX Template Modernization**: Updated OPEX edit template to match the modernized design and validation used in CAPEX forms
+- **OPEX Code Validation**: Fixed "Field 'opex_code' doesn't have a default value" error by ensuring automatic generation of opex_code when needed
+- **Form Layout**: Reduced width of quarterly amount textboxes to prevent overlapping in OPEX forms
 
 ### Added
+- **Dashboard Data API**: Added dashboard_data endpoints for both CAPEX and OPEX controllers to support AJAX dashboard functionality
+- **Auto-generation**: Automatic generation of OPEX codes when no TPC code or manual code is provided
+
+### Enhanced
+- **Form Consistency**: Unified form styling and validation across all CAPEX and OPEX templates
+- **User Experience**: Improved error handling and visual feedback in OPEX forms
+- **Code Management**: Better handling of TPC code assignment for OPEX entries
+
+## [1.3.1] - 2025-07-08
+
+### Added
+- **Enhanced Budget Utilization Display**: Visual indicators and warnings when budget utilization exceeds 100%
+- **Quarterly Consumption Tracking**: Display of actual quarterly consumption above quarterly distribution in CAPEX/OPEX views
+- **Proposed Quarter Column**: Added proposed quarter information to linked purchase requests tables in CAPEX/OPEX views
+
+### Enhanced
+- **Budget Visualization**: Improved color coding for over-budget scenarios in summary cards and progress bars
+- **User Experience**: Better visual feedback for budget health across CAPEX and OPEX management interfaces
+
+## [1.3.0] - 2025-07-08
+
+### Added
+- **Quarterly Budget Allocation**: Purchase requests can now be allocated to specific quarters of CAPEX/OPEX budgets
+- **Budget Impact Visualization**: Real-time preview of how quarterly allocations affect budget distributions
+- **Over-allocation Detection**: Automatic warnings when allocations exceed available quarterly budgets
+- **Quarterly Allocation Tracking**: Complete audit trail of quarterly budget allocations in purchase request details
 - **TPC Code Index Enhancement**: TPC code numbers are now clickable links that serve as shortcuts to view TPC code details
+- **Enhanced Budget Utilization Display**: Visual indicators and warnings when budget utilization exceeds 100%
+- **Quarterly Consumption Tracking**: Display of actual quarterly consumption above quarterly distribution in CAPEX/OPEX views
+- **Proposed Quarter Column**: Added proposed quarter information to linked purchase requests tables in CAPEX/OPEX views
+
+### Fixed
+- **Quarterly Allocation AJAX**: Fixed asynchronous handling of quarterly data fetching from CAPEX/OPEX entries
+- **Dynamic Budget Preview**: Resolved issue where original quarter budget values were hardcoded instead of dynamically fetched from selected CAPEX/OPEX entries
+- **Promise Resolution**: Corrected JavaScript Promise handling for real-time budget impact calculations
+- **CSRF Token Security**: Added CSRF token authentication for AJAX requests to prevent 403 Forbidden errors
+- **Numeric Value Handling**: Fixed JavaScript type errors when formatting currency values from server responses
+- **Null Value Protection**: Added safe navigation and fallback values for quarterly amounts to prevent undefined errors
+- **CSRF Protection**: Fixed 403 Forbidden errors by adding CSRF token to AJAX requests and proper authorization handling for quarterly data endpoints
+- **Permission Handling**: Added proper permission checks for quarterly data access while maintaining security
 - **Modern UI/UX Consistency**: Unified modern styling across all purchase request templates (new, edit, view)
 - **Professional Navigation**: Consistent contextual navigation buttons across all forms
 - **Enhanced User Experience**: Improved visual hierarchy and responsive design patterns
 
 ### Enhanced
+- **Purchase Request Model**: Added quarterly allocation fields (allocated_quarter, allocated_amount)
+- **Purchase Request Forms**: Enhanced with quarterly allocation section and real-time budget impact preview
+- **Purchase Request Display**: Shows quarterly allocation details and budget impact in view templates
+- **Form Validation**: Comprehensive validation for quarterly allocation consistency and budget constraints
 - **Purchase Request Templates**: Modernized edit and view templates to match the new template's professional styling
 - **Form Consistency**: Applied modern container layouts, tab navigation, and visual styling across all forms
 - **Tab Navigation**: Updated JavaScript for modern tab functionality with smooth transitions
@@ -23,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Critical TPC Code Update Error**: Resolved `ActiveRecord::NotNullViolation` error when updating CAPEX entries with TPC code selection
 - **Database Constraint Issue**: Fixed NULL constraint violation in `tpc_code` column during TPC code assignment
+- **TPC Code Uniqueness Constraint**: Removed unique TPC code per project/year validation to allow TPC code reuse across multiple CAPEX entries
 - **Form Validation**: Enhanced TPC code validation to handle both legacy and association-based TPC codes
 - **JavaScript Handling**: Improved form field management when switching between TPC code selection methods
 - **Data Integrity**: Ensured proper value assignment when using TPC code dropdowns vs legacy fields

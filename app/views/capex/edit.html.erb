@@ -16,4 +16,16 @@
 
 <h2>Edit CAPEX Entry: <%= @capex.tpc_code %></h2>
 
-<%= render 'form' %>
+<div class="pr-form-container">
+  <div class="pr-form-instructions">
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <h4>Edit CAPEX Entry</h4>
+        <p>Update the details below for this CAPEX budget entry. Quarterly amounts must sum to the total amount.</p>
+      </div>
+    </div>
+  </div>
+
+  <%= render 'form' %>
+</div>

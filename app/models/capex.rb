@@ -17,7 +17,6 @@ class Capex < ActiveRecord::Base
             presence: true, numericality: { greater_than_or_equal_to: 0 }
   
   validate :quarterly_amounts_sum_equals_total
-  validate :unique_tpc_code_per_project_year
   validate :tpc_code_validation
   
   before_save :handle_tpc_code_assignment
@@ -129,18 +128,18 @@ class Capex < ActiveRecord::Base
     }
   end
 
+  def quarterly_consumption(quarter)
+    # Calculate consumed amount for a specific quarter based on allocated purchase requests
+    purchase_requests.where(allocated_quarter: quarter)
+                    .where.not(allocated_amount: nil)
+                    .sum(:allocated_amount) || 0
+  end
+
   private
   
   def quarterly_amounts_sum_equals_total
     if total_amount.present? && (q1_amount + q2_amount + q3_amount + q4_amount) != total_amount
       errors.add(:base, "Sum of quarterly amounts must equal total amount")
-    end
-  end
-  
-  def unique_tpc_code_per_project_year
-    if project && Capex.where(project: project, year: year, tpc_code: tpc_code)
-                      .where.not(id: id).exists?
-      errors.add(:tpc_code, "must be unique per project and year")
     end
   end
   
