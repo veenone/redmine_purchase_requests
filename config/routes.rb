@@ -76,4 +76,7 @@ RedmineApp::Application.routes.draw do
   patch 'tpc_codes/:id', to: 'tpc_codes#global_update'
   put 'tpc_codes/:id', to: 'tpc_codes#global_update'
   delete 'tpc_codes/:id', to: 'tpc_codes#global_destroy'
+  
+  # Handle favicon.ico requests to prevent 404 errors in logs
+  get '/favicon.ico', to: proc { [204, {}, []] }
 end

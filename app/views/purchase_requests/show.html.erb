@@ -73,14 +73,16 @@
       <ul class="pr-tab-nav">
         <li class="pr-tab-item active">
           <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
-            <span class="icon icon-info"></span>
+            <span class="icon icon-edit">
             <%= l(:label_general) %>
+            </span>
           </a>
         </li>
         <li class="pr-tab-item">
           <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
-            <span class="icon icon-package"></span>
+            <span class="icon icon-package">
             <%= l(:label_details) %>
+            </span>
           </a>
         </li>
         <% if @purchase_request.attachments.any? %>
@@ -253,6 +255,45 @@
                           </div>
                         <% end %>
                       <% end %>
+                    </div>
+                  </span>
+                </div>
+              <% end %>
+              
+              <% if @purchase_request.has_quarterly_distribution? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:label_quarterly_distribution) %>:</span>
+                  <span class="value">
+                    <%= @purchase_request.formatted_price(@purchase_request.total_amount) %>
+                    <div class="quarterly-distribution-display">
+                      <div class="quarterly-breakdown">
+                        <div class="quarterly-item">
+                          <strong><%= l(:field_q1_amount) %>:</strong> 
+                          <%= @purchase_request.formatted_price(@purchase_request.q1_amount) %>
+                        </div>
+                        <div class="quarterly-item">
+                          <strong><%= l(:field_q2_amount) %>:</strong> 
+                          <%= @purchase_request.formatted_price(@purchase_request.q2_amount) %>
+                        </div>
+                        <div class="quarterly-item">
+                          <strong><%= l(:field_q3_amount) %>:</strong> 
+                          <%= @purchase_request.formatted_price(@purchase_request.q3_amount) %>
+                        </div>
+                        <div class="quarterly-item">
+                          <strong><%= l(:field_q4_amount) %>:</strong> 
+                          <%= @purchase_request.formatted_price(@purchase_request.q4_amount) %>
+                        </div>
+                      </div>
+                      <div class="quarterly-summary">
+                        <strong>Total Distributed:</strong> 
+                        <%= @purchase_request.formatted_price(@purchase_request.quarterly_total) %>
+                        <% unless @purchase_request.quarterly_distribution_matches_total? %>
+                          <span class="distribution-warning">
+                            <span class="icon icon-exclamation"></span>
+                            Distribution doesn't match total amount
+                          </span>
+                        <% end %>
+                      </div>
                     </div>
                   </span>
                 </div>
@@ -706,20 +747,47 @@
     margin: 3px 0;
   }
   
-  .allocation-warning-display {
-    margin-top: 8px;
-    padding: 6px;
-    background-color: #fff3cd;
-    border: 1px solid #ffeaa7;
+  /* Quarterly distribution display styling */
+  .quarterly-distribution-display {
+    margin-top: 5px;
+    padding: 8px;
+    background-color: #e8f5e8;
     border-radius: 3px;
-    color: #856404;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    border-left: 3px solid #4caf50;
+    font-size: 0.9em;
   }
   
-  .allocation-warning-display .icon {
-    color: #fd7e14;
+  .quarterly-breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .quarterly-item {
+    margin: 2px 0;
+  }
+  
+  .quarterly-summary {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #c8e6c9;
+    font-weight: bold;
+  }
+  
+  .distribution-warning {
+    margin-left: 10px;
+    color: #f44336;
+    font-size: 0.9em;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  
+  @media (max-width: 768px) {
+    .quarterly-breakdown {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 

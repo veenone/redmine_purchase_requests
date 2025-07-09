@@ -75,7 +75,7 @@ class PurchaseRequestsController < ApplicationController
   
   def edit
     # Load additional data for the edit form
-    @statuses = PurchaseRequestStatus.all.ordered
+    @statuses = PurchaseRequestStatus.all.sorted
     @vendors = Vendor.all
     @capex_entries = @project ? @project.capex.for_year(Date.current.year).ordered : []
     @opex_entries = @project ? @project.opex.for_year(Date.current.year).ordered : []
@@ -466,7 +466,8 @@ class PurchaseRequestsController < ApplicationController
       :title, :description, :status_id, :product_url, 
       :estimated_price, :priority, :due_date, 
       :notify_manager, :notes, :currency, :capex_id, :opex_id,
-      :allocated_quarter, :allocated_amount
+      :allocated_quarter, :allocated_amount, :total_amount,
+      :q1_amount, :q2_amount, :q3_amount, :q4_amount
       # Note: vendor and vendor_id are excluded here and handled manually in handle_vendor_assignment
     ]
     
