@@ -48,6 +48,18 @@ RedmineApp::Application.routes.draw do
         get 'export'
       end
     end
+    
+    # Add project-scoped reports
+    resources :reports, only: [:index] do
+      collection do
+        get 'purchase_requests'
+        get 'vendors'
+        get 'tpc_codes'
+        get 'capex'
+        get 'opex'
+        get 'overview'
+      end
+    end
   end
 
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
@@ -77,6 +89,21 @@ RedmineApp::Application.routes.draw do
   put 'tpc_codes/:id', to: 'tpc_codes#global_update'
   delete 'tpc_codes/:id', to: 'tpc_codes#global_destroy'
   
+  # Global reports
+  resources :reports, only: [:index] do
+    collection do
+      get 'purchase_requests'
+      get 'vendors'
+      get 'tpc_codes'
+      get 'capex'
+      get 'opex'
+      get 'overview'
+    end
+  end
+  
   # Handle favicon.ico requests to prevent 404 errors in logs
   get '/favicon.ico', to: proc { [204, {}, []] }
+  
+  # Handle Chrome DevTools requests to prevent 404 errors in logs
+  get '/.well-known/appspecific/com.chrome.devtools.json', to: proc { [204, {}, []] }
 end

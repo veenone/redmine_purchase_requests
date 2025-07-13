@@ -14,11 +14,11 @@ class Vendor < ActiveRecord::Base
   
   scope :sorted, -> { order(:name) }
   scope :active, -> { where(is_active: true) }
-  scope :global, -> { where(project_id: nil) }
-  scope :for_project, ->(project) { where(project_id: project.id) if project }
+  scope :global, -> { where('vendors.project_id' => nil) }
+  scope :for_project, ->(project) { where('vendors.project_id' => project.id) if project }
   scope :available_for_project, ->(project) { 
     if project && column_names.include?('project_id')
-      where("project_id IS NULL OR project_id = ?", project.id)
+      where("vendors.project_id IS NULL OR vendors.project_id = ?", project.id)
     else
       all
     end

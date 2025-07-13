@@ -1,0 +1,609 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/reports/overview.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<% end %>
+
+<% html_title("Executive Overview Report#{@project ? " - #{@project.name}" : ""}") %>
+
+<% unless @print_mode %>
+<div class="contextual">
+  <% reports_index_path = @project ? project_reports_path(@project) : reports_path %>
+  <%= link_to reports_index_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-cancel">Back to Reports</span>
+  <% end %>
+  
+  <% report_path_base = @project ? 
+       overview_project_reports_path(@project) : 
+       overview_reports_path %>
+  
+  <%= link_to "#{report_path_base}?format=pdf", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
+    <span class="icon icon-pdf">Export PDF</span>
+  <% end %>
+  
+  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
+    <span class="icon icon-csv-file">Export CSV</span>
+  <% end %>
+</div>
+<% end %>
+
+<h2>
+  Executive Overview Report
+  <% if @project %>
+    <span class="project-badge"><%= @project.name %></span>
+  <% end %>
+</h2>
+
+<div class="report-meta">
+  <p><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
+  <% if @project %>
+    <p><strong>Scope:</strong> Comprehensive analysis for <%= @project.name %></p>
+  <% else %>
+    <p><strong>Scope:</strong> System-wide analysis across all projects</p>
+  <% end %>
+</div>
+
+<!-- Executive Dashboard -->
+<div class="report-section executive-dashboard">
+  <h3>Executive Dashboard</h3>
+  
+  <div class="dashboard-grid">
+    <!-- Purchase Requests KPI -->
+    <div class="kpi-card purchase-requests">
+      <div class="kpi-header">
+        <span class="icon icon-package"></span>
+        <h4>Purchase Requests</h4>
+      </div>
+      <div class="kpi-metrics">
+        <div class="kpi-primary">
+          <span class="kpi-value"><%= @report_data[:executive_summary][:purchase_requests][:total] %></span>
+          <span class="kpi-label">Total Requests</span>
+        </div>
+        <div class="kpi-secondary">
+          <div class="kpi-item">
+            <span class="kpi-mini-value"><%= @report_data[:executive_summary][:purchase_requests][:open] %></span>
+            <span class="kpi-mini-label">Open</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-mini-value">$<%= number_with_delimiter(@report_data[:executive_summary][:purchase_requests][:total_value].round(0)) %></span>
+            <span class="kpi-mini-label">Est. Value</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Vendors KPI -->
+    <div class="kpi-card vendors">
+      <div class="kpi-header">
+        <span class="icon icon-group"></span>
+        <h4>Vendor Management</h4>
+      </div>
+      <div class="kpi-metrics">
+        <div class="kpi-primary">
+          <span class="kpi-value"><%= @report_data[:executive_summary][:vendors][:total] %></span>
+          <span class="kpi-label">Total Vendors</span>
+        </div>
+        <div class="kpi-secondary">
+          <div class="kpi-item">
+            <span class="kpi-mini-value"><%= @report_data[:executive_summary][:vendors][:active] %></span>
+            <span class="kpi-mini-label">Active</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-mini-value"><%= @report_data[:executive_summary][:vendors][:with_requests] %></span>
+            <span class="kpi-mini-label">Engaged</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Budget Overview -->
+    <div class="kpi-card budget">
+      <div class="kpi-header">
+        <span class="icon icon-money"></span>
+        <h4>Budget Overview</h4>
+      </div>
+      <div class="kpi-metrics">
+        <div class="kpi-primary">
+          <span class="kpi-value">$<%= number_with_delimiter(@report_data[:total_budget].round(0)) %></span>
+          <span class="kpi-label">Total Budget</span>
+        </div>
+        <div class="kpi-secondary">
+          <div class="kpi-item">
+            <span class="kpi-mini-value">$<%= number_with_delimiter(@report_data[:executive_summary][:capex][:total_value].round(0)) %></span>
+            <span class="kpi-mini-label">CAPEX</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-mini-value">$<%= number_with_delimiter(@report_data[:executive_summary][:opex][:total_value].round(0)) %></span>
+            <span class="kpi-mini-label">OPEX</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- TPC Governance -->
+    <div class="kpi-card tpc">
+      <div class="kpi-header">
+        <span class="icon icon-list"></span>
+        <h4>TPC Governance</h4>
+      </div>
+      <div class="kpi-metrics">
+        <div class="kpi-primary">
+          <span class="kpi-value"><%= @report_data[:executive_summary][:tpc_codes][:total] %></span>
+          <span class="kpi-label">TPC Codes</span>
+        </div>
+        <div class="kpi-secondary">
+          <div class="kpi-item">
+            <span class="kpi-mini-value"><%= @report_data[:executive_summary][:tpc_codes][:active] %></span>
+            <span class="kpi-mini-label">Active</span>
+          </div>
+          <div class="kpi-item">
+            <span class="kpi-mini-value"><%= (@report_data[:executive_summary][:capex][:total_items] + @report_data[:executive_summary][:opex][:total_items]) %></span>
+            <span class="kpi-mini-label">Allocations</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Budget Analysis -->
+<div class="report-section">
+  <h3>Budget Distribution</h3>
+  
+  <div class="budget-analysis">
+    <div class="budget-chart">
+      <canvas id="budgetChart" width="300" height="300"></canvas>
+    </div>
+    
+    <div class="budget-breakdown">
+      <div class="budget-item capex">
+        <div class="budget-icon">💰</div>
+        <div class="budget-details">
+          <div class="budget-title">Capital Expenditure (CAPEX)</div>
+          <div class="budget-amount">$<%= number_with_delimiter(@report_data[:executive_summary][:capex][:total_value].round(2)) %></div>
+          <div class="budget-items"><%= @report_data[:executive_summary][:capex][:total_items] %> items</div>
+          <div class="budget-percentage">
+            <%= @report_data[:total_budget] > 0 ? 
+                  "#{((@report_data[:executive_summary][:capex][:total_value] / @report_data[:total_budget]) * 100).round(1)}%" : 
+                  "0%" %> of total budget
+          </div>
+        </div>
+      </div>
+      
+      <div class="budget-item opex">
+        <div class="budget-icon">📊</div>
+        <div class="budget-details">
+          <div class="budget-title">Operational Expenditure (OPEX)</div>
+          <div class="budget-amount">$<%= number_with_delimiter(@report_data[:executive_summary][:opex][:total_value].round(2)) %></div>
+          <div class="budget-items"><%= @report_data[:executive_summary][:opex][:total_items] %> items</div>
+          <div class="budget-percentage">
+            <%= @report_data[:total_budget] > 0 ? 
+                  "#{((@report_data[:executive_summary][:opex][:total_value] / @report_data[:total_budget]) * 100).round(1)}%" : 
+                  "0%" %> of total budget
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Links to Detailed Reports -->
+<div class="report-section">
+  <h3>Detailed Reports</h3>
+  
+  <div class="detailed-reports-grid">
+    <% [
+      { name: 'Purchase Requests', action: 'purchase_requests', icon: 'icon-package', color: 'blue' },
+      { name: 'Vendors', action: 'vendors', icon: 'icon-group', color: 'green' },
+      { name: 'TPC Codes', action: 'tpc_codes', icon: 'icon-list', color: 'purple' },
+      { name: 'CAPEX', action: 'capex', icon: 'icon-money', color: 'orange' },
+      { name: 'OPEX', action: 'opex', icon: 'icon-stats', color: 'red' }
+    ].each do |report| %>
+      <div class="detailed-report-card <%= report[:color] %>">
+        <span class="<%= report[:icon] %>"></span>
+        <h4><%= report[:name] %></h4>
+        <div class="report-actions">
+          <% 
+            case report[:action]
+            when 'purchase_requests'
+              detail_path = @project ? purchase_requests_project_reports_path(@project) : purchase_requests_reports_path
+            when 'vendors'
+              detail_path = @project ? vendors_project_reports_path(@project) : vendors_reports_path
+            when 'tpc_codes'
+              detail_path = @project ? tpc_codes_project_reports_path(@project) : tpc_codes_reports_path
+            when 'capex'
+              detail_path = @project ? capex_project_reports_path(@project) : capex_reports_path
+            when 'opex'
+              detail_path = @project ? opex_project_reports_path(@project) : opex_reports_path
+            else
+              detail_path = @project ? project_reports_path(@project) : reports_path
+            end
+          %>
+          <%= link_to "View Details", detail_path, class: 'pr-button pr-button-outline pr-button-small' %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="report-section">
+  <h3>Summary Statistics</h3>
+  
+  <div class="stats-grid">
+    <div class="stat-group">
+      <h4>Purchase Request Activity</h4>
+      <div class="stat-item">
+        <span class="stat-label">Completion Rate:</span>
+        <span class="stat-value">
+          <%= @report_data[:purchase_requests][:summary][:total_count] > 0 ? 
+                "#{((@report_data[:purchase_requests][:summary][:closed_count].to_f / @report_data[:purchase_requests][:summary][:total_count]) * 100).round(1)}%" : 
+                "0%" %>
+        </span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Avg. Estimated Value:</span>
+        <span class="stat-value">$<%= number_with_delimiter(@report_data[:purchase_requests][:summary][:avg_estimated_value].round(2)) %></span>
+      </div>
+    </div>
+    
+    <div class="stat-group">
+      <h4>Vendor Engagement</h4>
+      <div class="stat-item">
+        <span class="stat-label">Engagement Rate:</span>
+        <span class="stat-value">
+          <%= @report_data[:vendors][:summary][:total_count] > 0 ? 
+                "#{((@report_data[:vendors][:summary][:vendors_with_requests].to_f / @report_data[:vendors][:summary][:total_count]) * 100).round(1)}%" : 
+                "0%" %>
+        </span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Active Vendors:</span>
+        <span class="stat-value">
+          <%= @report_data[:vendors][:summary][:total_count] > 0 ? 
+                "#{((@report_data[:vendors][:summary][:active_count].to_f / @report_data[:vendors][:summary][:total_count]) * 100).round(1)}%" : 
+                "0%" %>
+        </span>
+      </div>
+    </div>
+    
+    <div class="stat-group">
+      <h4>Budget Efficiency</h4>
+      <div class="stat-item">
+        <span class="stat-label">CAPEX vs OPEX Ratio:</span>
+        <span class="stat-value">
+          <%= @report_data[:executive_summary][:opex][:total_value] > 0 ? 
+                "#{(@report_data[:executive_summary][:capex][:total_value] / @report_data[:executive_summary][:opex][:total_value]).round(2)}:1" : 
+                "∞:1" %>
+        </span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">TPC Utilization:</span>
+        <span class="stat-value">
+          <%= @report_data[:tpc_codes][:summary][:total_count] > 0 ? 
+                "#{((@report_data[:tpc_codes][:summary][:active_count].to_f / @report_data[:tpc_codes][:summary][:total_count]) * 100).round(1)}%" : 
+                "0%" %>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% unless @print_mode %>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Budget Distribution Chart
+  const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+  const capexValue = <%= @report_data[:executive_summary][:capex][:total_value] %>;
+  const opexValue = <%= @report_data[:executive_summary][:opex][:total_value] %>;
+  
+  new Chart(budgetCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['CAPEX', 'OPEX'],
+      datasets: [{
+        data: [capexValue, opexValue],
+        backgroundColor: ['#FF9800', '#4CAF50'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 20,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed;
+              const total = capexValue + opexValue;
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return `${label}: $${value.toLocaleString()} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+});
+</script>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .executive-dashboard {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 30px;
+  }
+  
+  .executive-dashboard h3 {
+    color: white;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .kpi-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .kpi-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .kpi-header span[class*="icon"] {
+    font-size: 20px;
+    opacity: 0.9;
+  }
+  
+  .kpi-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  
+  .kpi-primary {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .kpi-value {
+    display: block;
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1;
+  }
+  
+  .kpi-label {
+    display: block;
+    font-size: 14px;
+    opacity: 0.9;
+    margin-top: 5px;
+  }
+  
+  .kpi-secondary {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+  }
+  
+  .kpi-item {
+    text-align: center;
+    flex: 1;
+  }
+  
+  .kpi-mini-value {
+    display: block;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
+  .kpi-mini-label {
+    display: block;
+    font-size: 12px;
+    opacity: 0.8;
+  }
+  
+  .budget-analysis {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  
+  .budget-chart {
+    height: 300px;
+  }
+  
+  .budget-breakdown {
+    display: grid;
+    gap: 20px;
+  }
+  
+  .budget-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    border-left: 4px solid #007bff;
+  }
+  
+  .budget-item.capex {
+    border-left-color: #FF9800;
+  }
+  
+  .budget-item.opex {
+    border-left-color: #4CAF50;
+  }
+  
+  .budget-icon {
+    font-size: 32px;
+  }
+  
+  .budget-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .budget-amount {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 3px;
+  }
+  
+  .budget-items {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 3px;
+  }
+  
+  .budget-percentage {
+    font-size: 12px;
+    color: #007bff;
+    font-weight: 500;
+  }
+  
+  .detailed-reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .detailed-report-card {
+    text-align: center;
+    padding: 25px;
+    border-radius: 8px;
+    background: white;
+    border: 2px solid #ddd;
+    transition: all 0.3s ease;
+  }
+  
+  .detailed-report-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .detailed-report-card.blue { border-color: #2196F3; }
+  .detailed-report-card.green { border-color: #4CAF50; }
+  .detailed-report-card.purple { border-color: #9C27B0; }
+  .detailed-report-card.orange { border-color: #FF9800; }
+  .detailed-report-card.red { border-color: #F44336; }
+  
+  .detailed-report-card span[class*="icon"] {
+    font-size: 32px;
+    margin-bottom: 15px;
+    display: block;
+  }
+  
+  .detailed-report-card.blue span[class*="icon"] { color: #2196F3; }
+  .detailed-report-card.green span[class*="icon"] { color: #4CAF50; }
+  .detailed-report-card.purple span[class*="icon"] { color: #9C27B0; }
+  .detailed-report-card.orange span[class*="icon"] { color: #FF9800; }
+  .detailed-report-card.red span[class*="icon"] { color: #F44336; }
+  
+  .detailed-report-card h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+  }
+  
+  .stat-group {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+  }
+  
+  .stat-group h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .stat-item:last-child {
+    border-bottom: none;
+  }
+  
+  .stat-label {
+    font-weight: 500;
+    color: #666;
+  }
+  
+  .stat-value {
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  .icon-pdf { 
+    background-image: url('<%= asset_path("files/pdf.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+  
+  .icon-csv-file { 
+    background-image: url('<%= asset_path("files/text.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .budget-analysis {
+      grid-template-columns: 1fr;
+    }
+    
+    .detailed-reports-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<% end %>

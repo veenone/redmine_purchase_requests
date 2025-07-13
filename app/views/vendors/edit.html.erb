@@ -7,12 +7,31 @@
 <% html_title("Edit Global Vendor - #{@vendor.name}") %>
 
 <div class="contextual">
-  <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-cancel">Back to Vendor List</span> 
+  <% if params[:project_id].present? %>
+    <% project = Project.find_by(id: params[:project_id]) %>
+    <% if project %>
+      <%= link_to project_vendors_path(project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+        <span class="icon icon-cancel">Back to Vendor List (<%= project.name %>)</span> 
+      <% end %>
+    <% else %>
+      <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+        <span class="icon icon-cancel">Back to Vendor List</span> 
+      <% end %>
+    <% end %>
+  <% else %>
+    <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-cancel">Back to Vendor List</span> 
+    <% end %>
   <% end %>
   
-  <%= link_to @vendor, class: 'pr-button pr-button-outline pr-button-icon' do %>
-    <span class="icon icon-magnifier">View Vendor</span> 
+  <% if params[:project_id].present? %>
+    <%= link_to vendor_path(@vendor, project_id: params[:project_id]), class: 'pr-button pr-button-outline pr-button-icon' do %>
+      <span class="icon icon-magnifier">View Vendor</span> 
+    <% end %>
+  <% else %>
+    <%= link_to @vendor, class: 'pr-button pr-button-outline pr-button-icon' do %>
+      <span class="icon icon-magnifier">View Vendor</span> 
+    <% end %>
   <% end %>
 </div>
 
@@ -25,7 +44,7 @@
   <p>This vendor is available to all projects in the system. Changes will affect all projects using this vendor.</p>
 </div>
 
-<%= form_with model: @vendor, local: true, html: { class: 'vendor-form' } do |f| %>
+<%= form_with model: @vendor, local: true, html: { class: 'vendor-form' }, url: vendor_path(@vendor, project_id: params[:project_id]) do |f| %>
   <% if @vendor.errors.any? %>
     <div id="errorExplanation" class="errorExplanation">
       <h2><%= pluralize(@vendor.errors.count, "error") %> prohibited this vendor from being saved:</h2>
@@ -119,8 +138,21 @@
       <span class="icon icon-save">Update Global Vendor</span>
     <% end %>
     
-    <%= link_to vendors_path, class: 'pr-button pr-button-secondary' do %>
-      Cancel
+    <% if params[:project_id].present? %>
+      <% project = Project.find_by(id: params[:project_id]) %>
+      <% if project %>
+        <%= link_to project_vendors_path(project), class: 'pr-button pr-button-secondary' do %>
+          Cancel
+        <% end %>
+      <% else %>
+        <%= link_to vendors_path, class: 'pr-button pr-button-secondary' do %>
+          Cancel
+        <% end %>
+      <% end %>
+    <% else %>
+      <%= link_to vendors_path, class: 'pr-button pr-button-secondary' do %>
+        Cancel
+      <% end %>
     <% end %>
   </div>
 <% end %>

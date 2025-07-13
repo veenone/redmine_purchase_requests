@@ -660,9 +660,7 @@ en:
   
   # Quarterly Allocation
   label_quarterly_allocation: "Quarterly Allocation"
-  label_quarterly_distribution: "Quarterly Distribution"
   text_quarterly_allocation_info: "Allocate this purchase request to a specific quarter within the selected budget"
-  text_quarterly_distribution_info: "Distribute the total purchase amount across different quarters for budget planning"
   field_allocated_quarter: "Allocated Quarter"
   field_allocated_amount: "Allocated Amount"
   text_allocated_quarter_info: "Select the quarter when this purchase will impact the budget"
@@ -673,13 +671,6 @@ en:
   field_remaining_quarter_budget: "Remaining Quarter Budget"
   warning_over_allocation: "Warning: Over-allocation detected!"
   text_over_allocation_warning: "The allocated amount exceeds the available budget for this quarter."
-  field_total_amount: "Total Amount"
-  field_q1_amount: "Q1 Amount"
-  field_q2_amount: "Q2 Amount"
-  field_q3_amount: "Q3 Amount"
-  field_q4_amount: "Q4 Amount"
-  text_total_amount_placeholder: "Enter the total purchase amount"
-  text_total_amount_info: "Total amount to be distributed across quarters"
   label_quarter_1: "Quarter 1 (Jan-Mar)"
   label_quarter_2: "Quarter 2 (Apr-Jun)"
   label_quarter_3: "Quarter 3 (Jul-Sep)"

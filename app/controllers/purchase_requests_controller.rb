@@ -466,8 +466,7 @@ class PurchaseRequestsController < ApplicationController
       :title, :description, :status_id, :product_url, 
       :estimated_price, :priority, :due_date, 
       :notify_manager, :notes, :currency, :capex_id, :opex_id,
-      :allocated_quarter, :allocated_amount, :total_amount,
-      :q1_amount, :q2_amount, :q3_amount, :q4_amount
+      :allocated_quarter, :allocated_amount
       # Note: vendor and vendor_id are excluded here and handled manually in handle_vendor_assignment
     ]
     

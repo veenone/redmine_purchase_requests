@@ -1,6 +1,8 @@
 require 'securerandom'
 
 class Opex < ActiveRecord::Base
+  include ActionView::Helpers::TextHelper
+  
   self.table_name = 'opex'
   
   belongs_to :project

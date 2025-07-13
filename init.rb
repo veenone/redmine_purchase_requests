@@ -26,12 +26,14 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_opex_dashboard, { opex: [:dashboard] }
     permission :view_tpc_codes, { tpc_codes: [:index, :show] }
     permission :manage_tpc_codes, { tpc_codes: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export] }
+    permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }
     
     # Global permissions (outside project context but grouped under purchase_requests module)
     permission :view_global_vendors, { vendors: [:index, :show, :autocomplete] }, global: true
     permission :manage_global_vendors, { vendors: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export, :import_template, :migrate_from_settings] }, global: true
     permission :view_global_tpc_codes, { tpc_codes: [:global_index, :show] }, global: true
     permission :manage_global_tpc_codes, { tpc_codes: [:global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import, :global_export, :global_import_export] }, global: true
+    permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
   end
   
   # Fix project menu items
@@ -82,6 +84,12 @@ Redmine::Plugin.register :redmine_purchase_requests do
        caption: 'TPC Codes',
        param: :project_id,
        parent: :purchase_requests
+       
+  menu :project_menu, :purchase_request_reports,
+       { controller: 'reports', action: 'index' },
+       caption: 'Reports',
+       param: :project_id,
+       parent: :purchase_requests
   
   # Add global TPC codes menu to top navigation
   menu :top_menu, :global_tpc_codes,
@@ -100,6 +108,15 @@ Redmine::Plugin.register :redmine_purchase_requests do
        if: Proc.new { 
          User.current.logged? && 
          (User.current.admin? || User.current.allowed_to?(:manage_global_vendors, nil, global: true))
+       }
+       
+  # Add global reports menu to top navigation
+  menu :top_menu, :global_reports,
+       { controller: 'reports', action: 'index' },
+       caption: 'Purchase Request Reports',
+       if: Proc.new { 
+         User.current.logged? && 
+         (User.current.admin? || User.current.allowed_to?(:view_purchase_request_reports, nil, global: true))
        }
   
   # Add settings page with empty exchange_rates hash
@@ -135,6 +152,9 @@ Rails.application.config.to_prepare do
   # Load helpers
   require_dependency 'purchase_request_settings_helper'
   require_dependency 'purchase_requests_helper'
+  
+  # Load PDF chart helper
+  require File.join(File.dirname(__FILE__), 'lib', 'pdf_chart_helper')
   
   # Create directory structure if needed
   lib_dir = File.join(File.dirname(__FILE__), 'lib')

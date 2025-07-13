@@ -1,0 +1,447 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/reports/tpc_codes.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<% end %>
+
+<% html_title("TPC Codes Report#{@project ? " - #{@project.name}" : ""}") %>
+
+<% unless @print_mode %>
+<div class="contextual">
+  <% reports_index_path = @project ? project_reports_path(@project) : reports_path %>
+  <%= link_to reports_index_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-cancel">Back to Reports</span>
+  <% end %>
+  
+  <% report_path_base = @project ? 
+       tpc_codes_project_reports_path(@project) : 
+       tpc_codes_reports_path %>
+  
+  <%= link_to "#{report_path_base}?format=pdf", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
+    <span class="icon icon-pdf">Export PDF</span>
+  <% end %>
+  
+  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
+    <span class="icon icon-csv-file">Export CSV</span>
+  <% end %>
+</div>
+<% end %>
+
+<h2>
+  TPC Codes Report
+  <% if @project %>
+    <span class="project-badge"><%= @project.name %></span>
+  <% end %>
+</h2>
+
+<div class="report-meta">
+  <p><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
+  <% if @project %>
+    <p><strong>Scope:</strong> TPC codes available for <%= @project.name %></p>
+  <% else %>
+    <p><strong>Scope:</strong> All TPC codes across the system</p>
+  <% end %>
+</div>
+
+<!-- Executive Summary -->
+<div class="report-section">
+  <h3>TPC Code Overview</h3>
+  
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon"><span class="icon icon-list"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:total_count] %></div>
+        <div class="card-label">Total TPC Codes</div>
+      </div>
+    </div>
+    
+    <div class="summary-card active">
+      <div class="card-icon"><span class="icon icon-checked"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:active_count] %></div>
+        <div class="card-label">Active Codes</div>
+      </div>
+    </div>
+    
+    <div class="summary-card global">
+      <div class="card-icon"><span class="icon icon-world"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:global_count] %></div>
+        <div class="card-label">Global Codes</div>
+      </div>
+    </div>
+    
+    <div class="summary-card usage">
+      <div class="card-icon"><span class="icon icon-stats"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:with_capex] + @report_data[:summary][:with_opex] %></div>
+        <div class="card-label">In Use</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Usage Analysis -->
+<div class="report-section">
+  <h3>TPC Code Usage Analysis</h3>
+  
+  <div class="usage-analysis">
+    <div class="usage-chart">
+      <canvas id="usageChart" width="300" height="300"></canvas>
+    </div>
+    
+    <div class="usage-details">
+      <div class="usage-detail-item capex">
+        <div class="usage-icon">💰</div>
+        <div class="usage-info">
+          <div class="usage-title">CAPEX Allocations</div>
+          <div class="usage-count"><%= @report_data[:summary][:with_capex] %> TPC codes</div>
+          <div class="usage-amount">$<%= number_with_delimiter(@report_data[:capex_totals].values.sum.round(2)) %></div>
+        </div>
+      </div>
+      
+      <div class="usage-detail-item opex">
+        <div class="usage-icon">📊</div>
+        <div class="usage-info">
+          <div class="usage-title">OPEX Allocations</div>
+          <div class="usage-count"><%= @report_data[:summary][:with_opex] %> TPC codes</div>
+          <div class="usage-amount">$<%= number_with_delimiter(@report_data[:opex_totals].values.sum.round(2)) %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Top CAPEX Allocations -->
+<% if @report_data[:capex_totals].any? %>
+<div class="report-section">
+  <h3>Top CAPEX Allocations by TPC Code</h3>
+  
+  <div class="allocation-list">
+    <% @report_data[:capex_totals].sort_by { |_, amount| -amount }.first(10).each_with_index do |(tpc_code, amount), index| %>
+      <div class="allocation-item">
+        <span class="allocation-rank">#<%= index + 1 %></span>
+        <div class="allocation-details">
+          <div class="allocation-code"><%= tpc_code %></div>
+          <div class="allocation-type">CAPEX Allocation</div>
+        </div>
+        <div class="allocation-amount">$<%= number_with_delimiter(amount.round(2)) %></div>
+      </div>
+    <% end %>
+  </div>
+</div>
+<% end %>
+
+<!-- Top OPEX Allocations -->
+<% if @report_data[:opex_totals].any? %>
+<div class="report-section">
+  <h3>Top OPEX Allocations by TPC Code</h3>
+  
+  <div class="allocation-list">
+    <% @report_data[:opex_totals].sort_by { |_, amount| -amount }.first(10).each_with_index do |(tpc_code, amount), index| %>
+      <div class="allocation-item">
+        <span class="allocation-rank">#<%= index + 1 %></span>
+        <div class="allocation-details">
+          <div class="allocation-code"><%= tpc_code %></div>
+          <div class="allocation-type">OPEX Allocation</div>
+        </div>
+        <div class="allocation-amount">$<%= number_with_delimiter(amount.round(2)) %></div>
+      </div>
+    <% end %>
+  </div>
+</div>
+<% end %>
+
+<!-- Recent TPC Codes -->
+<div class="report-section">
+  <h3>Recently Added TPC Codes</h3>
+  
+  <div class="autoscroll">
+    <table class="list recent-tpc-codes">
+      <thead>
+        <tr>
+          <th>TPC Number</th>
+          <th>Owner Name</th>
+          <th>Owner Email</th>
+          <th>Description</th>
+          <th>Scope</th>
+          <th>Status</th>
+          <th>CAPEX</th>
+          <th>OPEX</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @report_data[:recent_codes].each do |tpc_code| %>
+          <tr>
+            <td><strong><%= tpc_code.tpc_number %></strong></td>
+            <td><%= tpc_code.tpc_owner_name %></td>
+            <td><%= tpc_code.tpc_email %></td>
+            <td><%= truncate(tpc_code.description, length: 50) %></td>
+            <td>
+              <span class="scope-badge <%= tpc_code.project_id? ? 'project' : 'global' %>">
+                <%= tpc_code.project_id? ? 'Project' : 'Global' %>
+              </span>
+            </td>
+            <td>
+              <span class="status-badge <%= tpc_code.is_active? ? 'active' : 'inactive' %>">
+                <%= tpc_code.is_active? ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td><%= tpc_code.capex.count %></td>
+            <td><%= tpc_code.opex.count %></td>
+            <td><%= tpc_code.created_at.strftime('%Y-%m-%d') %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% unless @print_mode %>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Usage Chart
+  const usageCtx = document.getElementById('usageChart').getContext('2d');
+  const capexCount = <%= @report_data[:summary][:with_capex] %>;
+  const opexCount = <%= @report_data[:summary][:with_opex] %>;
+  const unusedCount = <%= @report_data[:summary][:total_count] %> - capexCount - opexCount;
+  
+  new Chart(usageCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['CAPEX Usage', 'OPEX Usage', 'Unused'],
+      datasets: [{
+        data: [capexCount, opexCount, unusedCount],
+        backgroundColor: ['#FF9800', '#4CAF50', '#9E9E9E'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 20,
+            usePointStyle: true
+          }
+        }
+      }
+    }
+  });
+});
+</script>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .project-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: normal;
+    margin-left: 15px;
+  }
+  
+  .report-meta {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 25px;
+  }
+  
+  .report-meta p {
+    margin: 0 0 5px 0;
+  }
+  
+  .report-section {
+    margin-bottom: 40px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 25px;
+  }
+  
+  .report-section h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .card-icon {
+    font-size: 24px;
+    opacity: 0.9;
+  }
+  
+  .card-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .card-label {
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  
+  .chart-container {
+    max-width: 600px;
+    height: 300px;
+    margin: 20px auto;
+  }
+  
+  .usage-analysis {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  
+  .usage-chart {
+    height: 300px;
+  }
+  
+  .usage-details {
+    display: grid;
+    gap: 20px;
+  }
+  
+  .usage-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    background: #f8f9fa;
+  }
+  
+  .usage-detail-item.capex {
+    border-left: 4px solid #FF9800;
+  }
+  
+  .usage-detail-item.opex {
+    border-left: 4px solid #4CAF50;
+  }
+  
+  .usage-icon {
+    font-size: 32px;
+  }
+  
+  .usage-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .usage-count {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 3px;
+  }
+  
+  .usage-amount {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .allocation-list {
+    display: grid;
+    gap: 12px;
+  }
+  
+  .allocation-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+  }
+  
+  .allocation-rank {
+    background: #007bff;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  
+  .allocation-details {
+    flex: 1;
+  }
+  
+  .allocation-code {
+    font-weight: 600;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    margin-bottom: 2px;
+  }
+  
+  .allocation-type {
+    font-size: 13px;
+    color: #666;
+  }
+  
+  .allocation-amount {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .summary-card.usage {
+    background: linear-gradient(135deg, #e17055 0%, #fdcb6e 100%);
+  }
+  
+  .icon-pdf { 
+    background-image: url('<%= asset_path("files/pdf.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+  
+  .icon-csv-file { 
+    background-image: url('<%= asset_path("files/text.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .usage-analysis {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<% end %>

@@ -16,8 +16,7 @@ class PurchaseRequest < ActiveRecord::Base
     attr_accessible :title, :description, :status_id, :product_url, 
                    :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
                    :notify_manager, :notes, :currency, :capex_id, :opex_id, :category_id,
-                   :project_id, :allocated_quarter, :allocated_amount, :total_amount,
-                   :q1_amount, :q2_amount, :q3_amount, :q4_amount
+                   :project_id, :allocated_quarter, :allocated_amount
   end
   
   validates :title, presence: true, length: { minimum: 5, maximum: 255 }
@@ -41,7 +40,6 @@ class PurchaseRequest < ActiveRecord::Base
   validate :business_justification_for_high_value
   validate :capex_or_opex_consistency
   validate :quarterly_allocation_consistency
-  validate :quarterly_distribution_consistency
   
   # Add any additional scopes or validations as needed
   scope :open, -> { joins(:status).where(purchase_request_statuses: { is_closed: false }) }
@@ -154,19 +152,6 @@ class PurchaseRequest < ActiveRecord::Base
     capex.present? || opex.present?
   end
 
-  # Helper methods for quarterly distribution
-  def quarterly_total
-    (q1_amount || 0) + (q2_amount || 0) + (q3_amount || 0) + (q4_amount || 0)
-  end
-  
-  def has_quarterly_distribution?
-    quarterly_total > 0
-  end
-  
-  def quarterly_distribution_matches_total?
-    return true if total_amount.blank? || quarterly_total == 0
-    (quarterly_total - (total_amount || 0)).abs < 0.01
-  end
 
   private
   
@@ -218,22 +203,4 @@ class PurchaseRequest < ActiveRecord::Base
     end
   end
   
-  def quarterly_distribution_consistency
-    # If quarterly distribution is used, validate that it matches the total amount
-    if has_quarterly_distribution? && total_amount.present? && !quarterly_distribution_matches_total?
-      errors.add(:base, I18n.t('error_quarterly_total_mismatch', 
-        default: 'The sum of quarterly amounts (%{quarterly_total}) must equal the total amount (%{total_amount}).') % {
-          quarterly_total: quarterly_total,
-          total_amount: total_amount
-        })
-    end
-    
-    # Validate individual quarterly amounts are not negative
-    [:q1_amount, :q2_amount, :q3_amount, :q4_amount].each do |field|
-      amount = send(field)
-      if amount.present? && amount < 0
-        errors.add(field, I18n.t('error_negative_amount', default: 'Amount cannot be negative.'))
-      end
-    end
-  end
 end

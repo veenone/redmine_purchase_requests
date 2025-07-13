@@ -14,7 +14,7 @@ class TpcCode < ActiveRecord::Base
   
   scope :active, -> { where(is_active: true) }
   scope :inactive, -> { where(is_active: false) }
-  scope :global, -> { where(project_id: nil) }
+  scope :global, -> { where('tpc_codes.project_id' => nil) }
   scope :for_project, ->(project) { where(project: project) }
   scope :search, ->(term) { 
     where("LOWER(tpc_number) LIKE ? OR LOWER(tpc_owner_name) LIKE ? OR LOWER(tpc_email) LIKE ? OR LOWER(description) LIKE ?", 
@@ -24,7 +24,7 @@ class TpcCode < ActiveRecord::Base
   
   def self.available_for_project(project)
     # Return both global TPC codes and project-specific ones
-    where(project_id: [nil, project&.id])
+    where('tpc_codes.project_id' => [nil, project&.id])
   end
   
   def global?

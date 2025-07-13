@@ -2,19 +2,47 @@
 <% html_title "#{l(:label_vendor)}: #{@vendor.name}" %>
 
 <div class="contextual">
-  <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-cancel"><%= l(:label_back_to_vendor_list) %></span> 
+  <% if params[:project_id].present? %>
+    <% project = Project.find_by(id: params[:project_id]) %>
+    <% if project %>
+      <%= link_to project_vendors_path(project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+        <span class="icon icon-cancel"><%= l(:label_back_to_vendor_list) %> (<%= project.name %>)</span> 
+      <% end %>
+    <% else %>
+      <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+        <span class="icon icon-cancel"><%= l(:label_back_to_vendor_list) %></span> 
+      <% end %>
+    <% end %>
+  <% else %>
+    <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-cancel"><%= l(:label_back_to_vendor_list) %></span> 
+    <% end %>
   <% end %>
   
-  <%= link_to edit_vendor_path(@vendor), class: 'pr-button pr-button-primary pr-button-icon' do %>
-    <span class="icon icon-edit"> <%= l(:button_edit) %></span> 
+  <% if params[:project_id].present? %>
+    <%= link_to edit_vendor_path(@vendor, project_id: params[:project_id]), class: 'pr-button pr-button-primary pr-button-icon' do %>
+      <span class="icon icon-edit"> <%= l(:button_edit) %></span> 
+    <% end %>
+  <% else %>
+    <%= link_to edit_vendor_path(@vendor), class: 'pr-button pr-button-primary pr-button-icon' do %>
+      <span class="icon icon-edit"> <%= l(:button_edit) %></span> 
+    <% end %>
   <% end %>
   
-  <%= link_to vendor_path(@vendor), 
-            method: :delete, 
-            data: { confirm: l(:text_are_you_sure) }, 
-            class: 'pr-button pr-button-danger pr-button-icon' do %>
-    <span class="icon icon-del"> <%= l(:button_delete) %></span> 
+  <% if params[:project_id].present? %>
+    <%= link_to vendor_path(@vendor, project_id: params[:project_id]), 
+              method: :delete, 
+              data: { confirm: l(:text_are_you_sure) }, 
+              class: 'pr-button pr-button-danger pr-button-icon' do %>
+      <span class="icon icon-del"> <%= l(:button_delete) %></span> 
+    <% end %>
+  <% else %>
+    <%= link_to vendor_path(@vendor), 
+              method: :delete, 
+              data: { confirm: l(:text_are_you_sure) }, 
+              class: 'pr-button pr-button-danger pr-button-icon' do %>
+      <span class="icon icon-del"> <%= l(:button_delete) %></span> 
+    <% end %>
   <% end %>
 </div>
 
@@ -230,8 +258,25 @@
 <% content_for :sidebar do %>
   <h3><%= l(:label_vendor_actions) %></h3>
   <ul>
-    <li><%= link_to l(:button_edit), edit_vendor_path(@vendor) %></li>
-    <li><%= link_to l(:label_back_to_vendor_list), vendors_path %></li>
+    <li>
+      <% if params[:project_id].present? %>
+        <%= link_to l(:button_edit), edit_vendor_path(@vendor, project_id: params[:project_id]) %>
+      <% else %>
+        <%= link_to l(:button_edit), edit_vendor_path(@vendor) %>
+      <% end %>
+    </li>
+    <li>
+      <% if params[:project_id].present? %>
+        <% project = Project.find_by(id: params[:project_id]) %>
+        <% if project %>
+          <%= link_to l(:label_back_to_vendor_list), project_vendors_path(project) %>
+        <% else %>
+          <%= link_to l(:label_back_to_vendor_list), vendors_path %>
+        <% end %>
+      <% else %>
+        <%= link_to l(:label_back_to_vendor_list), vendors_path %>
+      <% end %>
+    </li>
     <li><%= link_to l(:label_vendor_new), new_vendor_path %></li>
   </ul>
   

@@ -45,7 +45,16 @@ class VendorsController < ApplicationController
   def update
     if @vendor.update(vendor_params)
       flash[:notice] = l(:notice_vendor_updated)
-      redirect_to vendors_path
+      if params[:project_id].present?
+        project = Project.find_by(id: params[:project_id])
+        if project
+          redirect_to project_vendors_path(project)
+        else
+          redirect_to vendors_path
+        end
+      else
+        redirect_to vendors_path
+      end
     else
       render :edit
     end
@@ -57,7 +66,17 @@ class VendorsController < ApplicationController
     else
       flash[:error] = l(:error_vendor_not_deleted)
     end
-    redirect_to vendors_path
+    
+    if params[:project_id].present?
+      project = Project.find_by(id: params[:project_id])
+      if project
+        redirect_to project_vendors_path(project)
+      else
+        redirect_to vendors_path
+      end
+    else
+      redirect_to vendors_path
+    end
   end
   
   def show

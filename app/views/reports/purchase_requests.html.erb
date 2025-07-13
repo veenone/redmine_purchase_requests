@@ -1,0 +1,573 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/reports/purchase_requests.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<% end %>
+
+<% html_title("Purchase Requests Report#{@project ? " - #{@project.name}" : ""}") %>
+
+<% unless @print_mode %>
+<div class="contextual">
+  <% reports_index_path = @project ? project_reports_path(@project) : reports_path %>
+  <%= link_to reports_index_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-cancel">Back to Reports</span>
+  <% end %>
+  
+  <% report_path_base = @project ? 
+       purchase_requests_project_reports_path(@project) : 
+       purchase_requests_reports_path %>
+  
+  <%= link_to "#{report_path_base}?format=pdf", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
+    <span class="icon icon-pdf">Export PDF</span>
+  <% end %>
+  
+  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
+    <span class="icon icon-csv-file">Export CSV</span>
+  <% end %>
+</div>
+<% end %>
+
+<h2>
+  Purchase Requests Report
+  <% if @project %>
+    <span class="project-badge"><%= @project.name %></span>
+  <% end %>
+</h2>
+
+<div class="report-meta">
+  <p><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
+  <% if @project %>
+    <p><strong>Scope:</strong> Project-specific data for <%= @project.name %></p>
+  <% else %>
+    <p><strong>Scope:</strong> System-wide data across all projects</p>
+  <% end %>
+</div>
+
+<!-- Executive Summary -->
+<div class="report-section">
+  <h3>Executive Summary</h3>
+  
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon"><span class="icon icon-package"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:total_count] %></div>
+        <div class="card-label">Total Requests</div>
+      </div>
+    </div>
+    
+    <div class="summary-card open">
+      <div class="card-icon"><span class="icon icon-time"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:open_count] %></div>
+        <div class="card-label">Open Requests</div>
+      </div>
+    </div>
+    
+    <div class="summary-card closed">
+      <div class="card-icon"><span class="icon icon-checked"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:closed_count] %></div>
+        <div class="card-label">Closed Requests</div>
+      </div>
+    </div>
+    
+    <div class="summary-card financial">
+      <div class="card-icon"><span class="icon icon-money"></span></div>
+      <div class="card-content">
+        <div class="card-value">$<%= number_with_delimiter(@report_data[:summary][:total_estimated_value].round(2)) %></div>
+        <div class="card-label">Total Est. Value</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Analysis -->
+<div class="report-section">
+  <h3>Status Distribution</h3>
+  
+  <div class="chart-container">
+    <canvas id="statusChart" width="400" height="200"></canvas>
+  </div>
+  
+  <div class="data-table">
+    <table class="list">
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Count</th>
+          <th>Percentage</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% total = @report_data[:status_breakdown].values.sum %>
+        <% @report_data[:status_breakdown].each do |status, count| %>
+          <tr>
+            <td><%= status %></td>
+            <td><%= count %></td>
+            <td><%= total > 0 ? "#{((count.to_f / total) * 100).round(1)}%" : "0%" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Priority Analysis -->
+<div class="report-section">
+  <h3>Priority Distribution</h3>
+  
+  <div class="chart-container">
+    <canvas id="priorityChart" width="400" height="200"></canvas>
+  </div>
+  
+  <div class="priority-breakdown">
+    <% @report_data[:priority_breakdown].each do |priority, count| %>
+      <div class="priority-item priority-<%= priority %>">
+        <span class="priority-label"><%= priority.capitalize %></span>
+        <span class="priority-count"><%= count %></span>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Monthly Trend -->
+<div class="report-section">
+  <h3>Monthly Creation Trend (Last 12 Months)</h3>
+  
+  <div class="chart-container">
+    <canvas id="trendChart" width="400" height="200"></canvas>
+  </div>
+</div>
+
+<!-- Vendor Analysis -->
+<% if @report_data[:vendor_stats].any? %>
+<div class="report-section">
+  <h3>Top Vendors by Request Count</h3>
+  
+  <div class="vendor-stats">
+    <% @report_data[:vendor_stats].each_with_index do |(vendor_info, count), index| %>
+      <div class="vendor-stat-item">
+        <span class="vendor-rank">#<%= index + 1 %></span>
+        <span class="vendor-name"><%= vendor_info.first %></span>
+        <span class="vendor-count"><%= count %> requests</span>
+      </div>
+    <% end %>
+  </div>
+</div>
+<% end %>
+
+<!-- Recent Requests -->
+<div class="report-section">
+  <h3>Recent Purchase Requests</h3>
+  
+  <div class="autoscroll">
+    <table class="list recent-requests">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Project</th>
+          <th>Status</th>
+          <th>Priority</th>
+          <th>Est. Price</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @report_data[:recent_requests].each do |request| %>
+          <tr>
+            <td><%= request.id %></td>
+            <td><%= truncate(request.title, length: 50) %></td>
+            <td><%= request.project&.name %></td>
+            <td>
+              <span class="status-badge">
+                <%= request.status&.name %>
+              </span>
+            </td>
+            <td>
+              <span class="priority-badge priority-<%= request.priority %>">
+                <%= request.priority&.capitalize %>
+              </span>
+            </td>
+            <td>
+              <% if request.estimated_price %>
+                <%= request.currency %> <%= number_with_delimiter(request.estimated_price) %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td><%= request.created_at.strftime('%Y-%m-%d') %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Status Chart
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: <%= raw @report_data[:status_breakdown].keys.to_json %>,
+      datasets: [{
+        data: <%= raw @report_data[:status_breakdown].values.to_json %>,
+        backgroundColor: [
+          '#4CAF50', '#2196F3', '#FF9800', '#F44336', '#9C27B0', '#607D8B'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right'
+        }
+      }
+    }
+  });
+  
+  // Priority Chart
+  const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+  new Chart(priorityCtx, {
+    type: 'bar',
+    data: {
+      labels: <%= raw @report_data[:priority_breakdown].keys.map(&:capitalize).to_json %>,
+      datasets: [{
+        label: 'Requests',
+        data: <%= raw @report_data[:priority_breakdown].values.to_json %>,
+        backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#F44336']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+  
+  // Trend Chart
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: <%= raw @report_data[:monthly_trend].keys.map { |date| date.strftime('%b %Y') }.to_json %>,
+      datasets: [{
+        label: 'Purchase Requests Created',
+        data: <%= raw @report_data[:monthly_trend].values.to_json %>,
+        borderColor: '#2196F3',
+        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+});
+</script>
+
+<% content_for :header_tags do %>
+<style>
+  .project-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: normal;
+    margin-left: 15px;
+  }
+  
+  .report-meta {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 25px;
+  }
+  
+  .report-meta p {
+    margin: 0 0 5px 0;
+  }
+  
+  .report-section {
+    margin-bottom: 40px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 25px;
+  }
+  
+  .report-section h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .summary-card.open {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+  }
+  
+  .summary-card.closed {
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+  }
+  
+  .summary-card.financial {
+    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+  }
+  
+  .card-icon {
+    font-size: 24px;
+    opacity: 0.9;
+  }
+  
+  .card-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .card-label {
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  
+  .chart-container {
+    max-width: 600px;
+    height: 300px;
+    margin: 20px auto;
+  }
+  
+  .data-table {
+    margin-top: 20px;
+  }
+  
+  .priority-breakdown {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  
+  .priority-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    min-width: 100px;
+  }
+  
+  .priority-item.priority-low {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .priority-item.priority-normal {
+    background: #2196F3;
+    color: white;
+  }
+  
+  .priority-item.priority-high {
+    background: #FF9800;
+    color: white;
+  }
+  
+  .priority-item.priority-urgent {
+    background: #F44336;
+    color: white;
+  }
+  
+  .priority-label {
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  
+  .priority-count {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  
+  .vendor-stats {
+    display: grid;
+    gap: 10px;
+  }
+  
+  .vendor-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  .vendor-rank {
+    background: #007bff;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+  }
+  
+  .vendor-name {
+    flex: 1;
+    font-weight: 500;
+  }
+  
+  .vendor-count {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .status-badge, .priority-badge {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .status-badge {
+    background: #f0f0f0;
+    color: #333;
+  }
+  
+  .priority-badge.priority-low {
+    background: #4CAF50;
+    color: white;
+  }
+  
+  .priority-badge.priority-normal {
+    background: #2196F3;
+    color: white;
+  }
+  
+  .priority-badge.priority-high {
+    background: #FF9800;
+    color: white;
+  }
+  
+  .priority-badge.priority-urgent {
+    background: #F44336;
+    color: white;
+  }
+  
+  .recent-requests {
+    margin-top: 20px;
+  }
+  
+  .icon-pdf { 
+    background-image: url('<%= asset_path("files/pdf.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+  
+  .icon-csv-file { 
+    background-image: url('<%= asset_path("files/text.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .summary-cards {
+      grid-template-columns: 1fr;
+    }
+    
+    .priority-breakdown {
+      justify-content: center;
+    }
+  }
+  
+  <% if @print_mode %>
+  /* Print-specific styles */
+  @media all {
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #000;
+      background: #fff;
+    }
+    
+    .chart-container {
+      display: none !important;
+    }
+    
+    .report-section {
+      page-break-inside: avoid;
+      margin-bottom: 20px;
+    }
+    
+    h2, h3 {
+      color: #000;
+      border-bottom: 1px solid #ccc;
+    }
+    
+    .summary-cards {
+      display: block;
+    }
+    
+    .summary-card {
+      display: inline-block;
+      width: 200px;
+      margin: 10px;
+      page-break-inside: avoid;
+    }
+  }
+  <% end %>
+</style>
+<% end %>

@@ -1,0 +1,598 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/reports/vendors.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<% end %>
+
+<% html_title("Vendors Report#{@project ? " - #{@project.name}" : ""}") %>
+
+<% unless @print_mode %>
+<div class="contextual">
+  <% reports_index_path = @project ? project_reports_path(@project) : reports_path %>
+  <%= link_to reports_index_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-cancel">Back to Reports</span>
+  <% end %>
+  
+  <% report_path_base = @project ? 
+       vendors_project_reports_path(@project) : 
+       vendors_reports_path %>
+  
+  <%= link_to "#{report_path_base}?format=pdf", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
+    <span class="icon icon-pdf">Export PDF</span>
+  <% end %>
+  
+  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
+    <span class="icon icon-csv-file">Export CSV</span>
+  <% end %>
+</div>
+<% end %>
+
+<h2>
+  Vendors Report
+  <% if @project %>
+    <span class="project-badge"><%= @project.name %></span>
+  <% end %>
+</h2>
+
+<div class="report-meta">
+  <p><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
+  <% if @project %>
+    <p><strong>Scope:</strong> Vendors available for <%= @project.name %> (including global vendors)</p>
+  <% else %>
+    <p><strong>Scope:</strong> All vendors across the system</p>
+  <% end %>
+</div>
+
+<!-- Executive Summary -->
+<div class="report-section">
+  <h3>Vendor Overview</h3>
+  
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon"><span class="icon icon-group"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:total_count] %></div>
+        <div class="card-label">Total Vendors</div>
+      </div>
+    </div>
+    
+    <div class="summary-card active">
+      <div class="card-icon"><span class="icon icon-checked"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:active_count] %></div>
+        <div class="card-label">Active Vendors</div>
+      </div>
+    </div>
+    
+    <div class="summary-card global">
+      <div class="card-icon"><span class="icon icon-world"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:global_count] %></div>
+        <div class="card-label">Global Vendors</div>
+      </div>
+    </div>
+    
+    <div class="summary-card engaged">
+      <div class="card-icon"><span class="icon icon-package"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:vendors_with_requests] %></div>
+        <div class="card-label">With Purchase Requests</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Vendor Activity -->
+<div class="report-section">
+  <h3>Top Active Vendors</h3>
+  
+  <div class="vendor-activity-chart">
+    <canvas id="vendorActivityChart" width="400" height="300"></canvas>
+  </div>
+  
+  <div class="vendor-activity-list">
+    <% @report_data[:vendor_activity].each_with_index do |(vendor_info, count), index| %>
+      <div class="vendor-activity-item">
+        <span class="vendor-rank">#<%= index + 1 %></span>
+        <div class="vendor-details">
+          <div class="vendor-name"><%= vendor_info[1] %></div>
+          <div class="vendor-requests"><%= count %> purchase requests</div>
+        </div>
+        <div class="activity-bar">
+          <div class="activity-fill" style="width: <%= count > 0 ? [(count.to_f / @report_data[:vendor_activity].first[1] * 100), 100].min : 0 %>%"></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Project Distribution (Global View Only) -->
+<% if @project.nil? && @report_data[:project_distribution] %>
+<div class="report-section">
+  <h3>Project-Specific Vendor Distribution</h3>
+  
+  <div class="chart-container">
+    <canvas id="projectDistributionChart" width="400" height="200"></canvas>
+  </div>
+  
+  <div class="distribution-stats">
+    <% @report_data[:project_distribution].each do |project, count| %>
+      <div class="distribution-item">
+        <span class="project-name"><%= project %></span>
+        <span class="project-count"><%= count %> vendors</span>
+      </div>
+    <% end %>
+  </div>
+</div>
+<% end %>
+
+<!-- Vendor Status Analysis -->
+<div class="report-section">
+  <h3>Vendor Status & Engagement Analysis</h3>
+  
+  <div class="status-analysis">
+    <div class="status-chart">
+      <canvas id="statusChart" width="300" height="300"></canvas>
+    </div>
+    
+    <div class="status-details">
+      <div class="status-detail-item">
+        <div class="status-label">Active Vendors</div>
+        <div class="status-value"><%= @report_data[:summary][:active_count] %></div>
+        <div class="status-percentage">
+          <%= @report_data[:summary][:total_count] > 0 ? 
+                "#{((@report_data[:summary][:active_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" : 
+                "0%" %>
+        </div>
+      </div>
+      
+      <div class="status-detail-item">
+        <div class="status-label">With Purchase Requests</div>
+        <div class="status-value"><%= @report_data[:summary][:vendors_with_requests] %></div>
+        <div class="status-percentage">
+          <%= @report_data[:summary][:total_count] > 0 ? 
+                "#{((@report_data[:summary][:vendors_with_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" : 
+                "0%" %>
+        </div>
+      </div>
+      
+      <div class="status-detail-item">
+        <div class="status-label">Inactive/Unused</div>
+        <div class="status-value"><%= @report_data[:summary][:vendors_without_requests] %></div>
+        <div class="status-percentage">
+          <%= @report_data[:summary][:total_count] > 0 ? 
+                "#{((@report_data[:summary][:vendors_without_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" : 
+                "0%" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Vendors -->
+<div class="report-section">
+  <h3>Recently Added Vendors</h3>
+  
+  <div class="autoscroll">
+    <table class="list recent-vendors">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Vendor ID</th>
+          <th>Contact</th>
+          <th>Scope</th>
+          <th>Status</th>
+          <th>Requests</th>
+          <th>Added</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @report_data[:recent_vendors].each do |vendor| %>
+          <tr>
+            <td><strong><%= vendor.name %></strong></td>
+            <td><%= vendor.vendor_id %></td>
+            <td>
+              <% if vendor.contact_person.present? %>
+                <%= vendor.contact_person %>
+                <% if vendor.email.present? %>
+                  <br><small><%= vendor.email %></small>
+                <% end %>
+              <% elsif vendor.email.present? %>
+                <%= vendor.email %>
+              <% else %>
+                -
+              <% end %>
+            </td>
+            <td>
+              <span class="scope-badge <%= vendor.project_id? ? 'project' : 'global' %>">
+                <%= vendor.project_id? ? 'Project' : 'Global' %>
+              </span>
+            </td>
+            <td>
+              <span class="status-badge <%= vendor.is_active? ? 'active' : 'inactive' %>">
+                <%= vendor.is_active? ? 'Active' : 'Inactive' %>
+              </span>
+            </td>
+            <td><%= vendor.purchase_requests.count %></td>
+            <td><%= vendor.created_at.strftime('%Y-%m-%d') %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<% unless @print_mode %>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Vendor Activity Chart
+  const activityData = <%= raw @report_data[:vendor_activity].map { |info, count| [info[1], count] }.to_json %>;
+  const activityCtx = document.getElementById('vendorActivityChart').getContext('2d');
+  
+  new Chart(activityCtx, {
+    type: 'horizontalBar',
+    data: {
+      labels: activityData.map(item => item[0]).slice(0, 10),
+      datasets: [{
+        label: 'Purchase Requests',
+        data: activityData.map(item => item[1]).slice(0, 10),
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+  
+  // Status Chart
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  const statusData = [
+    <%= @report_data[:summary][:vendors_with_requests] %>,
+    <%= @report_data[:summary][:vendors_without_requests] %>
+  ];
+  
+  new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['With Requests', 'Without Requests'],
+      datasets: [{
+        data: statusData,
+        backgroundColor: ['#4CAF50', '#FF9800']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+  
+  <% if @project.nil? && @report_data[:project_distribution] %>
+  // Project Distribution Chart
+  const projDistCtx = document.getElementById('projectDistributionChart').getContext('2d');
+  new Chart(projDistCtx, {
+    type: 'bar',
+    data: {
+      labels: <%= raw @report_data[:project_distribution].keys.to_json %>,
+      datasets: [{
+        label: 'Project-Specific Vendors',
+        data: <%= raw @report_data[:project_distribution].values.to_json %>,
+        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+        borderColor: 'rgba(153, 102, 255, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+  <% end %>
+});
+</script>
+<% end %>
+
+<% content_for :header_tags do %>
+<style>
+  .project-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: normal;
+    margin-left: 15px;
+  }
+  
+  .report-meta {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 25px;
+  }
+  
+  .report-meta p {
+    margin: 0 0 5px 0;
+  }
+  
+  .report-section {
+    margin-bottom: 40px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 25px;
+  }
+  
+  .report-section h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+  }
+  
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  
+  .summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .card-icon {
+    font-size: 24px;
+    opacity: 0.9;
+  }
+  
+  .card-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .card-label {
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  
+  .chart-container {
+    max-width: 600px;
+    height: 300px;
+    margin: 20px auto;
+  }
+  
+  .summary-card.active {
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+  }
+  
+  .summary-card.global {
+    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+  }
+  
+  .summary-card.engaged {
+    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+  }
+  
+  .vendor-activity-chart {
+    height: 400px;
+    margin-bottom: 30px;
+  }
+  
+  .vendor-activity-list {
+    display: grid;
+    gap: 12px;
+  }
+  
+  .vendor-activity-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+  }
+  
+  .vendor-rank {
+    background: #007bff;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  
+  .vendor-details {
+    flex: 1;
+  }
+  
+  .vendor-name {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  
+  .vendor-requests {
+    font-size: 13px;
+    color: #666;
+  }
+  
+  .activity-bar {
+    width: 100px;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .activity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    transition: width 0.3s ease;
+  }
+  
+  .status-analysis {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    align-items: center;
+  }
+  
+  .status-details {
+    display: grid;
+    gap: 15px;
+  }
+  
+  .status-detail-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #007bff;
+  }
+  
+  .status-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+  
+  .status-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .status-percentage {
+    font-size: 12px;
+    color: #007bff;
+    font-weight: 500;
+  }
+  
+  .distribution-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+  
+  .distribution-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+  
+  .project-name {
+    font-weight: 500;
+  }
+  
+  .project-count {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .scope-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .scope-badge.global {
+    background-color: #2196F3;
+    color: white;
+  }
+  
+  .scope-badge.project {
+    background-color: #FF9800;
+    color: white;
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  .status-badge.active {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .status-badge.inactive {
+    background-color: #9E9E9E;
+    color: white;
+  }
+  
+  .icon-pdf { 
+    background-image: url('<%= asset_path("files/pdf.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+  
+  .icon-csv-file { 
+    background-image: url('<%= asset_path("files/text.png") %>'); 
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .status-analysis {
+      grid-template-columns: 1fr;
+    }
+    
+    .distribution-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+<% end %>

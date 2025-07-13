@@ -8,20 +8,20 @@
 
 <div class="contextual">
   <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-list"></span> Back to Vendor List
+    <span class="icon icon-list">Back to Vendor List</span> 
   <% end %>
   
   <%= link_to import_export_vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-package"></span> Import/Export
+    <span class="icon icon-package">Import/Export</span> 
   <% end %>
   
   <% if User.current.admin? || User.current.allowed_to?(:manage_vendors, nil, global: true) %>
     <%= link_to new_project_vendor_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-      <span class="icon icon-add"></span> New Project Vendor
+      <span class="icon icon-add">New Project Vendor</span> 
     <% end %>
     
     <%= link_to new_vendor_path, class: 'pr-button pr-button-outline pr-button-icon' do %>
-      <span class="icon icon-add"></span> New Global Vendor
+      <span class="icon icon-add">New Global Vendor</span> 
     <% end %>
   <% end %>
 </div>
@@ -68,7 +68,7 @@
       <h4>View & Edit Vendors</h4>
       <p>Browse all vendors available for this project, view details, and edit vendor information.</p>
       <%= link_to project_vendors_path(@project), class: 'pr-button pr-button-primary' do %>
-        <span class="icon icon-list"></span> View Vendor List
+        <span class="icon icon-list">View Vendor List</span> 
       <% end %>
     </div>
     
@@ -76,7 +76,7 @@
       <h4>Create Project Vendor</h4>
       <p>Add a new vendor specifically for this project. Project vendors are only available within this project context.</p>
       <%= link_to new_project_vendor_path(@project), class: 'pr-button pr-button-success' do %>
-        <span class="icon icon-add"></span> Create Project Vendor
+        <span class="icon icon-add">Create Project Vendor</span> 
       <% end %>
     </div>
     
@@ -84,7 +84,7 @@
       <h4>Create Global Vendor</h4>
       <p>Add a new global vendor available to all projects. Global vendors can be used across the entire system.</p>
       <%= link_to new_vendor_path, class: 'pr-button pr-button-primary' do %>
-        <span class="icon icon-add"></span> Create Global Vendor
+        <span class="icon icon-add">Create Global Vendor</span> 
       <% end %>
     </div>
     
@@ -92,7 +92,7 @@
       <h4>Import/Export Vendors</h4>
       <p>Import vendors from CSV file or export current vendor list for backup or sharing.</p>
       <%= link_to import_export_vendors_path, class: 'pr-button pr-button-secondary' do %>
-        <span class="icon icon-package"></span> Import/Export
+        <span class="icon icon-package">Import/Export</span> 
       <% end %>
     </div>
     
@@ -100,7 +100,7 @@
       <h4>Global Vendor Management</h4>
       <p>Access the global vendor management interface to manage vendors across all projects.</p>
       <%= link_to vendors_path, class: 'pr-button pr-button-outline' do %>
-        <span class="icon icon-settings"></span> Global Management
+        <span class="icon icon-settings">Global Management</span> 
       <% end %>
     </div>
   </div>
@@ -130,12 +130,12 @@
           
           <div class="vendor-actions">
             <%= link_to vendor_path(vendor), class: 'pr-button pr-button-small' do %>
-              <span class="icon icon-magnifier"></span> View
+              <span class="icon icon-magnifier">View</span> 
             <% end %>
             
             <% if User.current.admin? || User.current.allowed_to?(:manage_vendors, nil, global: true) %>
               <%= link_to edit_vendor_path(vendor), class: 'pr-button pr-button-small pr-button-primary' do %>
-                <span class="icon icon-edit"></span> Edit
+                <span class="icon icon-edit">Edit</span> 
               <% end %>
             <% end %>
           </div>
@@ -152,7 +152,7 @@
     <div class="no-vendors">
       <p class="nodata">No vendors are currently available for this project.</p>
       <%= link_to new_vendor_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-        <span class="icon icon-add"></span> Create your first vendor
+        <span class="icon icon-add">Create your first vendor</span> 
       <% end %>
     </div>
   <% end %>
