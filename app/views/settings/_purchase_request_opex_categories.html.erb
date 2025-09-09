@@ -1,30 +1,691 @@
 <%# OPEX Category Management Tab for Plugin Settings %>
-<h3><%= l(:label_opex_category_settings) %></h3>
-
-<div id="opex-category-management">
-  <table class="list opex-categories-table">
-    <thead>
-      <tr>
-        <th><%= l(:field_opex_category_name) %></th>
-        <th><%= l(:label_actions) %></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% OpexCategory.all.each do |category| %>
-        <tr>
-          <td><%= category.name %></td>
-          <td>
-            <%= link_to l(:button_delete), plugin_settings_path('redmine_purchase_requests', tab: 'opex_categories', delete_category: category.id), method: :post, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-del' %>
-          </td>
-        </tr>
+<div class="box tabular settings">
+  <div class="settings-header">
+    <h3><%= l(:label_opex_category_settings, default: 'OPEX Category Settings') %></h3>
+    <div class="contextual">
+      <%= link_to '/opex_categories', 
+          class: 'pr-button pr-button-primary pr-button-icon',
+          target: '_blank',
+          title: 'Manage OPEX Categories' do %>
+        <span class="icon icon-edit"></span> <%= l(:label_manage_opex_categories, default: 'Manage OPEX Categories') %>
       <% end %>
-    </tbody>
-  </table>
+    </div>
+  </div>
 
-  <h4><%= l(:label_add_new_opex_category) %></h4>
-  <%= form_with url: plugin_settings_path('redmine_purchase_requests', tab: 'opex_categories'), method: :post, local: true, html: { class: 'opex-category-form' } do |f| %>
-    <span><%= l(:field_opex_category_name) %></span>
-    <%= f.text_field 'opex_category[name]', required: true, maxlength: 100 %>
-    <%= f.submit l(:button_add), class: 'icon icon-add' %>
-  <% end %>
+  <!-- Category Overview Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4>Category Overview</h4>
+      <p class="section-description">View and manage your OPEX categories for expense classification</p>
+    </div>
+
+    <div class="info-message">
+      <span class="icon icon-info"></span>
+      <div class="info-content">
+        <%= l(:text_opex_categories_managed_separately, default: 'OPEX categories are managed independently from plugin settings.') %>
+        Use the "Manage OPEX Categories" button to add, edit, or remove categories.
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="list opex-categories-table" id="opex-categories-table">
+        <thead>
+          <tr>
+            <th class="category-name"><%= l(:field_opex_category_name, default: 'Category Name') %></th>
+            <th class="category-created"><%= l(:label_created_on, default: 'Created') %></th>
+            <th class="category-status">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if OpexCategory.respond_to?(:all) && OpexCategory.all.any? %>
+            <% OpexCategory.all.each_with_index do |category, index| %>
+              <tr class="category-row">
+                <td class="category-name-cell">
+                  <div class="category-info">
+                    <span class="category-name-text"><%= category.name %></span>
+                  </div>
+                </td>
+                <td class="category-created-cell">
+                  <% if category.respond_to?(:created_at) && category.created_at %>
+                    <span class="date-badge"><%= category.created_at.strftime('%Y-%m-%d') %></span>
+                  <% else %>
+                    <span class="date-badge unknown">Unknown</span>
+                  <% end %>
+                </td>
+                <td class="category-status-cell">
+                  <span class="status-badge active">Active</span>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr class="no-data-row">
+              <td colspan="3" class="no-data-cell">
+                <div class="no-data-message">
+                  <div class="no-data-icon">
+                    <span class="icon icon-warning"></span>
+                  </div>
+                  <div class="no-data-content">
+                    <h4>No Categories Found</h4>
+                    <p><%= l(:text_no_opex_categories, default: 'No OPEX categories have been created yet.') %></p>
+                    <%= link_to '/opex_categories', 
+                        class: 'pr-button pr-button-primary pr-button-icon',
+                        target: '_blank' do %>
+                      <span class="icon icon-add"></span> Create First Category
+                    <% end %>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Category Management Information Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4>Category Management</h4>
+      <p class="section-description">Information about managing your OPEX categories</p>
+    </div>
+
+    <div class="management-info">
+      <div class="management-grid">
+        <div class="management-card">
+          <div class="card-icon">
+            <span class="icon icon-add"></span>
+          </div>
+          <div class="card-content">
+            <h5>Add Categories</h5>
+            <p>Create new OPEX categories to classify your operational expenses effectively.</p>
+          </div>
+        </div>
+
+        <div class="management-card">
+          <div class="card-icon">
+            <span class="icon icon-edit"></span>
+          </div>
+          <div class="card-content">
+            <h5>Edit Categories</h5>
+            <p>Modify existing category names and properties as your business needs evolve.</p>
+          </div>
+        </div>
+
+        <div class="management-card">
+          <div class="card-icon">
+            <span class="icon icon-del"></span>
+          </div>
+          <div class="card-content">
+            <h5>Remove Categories</h5>
+            <p>Delete unused categories while preserving historical expense data.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="current-categories-summary">
+        <h5>Current Categories Summary</h5>
+        <div class="categories-list">
+          <% if OpexCategory.respond_to?(:all) && OpexCategory.all.any? %>
+            <div class="categories-count">
+              <span class="count-badge"><%= OpexCategory.all.count %></span>
+              <span class="count-label">categories defined</span>
+            </div>
+            <div class="categories-grid">
+              <% OpexCategory.all.each do |category| %>
+                <div class="category-chip">
+                  <span class="chip-icon">📁</span>
+                  <span class="chip-text"><%= category.name %></span>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="no-categories-state">
+              <span class="empty-state-icon">📋</span>
+              <p><em><%= l(:text_no_categories_defined, default: 'No categories defined') %></em></p>
+              <p>Get started by creating your first OPEX category.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4>Quick Actions</h4>
+      <p class="section-description">Common tasks for OPEX category management</p>
+    </div>
+
+    <div class="quick-actions">
+      <div class="action-group">
+        <div class="action-item">
+          <%= link_to '/opex_categories', 
+              class: 'action-button primary',
+              target: '_blank' do %>
+            <span class="icon icon-edit"></span>
+            <div class="action-content">
+              <span class="action-title">Manage All Categories</span>
+              <span class="action-description">Access the full category management interface</span>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="action-item">
+          <%= link_to '/opex_categories/new', 
+              class: 'action-button secondary',
+              target: '_blank' do %>
+            <span class="icon icon-add"></span>
+            <div class="action-content">
+              <span class="action-title">Add New Category</span>
+              <span class="action-description">Create a new OPEX expense category</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="help-note">
+        <span class="icon icon-help"></span>
+        <div class="help-content">
+          <strong>Need Help?</strong> OPEX categories help organize operational expenses like utilities, rent, and maintenance. 
+          Well-defined categories improve expense tracking and financial reporting accuracy.
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<style>
+  /* Settings Layout */
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .settings-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.4em;
+    font-weight: 600;
+  }
+
+  /* Settings Sections */
+  .settings-section {
+    margin-bottom: 40px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-header {
+    padding: 20px 24px 0;
+    margin-bottom: 20px;
+  }
+
+  .section-header h4 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+
+  .section-description {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9em;
+  }
+
+  /* Info Message */
+  .info-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 24px;
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    border-radius: 0;
+    margin: 0 0 20px 0;
+  }
+
+  .info-message .icon {
+    color: #1976d2;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+
+  .info-content {
+    color: #1565c0;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  /* Table Container */
+  .table-container {
+    background: #fff;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+  }
+
+  /* OPEX Categories Table */
+  .opex-categories-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+  }
+
+  .opex-categories-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e5e5e5;
+  }
+
+  .opex-categories-table th {
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .opex-categories-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid #f1f3f4;
+    vertical-align: middle;
+  }
+
+  .category-name { width: 50%; }
+  .category-created { width: 25%; }
+  .category-status { width: 25%; }
+
+  .category-row:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+  }
+
+  .category-row:last-child td {
+    border-bottom: none;
+  }
+
+  .category-name-text {
+    font-weight: 500;
+    color: #333;
+    font-size: 0.95em;
+  }
+
+  .date-badge {
+    display: inline-block;
+    background: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  }
+
+  .date-badge.unknown {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-badge.active {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  /* No Data Message */
+  .no-data-row {
+    background: #f8f9fa;
+  }
+
+  .no-data-cell {
+    padding: 60px 20px;
+    text-align: center;
+    border-bottom: none;
+  }
+
+  .no-data-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .no-data-icon .icon {
+    font-size: 48px;
+    color: #adb5bd;
+  }
+
+  .no-data-content h4 {
+    margin: 0 0 8px 0;
+    color: #495057;
+    font-weight: 600;
+  }
+
+  .no-data-content p {
+    margin: 0 0 20px 0;
+    color: #6c757d;
+  }
+
+  /* Management Information */
+  .management-info {
+    padding: 0 24px 24px;
+  }
+
+  .management-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .management-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .management-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    background: #007bff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-icon .icon {
+    color: #fff;
+    font-size: 18px;
+  }
+
+  .card-content h5 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1em;
+    font-weight: 600;
+  }
+
+  .card-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  /* Current Categories Summary */
+  .current-categories-summary {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    padding: 20px;
+  }
+
+  .current-categories-summary h5 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 1em;
+    font-weight: 600;
+  }
+
+  .categories-count {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .count-badge {
+    display: inline-block;
+    background: #007bff;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .count-label {
+    color: #6c757d;
+    font-size: 0.9em;
+  }
+
+  .categories-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .category-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #e9ecef;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.85em;
+  }
+
+  .chip-icon {
+    font-size: 0.9em;
+  }
+
+  .chip-text {
+    color: #495057;
+    font-weight: 500;
+  }
+
+  .no-categories-state {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .empty-state-icon {
+    font-size: 2em;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .no-categories-state p {
+    margin: 8px 0;
+    color: #6c757d;
+  }
+
+  /* Quick Actions */
+  .quick-actions {
+    padding: 0 24px 24px;
+  }
+
+  .action-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .action-button {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+  }
+
+  .action-button.primary {
+    background: #007bff;
+    color: #fff;
+  }
+
+  .action-button.primary:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    text-decoration: none;
+    color: #fff;
+  }
+
+  .action-button.secondary {
+    background: #fff;
+    color: #6c757d;
+    border-color: #e5e5e5;
+  }
+
+  .action-button.secondary:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  .action-button .icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .action-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-title {
+    font-weight: 600;
+    font-size: 0.95em;
+    margin-bottom: 4px;
+  }
+
+  .action-description {
+    font-size: 0.85em;
+    opacity: 0.8;
+  }
+
+  .help-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    border-radius: 4px;
+  }
+
+  .help-note .icon {
+    color: #856404;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+
+  .help-content {
+    color: #856404;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .settings-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+
+    .section-header,
+    .management-info,
+    .quick-actions {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .management-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .action-group {
+      grid-template-columns: 1fr;
+    }
+
+    .categories-grid {
+      justify-content: center;
+    }
+
+    .opex-categories-table {
+      font-size: 0.9em;
+    }
+  }
+
+  /* Dark Mode Support */
+  @media (prefers-color-scheme: dark) {
+    .settings-section {
+      background: #7382e6;
+      border-color: #cddcff;
+    }
+
+    .section-header h4 {
+      color: #e2e8f0;
+    }
+
+    .section-description {
+      color: #a0aec0;
+    }
+
+    .opex-categories-table {
+      background: #7382e6;
+    }
+
+    .opex-categories-table thead {
+      background: #cddcff;
+    }
+
+    .opex-categories-table th {
+      color: #e2e8f0;
+    }
+
+    .category-row:hover {
+      background-color: #cddcff;
+    }
+
+    .management-card {
+      background: #cddcff;
+      border-color: #7382e6;
+    }
+
+    .current-categories-summary {
+      background: #cddcff;
+      border-color: #7382e6;
+    }
+  }
+</style>

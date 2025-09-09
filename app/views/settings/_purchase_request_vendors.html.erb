@@ -11,24 +11,25 @@
     <%= l(:text_vendor_database_info) %>
   </p>
   
-  <div class="vendor-management-actions">
-    <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-edit"></span> <%= l(:label_global_vendor_settings) %>
-    <% end %>
-    
-    <p class="info-message">
+  <div class="vendor-management-actions">    
+      <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+        <span class="icon icon-edit"><%= l(:label_global_vendor_settings) %></span> 
+      <% end %>
+      
+  </div>
+</div>
+
+<p class="info-message">
       <strong><%= l(:label_notice) %>:</strong> <%= l(:text_vendor_management_moved_to_project) %>
-    </p>
-    
-    <% if Setting.plugin_redmine_purchase_requests['vendors'].is_a?(Array) && Setting.plugin_redmine_purchase_requests['vendors'].any? %>
+</p>
+
+ <% if Setting.plugin_redmine_purchase_requests['vendors'].is_a?(Array) && Setting.plugin_redmine_purchase_requests['vendors'].any? %>
       <%= form_tag({controller: 'vendors', action: 'migrate_from_settings'}, {method: :post, class: 'migration-form'}) do %>
         <%= button_tag type: 'submit', class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-import"></span> <%= l(:button_migrate_vendors) %>
+          <span class="icon icon-import"> <%= l(:button_migrate_vendors) rescue 'Migrate Vendors' %></span>
         <% end %>
       <% end %>
     <% end %>
-  </div>
-</div>
 
 <style>
   .info-message {
@@ -37,125 +38,21 @@
     background-color: #fff8e1;
     border-left: 3px solid #ffca28;
     border-radius: 3px;
+    padding-left : 10 !important;
   }
-</style>
-
-<style>
+  
   .vendor-management-actions {
     margin-top: 15px;
     display: flex;
     gap: 15px;
+    padding-left: 10 !important;
   }
   
   .migration-form {
     display: inline;
   }
-
   
-  .vendors-list {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .vendors-list th {
-    text-align: left;
-    font-weight: bold;
-    padding: 8px;
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .vendors-list td {
-    padding: 5px;
-    vertical-align: middle;
-  }
-  
-  .vendors-list tr:hover {
-    background-color: #f9f9f9;
-  }
-  
-  .vendors-list input[type="text"] {
-    width: 95%;
-    padding: 4px;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-  }
-  
-  .vendors-list .buttons {
-    text-align: center;
-    white-space: nowrap;
-  }
-  
-  .add-vendor {
-    margin-top: 10px;
+  .box {
+    padding-left: 10 !important;
   }
 </style>
-
-<%= javascript_tag do %>
-  $(document).ready(function() {
-    // Add new vendor row
-    $('#add-vendor-button').click(function(e) {
-      e.preventDefault();
-      
-      var rowCount = $('#vendors-table tbody tr').length;
-      var newRow = `
-        <tr class="vendor-row">
-          <td>
-            <input type="text" name="settings[vendors][${rowCount}][name]" 
-                  class="vendor-name" size="20" required="required">
-          </td>
-          <td>
-            <input type="text" name="settings[vendors][${rowCount}][vendor_id]" 
-                  class="vendor-id" size="10">
-          </td>
-          <td>
-            <input type="text" name="settings[vendors][${rowCount}][address]" 
-                  class="vendor-address" size="25">
-          </td>
-          <td>
-            <input type="text" name="settings[vendors][${rowCount}][phone]" 
-                  class="vendor-phone" size="15">
-          </td>
-          <td>
-            <input type="text" name="settings[vendors][${rowCount}][contact_person]" 
-                  class="vendor-contact" size="15">
-          </td>
-          <td>
-            <input type="text" name="settings[vendors][${rowCount}][email]" 
-                  class="vendor-email" size="20">
-          </td>
-          <td class="buttons">
-            <a href="#" class="pr-button pr-button-danger pr-button-icon small delete-vendor" title="<%= l(:button_delete) %>">
-              <span class="icon icon-del"></span>
-            </a>
-          </td>
-        </tr>
-      `;
-      
-      $('#vendors-table tbody').append(newRow);
-      $('#vendors-table tbody tr:last-child .vendor-name').focus();
-    });
-    
-    // Delete vendor row
-    $('#vendors-table').on('click', '.delete-vendor', function(e) {
-      e.preventDefault();
-      
-      var rowCount = $('#vendors-table tbody tr').length;
-      if (rowCount > 1) {
-        $(this).closest('tr').remove();
-        
-        // Renumber remaining rows
-        $('#vendors-table tbody tr').each(function(index) {
-          $(this).find('input').each(function() {
-            var name = $(this).attr('name');
-            var newName = name.replace(/\[\d+\]/, '[' + index + ']');
-            $(this).attr('name', newName);
-          });
-        });
-      } else {
-        // Don't delete the last row, just clear it
-        $(this).closest('tr').find('input').val('');
-      }
-    });
-  });
-<% end %>

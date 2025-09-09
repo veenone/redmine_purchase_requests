@@ -1,39 +1,252 @@
-<%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<%# Main settings partial for Purchase Requests plugin %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
 
-<div class="tabs">
-  <ul>
+<%# Main form wrapper for Redmine plugin settings %>
+<%= form_tag(plugin_settings_path('redmine_purchase_requests'), method: :post, multipart: true, id: 'settings-form') do %>
+  
+  <div class="tabs">
+    <ul>
+      <% purchase_request_settings_tabs.each do |tab| %>
+        <li><%= link_to l(tab[:label]), "#", 
+                      id: "tab-#{tab[:name]}", 
+                      class: (tab[:name] == @tab ? 'selected' : ''),
+                      onclick: "showTab('#{tab[:name]}'); return false;" %></li>
+      <% end %>
+    </ul>
+  </div>
+
+  <div class="tabs-content">
     <% purchase_request_settings_tabs.each do |tab| %>
-      <li><%= link_to l(tab[:label]), { tab: tab[:name] }, 
-                    id: "tab-#{tab[:name]}", 
-                    class: (tab[:name] == @tab ? 'selected' : ''),
-                    onclick: "showTab('#{tab[:name]}'); return false;" %></li>
+      <div id="tab-content-<%= tab[:name] %>" class="tab-content <%= tab[:name] != @tab ? 'hidden' : '' %>">
+        <%= render partial: tab[:partial], locals: { settings: @settings } %>
+      </div>
     <% end %>
-  </ul>
-</div>
+  </div>
+  
+  <%# Apply & Cancel buttons - aligned to leftmost %>
+  <div class="buttons-container">
+    <%= submit_tag l(:button_apply, default: 'Apply'), name: 'commit', class: 'btn btn-primary' %>
+    <%= link_to l(:button_cancel, default: 'Cancel'), 
+          { controller: 'settings', action: 'plugin', id: 'redmine_purchase_requests' }, 
+          class: 'btn btn-secondary' %>
+  </div>
 
-<div class="tabs-content">
-  <% purchase_request_settings_tabs.each do |tab| %>
-    <div id="tab-content-<%= tab[:name] %>" class="tab-content <%= tab[:name] != @tab ? 'hidden' : '' %>">
-      <%= render partial: tab[:partial], locals: { settings: @settings } %>
-    </div>
-  <% end %>
-</div>
+<% end %>
 
+<%# JavaScript to hide any duplicate/outer apply buttons %>
 <%= javascript_tag do %>
   function showTab(name) {
     $('.tab-content').hide();
     $('#tab-content-' + name).show();
     $('.tabs ul li a').removeClass('selected');
     $('#tab-' + name).addClass('selected');
+    
+    // Update URL hash
+    if (history.pushState) {
+      history.pushState(null, null, '#' + name);
+    } else {
+      window.location.hash = name;
+    }
+    
     return false;
   }
   
   $(function() {
-    if (location.hash != '') {
-      showTab(location.hash.replace(/^#/, ''));
+    // Handle initial tab selection
+    var hash = location.hash.replace(/^#/, '');
+    if (hash && $('#tab-' + hash).length) {
+      showTab(hash);
     } else {
       // Default to the general tab if no hash is specified
       showTab('general');
     }
+    
+    // Hide any duplicate apply buttons that might be added by Redmine
+    $('p.buttons').not('.buttons-container').hide();
+    $('input[name="commit"]').not('.buttons-container input').hide();
+    
+    // Handle form submission feedback
+    $('#settings-form').on('submit', function() {
+      var submitBtn = $(this).find('.btn-primary');
+      if (submitBtn.length) {
+        submitBtn.text('Applying...');
+        submitBtn.prop('disabled', true);
+        
+        // Re-enable after timeout in case of errors
+        setTimeout(function() {
+          if (submitBtn.prop('disabled')) {
+            submitBtn.text('Apply');
+            submitBtn.prop('disabled', false);
+          }
+        }, 10000);
+      }
+    });
   });
 <% end %>
+
+<style>
+  .tabs {
+    margin-bottom: 20px;
+    clear: both;
+  }
+  
+  .tabs ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    border-bottom: 2px solid #ddd;
+    flex-wrap: wrap;
+  }
+  
+  .tabs ul li {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .tabs ul li a {
+    display: block;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #333;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  
+  .tabs ul li a:hover {
+    background: #fff;
+    text-decoration: none;
+  }
+  
+  .tabs ul li a.selected {
+    background: #fff;
+    border-bottom: 2px solid #fff;
+    margin-bottom: 0px;
+    font-weight: bold;
+    color: #000;
+  }
+  
+  .tab-content {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-top: none;
+    min-height: 200px;
+  }
+  
+  .tab-content.hidden {
+    display: none;
+  }
+  
+  /* Leftmost aligned buttons container */
+  .buttons-container {
+    padding: 15px 20px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    margin-top: 0;
+    border-top: 1px solid #ddd;
+    text-align: left; /* Force leftmost alignment */
+    display: block;
+    clear: both;
+  }
+  
+  .buttons-container .btn {
+    margin-right: 10px;
+    margin-left: 0; /* Ensure no left margin */
+  }
+  
+  .btn-primary {
+    background-color: #007cba;
+    color: white;
+    border: 1px solid #007cba;
+    padding: 8px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-block;
+    text-decoration: none;
+  }
+  
+  .btn-primary:hover {
+    background-color: #005a87;
+  }
+  
+  .btn-primary:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .btn-secondary {
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 8px 16px;
+    border-radius: 3px;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 13px;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #e9e9e9;
+    text-decoration: none;
+  }
+  
+  /* Hide any duplicate buttons that Redmine might add */
+  p.buttons:not(.buttons-container) {
+    display: none !important;
+  }
+  
+  /* Ensure forms within tabs work properly */
+  .tab-content form {
+    margin-bottom: 15px;
+  }
+  
+  .tab-content input[type="submit"] {
+    margin-top: 10px;
+  }
+  
+  /* Responsive design for tabs */
+  @media (max-width: 768px) {
+    .tabs ul {
+      flex-direction: column;
+    }
+    
+    .tabs ul li {
+      flex: 1;
+    }
+    
+    .tabs ul li a {
+      margin-right: 0;
+      text-align: center;
+    }
+    
+    .tab-content {
+      padding: 15px;
+    }
+    
+    .buttons-container {
+      padding: 15px;
+      text-align: left; /* Keep leftmost alignment on mobile too */
+    }
+  }
+  
+  /* Additional styles to ensure leftmost positioning */
+  .buttons-container {
+    position: relative;
+    left: 0;
+    float: none;
+  }
+  
+  .buttons-container .btn:first-child {
+    margin-left: 0 !important;
+  }
+</style>

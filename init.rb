@@ -145,7 +145,7 @@ end
 require 'redmine'
 
 # Register assets to be included
-Rails.application.config.assets.precompile += %w(purchase_requests.js apexcharts.js purchase_requests.css purchase_request_buttons.css purchase_request_vendors.css)
+# Rails.application.config.assets.precompile += %w(purchase_requests.js apexcharts.js purchase_requests.css purchase_request_buttons.css purchase_request_vendors.css)
 
 # Load plugin components
 Rails.application.config.to_prepare do

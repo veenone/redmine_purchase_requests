@@ -682,3 +682,13 @@ en:
   error_allocated_quarter_required: "Quarter selection is required when specifying an allocated amount."
   error_budget_required_for_allocation: "A CAPEX or OPEX budget entry must be selected when specifying quarterly allocation."
   error_allocation_exceeds_price: "Allocated amount cannot exceed the estimated price."
+  
+    # Missing translations for Currency Settings
+  text_show_exchange_rates_info: "Enable this option to configure exchange rates for multi-currency support"
+  text_exchange_rates_setup_info: "Configure exchange rates for currency conversion. Enter the rate to convert to your default currency."
+  
+  # Additional missing translations
+  error_at_least_one_currency: "At least one currency must be selected"
+  label_actions: "Actions"
+  button_add: "Add"
+  button_migrate_vendors: "Migrate Vendors from Settings"

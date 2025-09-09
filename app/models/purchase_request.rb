@@ -25,7 +25,8 @@ class PurchaseRequest < ActiveRecord::Base
   validates :estimated_price, numericality: { greater_than: 0, allow_blank: true }
   validates :product_url, format: { with: /\Ahttps?:\/\/.*\z/i, 
                                    allow_blank: true }
-  validates :due_date, comparison: { greater_than: Date.current, allow_blank: true }
+  # Replace comparison validator with custom validation for Rails 6.1 compatibility
+  validate :due_date_must_be_future
   validates :currency, inclusion: { 
     in: %w[USD EUR GBP JPY CAD AUD CHF CNY SEK NZD MXN SGD HKD IDR NOK KRW TRY RUB INR BRL ZAR],
     allow_blank: true
@@ -154,6 +155,15 @@ class PurchaseRequest < ActiveRecord::Base
 
 
   private
+  
+  # Custom validation for due_date to replace Rails 7 comparison validator
+  def due_date_must_be_future
+    return if due_date.blank?
+    
+    if due_date <= Date.current
+      errors.add(:due_date, I18n.t('error_due_date_must_be_future', default: 'must be in the future'))
+    end
+  end
   
   def vendor_presence_check
     # Check if either vendor_id is present (for selected vendor) or vendor name is present (for custom vendor)
