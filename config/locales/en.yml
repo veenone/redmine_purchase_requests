@@ -85,6 +85,35 @@ en:
   label_editing_request: "Editing Purchase Request" 
   text_edit_purchase_request_guidelines: "Please review the following guidelines before submitting your changes:"
 
+  # New Vendor Settings Translations
+  label_vendor_configuration: "Vendor Configuration"
+  text_vendor_settings_description: "Configure vendor management options for your purchase requests"
+  label_vendor_management: "Vendor Management"
+  button_migrate_vendors: "Migrate Vendors from Settings"
+
+  # Vendor Settings Translations
+  label_allow_custom_vendors: "Allow Custom Vendors"
+  text_allow_custom_vendors_info: "Enable adding new vendors that are not pre-configured in the system"
+  label_global_vendor_settings: "Global Vendor Settings"
+  text_vendor_database_info: "Manage and configure your vendor database for purchase requests"
+  text_vendor_management_moved_to_project: "Vendor management has been moved to the project-level settings. You can now manage vendors per project."
+
+  # General Settings Translations
+  label_general_settings: "General Settings"
+  text_default_status_description: "Select the default status for new purchase requests"
+  label_notifications: "Notifications"
+  text_notification_settings_description: "Configure notification settings for purchase requests"
+  text_notification_help: "Enable email notifications for purchase request status changes"
+  label_default_assignment: "Default Assignment"
+  text_default_assignment_description: "Select the default user for purchase request assignments"
+
+  # Status Settings Translations
+  text_statuses_description: "Manage and configure purchase request statuses"
+  label_no_statuses_configured: "No Statuses Configured"
+  label_create_first_status: "Create First Status"
+  label_edit: "Edit"
+  label_delete: "Delete"
+
   # Dashboard Translations
   label_purchase_request_dashboard: "Purchase Request Dashboard"
   label_total_requests: "Total Requests"

@@ -1,86 +1,96 @@
+<%# app/views/settings/_purchase_request_statuses.html.erb %>
 <div class="box tabular settings">
   <div class="settings-header">
     <h3><%= l(:label_purchase_request_statuses) %></h3>
-    <div class="contextual">
-      <%= link_to new_purchase_request_status_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-        <span class="icon icon-add"></span> <%= l(:label_new_status) %>
+    <div class="contextual">      
+      <%= link_to new_purchase_request_status_path, class: 'pr-button button-primary pr-button-icon' do %>
+        <span class="icon icon-add"><%= l(:label_new_status) %> </span>
       <% end %>
     </div>
   </div>
 
-  <div class="table-container">
-    <table class="list settings-table">
-      <thead>
-        <tr>
-          <th class="status-name"><%= l(:label_status_name) %></th>
-          <th class="status-position"><%= l(:label_status_position) %></th>
-          <th class="status-closed"><%= l(:label_status_is_closed) %></th>
-          <th class="status-color"><%= l(:label_status_color) %></th>
-          <th class="status-default"><%= l(:label_status_is_default) %></th>
-          <th class="status-actions">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% PurchaseRequestStatus.order(:position).each do |status| %>
-          <tr class="status-row">
-            <td class="status-name-cell">
-              <span class="status-name-text"><%= status.name %></span>
-            </td>
-            <td class="status-position-cell">
-              <span class="position-badge"><%= status.position %></span>
-            </td>
-            <td class="status-closed-cell">
-              <div class="status-indicator">
-                <%= checked_image status.is_closed? %>
-                <span class="status-label"><%= status.is_closed? ? 'Closed' : 'Open' %></span>
-              </div>
-            </td>
-            <td class="status-color-cell">
-              <div class="color-display">
-                <span class="color-preview" style="background-color: <%= status.color.presence || '#777777' %>;"></span>
-                <span class="color-code"><%= status.color.presence || '#777777' %></span>
-              </div>
-            </td>
-            <td class="status-default-cell">
-              <div class="default-indicator">
-                <%= checked_image status.is_default? %>
-                <% if status.is_default? %>
-                  <span class="default-label">Default</span>
-                <% end %>
-              </div>
-            </td>
-            <td class="status-actions-cell">
-              <div class="action-buttons">
-                <%= link_to edit_purchase_request_status_path(status), 
-                      class: 'pr-button pr-button-secondary pr-button-icon small action-edit',
-                      title: 'Edit Status' do %>
-                  <span class="icon icon-edit"></span>
-                <% end %>
-                <%= link_to purchase_request_status_path(status),
-                      method: :delete,
-                      class: 'pr-button pr-button-danger pr-button-icon small action-delete',
-                      title: 'Delete Status',
-                      data: {confirm: l(:text_are_you_sure)} do %>
-                  <span class="icon icon-del"></span>
-                <% end %>
-              </div>
-            </td>
+  <!-- Statuses Table Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4><%= l(:label_manage_statuses) %></h4>
+      <p class="section-description"><%= l(:text_statuses_description) || 'Manage statuses for purchase requests' %></p>
+    </div>
+
+    <div class="table-container">
+      <table class="list settings-table purchase-request-statuses-table">
+        <thead>
+          <tr>
+            <th class="status-name"><%= l(:label_status_name) %></th>
+            <th class="status-position"><%= l(:label_status_position) %></th>
+            <th class="status-closed"><%= l(:label_status_is_closed) %></th>
+            <th class="status-color"><%= l(:label_status_color) %></th>
+            <th class="status-default"><%= l(:label_status_is_default) %></th>
+            <th class="status-actions"><%= l(:label_actions) %></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% PurchaseRequestStatus.order(:position).each do |status| %>
+            <tr class="status-row">
+              <td class="status-name-cell">
+                <span class="status-name-text"><%= status.name %></span>
+              </td>
+              <td class="status-position-cell">
+                <span class="position-badge"><%= status.position %></span>
+              </td>
+              <td class="status-closed-cell">
+                <div class="status-indicator">
+                  <%= checked_image status.is_closed? %>
+                  <span class="status-label"><%= status.is_closed? ? 'Closed' : 'Open' %></span>
+                </div>
+              </td>
+              <td class="status-color-cell">
+                <div class="color-display">
+                  <span class="color-preview" style="background-color: <%= status.color.presence || '#777777' %>;"></span>
+                  <span class="color-code"><%= status.color.presence || '#777777' %></span>
+                </div>
+              </td>
+              <td class="status-default-cell">
+                <div class="default-indicator">
+                  <%= checked_image status.is_default? %>
+                  <% if status.is_default? %>
+                    <span class="default-label"><%= l(:label_default) %></span>
+                  <% end %>
+                </div>
+              </td>
+              <td class="status-actions-cell">
+                <div class="action-buttons">
+                  <%= link_to edit_purchase_request_status_path(status), 
+                        class: 'pr-button button-secondary button-icon small action-edit',
+                        title: l(:label_edit) do %>
+                        <span class="icon icon-edit"><%= l(:label_edit) %></span>
+                  <% end %>
+                  <%= link_to purchase_request_status_path(status),
+                        method: :delete,
+                        class: 'pr-button button-danger button-icon small action-delete',
+                        title: l(:label_delete),
+                        data: {confirm: l(:text_are_you_sure)} do %>
+                        <span class="icon icon-del"><%= l(:label_delete) %></span>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
+  <!-- No Statuses Message -->
   <% if PurchaseRequestStatus.count == 0 %>
-    <div class="no-data-message">
+    <div class="settings-section no-data-message">
       <div class="no-data-icon">
         <span class="icon icon-warning"></span>
       </div>
       <div class="no-data-content">
-        <h4>No statuses configured</h4>
+        <h4><%= l(:label_no_statuses_configured) %></h4>
         <p><%= l(:label_no_data) %></p>
         <%= link_to new_purchase_request_status_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add"></span> Create First Status
+          <span class="icon icon-add"> <%= l(:label_create_first_status) %> </span>
         <% end %>
       </div>
     </div>
@@ -93,7 +103,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     padding-bottom: 15px;
     border-bottom: 1px solid #e5e5e5;
   }
@@ -105,13 +115,41 @@
     font-weight: 600;
   }
 
-  /* Table Container */
-  .table-container {
+  /* Settings Sections */
+  .settings-section {
+    margin-bottom: 40px;
     background: #fff;
     border-radius: 8px;
     border: 1px solid #e5e5e5;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-header {
+    padding: 20px 24px 0;
+    margin-bottom: 20px;
+  }
+
+  .section-header h4 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+
+  .section-description {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9em;
+    padding-left: 0 !important;
+  }
+
+  /* Table Container */
+  .table-container {
+    background: #fff;
+    border-radius: 8px;
+    border-top: 1px solid #e5e5e5;
+    overflow: hidden;
   }
 
   /* Table Styling */
@@ -151,11 +189,18 @@
   .status-default { width: 15%; }
   .status-actions { width: 10%; }
 
+  td { vertical-align: middle;}
+  td.status-default-cell { vertical-align: middle !important; color: #495057; }
+  td.status-name-cell { vertical-align: middle !important; color: #495057; }
+  td.status-closed-cell { vertical-align: middle !important; color: #495057;}
+
   /* Row Styling */
   .status-row:hover {
     background-color: #f8f9fa;
     transition: background-color 0.2s ease;
   }
+
+  
 
   .status-row:last-child td {
     border-bottom: none;
@@ -164,7 +209,7 @@
   /* Status Name */
   .status-name-text {
     font-weight: 500;
-    color: #333;
+    color: #b4b4b4;
   }
 
   /* Position Badge */
@@ -191,7 +236,7 @@
   .status-label,
   .default-label {
     font-size: 0.85em;
-    color: #6c757d;
+    color: #495057;
     font-weight: 500;
   }
 
@@ -297,13 +342,18 @@
 
   /* Dark Mode Support */
   @media (prefers-color-scheme: dark) {
-    .table-container {
+    .settings-section {
+      background: #2d3748;
+      border-color: #e9ecef;
+    }
+
+    .settings-table {
       background: #2d3748;
       border-color: #4a5568;
     }
 
     .settings-table th {
-      background: #4a5568;
+      background: #e9ecef;
       color: #e2e8f0;
     }
 
@@ -312,12 +362,52 @@
     }
 
     .status-row:hover {
-      background-color: #4a5568;
+      background-color: #e9ecef;
+    }
+
+    .section-header h4 {
+      color: #e2e8f0;
+    }
+
+    .section-description {
+      color: #a0aec0;
+    }
+
+    .status-name-text {
+      color: #495057;
+    }
+
+    .position-badge {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    .status-label,
+    .default-label {
+      color: #495057;
+    }
+
+    .color-code {
+      background: #e9ecef;
+      color: #495057;
+      border-color: #718096;
     }
 
     .no-data-message {
       background: #2d3748;
       color: #e2e8f0;
+    }
+
+    .no-data-icon .icon {
+      color: #718096;
+    }
+
+    .no-data-content h4 {
+      color: #e2e8f0;
+    }
+
+    .no-data-content p {
+      color: #a0aec0;
     }
   }
 </style>

@@ -1,58 +1,303 @@
-<h3><%= l(:label_vendor_settings) %></h3>
+<%# app/views/settings/_purchase_request_vendors.html.erb %>
+<div class="box tabular settings">
+  <div class="settings-header">
+    <h3><%= l(:label_vendor_settings) %></h3>
+  </div>
 
-<p>
-  <label><%= l(:label_allow_custom_vendors) %></label>
-  <%= check_box_tag 'settings[allow_custom_vendors]', '1', @settings['allow_custom_vendors'] == '1' %>
-  <em class="info"><%= l(:text_allow_custom_vendors_info) %></em>
-</p>
+  <!-- Vendor Configuration Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4><%= l(:label_vendor_configuration) %></h4>
+      <p class="section-description" align="left"><%= l(:text_vendor_settings_description) rescue 'Configure vendor management options for purchase requests' %></p>
+    </div>
 
-<div class="box">
-  <p>
-    <%= l(:text_vendor_database_info) %>
-  </p>
-  
-  <div class="vendor-management-actions">    
-      <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-        <span class="icon icon-edit"><%= l(:label_global_vendor_settings) %></span> 
-      <% end %>
-      
+    <div class="form-group checkbox-group">
+      <div class="checkbox-wrapper">
+        <%= check_box_tag 'settings[allow_custom_vendors]', '1', 
+                          @settings['allow_custom_vendors'] == '1', 
+                          class: 'form-checkbox', 
+                          id: 'allow_custom_vendors' %>
+        <span for="allow_custom_vendors" class="checkbox-label-text">
+          <%= l(:label_allow_custom_vendors) %>
+        </span>
+      </div>
+      <p class="form-help-text">
+        <%= l(:text_allow_custom_vendors_info) %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Vendor Management Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4><%= l(:label_vendor_management) rescue 'Vendor Management' %></h4>
+      <p class="section-description"><%= l(:text_vendor_database_info) %></p>
+    </div>
+
+    <div class="form-group">
+      <div class="vendor-management-actions">    
+        <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+          <span class="icon icon-edit"><%= l(:label_global_vendor_settings) %></span> 
+        <% end %>
+      </div>
+    </div>
+
+    <% if Setting.plugin_redmine_purchase_requests['vendors'].is_a?(Array) && Setting.plugin_redmine_purchase_requests['vendors'].any? %>
+      <div class="migration-section">
+        <div class="info-message">
+          <span class="icon icon-info"></span>
+          <div class="info-content">
+            <strong><%= l(:label_notice) %>:</strong> <%= l(:text_vendor_management_moved_to_project) %>
+          </div>
+        </div>
+        
+        <%= form_tag({controller: 'vendors', action: 'migrate_from_settings'}, {method: :post, class: 'migration-form'}) do %>
+          <%= button_tag type: 'submit', class: 'pr-button pr-button-primary pr-button-icon' do %>
+            <span class="icon icon-import"> <%= l(:button_migrate_vendors) rescue 'Migrate Vendors' %></span>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </div>
 
-<p class="info-message">
-      <strong><%= l(:label_notice) %>:</strong> <%= l(:text_vendor_management_moved_to_project) %>
-</p>
-
- <% if Setting.plugin_redmine_purchase_requests['vendors'].is_a?(Array) && Setting.plugin_redmine_purchase_requests['vendors'].any? %>
-      <%= form_tag({controller: 'vendors', action: 'migrate_from_settings'}, {method: :post, class: 'migration-form'}) do %>
-        <%= button_tag type: 'submit', class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-import"> <%= l(:button_migrate_vendors) rescue 'Migrate Vendors' %></span>
-        <% end %>
-      <% end %>
-    <% end %>
-
 <style>
-  .info-message {
-    margin: 15px 0;
-    padding: 10px;
-    background-color: #fff8e1;
-    border-left: 3px solid #ffca28;
-    border-radius: 3px;
-    padding-left : 10 !important;
+  /* Settings Layout */
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e5e5;
   }
-  
+
+  .settings-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.4em;
+    font-weight: 600;
+  }
+
+  /* Settings Sections */
+  .settings-section {
+    margin-bottom: 40px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-header {
+    padding: 20px 24px 0;
+    margin-bottom: 20px;
+  }
+
+  .section-header h4 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+
+  .section-description {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9em;
+    padding-left: 0 !important;
+  }
+
+  /* Form Elements */
+  .form-group {
+    padding: 0 24px 24px;
+  }
+
+  /* Checkbox Styling */
+  .checkbox-group {
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e5e5;
+    margin: 0;
+  }
+
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-checkbox {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .checkbox-label-text {
+    color: #495057;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .form-help-text {
+    margin: 8px 0 0 26px;
+    color: #6c757d;
+    font-size: 0.85em;
+    font-style: italic;
+    padding-left: 0 !important;
+  }
+
+  /* Vendor Management Actions */
   .vendor-management-actions {
-    margin-top: 15px;
     display: flex;
     gap: 15px;
-    padding-left: 10 !important;
+    flex-wrap: wrap;
   }
-  
+
+  .pr-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .pr-button-secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border-color: #dee2e6;
+  }
+
+  .pr-button-secondary:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+    color: #333;
+  }
+
+  .pr-button-primary {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+  }
+
+  .pr-button-primary:hover {
+    background: #0056b3;
+    border-color: #0056b3;
+  }
+
+  /* Migration Section */
+  .migration-section {
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e5e5;
+  }
+
+  .info-message {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #fff8e1;
+    border-left: 4px solid #ffca28;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+
+  .info-message .icon {
+    color: #ff9800;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+
+  .info-content {
+    color: #856404;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  .info-content strong {
+    font-weight: 600;
+  }
+
   .migration-form {
-    display: inline;
+    display: inline-block;
   }
-  
-  .box {
-    padding-left: 10 !important;
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .section-header,
+    .form-group,
+    .checkbox-group,
+    .migration-section {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .vendor-management-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .pr-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  /* Dark Mode Support */
+  @media (prefers-color-scheme: dark) {
+    .settings-section {
+      background: #7382e6;
+      border-color: #cddcff;
+    }
+
+    .section-header h4 {
+      color: #e2e8f0;
+    }
+
+    .section-description {
+      color: #000000;
+      padding-left: 0 !important;
+    }
+
+    .checkbox-group,
+    .migration-section {
+      background: #cddcff;
+    }
+
+    .checkbox-label-text {
+      color: #1a202c;
+    }
+
+    .form-help-text {
+      color: #2d3748;
+    }
+
+    .pr-button-secondary {
+      background: #ffffff;
+      color: #e2e8f0;
+      border-color: #2d3748;
+    }
+
+    .pr-button-secondary:hover {
+      background: #b4b4b4;
+      color: #fff;
+    }
+
+    .info-message {
+      background: #805a20;
+      border-left-color: #ff9800;
+    }
+
+    .info-content {
+      color: #ffe082;
+    }
   }
 </style>

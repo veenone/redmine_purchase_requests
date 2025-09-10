@@ -4,10 +4,10 @@
     <h3><%= l(:label_opex_category_settings, default: 'OPEX Category Settings') %></h3>
     <div class="contextual">
       <%= link_to '/opex_categories', 
-          class: 'pr-button pr-button-primary pr-button-icon',
+          class: 'button button-primary button-icon',
           target: '_blank',
           title: 'Manage OPEX Categories' do %>
-        <span class="icon icon-edit"></span> <%= l(:label_manage_opex_categories, default: 'Manage OPEX Categories') %>
+          <span class="icon icon-edit"><%= l(:label_manage_opex_categories, default: 'Manage OPEX Categories') %> </span>
       <% end %>
     </div>
   </div>
@@ -92,32 +92,29 @@
     <div class="management-info">
       <div class="management-grid">
         <div class="management-card">
-          <div class="card-icon">
-            <span class="icon icon-add"></span>
-          </div>
           <div class="card-content">
-            <h5>Add Categories</h5>
-            <p>Create new OPEX categories to classify your operational expenses effectively.</p>
+            <span class="icon icon-add">
+              <h5>Add Categories</h5>
+            </span>
+            <div>Create new OPEX categories to classify your operational expenses effectively.</div>
           </div>
         </div>
 
         <div class="management-card">
-          <div class="card-icon">
-            <span class="icon icon-edit"></span>
-          </div>
           <div class="card-content">
-            <h5>Edit Categories</h5>
-            <p>Modify existing category names and properties as your business needs evolve.</p>
+            <span class="icon icon-edit">
+              <h5>Edit Categories</h5>
+            </span>
+            <div>Modify existing category names and properties as your business needs evolve.</div>
           </div>
         </div>
 
         <div class="management-card">
-          <div class="card-icon">
-            <span class="icon icon-del"></span>
-          </div>
           <div class="card-content">
-            <h5>Remove Categories</h5>
-            <p>Delete unused categories while preserving historical expense data.</p>
+            <span class="icon icon-del">
+              <h5>Remove Categories</h5>
+            </span>
+            <div>Delete unused categories while preserving historical expense data.</div>
           </div>
         </div>
       </div>

@@ -1,18 +1,223 @@
-<p>
-  <label><%= l(:label_default_status) %></label>
-  <%= select_tag 'settings[default_status_id]',
-                options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, @settings['default_status_id'].to_i),
-                include_blank: true %>
-</p>
+<%# app/views/settings/_purchase_request_general.html.erb %>
+<div class="box tabular settings">
+  <div class="settings-header">
+    <h3><%= l(:label_general_settings) %></h3>
+  </div>
 
-<p>
-  <label><%= l(:label_enable_notifications) %></label>
-  <%= check_box_tag 'settings[enable_notifications]', '1', @settings['enable_notifications'] == '1' %>
-</p>
+  <!-- Default Status Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4><%= l(:label_default_status) %></h4>
+      <p class="section-description"><%= l(:text_default_status_description) || 'Select the default status for new purchase requests' %></p>
+    </div>
+    
+    <div class="form-group">
+      <span class="form-label"><%= l(:label_default_status) %></span>
+      <%= select_tag 'settings[default_status_id]',
+                    options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, @settings['default_status_id'].to_i),
+                    include_blank: true,
+                    class: 'form-select',
+                    id: 'settings_default_status_id' %>
+    </div>
+  </div>
 
-<p>
-  <label><%= l(:label_default_assigned_to) %></label>
-  <%= select_tag 'settings[default_assigned_to_id]',
-                options_from_collection_for_select(User.active, :id, :name, @settings['default_assigned_to_id'].to_i),
-                include_blank: true %>
-</p>
+  <!-- Notification Settings Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4><%= l(:label_notifications) %></h4>
+      <p class="section-description"><%= l(:text_notification_settings_description) || 'Configure notification settings for purchase requests' %></p>
+    </div>
+
+    <div class="form-group checkbox-group">
+      <div class="checkbox-wrapper">
+        <%= check_box_tag 'settings[enable_notifications]', '1', @settings['enable_notifications'] == '1', 
+                          class: 'form-checkbox', id: 'enable_notifications' %>
+        <span class="checkbox-label-text" for="enable_notifications"><%= l(:label_enable_notifications) %></span>
+      </div>
+      <p class="form-help-text">
+        <%= l(:text_notification_help) || 'Enable email notifications for purchase request status changes' %>
+      </p>
+    </div>
+  </div>
+
+  <!-- Default Assignment Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4><%= l(:label_default_assignment) %></h4>
+      <p class="section-description"><%= l(:text_default_assignment_description) || 'Select the default user for purchase request assignments' %></p>
+    </div>
+    
+    <div class="form-group">
+      <span class="form-label"><%= l(:label_default_assigned_to) %></span>
+      <%= select_tag 'settings[default_assigned_to_id]',
+                    options_from_collection_for_select(User.active, :id, :name, @settings['default_assigned_to_id'].to_i),
+                    include_blank: true,
+                    class: 'form-select',
+                    id: 'settings_default_assigned_to_id' %>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* CSS Styling from currency and vendor settings, adapted for general settings */
+  /* Settings Header */
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .settings-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.4em;
+    font-weight: 600;
+  }
+
+  /* Settings Sections */
+  .settings-section {
+    margin-bottom: 40px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e5e5e5;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .section-header {
+    padding: 20px 24px 0;
+    margin-bottom: 20px;
+  }
+
+  .section-header h4 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+
+  .section-description {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9em;
+    padding-left: 0 !important;
+  }
+
+  /* Form Elements */
+  .form-group {
+    padding: 0 24px 24px;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #495057;
+    font-weight: 500;
+    font-size: 0.9em;
+  }
+
+  .form-select {
+    width: 100%;
+    max-width: 300px;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9em;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+
+  /* Checkbox Styling */
+  .checkbox-group {
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e5e5;
+    margin: 0;
+  }
+
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-checkbox {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .checkbox-label-text {
+    color: #495057;
+    font-weight: 500;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .form-help-text {
+    margin: 8px 0 0 26px;
+    color: #6c757d;
+    font-size: 0.85em;
+    font-style: italic;
+    padding-left: 0 !important;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .section-header,
+    .form-group,
+    .checkbox-group {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    .form-select {
+      max-width: 100%;
+    }
+  }
+
+  /* Dark Mode Support */
+  @media (prefers-color-scheme: dark) {
+    .settings-section {
+      background: #2d3748;
+      border-color: #4a5568;
+    }
+
+    .section-header h4 {
+      color: #e2e8f0;
+    }
+
+    .section-description {
+      color: #a0aec0;
+    }
+
+    .form-select {
+      background: #4a5568;
+      border-color: #718096;
+      color: #e2e8f0;
+    }
+
+    .checkbox-group {
+      background: #4a5568;
+      border-color: #718096;
+    }
+
+    .checkbox-label-text {
+      color: #e2e8f0;
+    }
+
+    .form-help-text {
+      color: #a0aec0;
+    }
+  }
+</style>
