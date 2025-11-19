@@ -6,6 +6,7 @@ class PurchaseRequest < ActiveRecord::Base
   belongs_to :capex, optional: true
   belongs_to :opex, optional: true
   belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
+  belongs_to :tpc_code, optional: true
   
   # Include the attachable module from Redmine
   include Redmine::Acts::Attachable
@@ -13,10 +14,10 @@ class PurchaseRequest < ActiveRecord::Base
   
   # For Rails 3.x/4.x compatibility
   if Redmine::VERSION::MAJOR < 5
-    attr_accessible :title, :description, :status_id, :product_url, 
-                   :estimated_price, :vendor, :vendor_id, :priority, :due_date, 
+    attr_accessible :title, :description, :status_id, :product_url,
+                   :estimated_price, :vendor, :vendor_id, :priority, :due_date,
                    :notify_manager, :notes, :currency, :capex_id, :opex_id, :category_id,
-                   :project_id, :allocated_quarter, :allocated_amount
+                   :project_id, :allocated_quarter, :allocated_amount, :tpc_code_id
   end
   
   validates :title, presence: true, length: { minimum: 5, maximum: 255 }
@@ -151,6 +152,31 @@ class PurchaseRequest < ActiveRecord::Base
   
   def has_budget_assignment?
     capex.present? || opex.present?
+  end
+
+  # TPC code display methods
+  def tpc_code_display
+    if tpc_code.present?
+      tpc_code.tpc_number
+    elsif capex.present? && capex.tpc_code_record.present?
+      capex.tpc_code_display
+    elsif opex.present? && opex.tpc_code.present?
+      opex.tpc_code.tpc_number
+    else
+      nil
+    end
+  end
+
+  def tpc_code_with_description
+    if tpc_code.present?
+      "#{tpc_code.tpc_number} - #{tpc_code.description}"
+    elsif capex.present?
+      capex.display_name
+    elsif opex.present?
+      opex.display_name
+    else
+      "No TPC Code"
+    end
   end
 
 

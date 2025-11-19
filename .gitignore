@@ -1,0 +1,37 @@
+# Claude Code directory
+.claude/
+
+# Test and development scripts
+*.sh
+*_test.rb
+test_*.rb
+*_verification.rb
+check_*.rb
+setup_*.rb
+validate_*.rb
+debug_*.rb
+verify_*.rb
+simple_*.rb
+final_*.rb
+comprehensive_*.rb
+
+# Temporary SQL files
+*.sql
+
+# PHP test files
+*.php
+
+# Documentation markdown files (except official docs)
+*_FIX*.md
+*_COMPLETE*.md
+*_RESOLUTION*.md
+*_REPORT*.md
+*_STATUS*.md
+*_GUIDE*.md
+*_IMPLEMENTATION*.md
+MIGRATION_FIXES_APPLIED.md
+
+# Keep official documentation
+!README.md
+!CHANGELOG.md
+!docs/**/*.md

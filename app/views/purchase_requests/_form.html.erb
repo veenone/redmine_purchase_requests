@@ -404,13 +404,40 @@
               </div>
               
               <div class="budget-option">
-                <%= radio_button_tag 'budget_type', 'none', purchase_request.capex_id.blank? && purchase_request.opex_id.blank?, 
+                <%= radio_button_tag 'budget_type', 'none', purchase_request.capex_id.blank? && purchase_request.opex_id.blank?,
                                    class: 'budget-type-radio', id: 'budget_type_none' %>
                 <span class="budget-type-option"><%= l(:label_no_budget_tracking) %></span>
               </div>
             </div>
             <em class="info"><%= l(:text_budget_type_info) %></em>
           </div>
+        </div>
+
+        <!-- TPC Code Selection for No Budget Tracking -->
+        <div class="form-row budget-section-none" id="tpc-code-section" style="display: none;">
+          <p>
+            <%= form.label :tpc_code_id, l(:label_tpc_code) %> <span class="required">*</span>
+            <%
+              tpc_codes = TpcCode.all.order(:tpc_number)
+              if tpc_codes.any?
+            %>
+              <%= form.select :tpc_code_id,
+                            options_from_collection_for_select(tpc_codes, :id, :tpc_number_with_description, purchase_request.tpc_code_id),
+                            { include_blank: l(:label_select_tpc_code) },
+                            { class: 'form-control', id: 'purchase_request_tpc_code_id' } %>
+              <em class="info"><%= l(:text_tpc_code_owner_info) %></em>
+            <% else %>
+              <div class="no-budget-entry">
+                <span class="no-entries-message"><%= l(:text_no_tpc_codes_available) %></span>
+                <% if User.current.admin? || User.current.allowed_to?(:manage_global_tpc_codes, nil, global: true) %>
+                  <br><em class="info">
+                    <%= link_to l(:label_create_tpc_code), new_global_tpc_codes_path,
+                              class: 'budget-create-link', target: '_blank' %>
+                  </em>
+                <% end %>
+              </div>
+            <% end %>
+          </p>
         </div>
         
         <!-- CAPEX Selection -->
@@ -707,40 +734,57 @@ document.addEventListener('DOMContentLoaded', function() {
   var budgetTypeRadios = document.querySelectorAll('.budget-type-radio');
   var capexSection = document.getElementById('capex-section');
   var opexSection = document.getElementById('opex-section');
+  var tpcCodeSection = document.getElementById('tpc-code-section');
   var capexSelect = document.getElementById('purchase_request_capex_id');
   var opexSelect = document.getElementById('purchase_request_opex_id');
-  
+  var tpcCodeSelect = document.getElementById('purchase_request_tpc_code_id');
+
   function toggleBudgetSections() {
     var selectedType = document.querySelector('.budget-type-radio:checked');
     var categorySelect = document.getElementById('purchase_request_category_id');
-    
+
     if (selectedType) {
       if (selectedType.value === 'capex') {
         capexSection.style.display = 'block';
         opexSection.style.display = 'none';
+        tpcCodeSection.style.display = 'none';
         if (opexSelect) opexSelect.value = '';
+        if (tpcCodeSelect) tpcCodeSelect.value = '';
         // Remove required attribute from category when CAPEX is selected
         if (categorySelect) {
           categorySelect.removeAttribute('required');
           categorySelect.value = '';
         }
+        if (tpcCodeSelect) {
+          tpcCodeSelect.removeAttribute('required');
+        }
       } else if (selectedType.value === 'opex') {
         opexSection.style.display = 'block';
         capexSection.style.display = 'none';
+        tpcCodeSection.style.display = 'none';
         if (capexSelect) capexSelect.value = '';
+        if (tpcCodeSelect) tpcCodeSelect.value = '';
         // Add required attribute to category when OPEX is selected
         if (categorySelect) {
           categorySelect.setAttribute('required', 'required');
         }
+        if (tpcCodeSelect) {
+          tpcCodeSelect.removeAttribute('required');
+        }
       } else {
         capexSection.style.display = 'none';
         opexSection.style.display = 'none';
+        tpcCodeSection.style.display = 'block';
         if (capexSelect) capexSelect.value = '';
         if (opexSelect) opexSelect.value = '';
         // Remove required attribute from category when no budget type is selected
         if (categorySelect) {
           categorySelect.removeAttribute('required');
           categorySelect.value = '';
+        }
+        // Add required attribute to TPC code when no budget tracking is selected
+        if (tpcCodeSelect) {
+          tpcCodeSelect.setAttribute('required', 'required');
         }
       }
     }

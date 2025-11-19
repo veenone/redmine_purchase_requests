@@ -2,6 +2,7 @@ class TpcCode < ActiveRecord::Base
   belongs_to :project, optional: true
   has_many :capex, foreign_key: 'tpc_code_id', dependent: :restrict_with_error
   has_many :opex, foreign_key: 'tpc_code_id', dependent: :restrict_with_error
+  has_many :purchase_requests, foreign_key: 'tpc_code_id', dependent: :restrict_with_error
   
   validates :tpc_number, presence: true, length: { minimum: 3, maximum: 50 }
   validates :tpc_owner_name, presence: true, length: { minimum: 2, maximum: 100 }
@@ -34,7 +35,15 @@ class TpcCode < ActiveRecord::Base
   def display_name
     "#{tpc_number} - #{tpc_owner_name}"
   end
-  
+
+  def tpc_number_with_description
+    if description.present?
+      "#{tpc_number} - #{description.truncate(50)}"
+    else
+      "#{tpc_number} - #{tpc_owner_name}"
+    end
+  end
+
   def scope_display
     global? ? 'Global' : project.name
   end
@@ -46,13 +55,17 @@ class TpcCode < ActiveRecord::Base
   def linked_capex_count
     capex.count
   end
-  
+
   def linked_opex_count
     opex.count
   end
-  
+
+  def linked_purchase_requests_count
+    purchase_requests.count
+  end
+
   def total_linked_count
-    linked_capex_count + linked_opex_count
+    linked_capex_count + linked_opex_count + linked_purchase_requests_count
   end
   
   def can_be_deleted?

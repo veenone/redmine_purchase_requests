@@ -463,18 +463,18 @@ class PurchaseRequestsController < ApplicationController
   def purchase_request_params
     # Build permitted params dynamically based on available columns
     permitted = [
-      :title, :description, :status_id, :product_url, 
-      :estimated_price, :priority, :due_date, 
+      :title, :description, :status_id, :product_url,
+      :estimated_price, :priority, :due_date,
       :notify_manager, :notes, :currency, :capex_id, :opex_id,
-      :allocated_quarter, :allocated_amount
+      :allocated_quarter, :allocated_amount, :tpc_code_id
       # Note: vendor and vendor_id are excluded here and handled manually in handle_vendor_assignment
     ]
-    
+
     # Add category_id only if the column exists
     if PurchaseRequest.column_names.include?('category_id')
       permitted << :category_id
     end
-    
+
     params.require(:purchase_request).permit(permitted)
   end
   
