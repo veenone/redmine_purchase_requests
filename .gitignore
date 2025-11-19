@@ -1,5 +1,6 @@
-# Claude Code directory
+# Claude Code directory and documentation
 .claude/
+CLAUDE.md
 
 # Test and development scripts
 *.sh
