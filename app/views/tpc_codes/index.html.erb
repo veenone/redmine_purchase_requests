@@ -48,7 +48,7 @@
       
       <div class="filter-row">
         <label for="search">Search:</label>
-        <%= f.text_field :search, value: params[:search], placeholder: "TPC number, owner name, email, or description" %>
+        <%= f.text_field :search, value: params[:search], placeholder: "TPC number, owner name, department, email, or description" %>
         
         <label for="active">Status:</label>
         <%= f.select :active, options_for_select([
@@ -73,6 +73,7 @@
         <tr>
           <th>TPC Number</th>
           <th>Owner Name</th>
+          <th>Department</th>
           <th>Email</th>
           <th>Description</th>
           <% if @project %>
@@ -96,6 +97,9 @@
             </td>
             <td class="owner-name">
               <%= tpc_code.tpc_owner_name %>
+            </td>
+            <td class="department">
+              <%= tpc_code.department.present? ? tpc_code.department : '-' %>
             </td>
             <td class="email">
               <%= mail_to tpc_code.tpc_email, tpc_code.tpc_email, encode: 'hex' %>

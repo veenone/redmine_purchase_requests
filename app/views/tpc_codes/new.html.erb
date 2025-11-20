@@ -38,7 +38,13 @@
       <%= f.text_field :tpc_owner_name, required: true, size: 40, maxlength: 100 %>
       <em class="info">Full name of the TPC owner</em>
     </p>
-    
+
+    <p>
+      <%= f.label :department %>
+      <%= f.text_field :department, size: 40, maxlength: 100 %>
+      <em class="info">Department name (optional)</em>
+    </p>
+
     <p>
       <%= f.label :tpc_email, class: 'required' %> <em class="required">*</em>
       <%= f.email_field :tpc_email, required: true, size: 40, maxlength: 255 %>

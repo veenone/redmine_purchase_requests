@@ -6,6 +6,7 @@ class TpcCode < ActiveRecord::Base
   
   validates :tpc_number, presence: true, length: { minimum: 3, maximum: 50 }
   validates :tpc_owner_name, presence: true, length: { minimum: 2, maximum: 100 }
+  validates :department, length: { maximum: 100 }
   validates :tpc_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :description, length: { maximum: 1000 }
   validates :notes, length: { maximum: 2000 }
@@ -17,9 +18,9 @@ class TpcCode < ActiveRecord::Base
   scope :inactive, -> { where(is_active: false) }
   scope :global, -> { where('tpc_codes.project_id' => nil) }
   scope :for_project, ->(project) { where(project: project) }
-  scope :search, ->(term) { 
-    where("LOWER(tpc_number) LIKE ? OR LOWER(tpc_owner_name) LIKE ? OR LOWER(tpc_email) LIKE ? OR LOWER(description) LIKE ?", 
-          "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%") 
+  scope :search, ->(term) {
+    where("LOWER(tpc_number) LIKE ? OR LOWER(tpc_owner_name) LIKE ? OR LOWER(department) LIKE ? OR LOWER(tpc_email) LIKE ? OR LOWER(description) LIKE ?",
+          "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%")
   }
   scope :ordered, -> { order(:tpc_number) }
   
@@ -33,15 +34,21 @@ class TpcCode < ActiveRecord::Base
   end
   
   def display_name
-    "#{tpc_number} - #{tpc_owner_name}"
+    parts = [tpc_number]
+    parts << department if department.present?
+    parts << tpc_owner_name
+    parts.join(' - ')
   end
 
   def tpc_number_with_description
+    parts = [tpc_number]
+    parts << department if department.present?
     if description.present?
-      "#{tpc_number} - #{description.truncate(50)}"
+      parts << description.truncate(50)
     else
-      "#{tpc_number} - #{tpc_owner_name}"
+      parts << tpc_owner_name
     end
+    parts.join(' - ')
   end
 
   def scope_display
@@ -81,14 +88,15 @@ class TpcCode < ActiveRecord::Base
   # CSV export methods
   def self.to_csv(tpc_codes = all)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
-      csv << ['TPC Number', 'Owner Name', 'Email', 'Description', 'Active', 'Project', 'Notes']
-      
+      csv << ['TPC Number', 'Owner Name', 'Department', 'Email', 'Description', 'Active', 'Project', 'Notes']
+
       tpc_codes.includes(:project).each do |tpc|
         csv << [
           tpc.tpc_number,
           tpc.tpc_owner_name,
+          tpc.department,
           tpc.tpc_email,
           tpc.description,
           tpc.is_active,
@@ -105,6 +113,7 @@ class TpcCode < ActiveRecord::Base
       {
         tpc_number: tpc.tpc_number,
         tpc_owner_name: tpc.tpc_owner_name,
+        department: tpc.department,
         tpc_email: tpc.tpc_email,
         description: tpc.description,
         is_active: tpc.is_active,
@@ -124,6 +133,7 @@ class TpcCode < ActiveRecord::Base
         tpc_data = {
           tpc_number: row['TPC Number']&.strip,
           tpc_owner_name: row['Owner Name']&.strip,
+          department: row['Department']&.strip,
           tpc_email: row['Email']&.strip,
           description: row['Description']&.strip,
           is_active: row['Active'].to_s.downcase.in?(['true', '1', 'yes', 'active']),
@@ -168,6 +178,7 @@ class TpcCode < ActiveRecord::Base
           data = {
             tpc_number: tpc_data['tpc_number']&.strip,
             tpc_owner_name: tpc_data['tpc_owner_name']&.strip,
+            department: tpc_data['department']&.strip,
             tpc_email: tpc_data['tpc_email']&.strip,
             description: tpc_data['description']&.strip,
             is_active: tpc_data['is_active'],

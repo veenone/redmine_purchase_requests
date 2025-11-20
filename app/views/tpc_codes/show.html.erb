@@ -39,6 +39,11 @@
         <div class="owner-name">
           <strong><%= @tpc_code.tpc_owner_name %></strong>
         </div>
+        <% if @tpc_code.department.present? %>
+        <div class="owner-department">
+          <%= @tpc_code.department %>
+        </div>
+        <% end %>
         <div class="owner-email">
           <%= mail_to @tpc_code.tpc_email, @tpc_code.tpc_email, encode: 'hex' %>
         </div>
@@ -80,6 +85,12 @@
           <td class="label">Owner Name:</td>
           <td><%= @tpc_code.tpc_owner_name %></td>
         </tr>
+        <% if @tpc_code.department.present? %>
+        <tr>
+          <td class="label">Department:</td>
+          <td><%= @tpc_code.department %></td>
+        </tr>
+        <% end %>
         <tr>
           <td class="label">Email Address:</td>
           <td><%= mail_to @tpc_code.tpc_email, @tpc_code.tpc_email, encode: 'hex' %></td>

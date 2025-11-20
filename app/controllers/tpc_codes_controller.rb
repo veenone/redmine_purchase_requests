@@ -268,6 +268,6 @@ class TpcCodesController < ApplicationController
   end
   
   def tpc_code_params
-    params.require(:tpc_code).permit(:tpc_number, :tpc_owner_name, :tpc_email, :description, :is_active, :notes)
+    params.require(:tpc_code).permit(:tpc_number, :tpc_owner_name, :department, :tpc_email, :description, :is_active, :notes)
   end
 end
