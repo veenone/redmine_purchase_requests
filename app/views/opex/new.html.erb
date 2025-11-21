@@ -73,12 +73,12 @@
             
             <div class="pr-field">
               <%= f.label :tpc_code_id, 'TPC Code', class: 'pr-label' %>
-              <%= f.collection_select :tpc_code_id, 
-                                     TpcCode.available_for_project(@project).active.ordered, 
-                                     :id, :display_name, 
-                                     { prompt: 'Select TPC Code (optional)' }, 
+              <%= f.collection_select :tpc_code_id,
+                                     TpcCode.available_for_project(@project).active.ordered,
+                                     :id, :tpc_number_with_description,
+                                     { include_blank: 'Select TPC Code (optional)' },
                                      { class: 'pr-select', id: 'opex_tpc_code_id' } %>
-              <em class="pr-field-info">Link this OPEX entry to a TPC code for tracking</em>
+              <em class="pr-field-info">Link this OPEX entry to a TPC code for tracking (owner and budget responsibility)</em>
             </div>
           </div>
 
@@ -228,7 +228,37 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
+    color: #333 !important;
+    background-color: #fff !important;
     transition: border-color 0.3s ease;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-indent: 0 !important;
+    line-height: 1.5 !important;
+    min-height: 38px !important;
+  }
+
+  .pr-select {
+    width: auto;
+    min-width: 200px;
+    height: 38px !important;
+    padding: 6px 12px !important;
+    line-height: 1.5 !important;
+    -webkit-appearance: menulist !important;
+    -moz-appearance: menulist !important;
+    appearance: menulist !important;
+  }
+
+  .pr-select option {
+    color: #333 !important;
+    background-color: #fff !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  select.pr-select {
+    color: #333 !important;
+    background-color: #fff !important;
   }
   
   .pr-input:focus, .pr-select:focus, .pr-textarea:focus {

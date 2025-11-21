@@ -55,6 +55,7 @@
           <th>Total Amount</th>
           <th>Quarterly Distribution</th>
           <th>Category</th>
+          <th>TPC Code</th>
           <th>Utilized</th>
           <th>Remaining</th>
           <th>Utilization %</th>
@@ -90,6 +91,18 @@
             </td>
             <td class="category">
               <%= opex.category_display %>
+            </td>
+            <td class="tpc-code">
+              <% if opex.tpc_code.present? %>
+                <div class="tpc-code-display">
+                  <span class="tpc-number"><%= opex.tpc_code.tpc_number %></span>
+                  <% if opex.tpc_code.department.present? %>
+                    <span class="tpc-dept"><%= opex.tpc_code.department %></span>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="no-data">No TPC</span>
+              <% end %>
             </td>
             <td class="utilized-amount">
               <span class="amount utilized">
@@ -256,6 +269,35 @@
   .category {
     font-size: 12px;
     color: #666;
+  }
+
+  .tpc-code {
+    font-size: 12px;
+  }
+
+  .tpc-code-display {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .tpc-number {
+    font-family: monospace;
+    font-weight: bold;
+    color: #6f42c1;
+    font-size: 12px;
+  }
+
+  .tpc-dept {
+    font-size: 10px;
+    color: #666;
+    font-style: italic;
+  }
+
+  .no-data {
+    color: #999;
+    font-style: italic;
+    font-size: 11px;
   }
 </style>
 <% end %>

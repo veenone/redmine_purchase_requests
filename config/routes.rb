@@ -43,6 +43,7 @@ RedmineApp::Application.routes.draw do
     # Add TPC codes management routes (project-scoped)
     resources :tpc_codes, path: 'tpc_codes' do
       collection do
+        get 'dashboard'
         get 'import_export'
         post 'import'
         get 'export'
@@ -80,6 +81,7 @@ RedmineApp::Application.routes.draw do
   get 'tpc_codes', to: 'tpc_codes#global_index', as: 'global_tpc_codes'
   get 'tpc_codes/new', to: 'tpc_codes#global_new', as: 'new_global_tpc_codes'
   post 'tpc_codes', to: 'tpc_codes#global_create'
+  get 'tpc_codes/dashboard', to: 'tpc_codes#dashboard', as: 'tpc_codes_dashboard'
   get 'tpc_codes/import_export', to: 'tpc_codes#global_import_export', as: 'import_export_global_tpc_codes'
   post 'tpc_codes/import', to: 'tpc_codes#global_import', as: 'import_global_tpc_codes'
   get 'tpc_codes/export', to: 'tpc_codes#global_export', as: 'export_global_tpc_codes'

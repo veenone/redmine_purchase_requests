@@ -204,25 +204,91 @@
                 <div class="grid-row">
                   <span class="label"><%= l(:field_capex_entry) %>:</span>
                   <span class="value">
-                    <%= link_to @purchase_request.capex.display_name, 
+                    <%= link_to @purchase_request.capex.display_name,
                               project_capex_path(@project, @purchase_request.capex),
                               class: 'capex-link' %>
                     <div class="capex-details-display">
                       <div><strong><%= l(:field_capex_year) %>:</strong> <%= @purchase_request.capex.year %></div>
                       <div><strong><%= l(:field_capex_tpc_code) %>:</strong> <%= @purchase_request.capex.tpc_code %></div>
-                      <div><strong><%= l(:field_capex_total_amount) %>:</strong> 
+                      <div><strong><%= l(:field_capex_total_amount) %>:</strong>
                         <%= format_price(@purchase_request.capex.total_amount, @purchase_request.capex.currency) %>
                       </div>
-                      <div><strong><%= l(:field_capex_remaining_amount) %>:</strong> 
+                      <div><strong><%= l(:field_capex_remaining_amount) %>:</strong>
                         <span class="<%= @purchase_request.capex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
                           <%= format_price(@purchase_request.capex.remaining_amount, @purchase_request.capex.currency) %>
                         </span>
                       </div>
-                      <div><strong><%= l(:field_capex_utilization_percentage) %>:</strong> 
+                      <div><strong><%= l(:field_capex_utilization_percentage) %>:</strong>
                         <span class="utilization-percentage">
                           <%= @purchase_request.capex.utilization_percentage.round(1) %>%
                         </span>
                       </div>
+                    </div>
+                  </span>
+                </div>
+              <% elsif @purchase_request.opex.present? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:field_opex_entry) %>:</span>
+                  <span class="value">
+                    <%= link_to @purchase_request.opex.display_name,
+                              project_opex_path(@project, @purchase_request.opex),
+                              class: 'opex-link' %>
+                    <div class="opex-details-display">
+                      <div><strong><%= l(:field_opex_year) %>:</strong> <%= @purchase_request.opex.year %></div>
+                      <div><strong><%= l(:field_opex_code) %>:</strong> <%= @purchase_request.opex.opex_code %></div>
+                      <div><strong><%= l(:field_opex_category) %>:</strong> <%= @purchase_request.opex.category %></div>
+                      <div><strong><%= l(:field_opex_total_amount) %>:</strong>
+                        <%= format_price(@purchase_request.opex.total_amount, @purchase_request.opex.currency) %>
+                      </div>
+                      <div><strong><%= l(:field_opex_remaining_amount) %>:</strong>
+                        <span class="<%= @purchase_request.opex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
+                          <%= format_price(@purchase_request.opex.remaining_amount, @purchase_request.opex.currency) %>
+                        </span>
+                      </div>
+                      <div><strong><%= l(:field_opex_utilization_percentage) %>:</strong>
+                        <span class="utilization-percentage">
+                          <%= @purchase_request.opex.utilization_percentage.round(1) %>%
+                        </span>
+                      </div>
+                    </div>
+                  </span>
+                </div>
+              <% end %>
+
+              <% tpc_display = @purchase_request.tpc_code_display %>
+              <% if tpc_display.present? %>
+                <div class="grid-row">
+                  <span class="label"><%= l(:label_tpc_code) %>:</span>
+                  <span class="value">
+                    <div class="tpc-code-details-display">
+                      <div class="tpc-main-info">
+                        <strong class="tpc-number"><%= tpc_display %></strong>
+                        <% if @purchase_request.tpc_code.present? %>
+                          <span class="tpc-source-badge direct">Direct Assignment</span>
+                        <% elsif @purchase_request.capex&.tpc_code_record.present? %>
+                          <span class="tpc-source-badge capex">Inherited from CAPEX</span>
+                        <% elsif @purchase_request.opex&.tpc_code.present? %>
+                          <span class="tpc-source-badge opex">Inherited from OPEX</span>
+                        <% end %>
+                      </div>
+
+                      <%
+                        tpc_record = @purchase_request.tpc_code ||
+                                     @purchase_request.capex&.tpc_code_record ||
+                                     @purchase_request.opex&.tpc_code
+                      %>
+                      <% if tpc_record.present? %>
+                        <div class="tpc-owner-info">
+                          <div><strong>Owner:</strong> <%= tpc_record.tpc_owner_name %></div>
+                          <% if tpc_record.department.present? %>
+                            <div><strong>Department:</strong> <%= tpc_record.department %></div>
+                          <% end %>
+                          <div><strong>Email:</strong> <%= mail_to tpc_record.tpc_email, tpc_record.tpc_email %></div>
+                          <% if tpc_record.description.present? %>
+                            <div><strong>Description:</strong> <%= tpc_record.description %></div>
+                          <% end %>
+                        </div>
+                      <% end %>
                     </div>
                   </span>
                 </div>
@@ -694,7 +760,95 @@
     font-weight: bold;
     color: #ff9800;
   }
-  
+
+  /* OPEX details display styling */
+  .opex-details-display {
+    margin-top: 5px;
+    padding: 8px;
+    background-color: #f1f8f4;
+    border-radius: 3px;
+    border-left: 3px solid #4caf50;
+    font-size: 0.9em;
+  }
+
+  .opex-details-display div {
+    margin: 3px 0;
+  }
+
+  .opex-link {
+    color: #4caf50;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .opex-link:hover {
+    text-decoration: underline;
+  }
+
+  /* TPC Code details display styling */
+  .tpc-code-details-display {
+    margin-top: 5px;
+    padding: 10px;
+    background-color: #f8f4ff;
+    border-radius: 4px;
+    border-left: 3px solid #6f42c1;
+    font-size: 0.9em;
+  }
+
+  .tpc-main-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0d4f7;
+  }
+
+  .tpc-code-details-display .tpc-number {
+    font-size: 16px;
+    font-weight: bold;
+    color: #6f42c1;
+    font-family: monospace;
+  }
+
+  .tpc-source-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .tpc-source-badge.direct {
+    background-color: #6f42c1;
+    color: white;
+  }
+
+  .tpc-source-badge.capex {
+    background-color: #2196f3;
+    color: white;
+  }
+
+  .tpc-source-badge.opex {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .tpc-owner-info {
+    margin-top: 8px;
+  }
+
+  .tpc-owner-info div {
+    margin: 4px 0;
+    color: #555;
+  }
+
+  .tpc-owner-info strong {
+    color: #333;
+    margin-right: 5px;
+  }
+
   /* Quarterly allocation display styling */
   .quarterly-allocation-display {
     margin-top: 5px;

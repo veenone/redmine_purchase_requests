@@ -39,39 +39,39 @@
 
 /* Button variations */
 .pr-button-primary {
-  /* background-color: #4CAF50; */
-  color: white;
+  background-color: #4CAF50 !important;
+  color: white !important;
 }
 
 .pr-button-primary:hover {
-  background-color: #45a049;
+  background-color: #45a049 !important;
 }
 
 .pr-button-secondary {
-  /* background-color: #2196F3; */
-  color: white;
+  background-color: #2196F3 !important;
+  color: white !important;
 }
 
 .pr-button-secondary:hover {
-  background-color: #0b7dda;
+  background-color: #0b7dda !important;
 }
 
 .pr-button-danger {
-  background-color: #f44336;
-  color: white;
+  background-color: #f44336 !important;
+  color: white !important;
 }
 
 .pr-button-danger:hover {
-  background-color: #da190b;
+  background-color: #da190b !important;
 }
 
 .pr-button-cancel {
-  /* background-color: #757575; */
-  color: white;
+  background-color: #757575 !important;
+  color: white !important;
 }
 
 .pr-button-cancel:hover {
-  background-color: #616161;
+  background-color: #616161 !important;
 }
 
 /* Button container */

@@ -110,7 +110,17 @@ class PurchaseRequestsController < ApplicationController
   def dashboard
     # Collect general statistics for the current project
     scope = @project ? @project.purchase_requests : PurchaseRequest
-    
+
+    # Year filter
+    @selected_year = params[:year].present? ? params[:year].to_i : nil
+    @available_years = scope.pluck(Arel.sql('DISTINCT YEAR(purchase_requests.created_at)')).compact.sort.reverse
+    @available_years = [Date.current.year] if @available_years.empty?
+
+    # Apply year filter if selected
+    if @selected_year.present?
+      scope = scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
+    end
+
     @total_requests = scope.count
     @open_requests = scope.open.count
     @closed_requests = scope.closed.count
@@ -443,6 +453,33 @@ class PurchaseRequestsController < ApplicationController
     
     # Recent requests - add this to fix the empty recent activity list
     @recent_requests = scope.order(created_at: :desc).limit(5)
+
+    # TPC Code distribution with multi-currency support
+    tpc_data = {}
+
+    scope.where.not(estimated_price: nil).each do |request|
+      tpc_display = request.tpc_code_display
+      next if tpc_display.blank?
+
+      curr = request.currency.presence || default_currency
+      converted_price = helpers.convert_currency(request.estimated_price, curr, default_currency)
+
+      # Initialize TPC data if needed
+      tpc_data[tpc_display] ||= { count: 0, total_cost: 0 }
+
+      # Update TPC data
+      tpc_data[tpc_display][:count] += 1
+      tpc_data[tpc_display][:total_cost] += converted_price
+    end
+
+    # Format and sort TPCs by total cost
+    @tpc_distribution = tpc_data.map do |tpc_code, data|
+      {
+        tpc_code: tpc_code,
+        count: data[:count],
+        total_cost: data[:total_cost].round(2)
+      }
+    end.sort_by { |t| -t[:total_cost] }.take(10)
   end
   
   private

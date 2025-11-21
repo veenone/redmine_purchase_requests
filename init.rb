@@ -26,6 +26,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_opex_dashboard, { opex: [:dashboard] }
     permission :view_tpc_codes, { tpc_codes: [:index, :show] }
     permission :manage_tpc_codes, { tpc_codes: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export] }
+    permission :view_tpc_dashboard, { tpc_codes: [:dashboard] }
     permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }
     
     # Global permissions (outside project context but grouped under purchase_requests module)
@@ -84,7 +85,14 @@ Redmine::Plugin.register :redmine_purchase_requests do
        caption: 'TPC Codes',
        param: :project_id,
        parent: :purchase_requests
-       
+
+  menu :project_menu, :tpc_dashboard,
+       { controller: 'tpc_codes', action: 'dashboard' },
+       caption: 'TPC Dashboard',
+       param: :project_id,
+       parent: :purchase_requests,
+       if: Proc.new { |project| User.current.allowed_to?(:view_tpc_dashboard, project) }
+
   menu :project_menu, :purchase_request_reports,
        { controller: 'reports', action: 'index' },
        caption: 'Reports',
@@ -95,12 +103,21 @@ Redmine::Plugin.register :redmine_purchase_requests do
   menu :top_menu, :global_tpc_codes,
        { controller: 'tpc_codes', action: 'global_index' },
        caption: 'TPC Codes',
-       if: Proc.new { 
-         User.current.logged? && 
+       if: Proc.new {
+         User.current.logged? &&
          (User.current.admin? || User.current.allowed_to?(:view_global_tpc_codes, nil, global: true)) &&
          Setting.plugin_redmine_purchase_requests['tpc_global_enabled'] == '1'
        }
-       
+
+  # Add TPC dashboard menu to top navigation
+  menu :top_menu, :tpc_dashboard,
+       { controller: 'tpc_codes', action: 'dashboard' },
+       caption: 'TPC Dashboard',
+       if: Proc.new {
+         User.current.logged? &&
+         (User.current.admin? || User.current.allowed_to?(:view_global_tpc_codes, nil, global: true))
+       }
+
   # Add global vendor management menu to top navigation
   menu :top_menu, :global_vendors,
        { controller: 'vendors', action: 'index' },
