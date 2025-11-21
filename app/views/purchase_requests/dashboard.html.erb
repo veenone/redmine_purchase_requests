@@ -94,6 +94,16 @@
     font-weight: bold;
   }
 
+  .tpc-code-cell {
+    font-family: monospace;
+    color: #6f42c1;
+    font-size: 13px;
+  }
+
+  .tpc-code-cell strong {
+    font-weight: 600;
+  }
+
   .chart-container {
     width: 100%;
     height: 250px;
@@ -288,6 +298,27 @@
   <%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'icon icon-add' %>
   <% if User.current.allowed_to?(:view_tpc_codes, @project) %>
     <%= link_to l(:label_tpc_codes), project_tpc_codes_path(@project), class: 'icon icon-projects' %>
+  <% end %>
+</div>
+
+<!-- Year Filter Section -->
+<div class="dashboard-filter-section" style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+  <%= form_tag dashboard_project_purchase_requests_path(@project), method: :get, style: 'margin: 0;' do %>
+    <div style="display: flex; align-items: center; gap: 15px;">
+      <label for="year_filter" style="font-weight: bold; margin: 0;">Filter by Year:</label>
+      <%= select_tag :year,
+                     options_for_select([['All Years', '']] + @available_years.map { |y| [y.to_s, y.to_s] }, @selected_year),
+                     id: 'year_filter',
+                     class: 'pr-select',
+                     style: 'width: 150px; height: 38px !important; padding: 6px 12px !important; color: #333 !important; background-color: #fff !important;',
+                     onchange: 'this.form.submit();' %>
+      <% if @selected_year.present? %>
+        <span style="color: #666; font-size: 13px;">
+          Showing data for <%= @selected_year %>
+          <%= link_to 'Clear Filter', dashboard_project_purchase_requests_path(@project), style: 'margin-left: 10px; color: #2196F3;' %>
+        </span>
+      <% end %>
+    </div>
   <% end %>
 </div>
 
@@ -633,6 +664,43 @@
     </div>
   </div>
 
+  <!-- TPC Code Distribution Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3>Budget Distribution by TPC Code</h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @tpc_distribution.present? && @tpc_distribution.any? %>
+        <table class="dashboard-table">
+          <tr>
+            <th>TPC Code</th>
+            <th>Requests</th>
+            <th>Total Cost</th>
+          </tr>
+          <%
+            # Get default currency for TPC table
+            tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+            tpc_symbol = local_currency_symbol(tpc_currency, symbol_map)
+          %>
+          <% @tpc_distribution.each do |tpc| %>
+            <tr>
+              <td class="tpc-code-cell"><strong><%= tpc[:tpc_code] %></strong></td>
+              <td><%= tpc[:count] %></td>
+              <td class="stat-currency"><%= tpc_symbol %><%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %></td>
+            </tr>
+          <% end %>
+        </table>
+
+        <!-- Native Bar Chart for TPC Distribution -->
+        <div class="chart-bar-container" id="tpc-distribution-chart" style="margin-top: 20px;">
+          <!-- Bar chart will be generated here -->
+        </div>
+      <% else %>
+        <p class="nodata">No TPC code data available</p>
+      <% end %>
+    </div>
+  </div>
+
   <!-- Response Time Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
@@ -897,4 +965,25 @@ function generateBarChart(containerId, data) {
     container.appendChild(bar);
   });
 }
+
+// Generate TPC Distribution Bar Chart
+<% if @tpc_distribution.present? && @tpc_distribution.any? %>
+const tpcDistributionData = <%= raw @tpc_distribution.to_json %>;
+const tpcChartContainer = document.getElementById('tpc-distribution-chart');
+
+if (tpcChartContainer && tpcDistributionData.length > 0) {
+  const tpcChartData = tpcDistributionData.map(item => ({
+    label: item.tpc_code,
+    value: item.total_cost,
+    count: item.count
+  }));
+
+  generateBarChart(tpcChartContainer, tpcChartData, {
+    valueLabel: (value) => `$${value.toLocaleString()}`,
+    color: '#6f42c1',
+    showValues: true,
+    title: (item) => `${item.label}: ${item.count} requests ($${item.value.toLocaleString()})`
+  });
+}
+<% end %>
 </script>

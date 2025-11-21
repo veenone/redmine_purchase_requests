@@ -575,6 +575,8 @@ en:
   # TPC Code Management
   label_tpc_codes: "TPC Codes"
   label_tpc_code: "TPC Code"
+  label_select_tpc_code: "-- Select TPC Code --"
+  label_create_tpc_code: "Create New TPC Code"
   label_new_tpc_code: "New TPC Code"
   label_edit_tpc_code: "Edit TPC Code"
   label_show_tpc_code: "View TPC Code"
@@ -612,6 +614,8 @@ en:
   text_tpc_email_info: "Email address of the TPC code owner for communication"
   text_tpc_description_info: "Brief description of the TPC code purpose and scope"
   text_tpc_notes_info: "Additional notes, comments, or special instructions"
+  text_tpc_code_owner_info: "Select a TPC code to track cost ownership and budget responsibility"
+  text_no_tpc_codes_available: "No TPC codes are currently available. Please create one first."
   text_tpc_code_management_info: "Manage TPC codes for project cost tracking and budget allocation"
   text_global_tpc_code_info: "Global TPC codes are available to all projects"
   text_project_tpc_code_info: "Project TPC codes are specific to this project only"

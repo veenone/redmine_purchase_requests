@@ -95,12 +95,21 @@ Redmine::Plugin.register :redmine_purchase_requests do
   menu :top_menu, :global_tpc_codes,
        { controller: 'tpc_codes', action: 'global_index' },
        caption: 'TPC Codes',
-       if: Proc.new { 
-         User.current.logged? && 
+       if: Proc.new {
+         User.current.logged? &&
          (User.current.admin? || User.current.allowed_to?(:view_global_tpc_codes, nil, global: true)) &&
          Setting.plugin_redmine_purchase_requests['tpc_global_enabled'] == '1'
        }
-       
+
+  # Add TPC dashboard menu to top navigation
+  menu :top_menu, :tpc_dashboard,
+       { controller: 'tpc_codes', action: 'dashboard' },
+       caption: 'TPC Dashboard',
+       if: Proc.new {
+         User.current.logged? &&
+         (User.current.admin? || User.current.allowed_to?(:view_global_tpc_codes, nil, global: true))
+       }
+
   # Add global vendor management menu to top navigation
   menu :top_menu, :global_vendors,
        { controller: 'vendors', action: 'index' },

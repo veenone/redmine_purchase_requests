@@ -1,7 +1,7 @@
 class TpcCodesController < ApplicationController
   before_action :find_project, only: [:index, :show, :new, :create, :edit, :update, :destroy, :import_export, :import, :export]
   before_action :find_tpc_code, only: [:show, :edit, :update, :destroy]
-  before_action :authorize_global, only: [:global_index, :global_show, :global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import_export, :global_import, :global_export]
+  before_action :authorize_global, only: [:global_index, :global_show, :global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import_export, :global_import, :global_export, :dashboard]
   before_action :find_global_tpc_code, only: [:global_show, :global_edit, :global_update, :global_destroy]
   
   def index
@@ -238,7 +238,77 @@ class TpcCodesController < ApplicationController
     
     redirect_to global_tpc_codes_path
   end
-  
+
+  def dashboard
+    # Get all TPC codes (global and project-specific)
+    @all_tpc_codes = TpcCode.active.includes(:project, :capex, :opex, :purchase_requests)
+
+    # TPC codes by project
+    @tpc_by_project = @all_tpc_codes.group_by(&:project).map do |project, tpcs|
+      {
+        name: project ? project.name : 'Global',
+        count: tpcs.count,
+        is_global: project.nil?
+      }
+    end.sort_by { |p| p[:is_global] ? 0 : 1 }
+
+    # TPC codes by department
+    @tpc_by_department = @all_tpc_codes.where.not(department: [nil, '']).group(:department).count
+
+    # Calculate total costs and utilization for each TPC code
+    default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    @tpc_utilization = []
+
+    @all_tpc_codes.limit(20).each do |tpc|
+      total_cost = 0
+      request_count = 0
+
+      # Get costs from CAPEX entries
+      tpc.capex.each do |capex|
+        total_cost += helpers.convert_currency(capex.total_amount, capex.currency, default_currency)
+        request_count += capex.purchase_requests.count
+      end
+
+      # Get costs from OPEX entries
+      tpc.opex.each do |opex|
+        total_cost += helpers.convert_currency(opex.total_amount, opex.currency, default_currency)
+        request_count += opex.purchase_requests.count
+      end
+
+      # Get costs from direct purchase requests
+      tpc.purchase_requests.where.not(estimated_price: nil).each do |pr|
+        curr = pr.currency.presence || default_currency
+        total_cost += helpers.convert_currency(pr.estimated_price, curr, default_currency)
+        request_count += 1
+      end
+
+      @tpc_utilization << {
+        tpc_code: tpc.tpc_number,
+        department: tpc.department,
+        owner: tpc.tpc_owner_name,
+        total_cost: total_cost.round(2),
+        request_count: request_count
+      }
+    end
+
+    @tpc_utilization = @tpc_utilization.sort_by { |t| -t[:total_cost] }.take(10)
+
+    # Active vs Inactive TPCs
+    @active_tpcs = TpcCode.active.count
+    @inactive_tpcs = TpcCode.inactive.count
+
+    # Monthly TPC creation trend (last 12 months)
+    @monthly_tpc_creation = 12.times.map do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = i.months.ago.end_of_month
+
+      {
+        month: i.months.ago.strftime("%b %Y"),
+        count: TpcCode.where(created_at: month_start..month_end).count
+      }
+    end.reverse
+  end
+
   private
   
   def find_project

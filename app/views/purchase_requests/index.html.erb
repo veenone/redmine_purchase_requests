@@ -71,7 +71,8 @@
           <th class="status-column">Status</th>
           <th class="author-column">Author</th>
           <th class="price-column">Estimated Price</th>
-          <th class="capex-column">CAPEX Entry</th>
+          <th class="budget-column">Budget Entry</th>
+          <th class="tpc-column">TPC Code</th>
           <th class="date-column">Created</th>
           <th class="date-column">Updated</th>
           <th class="actions-column">Actions</th>
@@ -127,19 +128,46 @@
                 <span class="no-data">Not specified</span>
               <% end %>
             </td>
-            <td class="capex-entry">
+            <td class="budget-entry">
               <% if purchase_request.capex.present? %>
-                <div class="capex-link-container">
-                  <%= link_to purchase_request.capex.display_name, 
+                <div class="budget-link-container">
+                  <%= link_to purchase_request.capex.display_name,
                             project_capex_path(@project, purchase_request.capex),
-                            class: 'capex-link',
-                            title: "#{purchase_request.capex.tpc_code} - #{purchase_request.capex.year}" %>
-                  <div class="capex-utilization-badge <%= 'over-budget' if purchase_request.capex.utilization_percentage > 100 %>">
+                            class: 'budget-link capex-link',
+                            title: "CAPEX - #{purchase_request.capex.tpc_code} - #{purchase_request.capex.year}" %>
+                  <div class="budget-utilization-badge <%= 'over-budget' if purchase_request.capex.utilization_percentage > 100 %>">
                     <%= purchase_request.capex.utilization_percentage.round(1) %>%
                   </div>
                 </div>
+              <% elsif purchase_request.opex.present? %>
+                <div class="budget-link-container">
+                  <%= link_to purchase_request.opex.display_name,
+                            project_opex_path(@project, purchase_request.opex),
+                            class: 'budget-link opex-link',
+                            title: "OPEX - #{purchase_request.opex.opex_code} - #{purchase_request.opex.year}" %>
+                  <div class="budget-utilization-badge <%= 'over-budget' if purchase_request.opex.utilization_percentage > 100 %>">
+                    <%= purchase_request.opex.utilization_percentage.round(1) %>%
+                  </div>
+                </div>
               <% else %>
-                <span class="no-data">Not linked</span>
+                <span class="no-data">No Budget</span>
+              <% end %>
+            </td>
+            <td class="tpc-code">
+              <% tpc_display = purchase_request.tpc_code_display %>
+              <% if tpc_display.present? %>
+                <div class="tpc-code-display">
+                  <span class="tpc-number"><%= tpc_display %></span>
+                  <% if purchase_request.tpc_code.present? %>
+                    <span class="tpc-source direct">Direct</span>
+                  <% elsif purchase_request.capex&.tpc_code_record.present? %>
+                    <span class="tpc-source capex">via CAPEX</span>
+                  <% elsif purchase_request.opex&.tpc_code.present? %>
+                    <span class="tpc-source opex">via OPEX</span>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="no-data">No TPC</span>
               <% end %>
             </td>
             <td class="created-on">
@@ -303,11 +331,12 @@
   }
   
   .id-column { width: 60px; }
-  .title-column { width: 250px; }
-  .status-column { width: 120px; }
-  .author-column { width: 120px; }
-  .price-column { width: 130px; }
-  .capex-column { width: 150px; }
+  .title-column { width: 220px; }
+  .status-column { width: 110px; }
+  .author-column { width: 110px; }
+  .price-column { width: 120px; }
+  .budget-column { width: 140px; }
+  .tpc-column { width: 130px; }
   .date-column { width: 110px; }
   .actions-column { width: 140px; }
   
@@ -372,24 +401,31 @@
     text-transform: uppercase;
   }
   
-  .capex-link-container {
+  .budget-link-container {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
-  
-  .capex-link {
-    color: #007bff;
+
+  .budget-link {
     text-decoration: none;
     font-size: 12px;
   }
-  
-  .capex-link:hover {
+
+  .budget-link.capex-link {
+    color: #007bff;
+  }
+
+  .budget-link.opex-link {
+    color: #28a745;
+  }
+
+  .budget-link:hover {
     text-decoration: underline;
   }
-  
-  .capex-utilization-badge {
+
+  .budget-utilization-badge {
     display: inline-block;
     padding: 2px 6px;
     border-radius: 10px;
@@ -398,9 +434,47 @@
     font-size: 10px;
     font-weight: bold;
   }
-  
-  .capex-utilization-badge.over-budget {
+
+  .budget-utilization-badge.over-budget {
     background-color: #dc3545;
+  }
+
+  .tpc-code-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .tpc-number {
+    font-weight: bold;
+    color: #333;
+    font-size: 12px;
+    font-family: monospace;
+  }
+
+  .tpc-source {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+
+  .tpc-source.direct {
+    background-color: #6f42c1;
+    color: white;
+  }
+
+  .tpc-source.capex {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .tpc-source.opex {
+    background-color: #28a745;
+    color: white;
   }
   
   .date-display {
