@@ -3,18 +3,29 @@
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
-<% html_title "TPC Codes Dashboard" %>
+<% html_title @project ? "#{@project.name} - TPC Codes Dashboard" : "TPC Codes Dashboard" %>
 
 <div class="contextual">
-  <%= link_to global_tpc_codes_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-list">View All TPC Codes</span>
-  <% end %>
-  <%= link_to new_global_tpc_codes_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-    <span class="icon icon-add">New TPC Code</span>
+  <% if @project %>
+    <%= link_to project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-list">View TPC Codes</span>
+    <% end %>
+    <% if User.current.allowed_to?(:manage_tpc_codes, @project) %>
+      <%= link_to new_project_tpc_code_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+        <span class="icon icon-add">New TPC Code</span>
+      <% end %>
+    <% end %>
+  <% else %>
+    <%= link_to global_tpc_codes_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-list">View All TPC Codes</span>
+    <% end %>
+    <%= link_to new_global_tpc_codes_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
+      <span class="icon icon-add">New TPC Code</span>
+    <% end %>
   <% end %>
 </div>
 
-<h2>TPC Codes Dashboard</h2>
+<h2><%= @project ? "#{@project.name} - TPC Codes Dashboard" : "TPC Codes Dashboard" %></h2>
 
 <div class="dashboard-container">
   <!-- Summary Cards -->

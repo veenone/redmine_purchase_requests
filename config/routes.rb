@@ -43,6 +43,7 @@ RedmineApp::Application.routes.draw do
     # Add TPC codes management routes (project-scoped)
     resources :tpc_codes, path: 'tpc_codes' do
       collection do
+        get 'dashboard'
         get 'import_export'
         post 'import'
         get 'export'

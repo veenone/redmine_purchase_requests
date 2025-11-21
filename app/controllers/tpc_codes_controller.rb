@@ -1,7 +1,11 @@
 class TpcCodesController < ApplicationController
+  include PurchaseRequestsHelper
+
+  before_action :find_project_for_dashboard, only: [:dashboard]
   before_action :find_project, only: [:index, :show, :new, :create, :edit, :update, :destroy, :import_export, :import, :export]
   before_action :find_tpc_code, only: [:show, :edit, :update, :destroy]
-  before_action :authorize_global, only: [:global_index, :global_show, :global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import_export, :global_import, :global_export, :dashboard]
+  before_action :authorize_global, only: [:global_index, :global_show, :global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import_export, :global_import, :global_export]
+  before_action :authorize_dashboard, only: [:dashboard]
   before_action :find_global_tpc_code, only: [:global_show, :global_edit, :global_update, :global_destroy]
   
   def index
@@ -240,17 +244,27 @@ class TpcCodesController < ApplicationController
   end
 
   def dashboard
-    # Get all TPC codes (global and project-specific)
-    @all_tpc_codes = TpcCode.active.includes(:project, :capex, :opex, :purchase_requests)
+    # Get TPC codes - filter by project if in project context
+    if @project
+      @all_tpc_codes = TpcCode.available_for_project(@project).active.includes(:project, :capex, :opex, :purchase_requests)
+      base_scope = TpcCode.available_for_project(@project)
+    else
+      @all_tpc_codes = TpcCode.active.includes(:project, :capex, :opex, :purchase_requests)
+      base_scope = TpcCode
+    end
 
-    # TPC codes by project
-    @tpc_by_project = @all_tpc_codes.group_by(&:project).map do |project, tpcs|
-      {
-        name: project ? project.name : 'Global',
-        count: tpcs.count,
-        is_global: project.nil?
-      }
-    end.sort_by { |p| p[:is_global] ? 0 : 1 }
+    # TPC codes by project (only for global dashboard)
+    if @project
+      @tpc_by_project = []
+    else
+      @tpc_by_project = @all_tpc_codes.group_by(&:project).map do |project, tpcs|
+        {
+          name: project ? project.name : 'Global',
+          count: tpcs.count,
+          is_global: project.nil?
+        }
+      end.sort_by { |p| p[:is_global] ? 0 : 1 }
+    end
 
     # TPC codes by department
     @tpc_by_department = @all_tpc_codes.where.not(department: [nil, '']).group(:department).count
@@ -263,22 +277,25 @@ class TpcCodesController < ApplicationController
       total_cost = 0
       request_count = 0
 
-      # Get costs from CAPEX entries
-      tpc.capex.each do |capex|
-        total_cost += helpers.convert_currency(capex.total_amount, capex.currency, default_currency)
+      # Get costs from CAPEX entries (filter by project if applicable)
+      capex_scope = @project ? tpc.capex.where(project_id: @project.id) : tpc.capex
+      capex_scope.each do |capex|
+        total_cost += convert_currency(capex.total_amount, capex.currency, default_currency)
         request_count += capex.purchase_requests.count
       end
 
-      # Get costs from OPEX entries
-      tpc.opex.each do |opex|
-        total_cost += helpers.convert_currency(opex.total_amount, opex.currency, default_currency)
+      # Get costs from OPEX entries (filter by project if applicable)
+      opex_scope = @project ? tpc.opex.where(project_id: @project.id) : tpc.opex
+      opex_scope.each do |opex|
+        total_cost += convert_currency(opex.total_amount, opex.currency, default_currency)
         request_count += opex.purchase_requests.count
       end
 
-      # Get costs from direct purchase requests
-      tpc.purchase_requests.where.not(estimated_price: nil).each do |pr|
+      # Get costs from direct purchase requests (filter by project if applicable)
+      pr_scope = @project ? tpc.purchase_requests.where(project_id: @project.id) : tpc.purchase_requests
+      pr_scope.where.not(estimated_price: nil).each do |pr|
         curr = pr.currency.presence || default_currency
-        total_cost += helpers.convert_currency(pr.estimated_price, curr, default_currency)
+        total_cost += convert_currency(pr.estimated_price, curr, default_currency)
         request_count += 1
       end
 
@@ -294,8 +311,8 @@ class TpcCodesController < ApplicationController
     @tpc_utilization = @tpc_utilization.sort_by { |t| -t[:total_cost] }.take(10)
 
     # Active vs Inactive TPCs
-    @active_tpcs = TpcCode.active.count
-    @inactive_tpcs = TpcCode.inactive.count
+    @active_tpcs = base_scope.active.count
+    @inactive_tpcs = base_scope.inactive.count
 
     # Monthly TPC creation trend (last 12 months)
     @monthly_tpc_creation = 12.times.map do |i|
@@ -304,13 +321,35 @@ class TpcCodesController < ApplicationController
 
       {
         month: i.months.ago.strftime("%b %Y"),
-        count: TpcCode.where(created_at: month_start..month_end).count
+        count: base_scope.where(created_at: month_start..month_end).count
       }
     end.reverse
   end
 
   private
-  
+
+  def find_project_for_dashboard
+    @project = Project.find(params[:project_id]) if params[:project_id].present?
+  rescue ActiveRecord::RecordNotFound
+    render_404
+  end
+
+  def authorize_dashboard
+    if @project
+      # Project-scoped dashboard - check project permission
+      unless User.current.allowed_to?(:view_tpc_dashboard, @project)
+        render_403
+        return false
+      end
+    else
+      # Global dashboard - check global permission
+      unless User.current.admin? || User.current.allowed_to?(:view_global_tpc_codes, nil, global: true)
+        render_403
+        return false
+      end
+    end
+  end
+
   def find_project
     @project = Project.find(params[:project_id]) if params[:project_id]
   rescue ActiveRecord::RecordNotFound
