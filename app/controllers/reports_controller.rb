@@ -1,7 +1,8 @@
 class ReportsController < ApplicationController
   include ActionView::Helpers::TextHelper
   include ActionView::Helpers::NumberHelper
-  
+  include PurchaseRequestsHelper
+
   before_action :find_optional_project
   before_action :authorize_reports
   
@@ -292,8 +293,6 @@ class ReportsController < ApplicationController
   end
   
   def generate_tpc_codes_report
-    include PurchaseRequestsHelper
-
     # Scope data based on project context
     tpc_codes = @project ? TpcCode.available_for_project(@project) : TpcCode.all
     tpc_codes = tpc_codes.includes(:capex, :opex, :project, :purchase_requests)
