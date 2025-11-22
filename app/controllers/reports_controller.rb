@@ -292,48 +292,187 @@ class ReportsController < ApplicationController
   end
   
   def generate_tpc_codes_report
+    include PurchaseRequestsHelper
+
     # Scope data based on project context
     tpc_codes = @project ? TpcCode.available_for_project(@project) : TpcCode.all
-    tpc_codes = tpc_codes.includes(:capex, :opex, :project)
-    
+    tpc_codes = tpc_codes.includes(:capex, :opex, :project, :purchase_requests)
+
+    # Purchase request base scope
+    pr_base_scope = @project ? @project.purchase_requests : PurchaseRequest.all
+
     # Basic statistics
     total_count = tpc_codes.count
     active_count = tpc_codes.active.count
+    inactive_count = tpc_codes.inactive.count
     global_count = tpc_codes.global.count
-    
+
+    # Department breakdown
+    department_breakdown = tpc_codes.where.not(department: [nil, '']).group(:department).count
+
     # Usage analysis
     capex_usage = tpc_codes.joins(:capex).group('tpc_codes.tpc_number').count
     opex_usage = tpc_codes.joins(:opex).group('tpc_codes.tpc_number').count
-    
-    # Financial allocation
+    direct_pr_usage = tpc_codes.joins(:purchase_requests).group('tpc_codes.tpc_number').count
+
+    # Financial allocation from budget entries
     capex_totals = tpc_codes.joins(:capex)
                             .group('tpc_codes.tpc_number')
                             .sum('capex.total_amount')
-    
+
     opex_totals = tpc_codes.joins(:opex)
                            .group('tpc_codes.tpc_number')
                            .sum('opex.total_amount')
-    
+
+    # Purchase request counts by TPC code (from all sources)
+    tpc_pr_counts = {}
+    default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+
+    # Count direct TPC assignments
+    direct_tpc_counts = pr_base_scope.where.not(tpc_code_id: nil).group(:tpc_code_id).count
+    direct_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
+
+    # Count via CAPEX
+    capex_tpc_counts = pr_base_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).group('capex.tpc_code_id').count
+    capex_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
+
+    # Count via OPEX
+    opex_tpc_counts = pr_base_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).group('opex.tpc_code_id').count
+    opex_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
+
+    # Build TPC by purchase request data
+    tpc_by_purchase_request = []
+    tpc_pr_counts.each do |tpc_id, count|
+      tpc = TpcCode.find_by(id: tpc_id)
+      next unless tpc
+      tpc_by_purchase_request << {
+        tpc_number: tpc.tpc_number,
+        department: tpc.department,
+        owner: tpc.tpc_owner_name,
+        count: count
+      }
+    end
+    tpc_by_purchase_request = tpc_by_purchase_request.sort_by { |t| -t[:count] }.take(10)
+
+    # Calculate total cost utilization per TPC code
+    tpc_utilization = []
+    tpc_codes.active.limit(20).each do |tpc|
+      total_cost = 0
+      request_count = 0
+      capex_count = 0
+      opex_count = 0
+      direct_count = 0
+
+      # Get costs from CAPEX entries
+      capex_scope = @project ? tpc.capex.where(project_id: @project.id) : tpc.capex
+      capex_scope.each do |capex|
+        capex.purchase_requests.each do |pr|
+          curr = pr.currency.presence || default_currency
+          total_cost += convert_currency_for_report(pr.estimated_price || 0, curr, default_currency)
+          request_count += 1
+          capex_count += 1
+        end
+      end
+
+      # Get costs from OPEX entries
+      opex_scope = @project ? tpc.opex.where(project_id: @project.id) : tpc.opex
+      opex_scope.each do |opex|
+        opex.purchase_requests.each do |pr|
+          curr = pr.currency.presence || default_currency
+          total_cost += convert_currency_for_report(pr.estimated_price || 0, curr, default_currency)
+          request_count += 1
+          opex_count += 1
+        end
+      end
+
+      # Get costs from direct purchase requests
+      pr_scope = @project ? tpc.purchase_requests.where(project_id: @project.id) : tpc.purchase_requests
+      pr_scope.where.not(estimated_price: nil).each do |pr|
+        curr = pr.currency.presence || default_currency
+        total_cost += convert_currency_for_report(pr.estimated_price, curr, default_currency)
+        request_count += 1
+        direct_count += 1
+      end
+
+      next if request_count == 0
+
+      tpc_utilization << {
+        tpc_code: tpc.tpc_number,
+        department: tpc.department,
+        owner: tpc.tpc_owner_name,
+        total_cost: total_cost.round(2),
+        request_count: request_count,
+        capex_count: capex_count,
+        opex_count: opex_count,
+        direct_count: direct_count
+      }
+    end
+    tpc_utilization = tpc_utilization.sort_by { |t| -t[:total_cost] }.take(10)
+
+    # Non-budgeted purchase requests (no CAPEX, OPEX, or direct TPC)
+    non_budgeted_count = pr_base_scope.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).count
+    non_budgeted_value = pr_base_scope.where(capex_id: nil, opex_id: nil, tpc_code_id: nil)
+                                      .where.not(estimated_price: nil)
+                                      .sum(:estimated_price)
+
+    # Monthly trend (last 12 months)
+    monthly_trend = {}
+    12.times do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = month_start.end_of_month
+
+      # Count PRs with TPC codes in this month
+      month_pr_scope = pr_base_scope.where(created_at: month_start..month_end)
+      direct = month_pr_scope.where.not(tpc_code_id: nil).count
+      via_capex = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
+      via_opex = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
+
+      monthly_trend[month_start] = direct + via_capex + via_opex
+    end
+    monthly_trend = monthly_trend.sort.to_h
+
     # Generate CSV data
     csv_data = generate_tpc_codes_csv(tpc_codes)
-    
+
     {
       summary: {
         total_count: total_count,
         active_count: active_count,
+        inactive_count: inactive_count,
         global_count: global_count,
         with_capex: capex_usage.count,
-        with_opex: opex_usage.count
+        with_opex: opex_usage.count,
+        with_direct_pr: direct_pr_usage.count,
+        non_budgeted_count: non_budgeted_count,
+        non_budgeted_value: non_budgeted_value || 0
       },
+      department_breakdown: department_breakdown,
       capex_usage: capex_usage,
       opex_usage: opex_usage,
+      direct_pr_usage: direct_pr_usage,
       capex_totals: capex_totals,
       opex_totals: opex_totals,
+      tpc_by_purchase_request: tpc_by_purchase_request,
+      tpc_utilization: tpc_utilization,
+      monthly_trend: monthly_trend,
       recent_codes: tpc_codes.order(created_at: :desc).limit(10),
       csv_data: csv_data,
       project: @project,
       generated_at: Time.current
     }
+  end
+
+  # Helper method for currency conversion in reports
+  def convert_currency_for_report(amount, from_currency, to_currency)
+    return amount if from_currency == to_currency || amount.nil? || amount == 0
+
+    settings = Setting.plugin_redmine_purchase_requests
+    exchange_rates = settings['exchange_rates'] || {}
+
+    rate = exchange_rates[from_currency].to_f
+    return amount if rate <= 0
+
+    (amount / rate).round(2)
   end
   
   def generate_capex_report
