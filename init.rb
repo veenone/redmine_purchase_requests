@@ -37,67 +37,83 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
   end
   
-  # Fix project menu items
-  menu :project_menu, :purchase_requests, 
+  # Purchase Requests menu (core items only)
+  menu :project_menu, :purchase_requests,
        { controller: 'purchase_requests', action: 'index' },
        caption: :label_purchase_requests,
        after: :issues,
        param: :project_id
 
-  menu :project_menu, :purchase_requests_dashboard, 
+  menu :project_menu, :purchase_requests_dashboard,
        { controller: 'purchase_requests', action: 'dashboard' },
        caption: :label_purchase_request_dashboard,
        param: :project_id,
        parent: :purchase_requests
-       
+
   menu :project_menu, :purchase_requests_vendors,
        { controller: 'project_vendors', action: 'index' },
        caption: :label_vendors,
        param: :project_id,
        parent: :purchase_requests
-       
-  menu :project_menu, :capex,
-       { controller: 'capex', action: 'index' },
-       caption: 'CAPEX',
-       param: :project_id,
-       parent: :purchase_requests
-       
-  menu :project_menu, :capex_dashboard,
-       { controller: 'capex', action: 'dashboard' },
-       caption: 'CAPEX Dashboard',
-       param: :project_id,
-       parent: :purchase_requests
-       
-  menu :project_menu, :opex,
-       { controller: 'opex', action: 'index' },
-       caption: 'OPEX',
-       param: :project_id,
-       parent: :purchase_requests
-       
-  menu :project_menu, :opex_dashboard,
-       { controller: 'opex', action: 'dashboard' },
-       caption: 'OPEX Dashboard',
-       param: :project_id,
-       parent: :purchase_requests
-       
-  menu :project_menu, :tpc_codes,
-       { controller: 'tpc_codes', action: 'index' },
-       caption: 'TPC Codes',
-       param: :project_id,
-       parent: :purchase_requests
-
-  menu :project_menu, :tpc_dashboard,
-       { controller: 'tpc_codes', action: 'dashboard' },
-       caption: 'TPC Dashboard',
-       param: :project_id,
-       parent: :purchase_requests,
-       if: Proc.new { |project| User.current.allowed_to?(:view_tpc_dashboard, project) }
 
   menu :project_menu, :purchase_request_reports,
        { controller: 'reports', action: 'index' },
        caption: 'Reports',
        param: :project_id,
        parent: :purchase_requests
+
+  # Budget Management menu (virtual parent - groups CAPEX, OPEX, TPC)
+  menu :project_menu, :budget_management, '#',
+       caption: :label_budget_management,
+       after: :purchase_requests,
+       param: :project_id,
+       if: Proc.new { |project|
+         User.current.allowed_to?(:view_capex, project) ||
+         User.current.allowed_to?(:view_opex, project) ||
+         User.current.allowed_to?(:view_tpc_codes, project)
+       }
+
+  menu :project_menu, :capex,
+       { controller: 'capex', action: 'index' },
+       caption: 'CAPEX List',
+       param: :project_id,
+       parent: :budget_management,
+       if: Proc.new { |project| User.current.allowed_to?(:view_capex, project) }
+
+  menu :project_menu, :capex_dashboard,
+       { controller: 'capex', action: 'dashboard' },
+       caption: 'CAPEX Dashboard',
+       param: :project_id,
+       parent: :budget_management,
+       if: Proc.new { |project| User.current.allowed_to?(:view_capex_dashboard, project) }
+
+  menu :project_menu, :opex,
+       { controller: 'opex', action: 'index' },
+       caption: 'OPEX List',
+       param: :project_id,
+       parent: :budget_management,
+       if: Proc.new { |project| User.current.allowed_to?(:view_opex, project) }
+
+  menu :project_menu, :opex_dashboard,
+       { controller: 'opex', action: 'dashboard' },
+       caption: 'OPEX Dashboard',
+       param: :project_id,
+       parent: :budget_management,
+       if: Proc.new { |project| User.current.allowed_to?(:view_opex_dashboard, project) }
+
+  menu :project_menu, :tpc_codes,
+       { controller: 'tpc_codes', action: 'index' },
+       caption: 'TPC Codes',
+       param: :project_id,
+       parent: :budget_management,
+       if: Proc.new { |project| User.current.allowed_to?(:view_tpc_codes, project) }
+
+  menu :project_menu, :tpc_dashboard,
+       { controller: 'tpc_codes', action: 'dashboard' },
+       caption: 'TPC Dashboard',
+       param: :project_id,
+       parent: :budget_management,
+       if: Proc.new { |project| User.current.allowed_to?(:view_tpc_dashboard, project) }
   
   # Add global TPC codes menu to top navigation
   menu :top_menu, :global_tpc_codes,
