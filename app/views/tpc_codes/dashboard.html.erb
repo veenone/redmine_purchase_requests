@@ -154,18 +154,15 @@
       </div>
     </div>
 
-    <!-- Monthly TPC Creation Trend -->
+    <!-- Monthly TPC Budget Expense Trend -->
     <div class="chart-card">
       <div class="chart-header">
-        <h3>TPC Code Creation Trend<%= @selected_year ? " (#{@selected_year})" : " (Last 12 Months)" %></h3>
+        <h3>TPC Budget Expense Trend<%= @selected_year ? " (#{@selected_year})" : " (Last 12 Months)" %></h3>
       </div>
       <div class="chart-body">
-        <div class="line-chart-container" id="monthly-creation-chart"></div>
-        <div class="chart-legend" id="creation-legend">
-          <div class="legend-item">
-            <span class="legend-color" style="background-color: #6f42c1;"></span>
-            <span class="legend-label">TPC Codes Created</span>
-          </div>
+        <div class="line-chart-container" id="monthly-budget-chart"></div>
+        <div class="chart-legend" id="budget-legend">
+          <!-- Legend will be populated by JavaScript -->
         </div>
       </div>
     </div>
@@ -550,7 +547,7 @@ function createLineChart(containerId, data, color, valueKey = 'count') {
 }
 
 // Function to create multi-line chart with legend
-function createMultiLineChart(containerId, legendContainerId, monthLabels, dataSeries) {
+function createMultiLineChart(containerId, legendContainerId, monthLabels, dataSeries, isCurrency = false) {
   const container = document.getElementById(containerId);
   const legendContainer = document.getElementById(legendContainerId);
   if (!container || !monthLabels || monthLabels.length === 0) return;
@@ -559,6 +556,7 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
   const chartHeight = 250;
   const chartWidth = container.clientWidth || 400;
   const padding = 40;
+  const currency = '<%= Setting.plugin_redmine_purchase_requests["default_currency"] || "USD" %>';
 
   // Find max value across all series
   let maxCount = 1;
@@ -618,7 +616,8 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
       circle.setAttribute('stroke-width', '1');
 
       const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-      title.textContent = `${tpcCode} - ${monthLabels[index]}: ${value}`;
+      const displayValue = isCurrency ? currency + ' ' + value.toLocaleString() : value;
+      title.textContent = `${tpcCode} - ${monthLabels[index]}: ${displayValue}`;
       circle.appendChild(title);
 
       svg.appendChild(circle);
@@ -653,24 +652,37 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
   container.appendChild(svg);
 }
 
-// Monthly TPC Creation Trend - Line Chart
-const creationData = <%= raw @monthly_tpc_creation.to_json %>;
-createLineChart('monthly-creation-chart', creationData, '#6f42c1');
+// Monthly TPC Budget Expense Trend - Multi-Line Chart by TPC Code
+const budgetData = <%= raw @monthly_tpc_budget.to_json %>;
+const budgetByCode = <%= raw @monthly_tpc_budget_by_code.to_json %>;
+const budgetMonthLabels = budgetData.map(m => m.month);
+
+// Check if we have budget data split by TPC codes
+if (Object.keys(budgetByCode).length > 0) {
+  createMultiLineChart('monthly-budget-chart', 'budget-legend', budgetMonthLabels, budgetByCode, true);
+} else {
+  // Fallback to total if no split data
+  createLineChart('monthly-budget-chart', budgetData, '#6f42c1', 'total');
+  const budgetLegendContainer = document.getElementById('budget-legend');
+  if (budgetLegendContainer) {
+    budgetLegendContainer.innerHTML = '<div class="legend-item"><span class="legend-color" style="background-color: #6f42c1;"></span><span class="legend-label">Total Budget</span></div>';
+  }
+}
 
 // Monthly TPC Usage in Purchase Requests - Multi-Line Chart by TPC Code
 const usageData = <%= raw @monthly_tpc_usage.to_json %>;
 const usageByCode = <%= raw @monthly_tpc_usage_by_code.to_json %>;
-const monthLabels = usageData.map(m => m.month);
+const usageMonthLabels = usageData.map(m => m.month);
 
 // Check if we have data split by TPC codes
 if (Object.keys(usageByCode).length > 0) {
-  createMultiLineChart('monthly-usage-chart', 'usage-legend', monthLabels, usageByCode);
+  createMultiLineChart('monthly-usage-chart', 'usage-legend', usageMonthLabels, usageByCode, false);
 } else {
   // Fallback to total if no split data
   createLineChart('monthly-usage-chart', usageData, '#2196F3', 'total');
-  const legendContainer = document.getElementById('usage-legend');
-  if (legendContainer) {
-    legendContainer.innerHTML = '<div class="legend-item"><span class="legend-color" style="background-color: #2196F3;"></span><span class="legend-label">Total TPC Usage</span></div>';
+  const usageLegendContainer = document.getElementById('usage-legend');
+  if (usageLegendContainer) {
+    usageLegendContainer.innerHTML = '<div class="legend-item"><span class="legend-color" style="background-color: #2196F3;"></span><span class="legend-label">Total TPC Usage</span></div>';
   }
 }
 </script>

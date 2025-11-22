@@ -354,34 +354,109 @@ class TpcCodesController < ApplicationController
     @active_tpcs = base_scope.active.count
     @inactive_tpcs = base_scope.inactive.count
 
-    # Monthly TPC creation trend (last 12 months or selected year)
+    # Get top 5 TPC codes for the multi-line charts
+    top_tpc_ids = @tpc_by_purchase_request.take(5).map { |t| TpcCode.find_by(tpc_number: t[:name])&.id }.compact
+    @tpc_budget_legend = @tpc_by_purchase_request.take(5).map { |t| t[:name] }
+    @tpc_usage_legend = @tpc_by_purchase_request.take(5).map { |t| t[:name] }
+    default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+
+    # Monthly TPC budget expense trend (last 12 months or selected year)
     if @selected_year
-      @monthly_tpc_creation = 12.times.map do |i|
+      @monthly_tpc_budget = 12.times.map do |i|
         month_num = i + 1
         month_start = Date.new(@selected_year, month_num, 1)
         month_end = month_start.end_of_month
 
+        month_pr_scope = pr_base_scope.where(created_at: month_start.beginning_of_day..month_end.end_of_day)
+
+        # Calculate total budget per TPC code
+        tpc_budgets = {}
+        total_budget = 0
+
+        top_tpc_ids.each do |tpc_id|
+          tpc_total = 0
+
+          # Direct TPC assignments
+          month_pr_scope.where(tpc_code_id: tpc_id).where.not(estimated_price: nil).each do |pr|
+            curr = pr.currency.presence || default_currency
+            tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
+          end
+
+          # Via CAPEX
+          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+            curr = pr.currency.presence || default_currency
+            tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
+          end
+
+          # Via OPEX
+          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+            curr = pr.currency.presence || default_currency
+            tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
+          end
+
+          tpc_budgets[tpc_id] = tpc_total.round(2)
+          total_budget += tpc_total
+        end
+
         {
           month: month_start.strftime("%b"),
-          count: base_scope.where(created_at: month_start.beginning_of_day..month_end.end_of_day).count
+          total: total_budget.round(2),
+          by_tpc: tpc_budgets
         }
       end
     else
-      @monthly_tpc_creation = 12.times.map do |i|
+      @monthly_tpc_budget = 12.times.map do |i|
         month_start = i.months.ago.beginning_of_month
         month_end = i.months.ago.end_of_month
 
+        month_pr_scope = pr_base_scope.where(created_at: month_start..month_end)
+
+        # Calculate total budget per TPC code
+        tpc_budgets = {}
+        total_budget = 0
+
+        top_tpc_ids.each do |tpc_id|
+          tpc_total = 0
+
+          # Direct TPC assignments
+          month_pr_scope.where(tpc_code_id: tpc_id).where.not(estimated_price: nil).each do |pr|
+            curr = pr.currency.presence || default_currency
+            tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
+          end
+
+          # Via CAPEX
+          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+            curr = pr.currency.presence || default_currency
+            tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
+          end
+
+          # Via OPEX
+          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+            curr = pr.currency.presence || default_currency
+            tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
+          end
+
+          tpc_budgets[tpc_id] = tpc_total.round(2)
+          total_budget += tpc_total
+        end
+
         {
           month: i.months.ago.strftime("%b %Y"),
-          count: base_scope.where(created_at: month_start..month_end).count
+          total: total_budget.round(2),
+          by_tpc: tpc_budgets
         }
       end.reverse
     end
 
+    # Convert tpc_budgets keys to tpc_numbers for the view
+    @monthly_tpc_budget_by_code = {}
+    top_tpc_ids.each do |tpc_id|
+      tpc = TpcCode.find_by(id: tpc_id)
+      next unless tpc
+      @monthly_tpc_budget_by_code[tpc.tpc_number] = @monthly_tpc_budget.map { |m| m[:by_tpc][tpc_id] || 0 }
+    end
+
     # Monthly TPC usage in purchase requests trend (last 12 months or selected year)
-    # Get top 5 TPC codes for the multi-line chart
-    top_tpc_ids = @tpc_by_purchase_request.take(5).map { |t| TpcCode.find_by(tpc_number: t[:name])&.id }.compact
-    @tpc_usage_legend = @tpc_by_purchase_request.take(5).map { |t| t[:name] }
 
     if @selected_year
       @monthly_tpc_usage = 12.times.map do |i|
