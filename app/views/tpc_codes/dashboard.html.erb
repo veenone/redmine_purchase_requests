@@ -161,6 +161,12 @@
       </div>
       <div class="chart-body">
         <div class="line-chart-container" id="monthly-creation-chart"></div>
+        <div class="chart-legend" id="creation-legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: #6f42c1;"></span>
+            <span class="legend-label">TPC Codes Created</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -171,6 +177,9 @@
       </div>
       <div class="chart-body">
         <div class="line-chart-container" id="monthly-usage-chart"></div>
+        <div class="chart-legend" id="usage-legend">
+          <!-- Legend will be populated by JavaScript -->
+        </div>
       </div>
     </div>
   </div>
@@ -322,6 +331,35 @@
     padding: 60px 20px;
   }
 
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    justify-content: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .legend-color {
+    width: 16px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .legend-label {
+    font-family: monospace;
+    font-size: 11px;
+  }
+
   @media (max-width: 768px) {
     .charts-grid {
       grid-template-columns: 1fr;
@@ -434,12 +472,12 @@ if (costChartContainer) {
 }
 <% end %>
 
-// Function to create line chart
-function createLineChart(containerId, data, color) {
+// Function to create single line chart
+function createLineChart(containerId, data, color, valueKey = 'count') {
   const container = document.getElementById(containerId);
   if (!container || !data || data.length === 0) return;
 
-  const maxCount = Math.max(...data.map(m => m.count)) || 1;
+  const maxCount = Math.max(...data.map(m => m[valueKey] || 0)) || 1;
   const chartHeight = 250;
   const chartWidth = container.clientWidth || 400;
   const padding = 40;
@@ -465,7 +503,7 @@ function createLineChart(containerId, data, color) {
   // Plot line
   const points = data.map((item, index) => {
     const x = padding + (chartWidth - 2 * padding) * index / (data.length - 1 || 1);
-    const y = chartHeight - padding - (chartHeight - 2 * padding) * item.count / maxCount;
+    const y = chartHeight - padding - (chartHeight - 2 * padding) * (item[valueKey] || 0) / maxCount;
     return `${x},${y}`;
   }).join(' ');
 
@@ -479,7 +517,7 @@ function createLineChart(containerId, data, color) {
   // Plot points and labels
   data.forEach((item, index) => {
     const x = padding + (chartWidth - 2 * padding) * index / (data.length - 1 || 1);
-    const y = chartHeight - padding - (chartHeight - 2 * padding) * item.count / maxCount;
+    const y = chartHeight - padding - (chartHeight - 2 * padding) * (item[valueKey] || 0) / maxCount;
 
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', x);
@@ -490,12 +528,12 @@ function createLineChart(containerId, data, color) {
     circle.setAttribute('stroke-width', '2');
 
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-    title.textContent = `${item.month}: ${item.count}`;
+    title.textContent = `${item.month}: ${item[valueKey] || 0}`;
     circle.appendChild(title);
 
     svg.appendChild(circle);
 
-    // Month labels (show every other month or all if 12 months in a year)
+    // Month labels
     if (index % 2 === 0 || data.length <= 12) {
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       text.setAttribute('x', x);
@@ -511,11 +549,128 @@ function createLineChart(containerId, data, color) {
   container.appendChild(svg);
 }
 
+// Function to create multi-line chart with legend
+function createMultiLineChart(containerId, legendContainerId, monthLabels, dataSeries) {
+  const container = document.getElementById(containerId);
+  const legendContainer = document.getElementById(legendContainerId);
+  if (!container || !monthLabels || monthLabels.length === 0) return;
+
+  const colors = ['#6f42c1', '#2196F3', '#4CAF50', '#FF9800', '#F44336', '#00BCD4'];
+  const chartHeight = 250;
+  const chartWidth = container.clientWidth || 400;
+  const padding = 40;
+
+  // Find max value across all series
+  let maxCount = 1;
+  Object.values(dataSeries).forEach(values => {
+    const seriesMax = Math.max(...values);
+    if (seriesMax > maxCount) maxCount = seriesMax;
+  });
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', chartWidth);
+  svg.setAttribute('height', chartHeight);
+  svg.style.cssText = 'overflow:visible;';
+
+  // Grid lines
+  for (let i = 0; i <= 5; i++) {
+    const y = padding + (chartHeight - 2 * padding) * i / 5;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', padding);
+    line.setAttribute('y1', y);
+    line.setAttribute('x2', chartWidth - padding);
+    line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#e0e0e0');
+    line.setAttribute('stroke-width', '1');
+    svg.appendChild(line);
+  }
+
+  // Plot each series
+  let colorIndex = 0;
+  Object.entries(dataSeries).forEach(([tpcCode, values]) => {
+    const color = colors[colorIndex % colors.length];
+
+    // Plot line
+    const points = values.map((value, index) => {
+      const x = padding + (chartWidth - 2 * padding) * index / (values.length - 1 || 1);
+      const y = chartHeight - padding - (chartHeight - 2 * padding) * value / maxCount;
+      return `${x},${y}`;
+    }).join(' ');
+
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', points);
+    polyline.setAttribute('fill', 'none');
+    polyline.setAttribute('stroke', color);
+    polyline.setAttribute('stroke-width', '2');
+    svg.appendChild(polyline);
+
+    // Plot points
+    values.forEach((value, index) => {
+      const x = padding + (chartWidth - 2 * padding) * index / (values.length - 1 || 1);
+      const y = chartHeight - padding - (chartHeight - 2 * padding) * value / maxCount;
+
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x);
+      circle.setAttribute('cy', y);
+      circle.setAttribute('r', '4');
+      circle.setAttribute('fill', color);
+      circle.setAttribute('stroke', '#fff');
+      circle.setAttribute('stroke-width', '1');
+
+      const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      title.textContent = `${tpcCode} - ${monthLabels[index]}: ${value}`;
+      circle.appendChild(title);
+
+      svg.appendChild(circle);
+    });
+
+    // Add legend item
+    if (legendContainer) {
+      const legendItem = document.createElement('div');
+      legendItem.className = 'legend-item';
+      legendItem.innerHTML = `<span class="legend-color" style="background-color: ${color};"></span><span class="legend-label">${tpcCode}</span>`;
+      legendContainer.appendChild(legendItem);
+    }
+
+    colorIndex++;
+  });
+
+  // Month labels
+  monthLabels.forEach((month, index) => {
+    if (index % 2 === 0 || monthLabels.length <= 12) {
+      const x = padding + (chartWidth - 2 * padding) * index / (monthLabels.length - 1 || 1);
+      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      text.setAttribute('x', x);
+      text.setAttribute('y', chartHeight - 10);
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('font-size', '10');
+      text.setAttribute('fill', '#666');
+      text.textContent = month;
+      svg.appendChild(text);
+    }
+  });
+
+  container.appendChild(svg);
+}
+
 // Monthly TPC Creation Trend - Line Chart
 const creationData = <%= raw @monthly_tpc_creation.to_json %>;
 createLineChart('monthly-creation-chart', creationData, '#6f42c1');
 
-// Monthly TPC Usage in Purchase Requests - Line Chart
+// Monthly TPC Usage in Purchase Requests - Multi-Line Chart by TPC Code
 const usageData = <%= raw @monthly_tpc_usage.to_json %>;
-createLineChart('monthly-usage-chart', usageData, '#2196F3');
+const usageByCode = <%= raw @monthly_tpc_usage_by_code.to_json %>;
+const monthLabels = usageData.map(m => m.month);
+
+// Check if we have data split by TPC codes
+if (Object.keys(usageByCode).length > 0) {
+  createMultiLineChart('monthly-usage-chart', 'usage-legend', monthLabels, usageByCode);
+} else {
+  // Fallback to total if no split data
+  createLineChart('monthly-usage-chart', usageData, '#2196F3', 'total');
+  const legendContainer = document.getElementById('usage-legend');
+  if (legendContainer) {
+    legendContainer.innerHTML = '<div class="legend-item"><span class="legend-color" style="background-color: #2196F3;"></span><span class="legend-label">Total TPC Usage</span></div>';
+  }
+}
 </script>
