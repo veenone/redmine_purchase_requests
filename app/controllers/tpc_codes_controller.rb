@@ -379,21 +379,36 @@ class TpcCodesController < ApplicationController
     end
 
     # Monthly TPC usage in purchase requests trend (last 12 months or selected year)
+    # Get top 5 TPC codes for the multi-line chart
+    top_tpc_ids = @tpc_by_purchase_request.take(5).map { |t| TpcCode.find_by(tpc_number: t[:name])&.id }.compact
+    @tpc_usage_legend = @tpc_by_purchase_request.take(5).map { |t| t[:name] }
+
     if @selected_year
       @monthly_tpc_usage = 12.times.map do |i|
         month_num = i + 1
         month_start = Date.new(@selected_year, month_num, 1)
         month_end = month_start.end_of_month
 
-        # Count purchase requests with TPC codes (direct, via CAPEX, or via OPEX)
         month_pr_scope = pr_base_scope.where(created_at: month_start.beginning_of_day..month_end.end_of_day)
+
+        # Get counts per TPC code
+        tpc_counts = {}
+        top_tpc_ids.each do |tpc_id|
+          direct = month_pr_scope.where(tpc_code_id: tpc_id).count
+          capex = month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).count
+          opex = month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).count
+          tpc_counts[tpc_id] = direct + capex + opex
+        end
+
+        # Total count for all TPCs
         direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
         capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
         opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
 
         {
           month: month_start.strftime("%b"),
-          count: direct_count + capex_count + opex_count
+          total: direct_count + capex_count + opex_count,
+          by_tpc: tpc_counts
         }
       end
     else
@@ -401,17 +416,36 @@ class TpcCodesController < ApplicationController
         month_start = i.months.ago.beginning_of_month
         month_end = i.months.ago.end_of_month
 
-        # Count purchase requests with TPC codes (direct, via CAPEX, or via OPEX)
         month_pr_scope = pr_base_scope.where(created_at: month_start..month_end)
+
+        # Get counts per TPC code
+        tpc_counts = {}
+        top_tpc_ids.each do |tpc_id|
+          direct = month_pr_scope.where(tpc_code_id: tpc_id).count
+          capex = month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).count
+          opex = month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).count
+          tpc_counts[tpc_id] = direct + capex + opex
+        end
+
+        # Total count for all TPCs
         direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
         capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
         opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
 
         {
           month: i.months.ago.strftime("%b %Y"),
-          count: direct_count + capex_count + opex_count
+          total: direct_count + capex_count + opex_count,
+          by_tpc: tpc_counts
         }
       end.reverse
+    end
+
+    # Convert tpc_counts keys to tpc_numbers for the view
+    @monthly_tpc_usage_by_code = {}
+    top_tpc_ids.each_with_index do |tpc_id, idx|
+      tpc = TpcCode.find_by(id: tpc_id)
+      next unless tpc
+      @monthly_tpc_usage_by_code[tpc.tpc_number] = @monthly_tpc_usage.map { |m| m[:by_tpc][tpc_id] || 0 }
     end
   end
 
