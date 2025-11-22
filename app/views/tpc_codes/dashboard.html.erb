@@ -469,38 +469,88 @@ if (costChartContainer) {
 }
 <% end %>
 
-// Function to create single line chart
-function createLineChart(containerId, data, color, valueKey = 'count') {
+// Function to create single line chart with Y-axis labels
+function createLineChart(containerId, data, color, valueKey = 'count', isCurrency = false) {
   const container = document.getElementById(containerId);
   if (!container || !data || data.length === 0) return;
 
   const maxCount = Math.max(...data.map(m => m[valueKey] || 0)) || 1;
   const chartHeight = 250;
   const chartWidth = container.clientWidth || 400;
-  const padding = 40;
+  const leftPadding = 70;
+  const rightPadding = 20;
+  const topPadding = 20;
+  const bottomPadding = 30;
+  const currency = '<%= Setting.plugin_redmine_purchase_requests["default_currency"] || "USD" %>';
+
+  // Format number for Y-axis display
+  function formatYAxisValue(value, isCurr) {
+    if (value >= 1000000) {
+      return (isCurr ? currency + ' ' : '') + (value / 1000000).toFixed(1) + 'M';
+    } else if (value >= 1000) {
+      return (isCurr ? currency + ' ' : '') + (value / 1000).toFixed(1) + 'K';
+    }
+    return (isCurr ? currency + ' ' : '') + value.toLocaleString();
+  }
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', chartWidth);
   svg.setAttribute('height', chartHeight);
   svg.style.cssText = 'overflow:visible;';
 
-  // Grid lines
+  const chartAreaWidth = chartWidth - leftPadding - rightPadding;
+  const chartAreaHeight = chartHeight - topPadding - bottomPadding;
+
+  // Grid lines and Y-axis labels
   for (let i = 0; i <= 5; i++) {
-    const y = padding + (chartHeight - 2 * padding) * i / 5;
+    const y = topPadding + chartAreaHeight * i / 5;
+    const yValue = maxCount - (maxCount * i / 5);
+
+    // Grid line
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', padding);
+    line.setAttribute('x1', leftPadding);
     line.setAttribute('y1', y);
-    line.setAttribute('x2', chartWidth - padding);
+    line.setAttribute('x2', chartWidth - rightPadding);
     line.setAttribute('y2', y);
     line.setAttribute('stroke', '#e0e0e0');
     line.setAttribute('stroke-width', '1');
     svg.appendChild(line);
+
+    // Y-axis label
+    const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    yLabel.setAttribute('x', leftPadding - 8);
+    yLabel.setAttribute('y', y + 4);
+    yLabel.setAttribute('text-anchor', 'end');
+    yLabel.setAttribute('font-size', '10');
+    yLabel.setAttribute('fill', '#666');
+    yLabel.textContent = formatYAxisValue(Math.round(yValue), isCurrency);
+    svg.appendChild(yLabel);
   }
+
+  // Y-axis line
+  const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  yAxis.setAttribute('x1', leftPadding);
+  yAxis.setAttribute('y1', topPadding);
+  yAxis.setAttribute('x2', leftPadding);
+  yAxis.setAttribute('y2', chartHeight - bottomPadding);
+  yAxis.setAttribute('stroke', '#ccc');
+  yAxis.setAttribute('stroke-width', '1');
+  svg.appendChild(yAxis);
+
+  // X-axis line
+  const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  xAxis.setAttribute('x1', leftPadding);
+  xAxis.setAttribute('y1', chartHeight - bottomPadding);
+  xAxis.setAttribute('x2', chartWidth - rightPadding);
+  xAxis.setAttribute('y2', chartHeight - bottomPadding);
+  xAxis.setAttribute('stroke', '#ccc');
+  xAxis.setAttribute('stroke-width', '1');
+  svg.appendChild(xAxis);
 
   // Plot line
   const points = data.map((item, index) => {
-    const x = padding + (chartWidth - 2 * padding) * index / (data.length - 1 || 1);
-    const y = chartHeight - padding - (chartHeight - 2 * padding) * (item[valueKey] || 0) / maxCount;
+    const x = leftPadding + chartAreaWidth * index / (data.length - 1 || 1);
+    const y = topPadding + chartAreaHeight - (chartAreaHeight * (item[valueKey] || 0) / maxCount);
     return `${x},${y}`;
   }).join(' ');
 
@@ -513,8 +563,8 @@ function createLineChart(containerId, data, color, valueKey = 'count') {
 
   // Plot points and labels
   data.forEach((item, index) => {
-    const x = padding + (chartWidth - 2 * padding) * index / (data.length - 1 || 1);
-    const y = chartHeight - padding - (chartHeight - 2 * padding) * (item[valueKey] || 0) / maxCount;
+    const x = leftPadding + chartAreaWidth * index / (data.length - 1 || 1);
+    const y = topPadding + chartAreaHeight - (chartAreaHeight * (item[valueKey] || 0) / maxCount);
 
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', x);
@@ -525,12 +575,13 @@ function createLineChart(containerId, data, color, valueKey = 'count') {
     circle.setAttribute('stroke-width', '2');
 
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-    title.textContent = `${item.month}: ${item[valueKey] || 0}`;
+    const displayValue = isCurrency ? currency + ' ' + (item[valueKey] || 0).toLocaleString() : (item[valueKey] || 0);
+    title.textContent = `${item.month}: ${displayValue}`;
     circle.appendChild(title);
 
     svg.appendChild(circle);
 
-    // Month labels
+    // Month labels (X-axis)
     if (index % 2 === 0 || data.length <= 12) {
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       text.setAttribute('x', x);
@@ -546,7 +597,7 @@ function createLineChart(containerId, data, color, valueKey = 'count') {
   container.appendChild(svg);
 }
 
-// Function to create multi-line chart with legend
+// Function to create multi-line chart with legend and Y-axis labels
 function createMultiLineChart(containerId, legendContainerId, monthLabels, dataSeries, isCurrency = false) {
   const container = document.getElementById(containerId);
   const legendContainer = document.getElementById(legendContainerId);
@@ -555,7 +606,10 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
   const colors = ['#6f42c1', '#2196F3', '#4CAF50', '#FF9800', '#F44336', '#00BCD4'];
   const chartHeight = 250;
   const chartWidth = container.clientWidth || 400;
-  const padding = 40;
+  const leftPadding = 70; // Increased for Y-axis labels
+  const rightPadding = 20;
+  const topPadding = 20;
+  const bottomPadding = 30;
   const currency = '<%= Setting.plugin_redmine_purchase_requests["default_currency"] || "USD" %>';
 
   // Find max value across all series
@@ -565,23 +619,69 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
     if (seriesMax > maxCount) maxCount = seriesMax;
   });
 
+  // Format number for Y-axis display
+  function formatYAxisValue(value, isCurr) {
+    if (value >= 1000000) {
+      return (isCurr ? currency + ' ' : '') + (value / 1000000).toFixed(1) + 'M';
+    } else if (value >= 1000) {
+      return (isCurr ? currency + ' ' : '') + (value / 1000).toFixed(1) + 'K';
+    }
+    return (isCurr ? currency + ' ' : '') + value.toLocaleString();
+  }
+
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', chartWidth);
   svg.setAttribute('height', chartHeight);
   svg.style.cssText = 'overflow:visible;';
 
-  // Grid lines
+  const chartAreaWidth = chartWidth - leftPadding - rightPadding;
+  const chartAreaHeight = chartHeight - topPadding - bottomPadding;
+
+  // Grid lines and Y-axis labels
   for (let i = 0; i <= 5; i++) {
-    const y = padding + (chartHeight - 2 * padding) * i / 5;
+    const y = topPadding + chartAreaHeight * i / 5;
+    const yValue = maxCount - (maxCount * i / 5);
+
+    // Grid line
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', padding);
+    line.setAttribute('x1', leftPadding);
     line.setAttribute('y1', y);
-    line.setAttribute('x2', chartWidth - padding);
+    line.setAttribute('x2', chartWidth - rightPadding);
     line.setAttribute('y2', y);
     line.setAttribute('stroke', '#e0e0e0');
     line.setAttribute('stroke-width', '1');
     svg.appendChild(line);
+
+    // Y-axis label
+    const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    yLabel.setAttribute('x', leftPadding - 8);
+    yLabel.setAttribute('y', y + 4);
+    yLabel.setAttribute('text-anchor', 'end');
+    yLabel.setAttribute('font-size', '10');
+    yLabel.setAttribute('fill', '#666');
+    yLabel.textContent = formatYAxisValue(Math.round(yValue), isCurrency);
+    svg.appendChild(yLabel);
   }
+
+  // Y-axis line
+  const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  yAxis.setAttribute('x1', leftPadding);
+  yAxis.setAttribute('y1', topPadding);
+  yAxis.setAttribute('x2', leftPadding);
+  yAxis.setAttribute('y2', chartHeight - bottomPadding);
+  yAxis.setAttribute('stroke', '#ccc');
+  yAxis.setAttribute('stroke-width', '1');
+  svg.appendChild(yAxis);
+
+  // X-axis line
+  const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  xAxis.setAttribute('x1', leftPadding);
+  xAxis.setAttribute('y1', chartHeight - bottomPadding);
+  xAxis.setAttribute('x2', chartWidth - rightPadding);
+  xAxis.setAttribute('y2', chartHeight - bottomPadding);
+  xAxis.setAttribute('stroke', '#ccc');
+  xAxis.setAttribute('stroke-width', '1');
+  svg.appendChild(xAxis);
 
   // Plot each series
   let colorIndex = 0;
@@ -590,8 +690,8 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
 
     // Plot line
     const points = values.map((value, index) => {
-      const x = padding + (chartWidth - 2 * padding) * index / (values.length - 1 || 1);
-      const y = chartHeight - padding - (chartHeight - 2 * padding) * value / maxCount;
+      const x = leftPadding + chartAreaWidth * index / (values.length - 1 || 1);
+      const y = topPadding + chartAreaHeight - (chartAreaHeight * value / maxCount);
       return `${x},${y}`;
     }).join(' ');
 
@@ -604,8 +704,8 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
 
     // Plot points
     values.forEach((value, index) => {
-      const x = padding + (chartWidth - 2 * padding) * index / (values.length - 1 || 1);
-      const y = chartHeight - padding - (chartHeight - 2 * padding) * value / maxCount;
+      const x = leftPadding + chartAreaWidth * index / (values.length - 1 || 1);
+      const y = topPadding + chartAreaHeight - (chartAreaHeight * value / maxCount);
 
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('cx', x);
@@ -634,10 +734,10 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
     colorIndex++;
   });
 
-  // Month labels
+  // Month labels (X-axis)
   monthLabels.forEach((month, index) => {
     if (index % 2 === 0 || monthLabels.length <= 12) {
-      const x = padding + (chartWidth - 2 * padding) * index / (monthLabels.length - 1 || 1);
+      const x = leftPadding + chartAreaWidth * index / (monthLabels.length - 1 || 1);
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       text.setAttribute('x', x);
       text.setAttribute('y', chartHeight - 10);
@@ -662,7 +762,7 @@ if (Object.keys(budgetByCode).length > 0) {
   createMultiLineChart('monthly-budget-chart', 'budget-legend', budgetMonthLabels, budgetByCode, true);
 } else {
   // Fallback to total if no split data
-  createLineChart('monthly-budget-chart', budgetData, '#6f42c1', 'total');
+  createLineChart('monthly-budget-chart', budgetData, '#6f42c1', 'total', true);
   const budgetLegendContainer = document.getElementById('budget-legend');
   if (budgetLegendContainer) {
     budgetLegendContainer.innerHTML = '<div class="legend-item"><span class="legend-color" style="background-color: #6f42c1;"></span><span class="legend-label">Total Budget</span></div>';
