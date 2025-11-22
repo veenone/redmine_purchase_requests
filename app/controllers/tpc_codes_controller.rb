@@ -248,23 +248,54 @@ class TpcCodesController < ApplicationController
     if @project
       @all_tpc_codes = TpcCode.available_for_project(@project).active.includes(:project, :capex, :opex, :purchase_requests)
       base_scope = TpcCode.available_for_project(@project)
+      pr_base_scope = @project.purchase_requests
     else
       @all_tpc_codes = TpcCode.active.includes(:project, :capex, :opex, :purchase_requests)
       base_scope = TpcCode
+      pr_base_scope = PurchaseRequest
     end
 
-    # TPC codes by project (only for global dashboard)
-    if @project
-      @tpc_by_project = []
+    # Year filter
+    @selected_year = params[:year].present? ? params[:year].to_i : nil
+    @available_years = pr_base_scope.pluck(Arel.sql('DISTINCT YEAR(purchase_requests.created_at)')).compact.sort.reverse
+    tpc_years = base_scope.pluck(Arel.sql('DISTINCT YEAR(tpc_codes.created_at)')).compact
+    @available_years = (@available_years + tpc_years).uniq.sort.reverse
+    @available_years = [Date.current.year] if @available_years.empty?
+
+    # Apply year filter to purchase request scope if selected
+    if @selected_year.present?
+      pr_year_scope = pr_base_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
     else
-      @tpc_by_project = @all_tpc_codes.group_by(&:project).map do |project, tpcs|
-        {
-          name: project ? project.name : 'Global',
-          count: tpcs.count,
-          is_global: project.nil?
-        }
-      end.sort_by { |p| p[:is_global] ? 0 : 1 }
+      pr_year_scope = pr_base_scope
     end
+
+    # TPC codes by purchase request count (replaces TPC by project)
+    @tpc_by_purchase_request = []
+    tpc_pr_counts = {}
+
+    # Count direct TPC assignments
+    direct_tpc_counts = pr_year_scope.where.not(tpc_code_id: nil).group(:tpc_code_id).count
+    direct_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
+
+    # Count via CAPEX
+    capex_tpc_counts = pr_year_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).group('capex.tpc_code_id').count
+    capex_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
+
+    # Count via OPEX
+    opex_tpc_counts = pr_year_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).group('opex.tpc_code_id').count
+    opex_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
+
+    # Build the chart data
+    tpc_pr_counts.each do |tpc_id, count|
+      tpc = TpcCode.find_by(id: tpc_id)
+      next unless tpc
+      @tpc_by_purchase_request << {
+        name: tpc.tpc_number,
+        count: count,
+        department: tpc.department
+      }
+    end
+    @tpc_by_purchase_request = @tpc_by_purchase_request.sort_by { |t| -t[:count] }.take(10)
 
     # TPC codes by department
     @tpc_by_department = @all_tpc_codes.where.not(department: [nil, '']).group(:department).count
@@ -277,22 +308,31 @@ class TpcCodesController < ApplicationController
       total_cost = 0
       request_count = 0
 
-      # Get costs from CAPEX entries (filter by project if applicable)
+      # Get costs from CAPEX entries (filter by project and year if applicable)
       capex_scope = @project ? tpc.capex.where(project_id: @project.id) : tpc.capex
       capex_scope.each do |capex|
-        total_cost += convert_currency(capex.total_amount, capex.currency, default_currency)
-        request_count += capex.purchase_requests.count
+        capex_pr_scope = @selected_year ? capex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) : capex.purchase_requests
+        capex_pr_scope.each do |pr|
+          curr = pr.currency.presence || default_currency
+          total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
+          request_count += 1
+        end
       end
 
-      # Get costs from OPEX entries (filter by project if applicable)
+      # Get costs from OPEX entries (filter by project and year if applicable)
       opex_scope = @project ? tpc.opex.where(project_id: @project.id) : tpc.opex
       opex_scope.each do |opex|
-        total_cost += convert_currency(opex.total_amount, opex.currency, default_currency)
-        request_count += opex.purchase_requests.count
+        opex_pr_scope = @selected_year ? opex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) : opex.purchase_requests
+        opex_pr_scope.each do |pr|
+          curr = pr.currency.presence || default_currency
+          total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
+          request_count += 1
+        end
       end
 
-      # Get costs from direct purchase requests (filter by project if applicable)
+      # Get costs from direct purchase requests (filter by project and year if applicable)
       pr_scope = @project ? tpc.purchase_requests.where(project_id: @project.id) : tpc.purchase_requests
+      pr_scope = pr_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) if @selected_year
       pr_scope.where.not(estimated_price: nil).each do |pr|
         curr = pr.currency.presence || default_currency
         total_cost += convert_currency(pr.estimated_price, curr, default_currency)
@@ -314,16 +354,65 @@ class TpcCodesController < ApplicationController
     @active_tpcs = base_scope.active.count
     @inactive_tpcs = base_scope.inactive.count
 
-    # Monthly TPC creation trend (last 12 months)
-    @monthly_tpc_creation = 12.times.map do |i|
-      month_start = i.months.ago.beginning_of_month
-      month_end = i.months.ago.end_of_month
+    # Monthly TPC creation trend (last 12 months or selected year)
+    if @selected_year
+      @monthly_tpc_creation = 12.times.map do |i|
+        month_num = i + 1
+        month_start = Date.new(@selected_year, month_num, 1)
+        month_end = month_start.end_of_month
 
-      {
-        month: i.months.ago.strftime("%b %Y"),
-        count: base_scope.where(created_at: month_start..month_end).count
-      }
-    end.reverse
+        {
+          month: month_start.strftime("%b"),
+          count: base_scope.where(created_at: month_start.beginning_of_day..month_end.end_of_day).count
+        }
+      end
+    else
+      @monthly_tpc_creation = 12.times.map do |i|
+        month_start = i.months.ago.beginning_of_month
+        month_end = i.months.ago.end_of_month
+
+        {
+          month: i.months.ago.strftime("%b %Y"),
+          count: base_scope.where(created_at: month_start..month_end).count
+        }
+      end.reverse
+    end
+
+    # Monthly TPC usage in purchase requests trend (last 12 months or selected year)
+    if @selected_year
+      @monthly_tpc_usage = 12.times.map do |i|
+        month_num = i + 1
+        month_start = Date.new(@selected_year, month_num, 1)
+        month_end = month_start.end_of_month
+
+        # Count purchase requests with TPC codes (direct, via CAPEX, or via OPEX)
+        month_pr_scope = pr_base_scope.where(created_at: month_start.beginning_of_day..month_end.end_of_day)
+        direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
+        capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
+        opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
+
+        {
+          month: month_start.strftime("%b"),
+          count: direct_count + capex_count + opex_count
+        }
+      end
+    else
+      @monthly_tpc_usage = 12.times.map do |i|
+        month_start = i.months.ago.beginning_of_month
+        month_end = i.months.ago.end_of_month
+
+        # Count purchase requests with TPC codes (direct, via CAPEX, or via OPEX)
+        month_pr_scope = pr_base_scope.where(created_at: month_start..month_end)
+        direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
+        capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
+        opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
+
+        {
+          month: i.months.ago.strftime("%b %Y"),
+          count: direct_count + capex_count + opex_count
+        }
+      end.reverse
+    end
   end
 
   private
