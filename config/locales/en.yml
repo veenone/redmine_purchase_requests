@@ -1,7 +1,9 @@
 en:
+  label_procurement: Procurement
   label_purchase_requests: Purchase Requests
   label_purchase_request: Purchase Request
   label_budget_management: Budget Management
+  label_reports: Reports
   label_purchase_request_statuses: "Status Settings"
   label_default_status: Default Status
   label_enable_notifications: Enable Notifications
