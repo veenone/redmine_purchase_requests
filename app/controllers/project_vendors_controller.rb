@@ -110,8 +110,8 @@ class ProjectVendorsController < ApplicationController
   end
 
   def vendor_params
-    params.require(:vendor).permit(:name, :vendor_id, :email, :phone, :contact_person, 
-                                   :address, :website, :notes, :is_active, :project_id)
+    params.require(:vendor).permit(:name, :vendor_id, :email, :phone, :contact_person,
+                                   :address, :country, :website, :notes, :is_active, :project_id)
   end
 
   def authorize_view

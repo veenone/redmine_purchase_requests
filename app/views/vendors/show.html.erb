@@ -106,7 +106,14 @@
             <td><%= simple_format(@vendor.address) %></td>
           </tr>
           <% end %>
-          
+
+          <% if @vendor.respond_to?(:country) && @vendor.country.present? %>
+          <tr>
+            <th><%= l(:field_country) %>:</th>
+            <td><%= @vendor.country %></td>
+          </tr>
+          <% end %>
+
           <tr>
             <th><%= l(:field_is_active) %>:</th>
             <td>

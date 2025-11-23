@@ -427,6 +427,7 @@ en:
   field_is_active: "Active"
   field_website: "Website"
   field_address: "Address"
+  field_country: "Country"
   field_phone: "Phone"
   field_email: "Email"
   

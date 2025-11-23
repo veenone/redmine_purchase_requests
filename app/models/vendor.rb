@@ -63,6 +63,7 @@ class Vendor < ActiveRecord::Base
       email: email,
       website: website,
       notes: notes,
+      country: country,
       is_active: is_active,
       project_id: project_id,
       scope: scope_display

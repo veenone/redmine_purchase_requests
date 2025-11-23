@@ -808,13 +808,15 @@ class ReportsController < ApplicationController
     tpc_data = generate_tpc_codes_report
     capex_data = generate_capex_report
     opex_data = generate_opex_report
-    
+
     # Executive summary combining all data
     executive_summary = {
       purchase_requests: {
         total: pr_data[:summary][:total_count],
         open: pr_data[:summary][:open_count],
-        total_value: pr_data[:summary][:total_estimated_value]
+        closed: pr_data[:summary][:closed_count],
+        total_value: pr_data[:summary][:total_estimated_value],
+        avg_value: pr_data[:summary][:avg_estimated_value]
       },
       vendors: {
         total: vendor_data[:summary][:total_count],
@@ -834,16 +836,32 @@ class ReportsController < ApplicationController
         total_value: opex_data[:summary][:total_value]
       }
     }
-    
+
     # Combined financial overview
     total_budget = capex_data[:summary][:total_value] + opex_data[:summary][:total_value]
-    
+
+    # Budget distribution including non-budgeted purchases
+    budget_distribution = generate_budget_distribution_data(pr_data)
+
+    # Currency usage analysis
+    currency_usage = generate_currency_usage_data
+
+    # Vendor country distribution
+    vendor_countries = generate_vendor_country_data
+
+    # Additional high-level indicators
+    high_level_indicators = generate_high_level_indicators(pr_data, vendor_data, capex_data, opex_data)
+
     # Generate combined CSV
     csv_data = generate_overview_csv(pr_data, vendor_data, tpc_data, capex_data, opex_data)
-    
+
     {
       executive_summary: executive_summary,
       total_budget: total_budget,
+      budget_distribution: budget_distribution,
+      currency_usage: currency_usage,
+      vendor_countries: vendor_countries,
+      high_level_indicators: high_level_indicators,
       purchase_requests: pr_data,
       vendors: vendor_data,
       tpc_codes: tpc_data,
@@ -854,15 +872,147 @@ class ReportsController < ApplicationController
       generated_at: Time.current
     }
   end
+
+  def generate_budget_distribution_data(pr_data)
+    # Get budget source values including non-budgeted
+    {
+      'CAPEX' => pr_data[:budget_source_value]['CAPEX'] || 0,
+      'OPEX' => pr_data[:budget_source_value]['OPEX'] || 0,
+      'Direct TPC' => pr_data[:budget_source_value]['Direct TPC'] || 0,
+      'Non-budgeted' => pr_data[:budget_source_value]['Non-budgeted'] || 0
+    }
+  end
+
+  def generate_currency_usage_data
+    purchase_requests = @project ? @project.purchase_requests : PurchaseRequest.all
+
+    # Currency breakdown by count
+    currency_by_count = purchase_requests.where.not(currency: [nil, ''])
+                                         .group(:currency)
+                                         .count
+
+    # Currency breakdown by value
+    currency_by_value = purchase_requests.where.not(currency: [nil, ''])
+                                         .where.not(estimated_price: nil)
+                                         .group(:currency)
+                                         .sum(:estimated_price)
+
+    {
+      by_count: currency_by_count,
+      by_value: currency_by_value
+    }
+  end
+
+  def generate_vendor_country_data
+    base_vendors = @project ? Vendor.available_for_project(@project) : Vendor.all
+
+    # Country distribution - handle potential missing country column gracefully
+    country_distribution = {}
+    if base_vendors.column_names.include?('country')
+      country_distribution = base_vendors.where.not(country: [nil, ''])
+                                         .group(:country)
+                                         .count
+                                         .sort_by { |_, count| -count }
+                                         .to_h
+    end
+
+    # Add vendors without country
+    vendors_without_country = base_vendors.where(country: [nil, '']).count
+
+    {
+      distribution: country_distribution,
+      without_country: vendors_without_country,
+      total_countries: country_distribution.keys.count
+    }
+  end
+
+  def generate_high_level_indicators(pr_data, vendor_data, capex_data, opex_data)
+    purchase_requests = @project ? @project.purchase_requests : PurchaseRequest.all
+
+    # Completion rate
+    total_prs = pr_data[:summary][:total_count]
+    closed_prs = pr_data[:summary][:closed_count]
+    completion_rate = total_prs > 0 ? ((closed_prs.to_f / total_prs) * 100).round(1) : 0
+
+    # Average processing time (days from created to closed)
+    closed_requests = purchase_requests.joins(:status).where(purchase_request_statuses: { is_closed: true })
+    avg_processing_days = 0
+    if closed_requests.any?
+      total_days = closed_requests.sum { |pr| (pr.updated_at.to_date - pr.created_at.to_date).to_i }
+      avg_processing_days = (total_days.to_f / closed_requests.count).round(1)
+    end
+
+    # This month's activity
+    this_month_start = Date.current.beginning_of_month
+    this_month_prs = purchase_requests.where('created_at >= ?', this_month_start).count
+    this_month_value = purchase_requests.where('created_at >= ?', this_month_start)
+                                        .where.not(estimated_price: nil)
+                                        .sum(:estimated_price)
+
+    # Last month comparison
+    last_month_start = 1.month.ago.beginning_of_month
+    last_month_end = 1.month.ago.end_of_month
+    last_month_prs = purchase_requests.where(created_at: last_month_start..last_month_end).count
+
+    # Month-over-month growth
+    mom_growth = last_month_prs > 0 ? (((this_month_prs - last_month_prs).to_f / last_month_prs) * 100).round(1) : 0
+
+    # Budget utilization (PR value vs total budget)
+    total_budget = (capex_data[:summary][:total_value] || 0) + (opex_data[:summary][:total_value] || 0)
+    total_pr_value = pr_data[:summary][:total_estimated_value] || 0
+    budget_utilization = total_budget > 0 ? ((total_pr_value / total_budget) * 100).round(1) : 0
+
+    # Top priority distribution
+    high_priority_count = purchase_requests.where(priority: ['high', 'urgent', 'critical']).count
+    high_priority_pct = total_prs > 0 ? ((high_priority_count.to_f / total_prs) * 100).round(1) : 0
+
+    # Vendor engagement rate
+    vendor_engagement = vendor_data[:summary][:total_count] > 0 ?
+      ((vendor_data[:summary][:vendors_with_requests].to_f / vendor_data[:summary][:total_count]) * 100).round(1) : 0
+
+    {
+      completion_rate: completion_rate,
+      avg_processing_days: avg_processing_days,
+      this_month_prs: this_month_prs,
+      this_month_value: this_month_value,
+      mom_growth: mom_growth,
+      budget_utilization: budget_utilization,
+      high_priority_count: high_priority_count,
+      high_priority_pct: high_priority_pct,
+      vendor_engagement: vendor_engagement,
+      total_budget: total_budget
+    }
+  end
   
   # CSV generation methods
   def generate_purchase_requests_csv(purchase_requests)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
-      csv << ['ID', 'Title', 'Project', 'Status', 'Priority', 'Vendor', 'Estimated Price', 'Currency', 'Created', 'Due Date']
-      
+      # Report metadata header
+      csv << ['Report', 'Purchase Requests Report']
+      csv << ['Generated By', "#{User.current.name} (#{User.current.mail})"]
+      csv << ['Generated At', Time.current.strftime('%Y-%m-%d %H:%M:%S')]
+      csv << ['Project', @project ? @project.name : 'All Projects']
+      csv << []  # Empty row separator
+
+      csv << ['ID', 'Title', 'Project', 'Status', 'Priority', 'Vendor', 'Vendor Country', 'Estimated Price', 'Currency', 'Budget Source', 'TPC Code', 'Requester', 'Created', 'Due Date', 'Updated']
+
       purchase_requests.each do |pr|
+        # Determine budget source
+        budget_source = if pr.capex_id.present?
+                          'CAPEX'
+                        elsif pr.opex_id.present?
+                          'OPEX'
+                        elsif pr.tpc_code_id.present?
+                          'Direct TPC'
+                        else
+                          'Non-budgeted'
+                        end
+
+        # Get TPC code
+        tpc_code = pr.capex&.tpc_code_record&.tpc_number || pr.opex&.tpc_code&.tpc_number || pr.tpc_code&.tpc_number
+
         csv << [
           pr.id,
           pr.title,
@@ -870,10 +1020,15 @@ class ReportsController < ApplicationController
           pr.status&.name,
           pr.priority,
           pr.vendor&.name,
+          pr.vendor&.respond_to?(:country) ? pr.vendor&.country : '',
           pr.estimated_price,
           pr.currency,
+          budget_source,
+          tpc_code,
+          pr.user&.name,
           pr.created_at&.strftime('%Y-%m-%d'),
-          pr.due_date&.strftime('%Y-%m-%d')
+          pr.due_date&.strftime('%Y-%m-%d'),
+          pr.updated_at&.strftime('%Y-%m-%d')
         ]
       end
     end
@@ -881,21 +1036,33 @@ class ReportsController < ApplicationController
   
   def generate_vendors_csv(vendors)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
-      csv << ['ID', 'Name', 'Vendor ID', 'Email', 'Phone', 'Contact Person', 'Active', 'Scope', 'Purchase Requests Count', 'Created']
-      
+      # Report metadata header
+      csv << ['Report', 'Vendors Report']
+      csv << ['Generated By', "#{User.current.name} (#{User.current.mail})"]
+      csv << ['Generated At', Time.current.strftime('%Y-%m-%d %H:%M:%S')]
+      csv << ['Project', @project ? @project.name : 'All Projects']
+      csv << []  # Empty row separator
+
+      csv << ['ID', 'Name', 'Vendor ID', 'Country', 'Email', 'Phone', 'Contact Person', 'Address', 'Website', 'Active', 'Scope', 'Purchase Requests Count', 'Total PR Value', 'Created']
+
       vendors.each do |vendor|
+        total_value = vendor.purchase_requests.where.not(estimated_price: nil).sum(:estimated_price)
         csv << [
           vendor.id,
           vendor.name,
           vendor.vendor_id,
+          vendor.respond_to?(:country) ? vendor.country : '',
           vendor.email,
           vendor.phone,
           vendor.contact_person,
+          vendor.address,
+          vendor.website,
           vendor.is_active? ? 'Yes' : 'No',
           vendor.project_specific? ? 'Project' : 'Global',
           vendor.purchase_requests.count,
+          total_value,
           vendor.created_at&.strftime('%Y-%m-%d')
         ]
       end
@@ -904,11 +1071,25 @@ class ReportsController < ApplicationController
   
   def generate_tpc_codes_csv(tpc_codes)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
-      csv << ['TPC Number', 'Owner Name', 'Owner Email', 'Description', 'Active', 'Scope', 'CAPEX Items', 'OPEX Items', 'Created']
-      
+      # Report metadata header
+      csv << ['Report', 'TPC Codes Report']
+      csv << ['Generated By', "#{User.current.name} (#{User.current.mail})"]
+      csv << ['Generated At', Time.current.strftime('%Y-%m-%d %H:%M:%S')]
+      csv << ['Project', @project ? @project.name : 'All Projects']
+      csv << []  # Empty row separator
+
+      csv << ['TPC Number', 'Owner Name', 'Owner Email', 'Description', 'Active', 'Scope', 'CAPEX Items', 'CAPEX Total Value', 'OPEX Items', 'OPEX Total Value', 'Direct PR Count', 'Direct PR Value', 'Total Budget', 'Created']
+
       tpc_codes.each do |tpc|
+        capex_total = tpc.capex.sum(:total_amount) rescue 0
+        opex_total = tpc.opex.sum(:total_amount) rescue 0
+        direct_prs = PurchaseRequest.where(tpc_code_id: tpc.id)
+        direct_pr_count = direct_prs.count
+        direct_pr_value = direct_prs.where.not(estimated_price: nil).sum(:estimated_price)
+        total_budget = capex_total + opex_total
+
         csv << [
           tpc.tpc_number,
           tpc.tpc_owner_name,
@@ -917,7 +1098,12 @@ class ReportsController < ApplicationController
           tpc.is_active? ? 'Yes' : 'No',
           tpc.project_id? ? 'Project' : 'Global',
           tpc.capex.count,
+          capex_total,
           tpc.opex.count,
+          opex_total,
+          direct_pr_count,
+          direct_pr_value,
+          total_budget,
           tpc.created_at&.strftime('%Y-%m-%d')
         ]
       end
@@ -926,11 +1112,37 @@ class ReportsController < ApplicationController
   
   def generate_capex_csv(capex_items)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
-      csv << ['ID', 'Project', 'Year', 'Description', 'TPC Code', 'Total Amount', 'Currency', 'Q1', 'Q2', 'Q3', 'Q4', 'Created']
-      
+      # Report metadata header
+      csv << ['Report', 'CAPEX Report']
+      csv << ['Generated By', "#{User.current.name} (#{User.current.mail})"]
+      csv << ['Generated At', Time.current.strftime('%Y-%m-%d %H:%M:%S')]
+      csv << ['Project', @project ? @project.name : 'All Projects']
+      csv << []  # Empty row separator
+
+      csv << ['ID', 'Project', 'Year', 'Description', 'TPC Code', 'Total Amount', 'Currency', 'Q1', 'Q2', 'Q3', 'Q4', 'PR Count', 'Utilized Amount', 'Utilization %', 'Remaining Amount', 'Status', 'Created']
+
       capex_items.each do |capex|
+        # Calculate utilization from purchase requests
+        prs = PurchaseRequest.where(capex_id: capex.id)
+        pr_count = prs.count
+        utilized_amount = prs.where.not(estimated_price: nil).sum(:estimated_price)
+        total = capex.total_amount || 0
+        utilization_pct = total > 0 ? ((utilized_amount / total.to_f) * 100).round(1) : 0
+        remaining = total - utilized_amount
+
+        # Determine status
+        status = if utilization_pct >= 100
+                   'Over-utilized'
+                 elsif utilization_pct >= 80
+                   'Near Limit'
+                 elsif utilization_pct > 0
+                   'Active'
+                 else
+                   'Unused'
+                 end
+
         csv << [
           capex.id,
           capex.project&.name,
@@ -943,6 +1155,11 @@ class ReportsController < ApplicationController
           capex.q2_amount,
           capex.q3_amount,
           capex.q4_amount,
+          pr_count,
+          utilized_amount,
+          "#{utilization_pct}%",
+          remaining,
+          status,
           capex.created_at&.strftime('%Y-%m-%d')
         ]
       end
@@ -951,11 +1168,37 @@ class ReportsController < ApplicationController
   
   def generate_opex_csv(opex_items)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
-      csv << ['ID', 'Project', 'Year', 'Description', 'TPC Code', 'Category', 'Total Amount', 'Currency', 'Q1', 'Q2', 'Q3', 'Q4', 'Created']
-      
+      # Report metadata header
+      csv << ['Report', 'OPEX Report']
+      csv << ['Generated By', "#{User.current.name} (#{User.current.mail})"]
+      csv << ['Generated At', Time.current.strftime('%Y-%m-%d %H:%M:%S')]
+      csv << ['Project', @project ? @project.name : 'All Projects']
+      csv << []  # Empty row separator
+
+      csv << ['ID', 'Project', 'Year', 'Description', 'TPC Code', 'Category', 'Total Amount', 'Currency', 'Q1', 'Q2', 'Q3', 'Q4', 'PR Count', 'Utilized Amount', 'Utilization %', 'Remaining Amount', 'Status', 'Created']
+
       opex_items.each do |opex|
+        # Calculate utilization from purchase requests
+        prs = PurchaseRequest.where(opex_id: opex.id)
+        pr_count = prs.count
+        utilized_amount = prs.where.not(estimated_price: nil).sum(:estimated_price)
+        total = opex.total_amount || 0
+        utilization_pct = total > 0 ? ((utilized_amount / total.to_f) * 100).round(1) : 0
+        remaining = total - utilized_amount
+
+        # Determine status
+        status = if utilization_pct >= 100
+                   'Over-utilized'
+                 elsif utilization_pct >= 80
+                   'Near Limit'
+                 elsif utilization_pct > 0
+                   'Active'
+                 else
+                   'Unused'
+                 end
+
         csv << [
           opex.id,
           opex.project&.name,
@@ -969,6 +1212,11 @@ class ReportsController < ApplicationController
           opex.q2_amount,
           opex.q3_amount,
           opex.q4_amount,
+          pr_count,
+          utilized_amount,
+          "#{utilization_pct}%",
+          remaining,
+          status,
           opex.created_at&.strftime('%Y-%m-%d')
         ]
       end
@@ -977,30 +1225,114 @@ class ReportsController < ApplicationController
   
   def generate_overview_csv(pr_data, vendor_data, tpc_data, capex_data, opex_data)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
+      # Report metadata header
+      csv << ['Report', 'Executive Overview Report']
+      csv << ['Generated By', "#{User.current.name} (#{User.current.mail})"]
+      csv << ['Generated At', Time.current.strftime('%Y-%m-%d %H:%M:%S')]
+      csv << ['Project', @project ? @project.name : 'All Projects']
+      csv << []  # Empty row separator
+
       csv << ['Report Section', 'Metric', 'Value']
-      
-      # Purchase Requests summary
-      csv << ['Purchase Requests', 'Total Count', pr_data[:summary][:total_count]]
-      csv << ['Purchase Requests', 'Open Count', pr_data[:summary][:open_count]]
-      csv << ['Purchase Requests', 'Total Estimated Value', pr_data[:summary][:total_estimated_value]]
-      
+
+      # High-level KPIs
+      csv << ['KPIs', 'Total Purchase Requests', pr_data[:summary][:total_count]]
+      csv << ['KPIs', 'Open Purchase Requests', pr_data[:summary][:open_count]]
+      csv << ['KPIs', 'Total PR Value', pr_data[:summary][:total_estimated_value]]
+      csv << ['KPIs', 'Avg PR Value', pr_data[:summary][:total_count].to_i > 0 ? (pr_data[:summary][:total_estimated_value].to_f / pr_data[:summary][:total_count]).round(2) : 0]
+
+      csv << ['', '', '']
+
+      # Purchase Requests by Status
+      csv << ['PR Status Breakdown', '---', '---']
+      if pr_data[:status_breakdown].present?
+        pr_data[:status_breakdown].each do |status, count|
+          csv << ['PR Status', status, count]
+        end
+      end
+
+      csv << ['', '', '']
+
+      # Budget Distribution
+      csv << ['Budget Distribution', '---', '---']
+      capex_pr_count = PurchaseRequest.where.not(capex_id: nil).count rescue 0
+      opex_pr_count = PurchaseRequest.where.not(opex_id: nil).count rescue 0
+      direct_tpc_count = PurchaseRequest.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).count rescue 0
+      non_budgeted_count = PurchaseRequest.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).count rescue 0
+      csv << ['Budget Source', 'CAPEX', capex_pr_count]
+      csv << ['Budget Source', 'OPEX', opex_pr_count]
+      csv << ['Budget Source', 'Direct TPC', direct_tpc_count]
+      csv << ['Budget Source', 'Non-budgeted', non_budgeted_count]
+
+      csv << ['', '', '']
+
+      # Currency Usage
+      csv << ['Currency Usage', '---', '---']
+      currency_data = PurchaseRequest.group(:currency).count rescue {}
+      currency_data.each do |currency, count|
+        csv << ['Currency', currency || 'Unspecified', count]
+      end
+
+      csv << ['', '', '']
+
       # Vendors summary
+      csv << ['Vendors Summary', '---', '---']
       csv << ['Vendors', 'Total Count', vendor_data[:summary][:total_count]]
       csv << ['Vendors', 'Active Count', vendor_data[:summary][:active_count]]
-      
+      global_vendor_count = (Vendor.where(project_id: nil).count rescue 0)
+      project_vendor_count = (Vendor.where.not(project_id: nil).count rescue 0)
+      csv << ['Vendors', 'Global Vendors', global_vendor_count]
+      csv << ['Vendors', 'Project-specific Vendors', project_vendor_count]
+
+      csv << ['', '', '']
+
+      # Vendor Countries
+      csv << ['Vendor Geographic Distribution', '---', '---']
+      country_data = Vendor.where.not(country: [nil, '']).group(:country).count rescue {}
+      country_data.each do |country, count|
+        csv << ['Vendor Country', country, count]
+      end
+      unspecified_count = Vendor.where(country: [nil, '']).count rescue 0
+      csv << ['Vendor Country', 'Unspecified', unspecified_count] if unspecified_count > 0
+
+      csv << ['', '', '']
+
       # TPC Codes summary
+      csv << ['TPC Codes Summary', '---', '---']
       csv << ['TPC Codes', 'Total Count', tpc_data[:summary][:total_count]]
       csv << ['TPC Codes', 'Active Count', tpc_data[:summary][:active_count]]
-      
+
+      csv << ['', '', '']
+
       # CAPEX summary
+      csv << ['CAPEX Summary', '---', '---']
       csv << ['CAPEX', 'Total Items', capex_data[:summary][:total_items]]
-      csv << ['CAPEX', 'Total Value', capex_data[:summary][:total_value]]
-      
+      csv << ['CAPEX', 'Total Budget Value', capex_data[:summary][:total_value]]
+      capex_utilized = PurchaseRequest.where.not(capex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+      csv << ['CAPEX', 'Utilized Amount', capex_utilized]
+      csv << ['CAPEX', 'Utilization %', capex_data[:summary][:total_value].to_f > 0 ? "#{((capex_utilized / capex_data[:summary][:total_value].to_f) * 100).round(1)}%" : '0%']
+
+      csv << ['', '', '']
+
       # OPEX summary
+      csv << ['OPEX Summary', '---', '---']
       csv << ['OPEX', 'Total Items', opex_data[:summary][:total_items]]
-      csv << ['OPEX', 'Total Value', opex_data[:summary][:total_value]]
+      csv << ['OPEX', 'Total Budget Value', opex_data[:summary][:total_value]]
+      opex_utilized = PurchaseRequest.where.not(opex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+      csv << ['OPEX', 'Utilized Amount', opex_utilized]
+      csv << ['OPEX', 'Utilization %', opex_data[:summary][:total_value].to_f > 0 ? "#{((opex_utilized / opex_data[:summary][:total_value].to_f) * 100).round(1)}%" : '0%']
+
+      csv << ['', '', '']
+
+      # Combined Budget Overview
+      csv << ['Combined Budget', '---', '---']
+      total_budget = (capex_data[:summary][:total_value] || 0) + (opex_data[:summary][:total_value] || 0)
+      total_utilized = capex_utilized + opex_utilized
+      csv << ['Combined', 'Total Budget (CAPEX + OPEX)', total_budget]
+      csv << ['Combined', 'Total Utilized', total_utilized]
+      csv << ['Combined', 'Total Remaining', total_budget - total_utilized]
+      csv << ['Combined', 'Overall Utilization %', total_budget > 0 ? "#{((total_utilized / total_budget.to_f) * 100).round(1)}%" : '0%']
     end
   end
   
@@ -1014,37 +1346,38 @@ class ReportsController < ApplicationController
   
   def generate_pdf_report(title, report_data)
     require 'rbpdf'
-    
+
     pdf = RBPDF.new
     pdf.set_creator('Redmine Purchase Requests Plugin')
-    pdf.set_author('Purchase Requests System')
+    pdf.set_author("#{User.current.name} (#{User.current.mail})")
     pdf.set_title(title)
     pdf.set_subject(title)
-    
+
     # Set margins
     pdf.set_margins(15, 27, 15)
     pdf.set_header_margin(5)
     pdf.set_footer_margin(10)
-    
+
     # Set auto page breaks
     pdf.set_auto_page_break(true, 25)
-    
+
     # Add page
     pdf.add_page
-    
+
     # Set font
     pdf.set_font('helvetica', 'B', 16)
-    
+
     # Title
     pdf.cell(0, 15, title, 0, 1, 'L')
-    
+
     if @project
       pdf.set_font('helvetica', '', 12)
       pdf.cell(0, 10, "Project: #{@project.name}", 0, 1, 'L')
     end
-    
+
     pdf.set_font('helvetica', '', 10)
     pdf.cell(0, 8, "Generated: #{report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p')}", 0, 1, 'L')
+    pdf.cell(0, 6, "Generated by: #{User.current.name} (#{User.current.mail})", 0, 1, 'L')
     pdf.ln(5)
     
     # Summary section
@@ -1258,24 +1591,69 @@ class ReportsController < ApplicationController
       pdf.ln(5)
       pdf.set_font('helvetica', 'B', 12)
       pdf.cell(0, 8, 'Project Distribution', 0, 1, 'L')
-      
+
       pdf.set_font('helvetica', 'B', 9)
       pdf.cell(15, 6, 'Rank', 1, 0, 'C')
       pdf.cell(70, 6, 'Project Name', 1, 0, 'C')
       pdf.cell(25, 6, 'Vendors', 1, 0, 'C')
       pdf.cell(70, 6, 'Distribution', 1, 1, 'C')
-      
+
       pdf.set_font('helvetica', '', 8)
       max_project_vendors = report_data[:project_distribution].values.max
-      
+
       report_data[:project_distribution].first(8).each_with_index do |(project, count), index|
         bars = max_project_vendors > 0 ? '#' * ((count.to_f / max_project_vendors) * 15).to_i : ''
-        
+
         pdf.cell(15, 5, "##{index + 1}", 1, 0, 'C')
         pdf.cell(70, 5, project.length > 30 ? "#{project[0, 27]}..." : project, 1, 0, 'L')
         pdf.cell(25, 5, count.to_s, 1, 0, 'C')
         pdf.cell(70, 5, bars, 1, 1, 'L')
       end
+    end
+
+    # Geographic Distribution
+    pdf.ln(5)
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(0, 8, 'Geographic Distribution', 0, 1, 'L')
+
+    country_data = Vendor.where.not(country: [nil, '']).group(:country).count rescue {}
+    unspecified_vendors = Vendor.where(country: [nil, '']).count rescue 0
+
+    if country_data.any? || unspecified_vendors > 0
+      pdf.set_font('helvetica', 'B', 9)
+      pdf.cell(15, 6, 'Rank', 1, 0, 'C')
+      pdf.cell(60, 6, 'Country', 1, 0, 'C')
+      pdf.cell(25, 6, 'Vendors', 1, 0, 'C')
+      pdf.cell(30, 6, '% of Total', 1, 0, 'C')
+      pdf.cell(50, 6, 'Distribution', 1, 1, 'C')
+
+      pdf.set_font('helvetica', '', 8)
+      total_vendors = country_data.values.sum + unspecified_vendors
+      sorted_countries = country_data.sort_by { |_, count| -count }.first(8)
+      max_country_vendors = sorted_countries.first ? sorted_countries.first[1] : 1
+
+      sorted_countries.each_with_index do |(country, count), index|
+        pct = total_vendors > 0 ? ((count / total_vendors.to_f) * 100).round(1) : 0
+        bars = max_country_vendors > 0 ? '#' * ((count.to_f / max_country_vendors) * 10).to_i : ''
+
+        pdf.cell(15, 5, "##{index + 1}", 1, 0, 'C')
+        pdf.cell(60, 5, country.length > 25 ? "#{country[0, 22]}..." : country, 1, 0, 'L')
+        pdf.cell(25, 5, count.to_s, 1, 0, 'C')
+        pdf.cell(30, 5, "#{pct}%", 1, 0, 'C')
+        pdf.cell(50, 5, bars, 1, 1, 'L')
+      end
+
+      if unspecified_vendors > 0
+        pct = total_vendors > 0 ? ((unspecified_vendors / total_vendors.to_f) * 100).round(1) : 0
+        pdf.cell(15, 5, "-", 1, 0, 'C')
+        pdf.cell(60, 5, 'Unspecified', 1, 0, 'L')
+        pdf.cell(25, 5, unspecified_vendors.to_s, 1, 0, 'C')
+        pdf.cell(30, 5, "#{pct}%", 1, 0, 'C')
+        pdf.cell(50, 5, '', 1, 1, 'L')
+      end
+    else
+      pdf.set_font('helvetica', 'I', 9)
+      pdf.cell(0, 5, 'No country data available. Please update vendor records with country information.', 0, 1, 'L')
     end
   end
   
@@ -1670,7 +2048,7 @@ class ReportsController < ApplicationController
       pdf.set_font('helvetica', 'B', 12)
       pdf.cell(0, 8, 'Executive Summary', 0, 1, 'L')
       pdf.set_font('helvetica', '', 9)
-      
+
       summary = report_data[:executive_summary]
       pdf.cell(0, 5, "Purchase Requests: #{summary[:purchase_requests][:total]} total, #{summary[:purchase_requests][:open]} open", 0, 1, 'L')
       pdf.cell(0, 5, "Vendors: #{summary[:vendors][:total]} total, #{summary[:vendors][:active]} active", 0, 1, 'L')
@@ -1678,28 +2056,125 @@ class ReportsController < ApplicationController
       pdf.cell(0, 5, "Total Budget: $#{format_number(report_data[:total_budget].round(2))}", 0, 1, 'L')
       pdf.ln(5)
     end
-    
-    # Budget Distribution Chart
+
+    # Budget Distribution Chart (CAPEX vs OPEX)
     capex_value = report_data[:executive_summary][:capex][:total_value]
     opex_value = report_data[:executive_summary][:opex][:total_value]
-    
+
     if capex_value > 0 || opex_value > 0
       budget_data = {
         'CAPEX' => capex_value,
         'OPEX' => opex_value
       }
-      
+
       PdfChartHelper.generate_pie_chart(pdf, budget_data, {
         title: 'Budget Distribution (CAPEX vs OPEX)',
         width: 350,
         height: 350
       })
     end
-    
+
+    # Budget Distribution by Source (PR allocation)
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(0, 8, 'Purchase Request Budget Sources', 0, 1, 'L')
+
+    pdf.set_font('helvetica', 'B', 8)
+    pdf.cell(50, 6, 'Budget Source', 1, 0, 'C')
+    pdf.cell(30, 6, 'PR Count', 1, 0, 'C')
+    pdf.cell(40, 6, 'Total Value', 1, 0, 'C')
+    pdf.cell(30, 6, '% of Total', 1, 1, 'C')
+
+    pdf.set_font('helvetica', '', 8)
+    capex_pr_count = PurchaseRequest.where.not(capex_id: nil).count rescue 0
+    capex_pr_value = PurchaseRequest.where.not(capex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    opex_pr_count = PurchaseRequest.where.not(opex_id: nil).count rescue 0
+    opex_pr_value = PurchaseRequest.where.not(opex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    direct_tpc_count = PurchaseRequest.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).count rescue 0
+    direct_tpc_value = PurchaseRequest.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    non_budgeted_count = PurchaseRequest.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).count rescue 0
+    non_budgeted_value = PurchaseRequest.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    total_pr_value = capex_pr_value + opex_pr_value + direct_tpc_value + non_budgeted_value
+
+    [
+      ['CAPEX', capex_pr_count, capex_pr_value],
+      ['OPEX', opex_pr_count, opex_pr_value],
+      ['Direct TPC', direct_tpc_count, direct_tpc_value],
+      ['Non-budgeted', non_budgeted_count, non_budgeted_value]
+    ].each do |source, count, value|
+      pct = total_pr_value > 0 ? ((value / total_pr_value.to_f) * 100).round(1) : 0
+      pdf.cell(50, 5, source, 1, 0, 'L')
+      pdf.cell(30, 5, count.to_s, 1, 0, 'C')
+      pdf.cell(40, 5, "$#{format_number(value.round(0))}", 1, 0, 'R')
+      pdf.cell(30, 5, "#{pct}%", 1, 1, 'C')
+    end
+    pdf.ln(5)
+
+    # Currency Usage Analysis
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(0, 8, 'Currency Usage Analysis', 0, 1, 'L')
+
+    currency_data = PurchaseRequest.group(:currency).count rescue {}
+    currency_values = PurchaseRequest.group(:currency).where.not(estimated_price: nil).sum(:estimated_price) rescue {}
+
+    if currency_data.any?
+      pdf.set_font('helvetica', 'B', 8)
+      pdf.cell(40, 6, 'Currency', 1, 0, 'C')
+      pdf.cell(30, 6, 'PR Count', 1, 0, 'C')
+      pdf.cell(40, 6, 'Total Value', 1, 0, 'C')
+      pdf.cell(40, 6, '% of PRs', 1, 1, 'C')
+
+      pdf.set_font('helvetica', '', 8)
+      total_prs = currency_data.values.sum
+      currency_data.each do |currency, count|
+        curr_name = currency.present? ? currency : 'Unspecified'
+        curr_value = currency_values[currency] || 0
+        pct = total_prs > 0 ? ((count / total_prs.to_f) * 100).round(1) : 0
+        pdf.cell(40, 5, curr_name, 1, 0, 'L')
+        pdf.cell(30, 5, count.to_s, 1, 0, 'C')
+        pdf.cell(40, 5, "#{curr_name == 'Unspecified' ? '' : curr_name} #{format_number(curr_value.round(0))}", 1, 0, 'R')
+        pdf.cell(40, 5, "#{pct}%", 1, 1, 'C')
+      end
+    end
+    pdf.ln(5)
+
+    # Vendor Geographic Distribution
+    pdf.set_font('helvetica', 'B', 12)
+    pdf.cell(0, 8, 'Vendor Geographic Distribution', 0, 1, 'L')
+
+    country_data = Vendor.where.not(country: [nil, '']).group(:country).count rescue {}
+    unspecified_vendors = Vendor.where(country: [nil, '']).count rescue 0
+
+    if country_data.any? || unspecified_vendors > 0
+      pdf.set_font('helvetica', 'B', 8)
+      pdf.cell(60, 6, 'Country', 1, 0, 'C')
+      pdf.cell(30, 6, 'Vendor Count', 1, 0, 'C')
+      pdf.cell(40, 6, '% of Vendors', 1, 1, 'C')
+
+      pdf.set_font('helvetica', '', 8)
+      total_vendors = country_data.values.sum + unspecified_vendors
+
+      # Show top 10 countries
+      sorted_countries = country_data.sort_by { |_, count| -count }.first(10)
+      sorted_countries.each do |country, count|
+        pct = total_vendors > 0 ? ((count / total_vendors.to_f) * 100).round(1) : 0
+        pdf.cell(60, 5, country.length > 25 ? "#{country[0, 22]}..." : country, 1, 0, 'L')
+        pdf.cell(30, 5, count.to_s, 1, 0, 'C')
+        pdf.cell(40, 5, "#{pct}%", 1, 1, 'C')
+      end
+
+      if unspecified_vendors > 0
+        pct = total_vendors > 0 ? ((unspecified_vendors / total_vendors.to_f) * 100).round(1) : 0
+        pdf.cell(60, 5, 'Unspecified', 1, 0, 'L')
+        pdf.cell(30, 5, unspecified_vendors.to_s, 1, 0, 'C')
+        pdf.cell(40, 5, "#{pct}%", 1, 1, 'C')
+      end
+    end
+    pdf.ln(5)
+
     # KPI Dashboard
     pdf.set_font('helvetica', 'B', 12)
     pdf.cell(0, 8, 'Key Performance Indicators', 0, 1, 'L')
-    
+
     # Create KPI table
     pdf.set_font('helvetica', 'B', 8)
     pdf.cell(45, 6, 'Category', 1, 0, 'C')
@@ -1707,9 +2182,9 @@ class ReportsController < ApplicationController
     pdf.cell(30, 6, 'Active/Open', 1, 0, 'C')
     pdf.cell(40, 6, 'Engagement', 1, 0, 'C')
     pdf.cell(45, 6, 'Value/Notes', 1, 1, 'C')
-    
+
     pdf.set_font('helvetica', '', 8)
-    
+
     # Purchase Requests KPI
     pr_total = summary[:purchase_requests][:total]
     pr_open = summary[:purchase_requests][:open]
@@ -1719,7 +2194,7 @@ class ReportsController < ApplicationController
     pdf.cell(30, 5, pr_open.to_s, 1, 0, 'C')
     pdf.cell(40, 5, "#{pr_completion_rate}% Complete", 1, 0, 'C')
     pdf.cell(45, 5, "$#{format_number(summary[:purchase_requests][:total_value].round(0))}", 1, 1, 'R')
-    
+
     # Vendors KPI
     vendor_total = summary[:vendors][:total]
     vendor_active = summary[:vendors][:active]
@@ -1730,7 +2205,7 @@ class ReportsController < ApplicationController
     pdf.cell(30, 5, vendor_active.to_s, 1, 0, 'C')
     pdf.cell(40, 5, "#{vendor_engagement_rate}% Engaged", 1, 0, 'C')
     pdf.cell(45, 5, "#{vendor_engaged} with requests", 1, 1, 'L')
-    
+
     # TPC Codes KPI
     tpc_total = summary[:tpc_codes][:total]
     tpc_active = summary[:tpc_codes][:active]
@@ -1741,18 +2216,24 @@ class ReportsController < ApplicationController
     pdf.cell(30, 5, tpc_active.to_s, 1, 0, 'C')
     pdf.cell(40, 5, "#{tpc_utilization}% Utilized", 1, 0, 'C')
     pdf.cell(45, 5, "#{total_allocations} allocations", 1, 1, 'L')
-    
+
     pdf.ln(5)
-    
+
     # Budget Efficiency Analysis
     pdf.set_font('helvetica', 'B', 12)
     pdf.cell(0, 8, 'Budget Efficiency Analysis', 0, 1, 'L')
     pdf.set_font('helvetica', '', 9)
-    
-    capex_opex_ratio = opex_value > 0 ? (capex_value / opex_value).round(2) : "∞"
+
+    capex_opex_ratio = opex_value > 0 ? (capex_value / opex_value).round(2) : "N/A"
     pdf.cell(0, 5, "CAPEX to OPEX Ratio: #{capex_opex_ratio}:1", 0, 1, 'L')
     pdf.cell(0, 5, "Average Request Value: $#{format_number(report_data[:purchase_requests][:summary][:avg_estimated_value].round(2))}", 0, 1, 'L')
     pdf.cell(0, 5, "Budget Items per TPC Code: #{tpc_total > 0 ? (total_allocations.to_f / tpc_total).round(1) : 0}", 0, 1, 'L')
+
+    # Budget Utilization
+    total_budget = capex_value + opex_value
+    total_utilized = capex_pr_value + opex_pr_value
+    overall_utilization = total_budget > 0 ? ((total_utilized / total_budget.to_f) * 100).round(1) : 0
+    pdf.cell(0, 5, "Overall Budget Utilization: #{overall_utilization}% ($#{format_number(total_utilized.round(0))} of $#{format_number(total_budget.round(0))})", 0, 1, 'L')
   end
 
   def format_number(number)

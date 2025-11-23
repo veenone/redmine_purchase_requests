@@ -166,12 +166,11 @@
             <td><%= item[:pr_count] %></td>
             <td>
               <span class="status-badge <%= item[:status] %>">
-                <% case item[:status] %>
-                <% when 'over_budget' %>Over Budget
-                <% when 'high_utilization' %>High
-                <% when 'medium_utilization' %>Medium
-                <% when 'low_utilization' %>Low
-                <% when 'unused' %>Unused
+                <% if item[:status] == 'over_budget' %>Over Budget
+                <% elsif item[:status] == 'high_utilization' %>High
+                <% elsif item[:status] == 'medium_utilization' %>Medium
+                <% elsif item[:status] == 'low_utilization' %>Low
+                <% elsif item[:status] == 'unused' %>Unused
                 <% end %>
               </span>
             </td>
