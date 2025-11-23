@@ -239,31 +239,43 @@
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Category Chart
+  // Chart.js default configuration
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif';
+
+  // Category Chart (horizontal bar using indexAxis)
   const categoryCtx = document.getElementById('categoryChart').getContext('2d');
   new Chart(categoryCtx, {
-    type: 'horizontalBar',
+    type: 'bar',
     data: {
       labels: <%= raw @report_data[:category_breakdown].keys.to_json %>,
       datasets: [{
         label: 'OPEX Amount',
         data: <%= raw @report_data[:category_breakdown].values.to_json %>,
-        backgroundColor: 'rgba(76, 175, 80, 0.6)',
+        backgroundColor: 'rgba(76, 175, 80, 0.7)',
         borderColor: 'rgba(76, 175, 80, 1)',
         borderWidth: 1
       }]
     },
     options: {
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
           display: false
+        },
+        title: {
+          display: true,
+          text: 'OPEX by Category'
         }
       },
       scales: {
         x: {
           beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Amount'
+          },
           ticks: {
             callback: function(value) {
               return '$' + value.toLocaleString();
@@ -273,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
-  
+
   // Yearly Chart
   const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
   new Chart(yearlyCtx, {
@@ -286,7 +298,9 @@ document.addEventListener('DOMContentLoaded', function() {
         borderColor: 'rgba(76, 175, 80, 1)',
         backgroundColor: 'rgba(76, 175, 80, 0.1)',
         tension: 0.4,
-        fill: true
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 8
       }]
     },
     options: {
@@ -295,11 +309,19 @@ document.addEventListener('DOMContentLoaded', function() {
       plugins: {
         legend: {
           display: false
+        },
+        title: {
+          display: true,
+          text: 'OPEX Trend by Year'
         }
       },
       scales: {
         y: {
           beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Amount'
+          },
           ticks: {
             callback: function(value) {
               return '$' + value.toLocaleString();
@@ -309,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
-  
+
   // Quarterly Chart
   const quarterlyCtx = document.getElementById('quarterlyChart').getContext('2d');
   new Chart(quarterlyCtx, {
@@ -318,7 +340,9 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['Q1', 'Q2', 'Q3', 'Q4'],
       datasets: [{
         data: <%= raw @report_data[:quarterly_breakdown].values.to_json %>,
-        backgroundColor: ['#4CAF50', '#81C784', '#A5D6A7', '#C8E6C9']
+        backgroundColor: ['#4CAF50', '#81C784', '#A5D6A7', '#C8E6C9'],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
@@ -326,12 +350,16 @@ document.addEventListener('DOMContentLoaded', function() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false
+          position: 'bottom'
+        },
+        title: {
+          display: true,
+          text: 'Quarterly Distribution'
         }
       }
     }
   });
-  
+
   <% if @report_data[:currency_breakdown].any? %>
   // Currency Chart
   const currencyCtx = document.getElementById('currencyChart').getContext('2d');
@@ -343,7 +371,9 @@ document.addEventListener('DOMContentLoaded', function() {
         data: <%= raw @report_data[:currency_breakdown].values.to_json %>,
         backgroundColor: [
           '#4CAF50', '#81C784', '#A5D6A7', '#C8E6C9', '#E8F5E8', '#F1F8E9'
-        ]
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
@@ -352,6 +382,10 @@ document.addEventListener('DOMContentLoaded', function() {
       plugins: {
         legend: {
           position: 'bottom'
+        },
+        title: {
+          display: true,
+          text: 'Currency Distribution'
         }
       }
     }
