@@ -181,25 +181,25 @@ class ReportsController < ApplicationController
   def generate_purchase_requests_report
     # Scope data based on project context
     purchase_requests = @project ? @project.purchase_requests : PurchaseRequest.all
-    purchase_requests = purchase_requests.includes(:project, :status, :vendor, :user, :capex, :opex)
-    
+    purchase_requests = purchase_requests.includes(:project, :status, :vendor, :user, :capex, :opex, :tpc_code)
+
     # Basic statistics
     total_count = purchase_requests.count
     open_count = purchase_requests.joins(:status).where(purchase_request_statuses: { is_closed: false }).count
     closed_count = purchase_requests.joins(:status).where(purchase_request_statuses: { is_closed: true }).count
-    
+
     # Status breakdown
     status_breakdown = purchase_requests.joins(:status)
                                        .group('purchase_request_statuses.name')
                                        .count
-    
+
     # Priority distribution
     priority_breakdown = purchase_requests.group(:priority).count
-    
+
     # Financial summary
     total_estimated_value = purchase_requests.where.not(estimated_price: nil).sum(:estimated_price)
     avg_estimated_value = purchase_requests.where.not(estimated_price: nil).average(:estimated_price)
-    
+
     # Monthly trend (last 12 months)
     monthly_trend = {}
     12.times do |i|
@@ -209,7 +209,7 @@ class ReportsController < ApplicationController
       monthly_trend[month_start] = count
     end
     monthly_trend = monthly_trend.sort.to_h
-    
+
     # Top vendors
     vendor_stats = purchase_requests.joins(:vendor)
                                    .group('vendors.name')
@@ -217,22 +217,129 @@ class ReportsController < ApplicationController
                                    .count
                                    .sort_by { |_, count| -count }
                                    .first(10)
-    
+
+    # Budget source breakdown (CAPEX, OPEX, Direct TPC, Non-budgeted)
+    capex_count = purchase_requests.where.not(capex_id: nil).count
+    opex_count = purchase_requests.where.not(opex_id: nil).count
+    direct_tpc_count = purchase_requests.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).count
+    non_budgeted_count = purchase_requests.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).count
+
+    budget_source_breakdown = {
+      'CAPEX' => capex_count,
+      'OPEX' => opex_count,
+      'Direct TPC' => direct_tpc_count,
+      'Non-budgeted' => non_budgeted_count
+    }
+
+    # Budget source by value
+    capex_value = purchase_requests.where.not(capex_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
+    opex_value = purchase_requests.where.not(opex_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
+    direct_tpc_value = purchase_requests.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
+    non_budgeted_value = purchase_requests.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
+
+    budget_source_value = {
+      'CAPEX' => capex_value || 0,
+      'OPEX' => opex_value || 0,
+      'Direct TPC' => direct_tpc_value || 0,
+      'Non-budgeted' => non_budgeted_value || 0
+    }
+
+    # Requester breakdown (top 10)
+    requester_breakdown = purchase_requests.joins(:user)
+                                           .group('users.id', 'users.firstname', 'users.lastname')
+                                           .count
+                                           .sort_by { |_, count| -count }
+                                           .first(10)
+                                           .map { |k, v| { id: k[0], name: "#{k[1]} #{k[2]}", count: v } }
+
+    # TPC code distribution (top 10)
+    tpc_distribution = {}
+
+    # Direct TPC assignments
+    direct_tpc = purchase_requests.joins(:tpc_code)
+                                  .group('tpc_codes.tpc_number')
+                                  .count
+
+    # Via CAPEX
+    capex_tpc = purchase_requests.joins(capex: :tpc_code)
+                                 .group('tpc_codes.tpc_number')
+                                 .count
+
+    # Via OPEX
+    opex_tpc = purchase_requests.joins(opex: :tpc_code)
+                                .group('tpc_codes.tpc_number')
+                                .count
+
+    # Merge all TPC counts
+    [direct_tpc, capex_tpc, opex_tpc].each do |tpc_hash|
+      tpc_hash.each do |tpc_number, count|
+        tpc_distribution[tpc_number] = (tpc_distribution[tpc_number] || 0) + count
+      end
+    end
+    tpc_distribution = tpc_distribution.sort_by { |_, count| -count }.first(10).to_h
+
+    # TPC value distribution
+    tpc_value_distribution = {}
+
+    direct_tpc_values = purchase_requests.joins(:tpc_code)
+                                         .where.not(estimated_price: nil)
+                                         .group('tpc_codes.tpc_number')
+                                         .sum(:estimated_price)
+
+    capex_tpc_values = purchase_requests.joins(capex: :tpc_code)
+                                        .where.not(estimated_price: nil)
+                                        .group('tpc_codes.tpc_number')
+                                        .sum(:estimated_price)
+
+    opex_tpc_values = purchase_requests.joins(opex: :tpc_code)
+                                       .where.not(estimated_price: nil)
+                                       .group('tpc_codes.tpc_number')
+                                       .sum(:estimated_price)
+
+    [direct_tpc_values, capex_tpc_values, opex_tpc_values].each do |tpc_hash|
+      tpc_hash.each do |tpc_number, value|
+        tpc_value_distribution[tpc_number] = (tpc_value_distribution[tpc_number] || 0) + value.to_f
+      end
+    end
+    tpc_value_distribution = tpc_value_distribution.sort_by { |_, value| -value }.first(10).to_h
+
+    # Monthly cost consumption trend (last 12 months)
+    monthly_cost_trend = {}
+    12.times do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = month_start.end_of_month
+      value = purchase_requests.where(created_at: month_start..month_end)
+                               .where.not(estimated_price: nil)
+                               .sum(:estimated_price)
+      monthly_cost_trend[month_start.strftime('%b %Y')] = value || 0
+    end
+    monthly_cost_trend = monthly_cost_trend.to_a.reverse.to_h
+
     # Generate CSV data
     csv_data = generate_purchase_requests_csv(purchase_requests)
-    
+
     {
       summary: {
         total_count: total_count,
         open_count: open_count,
         closed_count: closed_count,
         total_estimated_value: total_estimated_value || 0,
-        avg_estimated_value: avg_estimated_value || 0
+        avg_estimated_value: avg_estimated_value || 0,
+        capex_count: capex_count,
+        opex_count: opex_count,
+        direct_tpc_count: direct_tpc_count,
+        non_budgeted_count: non_budgeted_count
       },
       status_breakdown: status_breakdown,
       priority_breakdown: priority_breakdown,
       monthly_trend: monthly_trend,
+      monthly_cost_trend: monthly_cost_trend,
       vendor_stats: vendor_stats,
+      budget_source_breakdown: budget_source_breakdown,
+      budget_source_value: budget_source_value,
+      requester_breakdown: requester_breakdown,
+      tpc_distribution: tpc_distribution,
+      tpc_value_distribution: tpc_value_distribution,
       recent_requests: purchase_requests.order(created_at: :desc).limit(10),
       csv_data: csv_data,
       project: @project,
