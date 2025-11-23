@@ -261,7 +261,7 @@ class ReportsController < ApplicationController
                                   .count
 
     # Via CAPEX
-    capex_tpc = purchase_requests.joins(capex: :tpc_code)
+    capex_tpc = purchase_requests.joins(capex: :tpc_code_record)
                                  .group('tpc_codes.tpc_number')
                                  .count
 
@@ -286,7 +286,7 @@ class ReportsController < ApplicationController
                                          .group('tpc_codes.tpc_number')
                                          .sum(:estimated_price)
 
-    capex_tpc_values = purchase_requests.joins(capex: :tpc_code)
+    capex_tpc_values = purchase_requests.joins(capex: :tpc_code_record)
                                         .where.not(estimated_price: nil)
                                         .group('tpc_codes.tpc_number')
                                         .sum(:estimated_price)
