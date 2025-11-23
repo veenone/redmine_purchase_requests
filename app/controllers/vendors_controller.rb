@@ -265,24 +265,25 @@ class VendorsController < ApplicationController
   end
   
   def vendor_params
-    params.require(:vendor).permit(:name, :vendor_id, :email, :phone, :website, :address, :contact_person, :notes, :is_active, :project_id)
+    params.require(:vendor).permit(:name, :vendor_id, :email, :phone, :website, :address, :country, :contact_person, :notes, :is_active, :project_id)
   end
   
   def generate_csv(vendors)
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
       csv << [
         l(:field_name),
-        l(:field_email), 
+        l(:field_email),
         l(:field_phone),
         l(:field_website),
         l(:field_address),
+        l(:field_country),
         l(:field_contact_person),
         l(:field_notes),
         l(:field_is_active)
       ]
-      
+
       vendors.each do |vendor|
         csv << [
           vendor.name,
@@ -290,6 +291,7 @@ class VendorsController < ApplicationController
           vendor.phone,
           vendor.website,
           vendor.address,
+          vendor.respond_to?(:country) ? vendor.country : '',
           vendor.contact_person,
           vendor.notes,
           vendor.is_active? ? 'Yes' : 'No'
@@ -297,22 +299,23 @@ class VendorsController < ApplicationController
       end
     end
   end
-  
+
   def generate_template_csv
     require 'csv'
-    
+
     CSV.generate(headers: true) do |csv|
       csv << [
         l(:field_name),
-        l(:field_email), 
+        l(:field_email),
         l(:field_phone),
         l(:field_website),
         l(:field_address),
+        l(:field_country),
         l(:field_contact_person),
         l(:field_notes),
         l(:field_is_active)
       ]
-      
+
       # Add sample row
       csv << [
         'Sample Vendor Inc.',
@@ -320,6 +323,7 @@ class VendorsController < ApplicationController
         '+1-555-0123',
         'https://www.samplevendor.com',
         '123 Business St, City, State 12345',
+        'United States',
         'John Smith',
         'Reliable supplier for office equipment',
         'Yes'
@@ -329,20 +333,21 @@ class VendorsController < ApplicationController
   
   def import_from_csv(file)
     require 'csv'
-    
+
     imported_count = 0
     updated_count = 0
     errors = []
-    
+
     CSV.foreach(file.path, headers: true, encoding: 'utf-8') do |row|
       next if row[l(:field_name)].blank?
-      
+
       vendor_data = {
         name: row[l(:field_name)],
         email: row[l(:field_email)],
         phone: row[l(:field_phone)],
         website: row[l(:field_website)],
         address: row[l(:field_address)],
+        country: row[l(:field_country)],
         contact_person: row[l(:field_contact_person)],
         notes: row[l(:field_notes)],
         is_active: row[l(:field_is_active)].to_s.downcase.in?(['yes', 'true', '1'])
