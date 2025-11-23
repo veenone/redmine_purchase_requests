@@ -37,35 +37,40 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
   end
   
-  # Purchase Requests menu (core items only)
+  # Procurement menu (virtual parent)
+  menu :project_menu, :procurement, '#',
+       caption: :label_procurement,
+       after: :issues,
+       param: :project_id
+
   menu :project_menu, :purchase_requests,
        { controller: 'purchase_requests', action: 'index' },
        caption: :label_purchase_requests,
-       after: :issues,
-       param: :project_id
+       param: :project_id,
+       parent: :procurement
 
   menu :project_menu, :purchase_requests_dashboard,
        { controller: 'purchase_requests', action: 'dashboard' },
        caption: :label_purchase_request_dashboard,
        param: :project_id,
-       parent: :purchase_requests
+       parent: :procurement
 
   menu :project_menu, :purchase_requests_vendors,
        { controller: 'project_vendors', action: 'index' },
        caption: :label_vendors,
        param: :project_id,
-       parent: :purchase_requests
+       parent: :procurement
 
   menu :project_menu, :purchase_request_reports,
        { controller: 'reports', action: 'index' },
-       caption: 'Reports',
+       caption: :label_reports,
        param: :project_id,
-       parent: :purchase_requests
+       parent: :procurement
 
   # Budget Management menu (virtual parent - groups CAPEX, OPEX, TPC)
   menu :project_menu, :budget_management, '#',
        caption: :label_budget_management,
-       after: :purchase_requests,
+       after: :procurement,
        param: :project_id,
        if: Proc.new { |project|
          User.current.allowed_to?(:view_capex, project) ||
