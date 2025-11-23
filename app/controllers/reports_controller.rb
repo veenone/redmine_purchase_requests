@@ -619,14 +619,14 @@ class ReportsController < ApplicationController
     # Scope data based on project context
     capex_items = @project ? @project.capex : Capex.all
     capex_items = capex_items.includes(:project, :tpc_code_record, :purchase_requests)
-    
+
     # Year-based analysis
     current_year = Date.current.year
     years = capex_items.distinct.pluck(:year).sort
-    
+
     # Financial summary by year
     yearly_totals = capex_items.group(:year).sum(:total_amount)
-    
+
     # Quarterly breakdown for current year
     current_year_items = capex_items.for_year(current_year)
     quarterly_breakdown = {
@@ -635,30 +635,107 @@ class ReportsController < ApplicationController
       q3: current_year_items.sum(:q3_amount),
       q4: current_year_items.sum(:q4_amount)
     }
-    
+
     # TPC code distribution
     tpc_distribution_raw = capex_items.joins(:tpc_code_record)
                                      .group('tpc_codes.tpc_number')
                                      .sum(:total_amount)
     tpc_distribution = tpc_distribution_raw.sort_by { |_, amount| -amount }
-    
+
     # Currency analysis
     currency_breakdown = capex_items.group(:currency).sum(:total_amount)
-    
+
+    # Utilization status breakdown
+    capex_with_pr = capex_items.joins(:purchase_requests).distinct.count
+    capex_without_pr = capex_items.count - capex_with_pr
+
+    utilization_breakdown = {
+      'With Purchase Requests' => capex_with_pr,
+      'Without Purchase Requests' => capex_without_pr
+    }
+
+    # Calculate utilization percentage (spent vs budgeted)
+    utilization_details = []
+    capex_items.includes(:purchase_requests).each do |capex|
+      next if capex.total_amount.nil? || capex.total_amount == 0
+
+      spent = capex.purchase_requests.where.not(estimated_price: nil).sum(:estimated_price)
+      budgeted = capex.total_amount
+      utilization_pct = (spent.to_f / budgeted * 100).round(1)
+
+      status = if utilization_pct >= 100
+                 'over_budget'
+               elsif utilization_pct >= 75
+                 'high_utilization'
+               elsif utilization_pct >= 50
+                 'medium_utilization'
+               elsif utilization_pct > 0
+                 'low_utilization'
+               else
+                 'unused'
+               end
+
+      utilization_details << {
+        id: capex.id,
+        description: capex.description,
+        year: capex.year,
+        budgeted: budgeted,
+        spent: spent,
+        remaining: budgeted - spent,
+        utilization_pct: utilization_pct,
+        status: status,
+        pr_count: capex.purchase_requests.count
+      }
+    end
+
+    # Utilization status summary
+    utilization_status_breakdown = {
+      'Over Budget (100%+)' => utilization_details.count { |u| u[:status] == 'over_budget' },
+      'High (75-99%)' => utilization_details.count { |u| u[:status] == 'high_utilization' },
+      'Medium (50-74%)' => utilization_details.count { |u| u[:status] == 'medium_utilization' },
+      'Low (1-49%)' => utilization_details.count { |u| u[:status] == 'low_utilization' },
+      'Unused (0%)' => utilization_details.count { |u| u[:status] == 'unused' }
+    }
+
+    # Top utilized CAPEX items
+    top_utilized = utilization_details.sort_by { |u| -u[:utilization_pct] }.first(10)
+
+    # Purchase request status breakdown for CAPEX-linked PRs
+    pr_status_breakdown = {}
+    capex_items.each do |capex|
+      capex.purchase_requests.joins(:status).group('purchase_request_statuses.name').count.each do |status, count|
+        pr_status_breakdown[status] = (pr_status_breakdown[status] || 0) + count
+      end
+    end
+
+    # Total PRs linked to CAPEX
+    total_capex_prs = capex_items.joins(:purchase_requests).count
+    total_capex_pr_value = capex_items.joins(:purchase_requests)
+                                      .where.not(purchase_requests: { estimated_price: nil })
+                                      .sum('purchase_requests.estimated_price')
+
     # Generate CSV data
     csv_data = generate_capex_csv(capex_items)
-    
+
     {
       summary: {
         total_items: capex_items.count,
         total_value: yearly_totals.values.sum,
         years_covered: years,
-        current_year_value: yearly_totals[current_year] || 0
+        current_year_value: yearly_totals[current_year] || 0,
+        capex_with_pr: capex_with_pr,
+        capex_without_pr: capex_without_pr,
+        total_capex_prs: total_capex_prs,
+        total_capex_pr_value: total_capex_pr_value || 0
       },
       yearly_totals: yearly_totals,
       quarterly_breakdown: quarterly_breakdown,
       tpc_distribution: tpc_distribution.first(10),
       currency_breakdown: currency_breakdown,
+      utilization_breakdown: utilization_breakdown,
+      utilization_status_breakdown: utilization_status_breakdown,
+      top_utilized: top_utilized,
+      pr_status_breakdown: pr_status_breakdown,
       recent_items: capex_items.order(created_at: :desc).limit(10),
       csv_data: csv_data,
       project: @project,

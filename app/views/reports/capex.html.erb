@@ -12,15 +12,15 @@
   <%= link_to reports_index_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
     <span class="icon icon-cancel">Back to Reports</span>
   <% end %>
-  
-  <% report_path_base = @project ? 
-       capex_project_reports_path(@project) : 
+
+  <% report_path_base = @project ?
+       capex_project_reports_path(@project) :
        capex_reports_path %>
-  
+
   <%= link_to "#{report_path_base}?format=pdf", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
     <span class="icon icon-pdf">Export PDF</span>
   <% end %>
-  
+
   <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
     <span class="icon icon-csv-file">Export CSV</span>
   <% end %>
@@ -46,7 +46,7 @@
 <!-- Executive Summary -->
 <div class="report-section">
   <h3>CAPEX Overview</h3>
-  
+
   <div class="summary-cards">
     <div class="summary-card">
       <div class="card-icon"><span class="icon icon-money"></span></div>
@@ -55,7 +55,7 @@
         <div class="card-label">Total CAPEX Items</div>
       </div>
     </div>
-    
+
     <div class="summary-card financial">
       <div class="card-icon"><span class="icon icon-stats"></span></div>
       <div class="card-content">
@@ -63,7 +63,7 @@
         <div class="card-label">Total CAPEX Value</div>
       </div>
     </div>
-    
+
     <div class="summary-card current">
       <div class="card-icon"><span class="icon icon-time"></span></div>
       <div class="card-content">
@@ -71,7 +71,23 @@
         <div class="card-label"><%= Date.current.year %> CAPEX</div>
       </div>
     </div>
-    
+
+    <div class="summary-card pr-count">
+      <div class="card-icon"><span class="icon icon-package"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:total_capex_prs] %></div>
+        <div class="card-label">Linked PRs</div>
+      </div>
+    </div>
+
+    <div class="summary-card pr-value">
+      <div class="card-icon"><span class="icon icon-invoice"></span></div>
+      <div class="card-content">
+        <div class="card-value">$<%= number_with_delimiter(@report_data[:summary][:total_capex_pr_value].round(0)) %></div>
+        <div class="card-label">PR Total Value</div>
+      </div>
+    </div>
+
     <div class="summary-card years">
       <div class="card-icon"><span class="icon icon-calendar"></span></div>
       <div class="card-content">
@@ -82,14 +98,123 @@
   </div>
 </div>
 
+<!-- Utilization Status Breakdown -->
+<div class="report-section">
+  <h3>CAPEX Utilization Analysis</h3>
+
+  <div class="utilization-analysis">
+    <div class="chart-half">
+      <h4>CAPEX Usage Status</h4>
+      <div class="chart-container-sm">
+        <canvas id="utilizationChart" height="250"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-half">
+      <h4>Utilization Level Distribution</h4>
+      <div class="chart-container-sm">
+        <canvas id="utilizationStatusChart" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="utilization-cards">
+    <% @report_data[:utilization_status_breakdown].each do |status, count| %>
+      <div class="utilization-card <%= status.parameterize %>">
+        <div class="util-label"><%= status %></div>
+        <div class="util-count"><%= count %></div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Top Utilized CAPEX Items -->
+<% if @report_data[:top_utilized].any? %>
+<div class="report-section">
+  <h3>Top CAPEX Items by Utilization</h3>
+
+  <div class="autoscroll">
+    <table class="list utilization-table">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Description</th>
+          <th>Budgeted</th>
+          <th>Spent</th>
+          <th>Remaining</th>
+          <th>Utilization</th>
+          <th>PRs</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @report_data[:top_utilized].each do |item| %>
+          <tr>
+            <td><%= item[:year] %></td>
+            <td><%= truncate(item[:description], length: 40) %></td>
+            <td>$<%= number_with_delimiter(item[:budgeted].round(0)) %></td>
+            <td>$<%= number_with_delimiter(item[:spent].round(0)) %></td>
+            <td class="<%= item[:remaining] < 0 ? 'negative' : '' %>">
+              $<%= number_with_delimiter(item[:remaining].round(0)) %>
+            </td>
+            <td>
+              <div class="utilization-bar">
+                <div class="utilization-fill <%= item[:status] %>" style="width: <%= [item[:utilization_pct], 100].min %>%"></div>
+                <span class="utilization-text"><%= item[:utilization_pct] %>%</span>
+              </div>
+            </td>
+            <td><%= item[:pr_count] %></td>
+            <td>
+              <span class="status-badge <%= item[:status] %>">
+                <% case item[:status] %>
+                <% when 'over_budget' %>Over Budget
+                <% when 'high_utilization' %>High
+                <% when 'medium_utilization' %>Medium
+                <% when 'low_utilization' %>Low
+                <% when 'unused' %>Unused
+                <% end %>
+              </span>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% end %>
+
+<!-- Purchase Request Status Breakdown -->
+<% if @report_data[:pr_status_breakdown].any? %>
+<div class="report-section">
+  <h3>Purchase Requests by Status</h3>
+
+  <div class="pr-status-analysis">
+    <div class="chart-container-sm">
+      <canvas id="prStatusChart" height="280"></canvas>
+    </div>
+
+    <div class="pr-status-breakdown">
+      <% total_prs = @report_data[:pr_status_breakdown].values.sum %>
+      <% @report_data[:pr_status_breakdown].each do |status, count| %>
+        <div class="pr-status-item">
+          <span class="pr-status-name"><%= status %></span>
+          <span class="pr-status-count"><%= count %></span>
+          <span class="pr-status-pct"><%= total_prs > 0 ? "#{((count.to_f / total_prs) * 100).round(1)}%" : "0%" %></span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+<% end %>
+
 <!-- Yearly Trend -->
 <div class="report-section">
   <h3>CAPEX by Year</h3>
-  
+
   <div class="chart-container">
-    <canvas id="yearlyChart" width="400" height="200"></canvas>
+    <canvas id="yearlyChart" height="250"></canvas>
   </div>
-  
+
   <div class="yearly-breakdown">
     <% @report_data[:yearly_totals].each do |year, total| %>
       <div class="year-item">
@@ -103,12 +228,12 @@
 <!-- Quarterly Analysis -->
 <div class="report-section">
   <h3><%= Date.current.year %> Quarterly Breakdown</h3>
-  
+
   <div class="quarterly-analysis">
     <div class="quarterly-chart">
-      <canvas id="quarterlyChart" width="400" height="200"></canvas>
+      <canvas id="quarterlyChart" height="250"></canvas>
     </div>
-    
+
     <div class="quarterly-grid">
       <% [:q1, :q2, :q3, :q4].each_with_index do |quarter, index| %>
         <div class="quarter-card">
@@ -130,7 +255,7 @@
 <% if @report_data[:tpc_distribution].any? %>
 <div class="report-section">
   <h3>Top TPC Code Allocations</h3>
-  
+
   <div class="tpc-distribution">
     <% @report_data[:tpc_distribution].each_with_index do |(tpc_info, amount), index| %>
       <div class="tpc-item">
@@ -150,12 +275,12 @@
 <% if @report_data[:currency_breakdown].any? %>
 <div class="report-section">
   <h3>Currency Distribution</h3>
-  
+
   <div class="currency-analysis">
     <div class="currency-chart">
-      <canvas id="currencyChart" width="300" height="300"></canvas>
+      <canvas id="currencyChart" height="280"></canvas>
     </div>
-    
+
     <div class="currency-breakdown">
       <% @report_data[:currency_breakdown].each do |currency, amount| %>
         <div class="currency-item">
@@ -171,7 +296,7 @@
 <!-- Recent CAPEX Items -->
 <div class="report-section">
   <h3>Recent CAPEX Items</h3>
-  
+
   <div class="autoscroll">
     <table class="list recent-capex">
       <thead>
@@ -182,6 +307,7 @@
           <th>TPC Code</th>
           <th>Total Amount</th>
           <th>Currency</th>
+          <th>PRs</th>
           <th>Q1</th>
           <th>Q2</th>
           <th>Q3</th>
@@ -193,11 +319,12 @@
         <% @report_data[:recent_items].each do |capex| %>
           <tr>
             <td><%= capex.year %></td>
-            <td><%= truncate(capex.description, length: 40) %></td>
+            <td><%= truncate(capex.description, length: 35) %></td>
             <td><%= capex.project&.name %></td>
             <td><%= capex.tpc_code %></td>
             <td><%= number_with_delimiter(capex.total_amount) %></td>
             <td><%= capex.currency %></td>
+            <td><%= capex.purchase_requests.count %></td>
             <td><%= number_with_delimiter(capex.q1_amount) %></td>
             <td><%= number_with_delimiter(capex.q2_amount) %></td>
             <td><%= number_with_delimiter(capex.q3_amount) %></td>
@@ -213,6 +340,105 @@
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Chart.js default configuration
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif';
+
+  // Utilization Chart (With/Without PRs)
+  const utilizationCtx = document.getElementById('utilizationChart').getContext('2d');
+  new Chart(utilizationCtx, {
+    type: 'doughnut',
+    data: {
+      labels: <%= raw @report_data[:utilization_breakdown].keys.to_json %>,
+      datasets: [{
+        data: <%= raw @report_data[:utilization_breakdown].values.to_json %>,
+        backgroundColor: ['#4CAF50', '#9E9E9E'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        title: {
+          display: true,
+          text: 'CAPEX with Purchase Requests'
+        }
+      }
+    }
+  });
+
+  // Utilization Status Chart
+  const utilizationStatusCtx = document.getElementById('utilizationStatusChart').getContext('2d');
+  new Chart(utilizationStatusCtx, {
+    type: 'bar',
+    data: {
+      labels: <%= raw @report_data[:utilization_status_breakdown].keys.to_json %>,
+      datasets: [{
+        label: 'CAPEX Items',
+        data: <%= raw @report_data[:utilization_status_breakdown].values.to_json %>,
+        backgroundColor: ['#F44336', '#FF9800', '#FFC107', '#8BC34A', '#9E9E9E']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: 'Utilization Level'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Count'
+          }
+        }
+      }
+    }
+  });
+
+  <% if @report_data[:pr_status_breakdown].any? %>
+  // PR Status Chart
+  const prStatusCtx = document.getElementById('prStatusChart').getContext('2d');
+  new Chart(prStatusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: <%= raw @report_data[:pr_status_breakdown].keys.to_json %>,
+      datasets: [{
+        data: <%= raw @report_data[:pr_status_breakdown].values.to_json %>,
+        backgroundColor: [
+          '#4CAF50', '#2196F3', '#FF9800', '#F44336', '#9C27B0', '#607D8B', '#795548', '#00BCD4'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right'
+        },
+        title: {
+          display: true,
+          text: 'CAPEX-Linked Purchase Requests by Status'
+        }
+      }
+    }
+  });
+  <% end %>
+
   // Yearly Chart
   const yearlyCtx = document.getElementById('yearlyChart').getContext('2d');
   new Chart(yearlyCtx, {
@@ -222,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'CAPEX Amount',
         data: <%= raw @report_data[:yearly_totals].values.to_json %>,
-        backgroundColor: 'rgba(255, 152, 0, 0.6)',
+        backgroundColor: 'rgba(255, 152, 0, 0.7)',
         borderColor: 'rgba(255, 152, 0, 1)',
         borderWidth: 1
       }]
@@ -233,11 +459,19 @@ document.addEventListener('DOMContentLoaded', function() {
       plugins: {
         legend: {
           display: false
+        },
+        title: {
+          display: true,
+          text: 'CAPEX by Year'
         }
       },
       scales: {
         y: {
           beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Amount'
+          },
           ticks: {
             callback: function(value) {
               return '$' + value.toLocaleString();
@@ -247,7 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
-  
+
   // Quarterly Chart
   const quarterlyCtx = document.getElementById('quarterlyChart').getContext('2d');
   new Chart(quarterlyCtx, {
@@ -256,7 +490,9 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['Q1', 'Q2', 'Q3', 'Q4'],
       datasets: [{
         data: <%= raw @report_data[:quarterly_breakdown].values.to_json %>,
-        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4']
+        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
@@ -264,12 +500,16 @@ document.addEventListener('DOMContentLoaded', function() {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false
+          position: 'bottom'
+        },
+        title: {
+          display: true,
+          text: 'Quarterly Distribution'
         }
       }
     }
   });
-  
+
   <% if @report_data[:currency_breakdown].any? %>
   // Currency Chart
   const currencyCtx = document.getElementById('currencyChart').getContext('2d');
@@ -281,7 +521,9 @@ document.addEventListener('DOMContentLoaded', function() {
         data: <%= raw @report_data[:currency_breakdown].values.to_json %>,
         backgroundColor: [
           '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3'
-        ]
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
@@ -290,6 +532,10 @@ document.addEventListener('DOMContentLoaded', function() {
       plugins: {
         legend: {
           position: 'bottom'
+        },
+        title: {
+          display: true,
+          text: 'Currency Distribution'
         }
       }
     }
@@ -310,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: normal;
     margin-left: 15px;
   }
-  
+
   .report-meta {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -318,11 +564,11 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 15px;
     margin-bottom: 25px;
   }
-  
+
   .report-meta p {
     margin: 0 0 5px 0;
   }
-  
+
   .report-section {
     margin-bottom: 40px;
     background: white;
@@ -330,71 +576,154 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 8px;
     padding: 25px;
   }
-  
+
   .report-section h3 {
     margin: 0 0 20px 0;
     color: #333;
     border-bottom: 2px solid #eee;
     padding-bottom: 10px;
   }
-  
+
+  .report-section h4 {
+    margin: 0 0 15px 0;
+    color: #555;
+    font-size: 14px;
+    text-align: center;
+  }
+
   .summary-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 15px;
   }
-  
+
   .summary-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 20px;
+    padding: 18px;
     border-radius: 8px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
   }
-  
-  .card-icon {
-    font-size: 24px;
-    opacity: 0.9;
+
+  .card-icon { font-size: 22px; opacity: 0.9; }
+  .card-value { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
+  .card-label { font-size: 12px; opacity: 0.9; }
+
+  .summary-card.financial { background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%); }
+  .summary-card.current { background: linear-gradient(135deg, #00b894 0%, #00cec9 100%); }
+  .summary-card.pr-count { background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); }
+  .summary-card.pr-value { background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); }
+  .summary-card.years { background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); }
+
+  .utilization-analysis, .pr-status-analysis {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 20px;
   }
-  
-  .card-value {
-    font-size: 24px;
+
+  .chart-half { min-height: 280px; }
+  .chart-container { max-width: 700px; height: 300px; margin: 20px auto; }
+  .chart-container-sm { height: 280px; }
+
+  .utilization-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .utilization-card {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+  }
+
+  .utilization-card.over-budget-100 { background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%); }
+  .utilization-card.high-75-99 { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+  .utilization-card.medium-50-74 { background: linear-gradient(135deg, #FFC107 0%, #FFA000 100%); color: #333; }
+  .utilization-card.low-1-49 { background: linear-gradient(135deg, #8BC34A 0%, #689F38 100%); }
+  .utilization-card.unused-0 { background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%); }
+
+  .util-label { font-size: 12px; margin-bottom: 5px; }
+  .util-count { font-size: 24px; font-weight: bold; }
+
+  .utilization-table .negative { color: #F44336; }
+
+  .utilization-bar {
+    position: relative;
+    height: 24px;
+    background: #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    min-width: 100px;
+  }
+
+  .utilization-fill {
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+  }
+
+  .utilization-fill.over_budget { background: #F44336; }
+  .utilization-fill.high_utilization { background: #FF9800; }
+  .utilization-fill.medium_utilization { background: #FFC107; }
+  .utilization-fill.low_utilization { background: #8BC34A; }
+  .utilization-fill.unused { background: #9E9E9E; }
+
+  .utilization-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
     font-weight: bold;
-    margin-bottom: 5px;
+    color: #333;
   }
-  
-  .card-label {
-    font-size: 14px;
-    opacity: 0.9;
+
+  .status-badge {
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: white;
   }
-  
-  .chart-container {
-    max-width: 600px;
-    height: 300px;
-    margin: 20px auto;
+
+  .status-badge.over_budget { background: #F44336; }
+  .status-badge.high_utilization { background: #FF9800; }
+  .status-badge.medium_utilization { background: #FFC107; color: #333; }
+  .status-badge.low_utilization { background: #8BC34A; }
+  .status-badge.unused { background: #9E9E9E; }
+
+  .pr-status-breakdown {
+    display: grid;
+    gap: 10px;
   }
-  
-  .summary-card.financial {
-    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
+
+  .pr-status-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
   }
-  
-  .summary-card.current {
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-  }
-  
-  .summary-card.years {
-    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-  }
-  
+
+  .pr-status-name { flex: 1; font-weight: 500; }
+  .pr-status-count { font-size: 18px; font-weight: bold; color: #333; }
+  .pr-status-pct { font-size: 12px; color: #666; min-width: 50px; text-align: right; }
+
   .yearly-breakdown {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 15px;
     margin-top: 20px;
   }
-  
+
   .year-item {
     display: flex;
     justify-content: space-between;
@@ -404,33 +733,25 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 4px;
     border-left: 4px solid #FF9800;
   }
-  
-  .year-label {
-    font-weight: 600;
-  }
-  
-  .year-amount {
-    color: #FF9800;
-    font-weight: bold;
-  }
-  
+
+  .year-label { font-weight: 600; }
+  .year-amount { color: #FF9800; font-weight: bold; }
+
   .quarterly-analysis {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: 30px;
     align-items: start;
   }
-  
-  .quarterly-chart {
-    height: 300px;
-  }
-  
+
+  .quarterly-chart { height: 300px; }
+
   .quarterly-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 15px;
   }
-  
+
   .quarter-card {
     text-align: center;
     padding: 20px;
@@ -438,31 +759,13 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 8px;
     border-top: 4px solid #4ECDC4;
   }
-  
-  .quarter-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #666;
-  }
-  
-  .quarter-amount {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-    margin: 8px 0;
-  }
-  
-  .quarter-percentage {
-    font-size: 12px;
-    color: #4ECDC4;
-    font-weight: 500;
-  }
-  
-  .tpc-distribution {
-    display: grid;
-    gap: 12px;
-  }
-  
+
+  .quarter-label { font-size: 14px; font-weight: 600; color: #666; }
+  .quarter-amount { font-size: 20px; font-weight: bold; color: #333; margin: 8px 0; }
+  .quarter-percentage { font-size: 12px; color: #4ECDC4; font-weight: 500; }
+
+  .tpc-distribution { display: grid; gap: 12px; }
+
   .tpc-item {
     display: flex;
     align-items: center;
@@ -471,7 +774,7 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #f8f9fa;
     border-radius: 6px;
   }
-  
+
   .tpc-rank {
     background: #FF9800;
     color: white;
@@ -485,44 +788,22 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 13px;
     flex-shrink: 0;
   }
-  
-  .tpc-details {
-    flex: 1;
-  }
-  
-  .tpc-code {
-    font-weight: 600;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    margin-bottom: 2px;
-  }
-  
-  .tpc-type {
-    font-size: 13px;
-    color: #666;
-  }
-  
-  .tpc-amount {
-    font-size: 18px;
-    font-weight: bold;
-    color: #FF9800;
-  }
-  
+
+  .tpc-details { flex: 1; }
+  .tpc-code { font-weight: 600; font-family: 'Monaco', 'Menlo', monospace; margin-bottom: 2px; }
+  .tpc-type { font-size: 13px; color: #666; }
+  .tpc-amount { font-size: 18px; font-weight: bold; color: #FF9800; }
+
   .currency-analysis {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: 30px;
     align-items: center;
   }
-  
-  .currency-chart {
-    height: 300px;
-  }
-  
-  .currency-breakdown {
-    display: grid;
-    gap: 10px;
-  }
-  
+
+  .currency-chart { height: 300px; }
+  .currency-breakdown { display: grid; gap: 10px; }
+
   .currency-item {
     display: flex;
     justify-content: space-between;
@@ -531,38 +812,37 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #f8f9fa;
     border-radius: 4px;
   }
-  
-  .currency-code {
-    font-weight: 600;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  }
-  
-  .currency-amount {
-    font-weight: bold;
-    color: #333;
-  }
-  
-  .icon-pdf { 
-    background-image: url('<%= asset_path("files/pdf.png") %>'); 
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    background-position: center;
-    padding-left: 20px;
-  }
-  
-  .icon-csv-file { 
-    background-image: url('<%= asset_path("files/text.png") %>'); 
+
+  .currency-code { font-weight: 600; font-family: 'Monaco', 'Menlo', monospace; }
+  .currency-amount { font-weight: bold; color: #333; }
+
+  .icon-pdf {
+    background-image: url('<%= asset_path("files/pdf.png") %>');
     background-size: 16px 16px;
     background-repeat: no-repeat;
     background-position: center;
     padding-left: 20px;
   }
 
+  .icon-csv-file {
+    background-image: url('<%= asset_path("files/text.png") %>');
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+
+  @media (max-width: 992px) {
+    .utilization-analysis, .pr-status-analysis {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media (max-width: 768px) {
     .quarterly-analysis, .currency-analysis {
       grid-template-columns: 1fr;
     }
-    
+
     .quarterly-grid {
       grid-template-columns: 1fr;
     }
