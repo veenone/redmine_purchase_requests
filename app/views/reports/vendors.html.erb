@@ -12,15 +12,15 @@
   <%= link_to reports_index_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
     <span class="icon icon-cancel">Back to Reports</span>
   <% end %>
-  
-  <% report_path_base = @project ? 
-       vendors_project_reports_path(@project) : 
+
+  <% report_path_base = @project ?
+       vendors_project_reports_path(@project) :
        vendors_reports_path %>
-  
+
   <%= link_to "#{report_path_base}?format=pdf", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
     <span class="icon icon-pdf">Export PDF</span>
   <% end %>
-  
+
   <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
     <span class="icon icon-csv-file">Export CSV</span>
   <% end %>
@@ -46,7 +46,7 @@
 <!-- Executive Summary -->
 <div class="report-section">
   <h3>Vendor Overview</h3>
-  
+
   <div class="summary-cards">
     <div class="summary-card">
       <div class="card-icon"><span class="icon icon-group"></span></div>
@@ -55,7 +55,7 @@
         <div class="card-label">Total Vendors</div>
       </div>
     </div>
-    
+
     <div class="summary-card active">
       <div class="card-icon"><span class="icon icon-checked"></span></div>
       <div class="card-content">
@@ -63,7 +63,15 @@
         <div class="card-label">Active Vendors</div>
       </div>
     </div>
-    
+
+    <div class="summary-card inactive">
+      <div class="card-icon"><span class="icon icon-not-ok"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:inactive_count] %></div>
+        <div class="card-label">Inactive Vendors</div>
+      </div>
+    </div>
+
     <div class="summary-card global">
       <div class="card-icon"><span class="icon icon-world"></span></div>
       <div class="card-content">
@@ -71,12 +79,20 @@
         <div class="card-label">Global Vendors</div>
       </div>
     </div>
-    
+
     <div class="summary-card engaged">
       <div class="card-icon"><span class="icon icon-package"></span></div>
       <div class="card-content">
         <div class="card-value"><%= @report_data[:summary][:vendors_with_requests] %></div>
         <div class="card-label">With Purchase Requests</div>
+      </div>
+    </div>
+
+    <div class="summary-card unused">
+      <div class="card-icon"><span class="icon icon-warning"></span></div>
+      <div class="card-content">
+        <div class="card-value"><%= @report_data[:summary][:vendors_without_requests] %></div>
+        <div class="card-label">Without Requests</div>
       </div>
     </div>
   </div>
@@ -85,13 +101,25 @@
 <!-- Vendor Activity -->
 <div class="report-section">
   <h3>Top Active Vendors</h3>
-  
-  <div class="vendor-activity-chart">
-    <canvas id="vendorActivityChart" width="400" height="300"></canvas>
+
+  <div class="charts-row">
+    <div class="chart-half">
+      <h4>By Purchase Request Count</h4>
+      <div class="vendor-activity-chart">
+        <canvas id="vendorActivityChart" height="300"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-half">
+      <h4>By Total Value</h4>
+      <div class="vendor-value-chart">
+        <canvas id="vendorValueChart" height="300"></canvas>
+      </div>
+    </div>
   </div>
-  
+
   <div class="vendor-activity-list">
-    <% @report_data[:vendor_activity].each_with_index do |(vendor_info, count), index| %>
+    <% @report_data[:vendor_activity].first(10).each_with_index do |(vendor_info, count), index| %>
       <div class="vendor-activity-item">
         <span class="vendor-rank">#<%= index + 1 %></span>
         <div class="vendor-details">
@@ -99,22 +127,89 @@
           <div class="vendor-requests"><%= count %> purchase requests</div>
         </div>
         <div class="activity-bar">
-          <div class="activity-fill" style="width: <%= count > 0 ? [(count.to_f / @report_data[:vendor_activity].first[1] * 100), 100].min : 0 %>%"></div>
+          <% max_count = @report_data[:vendor_activity].first&.last || 1 %>
+          <div class="activity-fill" style="width: <%= count > 0 ? [(count.to_f / max_count * 100), 100].min : 0 %>%"></div>
         </div>
       </div>
     <% end %>
   </div>
 </div>
 
+<!-- Vendor Status & Engagement Analysis -->
+<div class="report-section">
+  <h3>Vendor Status & Engagement Analysis</h3>
+
+  <div class="status-analysis">
+    <div class="status-chart">
+      <canvas id="statusChart" height="300"></canvas>
+    </div>
+
+    <div class="engagement-chart">
+      <canvas id="engagementChart" height="300"></canvas>
+    </div>
+  </div>
+
+  <div class="status-details">
+    <div class="status-detail-item active-status">
+      <div class="status-label">Active Vendors</div>
+      <div class="status-value"><%= @report_data[:summary][:active_count] %></div>
+      <div class="status-percentage">
+        <%= @report_data[:summary][:total_count] > 0 ?
+              "#{((@report_data[:summary][:active_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+              "0%" %>
+      </div>
+    </div>
+
+    <div class="status-detail-item inactive-status">
+      <div class="status-label">Inactive Vendors</div>
+      <div class="status-value"><%= @report_data[:summary][:inactive_count] %></div>
+      <div class="status-percentage">
+        <%= @report_data[:summary][:total_count] > 0 ?
+              "#{((@report_data[:summary][:inactive_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+              "0%" %>
+      </div>
+    </div>
+
+    <div class="status-detail-item engaged-status">
+      <div class="status-label">With Purchase Requests</div>
+      <div class="status-value"><%= @report_data[:summary][:vendors_with_requests] %></div>
+      <div class="status-percentage">
+        <%= @report_data[:summary][:total_count] > 0 ?
+              "#{((@report_data[:summary][:vendors_with_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+              "0%" %>
+      </div>
+    </div>
+
+    <div class="status-detail-item unused-status">
+      <div class="status-label">Without Requests</div>
+      <div class="status-value"><%= @report_data[:summary][:vendors_without_requests] %></div>
+      <div class="status-percentage">
+        <%= @report_data[:summary][:total_count] > 0 ?
+              "#{((@report_data[:summary][:vendors_without_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+              "0%" %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Trends -->
+<div class="report-section">
+  <h3>Monthly Trends</h3>
+
+  <div class="trend-chart-container">
+    <canvas id="monthlyTrendChart" height="250"></canvas>
+  </div>
+</div>
+
 <!-- Project Distribution (Global View Only) -->
-<% if @project.nil? && @report_data[:project_distribution] %>
+<% if @project.nil? && @report_data[:project_distribution] && @report_data[:project_distribution].any? %>
 <div class="report-section">
   <h3>Project-Specific Vendor Distribution</h3>
-  
+
   <div class="chart-container">
-    <canvas id="projectDistributionChart" width="400" height="200"></canvas>
+    <canvas id="projectDistributionChart" height="250"></canvas>
   </div>
-  
+
   <div class="distribution-stats">
     <% @report_data[:project_distribution].each do |project, count| %>
       <div class="distribution-item">
@@ -126,53 +221,10 @@
 </div>
 <% end %>
 
-<!-- Vendor Status Analysis -->
-<div class="report-section">
-  <h3>Vendor Status & Engagement Analysis</h3>
-  
-  <div class="status-analysis">
-    <div class="status-chart">
-      <canvas id="statusChart" width="300" height="300"></canvas>
-    </div>
-    
-    <div class="status-details">
-      <div class="status-detail-item">
-        <div class="status-label">Active Vendors</div>
-        <div class="status-value"><%= @report_data[:summary][:active_count] %></div>
-        <div class="status-percentage">
-          <%= @report_data[:summary][:total_count] > 0 ? 
-                "#{((@report_data[:summary][:active_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" : 
-                "0%" %>
-        </div>
-      </div>
-      
-      <div class="status-detail-item">
-        <div class="status-label">With Purchase Requests</div>
-        <div class="status-value"><%= @report_data[:summary][:vendors_with_requests] %></div>
-        <div class="status-percentage">
-          <%= @report_data[:summary][:total_count] > 0 ? 
-                "#{((@report_data[:summary][:vendors_with_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" : 
-                "0%" %>
-        </div>
-      </div>
-      
-      <div class="status-detail-item">
-        <div class="status-label">Inactive/Unused</div>
-        <div class="status-value"><%= @report_data[:summary][:vendors_without_requests] %></div>
-        <div class="status-percentage">
-          <%= @report_data[:summary][:total_count] > 0 ? 
-                "#{((@report_data[:summary][:vendors_without_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" : 
-                "0%" %>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Recent Vendors -->
 <div class="report-section">
   <h3>Recently Added Vendors</h3>
-  
+
   <div class="autoscroll">
     <table class="list recent-vendors">
       <thead>
@@ -225,52 +277,109 @@
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Vendor Activity Chart
-  const activityData = <%= raw @report_data[:vendor_activity].map { |info, count| [info[1], count] }.to_json %>;
+  // Chart.js default configuration
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif';
+
+  // Top Active Vendors Chart (horizontal bar)
+  const activityData = <%= raw @report_data[:vendor_activity].first(10).map { |info, count| { name: info[1], count: count } }.to_json %>;
   const activityCtx = document.getElementById('vendorActivityChart').getContext('2d');
-  
+
   new Chart(activityCtx, {
-    type: 'horizontalBar',
+    type: 'bar',
     data: {
-      labels: activityData.map(item => item[0]).slice(0, 10),
+      labels: activityData.map(item => item.name),
       datasets: [{
         label: 'Purchase Requests',
-        data: activityData.map(item => item[1]).slice(0, 10),
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        data: activityData.map(item => item.count),
+        backgroundColor: 'rgba(54, 162, 235, 0.7)',
         borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1
       }]
     },
     options: {
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
           display: false
+        },
+        title: {
+          display: true,
+          text: 'Purchase Requests by Vendor'
         }
       },
       scales: {
         x: {
-          beginAtZero: true
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Number of Requests'
+          }
         }
       }
     }
   });
-  
-  // Status Chart
+
+  // Vendor by Value Chart
+  <% if @report_data[:vendor_by_value] && @report_data[:vendor_by_value].any? %>
+  const valueData = <%= raw @report_data[:vendor_by_value].map { |info, value| { name: info[1], value: value.to_f } }.to_json %>;
+  const valueCtx = document.getElementById('vendorValueChart').getContext('2d');
+
+  new Chart(valueCtx, {
+    type: 'bar',
+    data: {
+      labels: valueData.map(item => item.name),
+      datasets: [{
+        label: 'Total Value',
+        data: valueData.map(item => item.value),
+        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: 'Total Purchase Value by Vendor'
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Total Value'
+          },
+          ticks: {
+            callback: function(value) {
+              return value.toLocaleString();
+            }
+          }
+        }
+      }
+    }
+  });
+  <% end %>
+
+  // Status Chart (Doughnut - Active vs Inactive)
   const statusCtx = document.getElementById('statusChart').getContext('2d');
-  const statusData = [
-    <%= @report_data[:summary][:vendors_with_requests] %>,
-    <%= @report_data[:summary][:vendors_without_requests] %>
-  ];
-  
   new Chart(statusCtx, {
     type: 'doughnut',
     data: {
-      labels: ['With Requests', 'Without Requests'],
+      labels: ['Active', 'Inactive'],
       datasets: [{
-        data: statusData,
-        backgroundColor: ['#4CAF50', '#FF9800']
+        data: [<%= @report_data[:summary][:active_count] %>, <%= @report_data[:summary][:inactive_count] %>],
+        backgroundColor: ['#4CAF50', '#9E9E9E'],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
@@ -279,12 +388,93 @@ document.addEventListener('DOMContentLoaded', function() {
       plugins: {
         legend: {
           position: 'bottom'
+        },
+        title: {
+          display: true,
+          text: 'Vendor Status Distribution'
         }
       }
     }
   });
-  
-  <% if @project.nil? && @report_data[:project_distribution] %>
+
+  // Engagement Chart (Doughnut - With/Without Requests)
+  const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+  new Chart(engagementCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['With Requests', 'Without Requests'],
+      datasets: [{
+        data: [<%= @report_data[:summary][:vendors_with_requests] %>, <%= @report_data[:summary][:vendors_without_requests] %>],
+        backgroundColor: ['#2196F3', '#FF9800'],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        title: {
+          display: true,
+          text: 'Vendor Engagement'
+        }
+      }
+    }
+  });
+
+  // Monthly Trend Chart (Line - dual dataset)
+  const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+  new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: <%= raw @report_data[:monthly_vendor_trend].keys.to_json %>,
+      datasets: [
+        {
+          label: 'New Vendors Added',
+          data: <%= raw @report_data[:monthly_vendor_trend].values.to_json %>,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.1)',
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'Purchase Requests with Vendors',
+          data: <%= raw @report_data[:monthly_pr_trend].values.to_json %>,
+          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: 'rgba(255, 99, 132, 0.1)',
+          fill: true,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top'
+        },
+        title: {
+          display: true,
+          text: 'Monthly Vendor & Engagement Trends (Last 12 Months)'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Count'
+          }
+        }
+      }
+    }
+  });
+
+  <% if @project.nil? && @report_data[:project_distribution] && @report_data[:project_distribution].any? %>
   // Project Distribution Chart
   const projDistCtx = document.getElementById('projectDistributionChart').getContext('2d');
   new Chart(projDistCtx, {
@@ -294,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Project-Specific Vendors',
         data: <%= raw @report_data[:project_distribution].values.to_json %>,
-        backgroundColor: 'rgba(153, 102, 255, 0.6)',
+        backgroundColor: 'rgba(153, 102, 255, 0.7)',
         borderColor: 'rgba(153, 102, 255, 1)',
         borderWidth: 1
       }]
@@ -305,11 +495,19 @@ document.addEventListener('DOMContentLoaded', function() {
       plugins: {
         legend: {
           display: false
+        },
+        title: {
+          display: true,
+          text: 'Vendors by Project'
         }
       },
       scales: {
         y: {
-          beginAtZero: true
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Number of Vendors'
+          }
         }
       }
     }
@@ -330,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: normal;
     margin-left: 15px;
   }
-  
+
   .report-meta {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -338,11 +536,11 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 15px;
     margin-bottom: 25px;
   }
-  
+
   .report-meta p {
     margin: 0 0 5px 0;
   }
-  
+
   .report-section {
     margin-bottom: 40px;
     background: white;
@@ -350,20 +548,26 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 8px;
     padding: 25px;
   }
-  
+
   .report-section h3 {
     margin: 0 0 20px 0;
     color: #333;
     border-bottom: 2px solid #eee;
     padding-bottom: 10px;
   }
-  
+
+  .report-section h4 {
+    margin: 0 0 15px 0;
+    color: #555;
+    font-size: 14px;
+  }
+
   .summary-cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 20px;
   }
-  
+
   .summary-card {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -373,51 +577,76 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     gap: 15px;
   }
-  
+
   .card-icon {
     font-size: 24px;
     opacity: 0.9;
   }
-  
+
   .card-value {
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 5px;
   }
-  
+
   .card-label {
-    font-size: 14px;
+    font-size: 13px;
     opacity: 0.9;
   }
-  
-  .chart-container {
-    max-width: 600px;
-    height: 300px;
-    margin: 20px auto;
-  }
-  
+
   .summary-card.active {
     background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
   }
-  
+
+  .summary-card.inactive {
+    background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);
+  }
+
   .summary-card.global {
     background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
   }
-  
+
   .summary-card.engaged {
+    background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);
+  }
+
+  .summary-card.unused {
     background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
   }
-  
-  .vendor-activity-chart {
-    height: 400px;
+
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
     margin-bottom: 30px;
   }
-  
+
+  .chart-half {
+    min-height: 320px;
+  }
+
+  .vendor-activity-chart,
+  .vendor-value-chart {
+    height: 300px;
+  }
+
+  .chart-container {
+    max-width: 800px;
+    height: 300px;
+    margin: 20px auto;
+  }
+
+  .trend-chart-container {
+    height: 300px;
+    margin: 20px 0;
+  }
+
   .vendor-activity-list {
     display: grid;
     gap: 12px;
+    margin-top: 20px;
   }
-  
+
   .vendor-activity-item {
     display: flex;
     align-items: center;
@@ -426,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #f8f9fa;
     border-radius: 6px;
   }
-  
+
   .vendor-rank {
     background: #007bff;
     color: white;
@@ -440,21 +669,21 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 13px;
     flex-shrink: 0;
   }
-  
+
   .vendor-details {
     flex: 1;
   }
-  
+
   .vendor-name {
     font-weight: 600;
     margin-bottom: 2px;
   }
-  
+
   .vendor-requests {
     font-size: 13px;
     color: #666;
   }
-  
+
   .activity-bar {
     width: 100px;
     height: 8px;
@@ -462,57 +691,79 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: 4px;
     overflow: hidden;
   }
-  
+
   .activity-fill {
     height: 100%;
     background: linear-gradient(90deg, #007bff, #0056b3);
     transition: width 0.3s ease;
   }
-  
+
   .status-analysis {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 30px;
-    align-items: center;
+    margin-bottom: 30px;
   }
-  
+
+  .status-chart,
+  .engagement-chart {
+    height: 300px;
+  }
+
   .status-details {
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
   }
-  
+
   .status-detail-item {
     padding: 15px;
     background: #f8f9fa;
     border-radius: 6px;
     border-left: 4px solid #007bff;
   }
-  
+
+  .status-detail-item.active-status {
+    border-left-color: #4CAF50;
+  }
+
+  .status-detail-item.inactive-status {
+    border-left-color: #9E9E9E;
+  }
+
+  .status-detail-item.engaged-status {
+    border-left-color: #2196F3;
+  }
+
+  .status-detail-item.unused-status {
+    border-left-color: #FF9800;
+  }
+
   .status-label {
     font-size: 14px;
     color: #666;
     margin-bottom: 5px;
   }
-  
+
   .status-value {
     font-size: 24px;
     font-weight: bold;
     color: #333;
   }
-  
+
   .status-percentage {
     font-size: 12px;
     color: #007bff;
     font-weight: 500;
   }
-  
+
   .distribution-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
     margin-top: 20px;
   }
-  
+
   .distribution-item {
     display: flex;
     justify-content: space-between;
@@ -521,16 +772,16 @@ document.addEventListener('DOMContentLoaded', function() {
     background: #f8f9fa;
     border-radius: 4px;
   }
-  
+
   .project-name {
     font-weight: 500;
   }
-  
+
   .project-count {
     color: #666;
     font-size: 14px;
   }
-  
+
   .scope-badge {
     display: inline-block;
     padding: 2px 6px;
@@ -539,17 +790,17 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: bold;
     text-transform: uppercase;
   }
-  
+
   .scope-badge.global {
     background-color: #2196F3;
     color: white;
   }
-  
+
   .scope-badge.project {
     background-color: #FF9800;
     color: white;
   }
-  
+
   .status-badge {
     display: inline-block;
     padding: 2px 6px;
@@ -558,39 +809,49 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: bold;
     text-transform: uppercase;
   }
-  
+
   .status-badge.active {
     background-color: #4CAF50;
     color: white;
   }
-  
+
   .status-badge.inactive {
     background-color: #9E9E9E;
     color: white;
   }
-  
-  .icon-pdf { 
-    background-image: url('<%= asset_path("files/pdf.png") %>'); 
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    background-position: center;
-    padding-left: 20px;
-  }
-  
-  .icon-csv-file { 
-    background-image: url('<%= asset_path("files/text.png") %>'); 
+
+  .icon-pdf {
+    background-image: url('<%= asset_path("files/pdf.png") %>');
     background-size: 16px 16px;
     background-repeat: no-repeat;
     background-position: center;
     padding-left: 20px;
   }
 
-  @media (max-width: 768px) {
+  .icon-csv-file {
+    background-image: url('<%= asset_path("files/text.png") %>');
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    padding-left: 20px;
+  }
+
+  @media (max-width: 992px) {
+    .charts-row {
+      grid-template-columns: 1fr;
+    }
+
     .status-analysis {
       grid-template-columns: 1fr;
     }
-    
+  }
+
+  @media (max-width: 768px) {
     .distribution-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .status-details {
       grid-template-columns: 1fr;
     }
   }

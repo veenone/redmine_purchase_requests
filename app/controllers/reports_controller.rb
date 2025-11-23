@@ -243,26 +243,35 @@ class ReportsController < ApplicationController
   def generate_vendors_report
     # Scope data based on project context
     base_vendors = @project ? Vendor.available_for_project(@project) : Vendor.all
-    
+
     # Basic statistics (avoid includes for simple counts)
     total_count = base_vendors.count
     active_count = base_vendors.active.count
+    inactive_count = total_count - active_count
     global_count = base_vendors.global.count
     project_specific_count = base_vendors.where.not('vendors.project_id' => nil).count
-    
+
     # Purchase request associations (avoid ambiguous project_id)
     vendors_with_requests = base_vendors.joins(:purchase_requests).distinct.count
     vendors_without_requests = total_count - vendors_with_requests
-    
-    # Activity analysis
+
+    # Activity analysis - top vendors by purchase request count
     vendor_activity = base_vendors.left_joins(:purchase_requests)
                                  .group('vendors.id', 'vendors.name')
                                  .count('purchase_requests.id')
                                  .sort_by { |_, count| -count }
-    
+
+    # Top vendors by total value
+    vendor_by_value = base_vendors.joins(:purchase_requests)
+                                  .where.not(purchase_requests: { estimated_price: nil })
+                                  .group('vendors.id', 'vendors.name')
+                                  .sum('purchase_requests.estimated_price')
+                                  .sort_by { |_, value| -value }
+                                  .first(10)
+
     # Include associations for final vendor list
     vendors = base_vendors.includes(:purchase_requests, :project)
-    
+
     # Project distribution (for global view)
     if @project.nil?
       project_distribution = base_vendors.where.not('vendors.project_id' => nil)
@@ -270,20 +279,45 @@ class ReportsController < ApplicationController
                                         .group('projects.name')
                                         .count
     end
-    
+
+    # Monthly vendor creation trend (last 12 months)
+    monthly_vendor_trend = {}
+    12.times do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = month_start.end_of_month
+      count = base_vendors.where(created_at: month_start..month_end).count
+      monthly_vendor_trend[month_start.strftime('%b %Y')] = count
+    end
+    monthly_vendor_trend = monthly_vendor_trend.to_a.reverse.to_h
+
+    # Monthly purchase request trend by vendor engagement
+    monthly_pr_trend = {}
+    12.times do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end = month_start.end_of_month
+      pr_scope = @project ? @project.purchase_requests : PurchaseRequest.all
+      count = pr_scope.where(created_at: month_start..month_end).where.not(vendor_id: nil).count
+      monthly_pr_trend[month_start.strftime('%b %Y')] = count
+    end
+    monthly_pr_trend = monthly_pr_trend.to_a.reverse.to_h
+
     # Generate CSV data
     csv_data = generate_vendors_csv(vendors)
-    
+
     {
       summary: {
         total_count: total_count,
         active_count: active_count,
+        inactive_count: inactive_count,
         global_count: global_count,
         project_specific_count: project_specific_count,
         vendors_with_requests: vendors_with_requests,
         vendors_without_requests: vendors_without_requests
       },
       vendor_activity: vendor_activity.first(15),
+      vendor_by_value: vendor_by_value,
+      monthly_vendor_trend: monthly_vendor_trend,
+      monthly_pr_trend: monthly_pr_trend,
       project_distribution: (project_distribution if @project.nil?),
       recent_vendors: vendors.order(created_at: :desc).limit(10),
       csv_data: csv_data,
