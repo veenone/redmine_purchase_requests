@@ -7,6 +7,10 @@ class PurchaseRequest < ActiveRecord::Base
   belongs_to :opex, optional: true
   belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
   belongs_to :tpc_code, optional: true
+  belongs_to :issue, optional: true
+
+  has_many :purchase_request_subtasks, dependent: :destroy
+  has_many :subtask_issues, through: :purchase_request_subtasks, source: :issue
   
   # Include the attachable module from Redmine
   include Redmine::Acts::Attachable
@@ -179,9 +183,120 @@ class PurchaseRequest < ActiveRecord::Base
     end
   end
 
+  # Issue workflow methods
+  def has_linked_issue?
+    issue_id.present?
+  end
+
+  def workflow_enabled?
+    Setting.plugin_redmine_purchase_requests['workflow_enabled'] == '1'
+  end
+
+  def create_workflow_issue!
+    return if has_linked_issue?
+    return unless workflow_enabled?
+    return unless project.present?
+
+    tracker_id = Setting.plugin_redmine_purchase_requests['workflow_tracker_id']
+    return unless tracker_id.present?
+
+    tracker = Tracker.find_by(id: tracker_id)
+    return unless tracker.present?
+
+    # Create main issue
+    main_issue = Issue.new(
+      project: project,
+      tracker: tracker,
+      author: user || User.current,
+      subject: "PR-#{id}: #{title}",
+      description: build_issue_description,
+      priority: IssuePriority.default || IssuePriority.first,
+      start_date: Date.current,
+      due_date: due_date
+    )
+
+    if main_issue.save
+      update_column(:issue_id, main_issue.id)
+      create_workflow_subtasks!(main_issue)
+      main_issue
+    else
+      Rails.logger.error "Failed to create workflow issue for PR##{id}: #{main_issue.errors.full_messages.join(', ')}"
+      nil
+    end
+  end
+
+  def create_workflow_subtasks!(parent_issue)
+    templates = PurchaseRequestWorkflowTemplate.active.auto_create.sorted
+    return if templates.empty?
+
+    subtask_tracker_id = Setting.plugin_redmine_purchase_requests['workflow_subtask_tracker_id']
+    subtask_tracker = Tracker.find_by(id: subtask_tracker_id) || parent_issue.tracker
+
+    templates.each do |template|
+      subtask = Issue.new(
+        project: project,
+        tracker: template.tracker || subtask_tracker,
+        author: user || User.current,
+        subject: "#{template.name} - PR-#{id}",
+        description: template.description,
+        priority: parent_issue.priority,
+        parent_issue_id: parent_issue.id,
+        assigned_to_id: template.default_assigned_to_id,
+        estimated_hours: template.estimated_hours
+      )
+
+      if subtask.save
+        purchase_request_subtasks.create!(
+          issue: subtask,
+          workflow_template: template,
+          subtask_type: template.name,
+          position: template.position
+        )
+      else
+        Rails.logger.error "Failed to create subtask '#{template.name}' for PR##{id}: #{subtask.errors.full_messages.join(', ')}"
+      end
+    end
+  end
+
+  def workflow_progress
+    return 0 unless has_linked_issue?
+    return 0 if purchase_request_subtasks.empty?
+
+    completed = purchase_request_subtasks.select(&:completed?).count
+    total = purchase_request_subtasks.count
+    ((completed.to_f / total) * 100).round
+  end
+
+  def all_subtasks_completed?
+    return false if purchase_request_subtasks.empty?
+    purchase_request_subtasks.all?(&:completed?)
+  end
+
+  def next_pending_subtask
+    purchase_request_subtasks.sorted.find { |s| !s.completed? }
+  end
 
   private
-  
+
+  def build_issue_description
+    desc = []
+    desc << "**Purchase Request Details**"
+    desc << ""
+    desc << "| Field | Value |"
+    desc << "|-------|-------|"
+    desc << "| PR ID | #{id} |"
+    desc << "| Title | #{title} |"
+    desc << "| Vendor | #{vendor_name} |"
+    desc << "| Estimated Price | #{formatted_price} |"
+    desc << "| Priority | #{priority&.capitalize} |"
+    desc << "| Budget Source | #{budget_source} |"
+    desc << "| TPC Code | #{tpc_code_display || 'N/A'} |"
+    desc << ""
+    desc << "**Description:**"
+    desc << description if description.present?
+    desc.join("\n")
+  end
+
   # Custom validation for due_date to replace Rails 7 comparison validator
   def due_date_must_be_future
     return if due_date.blank?

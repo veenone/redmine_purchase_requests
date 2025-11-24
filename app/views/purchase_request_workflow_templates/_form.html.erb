@@ -1,0 +1,99 @@
+<div class="workflow-template-form">
+  <%= form_with model: @template, local: true do |f| %>
+    <% if @template.errors.any? %>
+      <div id="errorExplanation" class="errorExplanation">
+        <h2><%= pluralize(@template.errors.count, "error") %> prohibited this template from being saved:</h2>
+        <ul>
+          <% @template.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <p>
+      <%= f.label :name, l(:field_name, default: 'Name') %><span class="required">*</span>
+      <%= f.text_field :name, size: 40, required: true %>
+    </p>
+
+    <p>
+      <%= f.label :description, l(:field_description, default: 'Description') %>
+      <%= f.text_area :description, rows: 3, cols: 60 %>
+    </p>
+
+    <p>
+      <%= f.label :position, l(:field_position, default: 'Position') %>
+      <%= f.number_field :position, min: 1, step: 1 %>
+    </p>
+
+    <p>
+      <%= f.label :tracker_id, l(:field_tracker, default: 'Tracker') %>
+      <%= f.collection_select :tracker_id, Tracker.sorted, :id, :name,
+          { include_blank: l(:label_use_default_tracker, default: '-- Use default tracker --') } %>
+      <span class="hint"><%= l(:hint_template_tracker, default: 'Tracker to use for this subtask (optional)') %></span>
+    </p>
+
+    <p>
+      <%= f.label :default_assigned_to_id, l(:field_assigned_to, default: 'Default Assignee') %>
+      <%= f.collection_select :default_assigned_to_id, User.active.sorted, :id, :name,
+          { include_blank: l(:label_no_default_assignee, default: '-- No default assignee --') } %>
+    </p>
+
+    <p>
+      <%= f.label :estimated_hours, l(:field_estimated_hours, default: 'Estimated Hours') %>
+      <%= f.number_field :estimated_hours, min: 0, step: 0.5 %>
+    </p>
+
+    <p>
+      <%= f.label :is_active, l(:field_active, default: 'Active') %>
+      <%= f.check_box :is_active %>
+    </p>
+
+    <p>
+      <%= f.label :auto_create, l(:label_auto_create, default: 'Auto Create') %>
+      <%= f.check_box :auto_create %>
+      <span class="hint"><%= l(:hint_auto_create, default: 'Automatically create this subtask when a workflow issue is created') %></span>
+    </p>
+
+    <div class="form-actions">
+      <%= f.submit l(:button_save, default: 'Save') %>
+      <%= link_to l(:button_cancel, default: 'Cancel'),
+          plugin_settings_path('redmine_purchase_requests', tab: 'workflow'),
+          class: 'button' %>
+    </div>
+  <% end %>
+</div>
+
+<style>
+.workflow-template-form p {
+  margin-bottom: 12px;
+}
+
+.workflow-template-form label {
+  display: inline-block;
+  width: 150px;
+  font-weight: bold;
+}
+
+.workflow-template-form .hint {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  margin-left: 155px;
+  margin-top: 3px;
+}
+
+.workflow-template-form .required {
+  color: #c00;
+}
+
+.workflow-template-form .form-actions {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
+.workflow-template-form .button {
+  margin-left: 10px;
+}
+</style>

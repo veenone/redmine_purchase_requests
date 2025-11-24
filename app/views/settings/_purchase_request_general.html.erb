@@ -46,7 +46,7 @@
       <h4><%= l(:label_default_assignment) %></h4>
       <p class="section-description"><%= l(:text_default_assignment_description) || 'Select the default user for purchase request assignments' %></p>
     </div>
-    
+
     <div class="form-group">
       <span class="form-label"><%= l(:label_default_assigned_to) %></span>
       <%= select_tag 'settings[default_assigned_to_id]',
@@ -54,6 +54,50 @@
                     include_blank: true,
                     class: 'form-select',
                     id: 'settings_default_assigned_to_id' %>
+    </div>
+  </div>
+
+  <!-- Global Menu Visibility Section -->
+  <div class="settings-section">
+    <div class="section-header">
+      <h4><%= l(:label_global_menu_settings) %></h4>
+      <p class="section-description"><%= l(:text_global_menu_settings_description) %></p>
+    </div>
+
+    <div class="form-group checkbox-group">
+      <div class="checkbox-wrapper">
+        <%= check_box_tag 'settings[global_tpc_menu_enabled]', '1', @settings['global_tpc_menu_enabled'] == '1',
+                          class: 'form-checkbox', id: 'global_tpc_menu_enabled' %>
+        <span class="checkbox-label-text" for="global_tpc_menu_enabled"><%= l(:label_global_tpc_menu_enabled) %></span>
+      </div>
+      <p class="form-help-text"><%= l(:text_global_tpc_menu_enabled_info) %></p>
+    </div>
+
+    <div class="form-group checkbox-group">
+      <div class="checkbox-wrapper">
+        <%= check_box_tag 'settings[global_tpc_dashboard_menu_enabled]', '1', @settings['global_tpc_dashboard_menu_enabled'] == '1',
+                          class: 'form-checkbox', id: 'global_tpc_dashboard_menu_enabled' %>
+        <span class="checkbox-label-text" for="global_tpc_dashboard_menu_enabled"><%= l(:label_global_tpc_dashboard_menu_enabled) %></span>
+      </div>
+      <p class="form-help-text"><%= l(:text_global_tpc_dashboard_menu_enabled_info) %></p>
+    </div>
+
+    <div class="form-group checkbox-group">
+      <div class="checkbox-wrapper">
+        <%= check_box_tag 'settings[global_vendor_menu_enabled]', '1', @settings['global_vendor_menu_enabled'] == '1',
+                          class: 'form-checkbox', id: 'global_vendor_menu_enabled' %>
+        <span class="checkbox-label-text" for="global_vendor_menu_enabled"><%= l(:label_global_vendor_menu_enabled) %></span>
+      </div>
+      <p class="form-help-text"><%= l(:text_global_vendor_menu_enabled_info) %></p>
+    </div>
+
+    <div class="form-group checkbox-group">
+      <div class="checkbox-wrapper">
+        <%= check_box_tag 'settings[global_reports_menu_enabled]', '1', @settings['global_reports_menu_enabled'] == '1',
+                          class: 'form-checkbox', id: 'global_reports_menu_enabled' %>
+        <span class="checkbox-label-text" for="global_reports_menu_enabled"><%= l(:label_global_reports_menu_enabled) %></span>
+      </div>
+      <p class="form-help-text"><%= l(:text_global_reports_menu_enabled_info) %></p>
     </div>
   </div>
 </div>

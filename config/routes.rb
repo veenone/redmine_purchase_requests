@@ -3,6 +3,9 @@
 RedmineApp::Application.routes.draw do
   resources :projects do
     resources :purchase_requests do
+      member do
+        post 'create_workflow_issue'
+      end
       collection do
         get 'dashboard'
       end
@@ -64,6 +67,14 @@ RedmineApp::Application.routes.draw do
   end
 
   resources :purchase_request_statuses, only: [:index, :new, :create, :edit, :update, :destroy]
+
+  # Workflow templates management
+  resources :purchase_request_workflow_templates do
+    collection do
+      post 'create_defaults'
+      post 'update_positions'
+    end
+  end
   
   # Keep global vendors for data storage
   resources :vendors do

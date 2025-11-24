@@ -1,6 +1,6 @@
 class PurchaseRequestsController < ApplicationController
   before_action :find_project, only: [:index, :new, :create, :dashboard]
-  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy]
+  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue]
   before_action :authorize, except: [:show]
   
   # Set the current menu item for proper highlighting
@@ -60,12 +60,18 @@ class PurchaseRequestsController < ApplicationController
       # Handle attachments using Redmine's attachment system
       attachments = Attachment.attach_files(@purchase_request, params[:attachments])
       render_attachment_warning_if_needed(@purchase_request)
-      
+
       # Handle notifications
       if @purchase_request.notify_manager? && Setting.plugin_redmine_purchase_requests['enable_notifications']
         PurchaseRequestMailer.new_request_notification(@purchase_request).deliver_now
       end
-      
+
+      # Auto-create workflow issue if enabled
+      if Setting.plugin_redmine_purchase_requests['workflow_enabled'] == '1' &&
+         Setting.plugin_redmine_purchase_requests['workflow_auto_create'] == '1'
+        @purchase_request.create_workflow_issue!
+      end
+
       flash[:notice] = l(:notice_purchase_request_created)
       redirect_to project_purchase_request_path(@project, @purchase_request)
     else
@@ -106,7 +112,23 @@ class PurchaseRequestsController < ApplicationController
     flash[:notice] = l(:notice_purchase_request_deleted)
     redirect_to project_purchase_requests_path(@project)
   end
-  
+
+  def create_workflow_issue
+    if @purchase_request.has_linked_issue?
+      flash[:warning] = l(:notice_workflow_issue_exists, default: 'A workflow issue already exists for this purchase request.')
+    elsif !@purchase_request.workflow_enabled?
+      flash[:error] = l(:text_workflow_not_enabled)
+    else
+      issue = @purchase_request.create_workflow_issue!
+      if issue
+        flash[:notice] = l(:notice_workflow_issue_created, default: 'Workflow issue and subtasks have been created.')
+      else
+        flash[:error] = l(:error_creating_workflow_issue, default: 'Failed to create workflow issue. Please check the plugin settings.')
+      end
+    end
+    redirect_to project_purchase_request_path(@project, @purchase_request)
+  end
+
   def dashboard
     # Collect general statistics for the current project
     scope = @project ? @project.purchase_requests : PurchaseRequest
