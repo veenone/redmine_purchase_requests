@@ -113,6 +113,15 @@
             </span>
           </a>
         </li>
+        <li class="pr-tab-item">
+          <a href="#tab-workflow" class="pr-tab-link" data-tab="tab-workflow">
+            <span class="icon icon-issue"></span>
+            <%= l(:label_workflow) %>
+            <% if @purchase_request.has_linked_issue? %>
+              <span class="workflow-progress-badge"><%= @purchase_request.workflow_progress %>%</span>
+            <% end %>
+          </a>
+        </li>
       </ul>
     </div>
     
@@ -379,6 +388,16 @@
   
   #tab-general.tabbed-form {
     display: block;
+  }
+
+  .workflow-progress-badge {
+    display: inline-block;
+    background-color: #4caf50;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 5px;
   }
 </style>
 

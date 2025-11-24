@@ -207,8 +207,168 @@
         grid-template-columns: 1fr;
       }
     }
-    
-    /* ...existing code... */
+
+    /* Workflow section styling */
+    .workflow-section {
+      padding: 15px;
+    }
+
+    .workflow-section h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+    }
+
+    .workflow-main-issue {
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 6px;
+    }
+
+    .workflow-issue-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .workflow-issue-link {
+      color: #0078d4;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .workflow-issue-link:hover {
+      text-decoration: underline;
+    }
+
+    .issue-status-badge,
+    .subtask-status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      color: white;
+      font-size: 11px;
+      font-weight: 500;
+      background-color: #6c757d;
+    }
+
+    .workflow-progress-container {
+      margin-bottom: 20px;
+    }
+
+    .workflow-progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .progress-percentage {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .workflow-progress-bar {
+      height: 10px;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .workflow-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+      border-radius: 5px;
+    }
+
+    .workflow-subtasks {
+      margin-top: 15px;
+    }
+
+    .workflow-subtasks h4 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+    }
+
+    .workflow-subtasks-table {
+      width: 100%;
+      font-size: 13px;
+    }
+
+    .workflow-subtasks-table th {
+      background-color: #f0f0f0;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    .workflow-subtasks-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .subtask-completed {
+      background-color: #f8fff8;
+    }
+
+    .workflow-complete-notice {
+      margin-top: 15px;
+      padding: 12px;
+      background-color: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 4px;
+      color: #2e7d32;
+    }
+
+    .workflow-not-started,
+    .workflow-not-enabled {
+      padding: 20px;
+      text-align: center;
+      border-radius: 4px;
+    }
+
+    .workflow-not-started {
+      background-color: #e3f2fd;
+      border: 1px solid #90caf9;
+    }
+
+    .workflow-not-enabled {
+      background-color: #fff3cd;
+      border: 1px solid #ffc107;
+    }
+
+    .workflow-notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .workflow-not-enabled .workflow-notice {
+      color: #856404;
+    }
+
+    .workflow-setup-hint {
+      margin-top: 10px;
+    }
+
+    .workflow-create-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .workflow-progress-badge {
+      display: inline-block;
+      background-color: #4caf50;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 5px;
+    }
   </style>
 <% end %>
 
@@ -679,7 +839,106 @@
       </div>
     </div>
   </div>
-  
+
+  <% unless purchase_request.new_record? %>
+  <div id="tab-workflow" class="tab-pane tabbed-form" style="display: none;">
+    <div class="box tabular workflow-section">
+      <h3><%= l(:label_workflow_status) %></h3>
+
+      <% if purchase_request.has_linked_issue? %>
+        <div class="workflow-main-issue">
+          <div class="workflow-issue-header">
+            <span class="icon icon-issue"></span>
+            <strong><%= l(:label_linked_issue) %>:</strong>
+            <%= link_to "##{purchase_request.issue.id}: #{purchase_request.issue.subject}",
+                        issue_path(purchase_request.issue),
+                        class: 'workflow-issue-link' %>
+            <span class="issue-status-badge">
+              <%= purchase_request.issue.status.name %>
+            </span>
+          </div>
+
+          <div class="workflow-progress-container">
+            <div class="workflow-progress-label">
+              <span><%= l(:label_workflow_progress) %></span>
+              <span class="progress-percentage"><%= purchase_request.workflow_progress %>%</span>
+            </div>
+            <div class="workflow-progress-bar">
+              <div class="workflow-progress-fill" style="width: <%= purchase_request.workflow_progress %>%;"></div>
+            </div>
+          </div>
+
+          <% if purchase_request.subtask_issues.any? %>
+            <div class="workflow-subtasks">
+              <h4><%= l(:label_workflow_subtasks) %></h4>
+              <table class="workflow-subtasks-table list">
+                <thead>
+                  <tr>
+                    <th><%= l(:field_subject) %></th>
+                    <th><%= l(:field_status) %></th>
+                    <th><%= l(:field_assigned_to) %></th>
+                    <th><%= l(:field_done_ratio) %></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% purchase_request.subtask_issues.order(:id).each do |subtask| %>
+                    <tr class="<%= subtask.status.is_closed? ? 'subtask-completed' : 'subtask-pending' %>">
+                      <td><%= link_to "##{subtask.id}: #{subtask.subject}", issue_path(subtask) %></td>
+                      <td>
+                        <span class="subtask-status-badge">
+                          <%= subtask.status.name %>
+                        </span>
+                      </td>
+                      <td><%= subtask.assigned_to&.name || '-' %></td>
+                      <td><%= subtask.done_ratio %>%</td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          <% end %>
+
+          <% if purchase_request.all_subtasks_completed? %>
+            <div class="workflow-complete-notice">
+              <span class="icon icon-checked"></span>
+              <%= l(:notice_workflow_complete) %>
+            </div>
+          <% end %>
+        </div>
+      <% elsif purchase_request.workflow_enabled? %>
+        <div class="workflow-not-started">
+          <div class="workflow-notice">
+            <span class="icon icon-info"></span>
+            <%= l(:notice_workflow_not_started) %>
+          </div>
+          <% if User.current.allowed_to?(:edit_purchase_requests, @project) %>
+            <%= link_to create_workflow_issue_project_purchase_request_path(@project, purchase_request),
+                        method: :post,
+                        class: 'pr-button pr-button-primary workflow-create-button' do %>
+              <span class="icon icon-add"></span>
+              <%= l(:button_create_workflow_issue) %>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="workflow-not-enabled">
+          <div class="workflow-notice">
+            <span class="icon icon-warning"></span>
+            <%= l(:text_workflow_not_enabled) %>
+          </div>
+          <% if User.current.admin? %>
+            <p class="workflow-setup-hint">
+              <%= link_to l(:label_configure_workflow, default: 'Configure Workflow'),
+                          plugin_settings_path('redmine_purchase_requests', anchor: 'workflow'),
+                          class: 'icon icon-settings' %>
+            </p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  <% end %>
+
   <div class="pr-form-actions">
     <% if purchase_request.new_record? %>
       <%= form.submit defined?(button_label) ? button_label : l(:button_create), class: 'pr-button pr-button-primary' %>
