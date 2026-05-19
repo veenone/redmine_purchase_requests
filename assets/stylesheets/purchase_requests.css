@@ -1,234 +1,1814 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+/* ============================================================================
+   Redmine Purchase Requests — Unified Design System
+   ----------------------------------------------------------------------------
+   A single, token-driven stylesheet for every plugin view: purchase requests,
+   CAPEX, OPEX, vendors, TPC codes, reports, statuses, workflow templates and
+   settings.
+
+   Direction: "Refined enterprise" — a calm slate surface with a single indigo
+   accent, designed to sit harmoniously inside Redmine's native chrome while
+   giving the plugin one consistent, professional voice.
+
+   Conventions
+   -----------
+   * Every rule is scoped under `#content` so the plugin never restyles
+     Redmine's header, sidebar, top menu or footer.
+   * Component classes are prefixed `pr-`. A handful of long-standing
+     plugin class names (status-badge, stat-box, dashboard-card, form-row…)
+     are kept for backwards compatibility and defined here too.
+   * Redmine core classes (.box, table.list, .contextual, .tabs, .flash) are
+     intentionally NOT overridden — they already match Redmine.
+
+   All previous per-view <style> blocks and the legacy capex.css /
+   purchase_request_buttons.css / purchase_request_vendors.css files are
+   superseded by this file.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------------------
+   1. Design tokens
+   ------------------------------------------------------------------------- */
+:root {
+  /* Surfaces */
+  --pr-surface:        #ffffff;
+  --pr-surface-subtle: #f6f7f9;
+  --pr-surface-sunken: #eceef2;
+  --pr-surface-hover:  #f1f3f6;
+
+  /* Borders */
+  --pr-border:        #e5e7eb;
+  --pr-border-strong: #d3d7df;
+
+  /* Text */
+  --pr-ink:        #21262e;
+  --pr-ink-muted:  #5c6573;
+  --pr-ink-faint:  #949ba8;
+  --pr-ink-invert: #ffffff;
+
+  /* Accent — indigo */
+  --pr-accent:       #3a5bbf;
+  --pr-accent-hover: #30499c;
+  --pr-accent-soft:  #eef1fb;
+  --pr-accent-ink:   #33489c;
+
+  /* Semantic — positive */
+  --pr-success:      #2f9e44;
+  --pr-success-soft: #e8f5ec;
+  --pr-success-ink:  #1e7a32;
+
+  /* Semantic — warning */
+  --pr-warning:      #df8709;
+  --pr-warning-soft: #fbf1de;
+  --pr-warning-ink:  #a4660a;
+
+  /* Semantic — danger */
+  --pr-danger:      #dc3a3a;
+  --pr-danger-soft: #fbe9e9;
+  --pr-danger-ink:  #be2f2f;
+
+  /* Semantic — info */
+  --pr-info:      #2272c4;
+  --pr-info-soft: #e8f0fb;
+  --pr-info-ink:  #1a5fa8;
+
+  /* Accent — violet (TPC code identity) */
+  --pr-violet:      #6b4fc7;
+  --pr-violet-soft: #efebfa;
+  --pr-violet-ink:  #54399e;
+
+  /* Radii */
+  --pr-radius-sm: 5px;
+  --pr-radius:    8px;
+  --pr-radius-lg: 12px;
+  --pr-radius-pill: 999px;
+
+  /* Shadows */
+  --pr-shadow-xs: 0 1px 2px rgba(24, 28, 36, .05);
+  --pr-shadow-sm: 0 1px 3px rgba(24, 28, 36, .07), 0 1px 2px rgba(24, 28, 36, .04);
+  --pr-shadow-md: 0 6px 20px rgba(24, 28, 36, .10);
+
+  /* Typography */
+  --pr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --pr-font-mono: "SFMono-Regular", "JetBrains Mono", "Cascadia Mono", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
-h1, h2, h3 {
-    color: #333;
+/* ---------------------------------------------------------------------------
+   2. Plugin content baseline
+   ------------------------------------------------------------------------- */
+#content .pr-app,
+#content .pr-form-container,
+#content .pr-stats,
+#content .pr-grid,
+#content .pr-card,
+#content .pr-intro,
+#content .pr-toolbar { font-family: var(--pr-font); }
+
+/* Numeric figures align cleanly in tables and cards */
+#content .pr-num,
+#content .pr-stat__value,
+#content .pr-amount,
+#content .stat-number,
+#content .capex-stat-value { font-variant-numeric: tabular-nums; }
+
+#content .pr-mono,
+#content .tpc-number,
+#content .tpc-code-cell { font-family: var(--pr-font-mono); }
+
+/* ---------------------------------------------------------------------------
+   3. Page header & contextual toolbar
+   ------------------------------------------------------------------------- */
+#content h2 {
+  color: var(--pr-ink);
+  letter-spacing: -.01em;
 }
 
-.purchase-request {
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    padding: 15px;
-    margin: 10px 0;
-    background-color: #f9f9f9;
+#content h2 .count,
+#content h2 .request-id {
+  color: var(--pr-ink-faint);
+  font-weight: 400;
+  font-size: .68em;
 }
 
-.purchase-request-status {
-    font-weight: bold;
+/* A short descriptive line that can sit under the page <h2> */
+#content .pr-subhead {
+  margin: -4px 0 18px;
+  color: var(--pr-ink-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-.dashboard {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* ---------------------------------------------------------------------------
+   4. Buttons
+   ------------------------------------------------------------------------- */
+#content .pr-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--pr-radius-sm);
+  background: var(--pr-surface);
+  color: var(--pr-ink);
+  font-family: var(--pr-font);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+#content .pr-button:hover { text-decoration: none; }
+#content .pr-button:focus-visible {
+  outline: 2px solid var(--pr-accent);
+  outline-offset: 1px;
 }
 
-.dashboard .status {
-    margin: 10px;
-    padding: 10px;
-    border-radius: 5px;
+/* Primary — main call to action */
+#content .pr-button-primary {
+  background: var(--pr-accent);
+  border-color: var(--pr-accent);
+  color: var(--pr-ink-invert);
+  box-shadow: var(--pr-shadow-xs);
+}
+#content .pr-button-primary:hover {
+  background: var(--pr-accent-hover);
+  border-color: var(--pr-accent-hover);
+  color: var(--pr-ink-invert);
 }
 
-/**
- * DEPRECATED: Legacy button styles - DO NOT USE IN NEW CODE
- *
- * These styles are kept for backward compatibility only.
- * For all new development, please use the pr-button classes from 
- * purchase_request_buttons.css instead:
- *
- * Instead of:
- * - .button → use .pr-button.pr-button-secondary
- * - .button-positive → use .pr-button.pr-button-primary
- * - .button-negative → use .pr-button.pr-button-danger
- * - .form-actions → use .pr-form-actions
- */
-.button {
-    /* background-color: #007bff; */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
+/* Secondary — neutral outline */
+#content .pr-button-secondary {
+  background: var(--pr-surface);
+  border-color: var(--pr-border-strong);
+  color: var(--pr-ink);
+}
+#content .pr-button-secondary:hover {
+  background: var(--pr-surface-subtle);
+  border-color: var(--pr-ink-faint);
+  color: var(--pr-ink);
 }
 
-.button:hover {
-    background-color: #0056b3;
+/* Danger — outlined, escalates on hover */
+#content .pr-button-danger {
+  background: var(--pr-surface);
+  border-color: #ecbcbc;
+  color: var(--pr-danger-ink);
+}
+#content .pr-button-danger:hover {
+  background: var(--pr-danger-soft);
+  border-color: var(--pr-danger);
+  color: var(--pr-danger-ink);
 }
 
-.button-positive {
-    /* background-color: #4CAF50; */
-    color: white;
+/* Cancel — quiet, text-like */
+#content .pr-button-cancel {
+  background: transparent;
+  border-color: transparent;
+  color: var(--pr-ink-muted);
+}
+#content .pr-button-cancel:hover {
+  background: var(--pr-surface-subtle);
+  color: var(--pr-ink);
 }
 
-.button-negative {
-    background-color: #f44336;
-    color: white;
+/* Ghost — for dense toolbars and table rows */
+#content .pr-button-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--pr-ink-muted);
+}
+#content .pr-button-ghost:hover {
+  background: var(--pr-surface-subtle);
+  color: var(--pr-ink);
 }
 
-/* DEPRECATED: Legacy button container - use pr-form-actions instead */
-.form-actions {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid #e0e0e0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
+/* Disabled / inert button */
+#content .pr-button-disabled,
+#content .pr-button[disabled],
+#content .pr-button:disabled {
+  background: var(--pr-surface-subtle);
+  border-color: var(--pr-border);
+  color: var(--pr-ink-faint);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+#content .pr-button-disabled:hover { background: var(--pr-surface-subtle); }
+
+/* Sizes */
+#content .pr-button.small {
+  min-height: 26px;
+  padding: 3px 9px;
+  font-size: 12px;
+}
+#content .pr-button.large {
+  min-height: 40px;
+  padding: 10px 22px;
+  font-size: 14px;
 }
 
-/* ===== VENDOR MANAGEMENT STYLES ===== */
+/* Redmine sprite icons sit inside buttons — keep them legible on every fill */
+#content .pr-button .icon { padding-left: 16px; background-position: 0 50%; }
+#content .pr-button-primary .icon,
+#content .pr-button-primary .icon-add,
+#content .pr-button-primary .icon-stats { filter: brightness(0) invert(1); }
 
-/* Vendor list styling */
-.vendor-name-link {
-    font-weight: bold;
-    text-decoration: none;
-    color: #007cba;
+/* Button group / form actions */
+#content .pr-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--pr-border);
+}
+#content .pr-form-actions.left-aligned { justify-content: flex-start; }
+#content .pr-form-actions.centered    { justify-content: center; }
+
+/* Inline action cluster (used inside table cells) */
+#content .pr-table-actions,
+#content .action-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
-.vendor-name-link:hover {
-    text-decoration: underline;
-    color: #005a8b;
+/* Accessible icon-only buttons */
+#content .pr-button-icon-only .button-text {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
-/* Vendor detail page styling */
-.vendor-details {
-    margin-top: 1em;
+/* ---------------------------------------------------------------------------
+   5. Intro / info banner
+   ------------------------------------------------------------------------- */
+/* Simple descriptive banner (block content, no icon) */
+#content .info-box,
+#content .info-box-soft {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  background: var(--pr-accent-soft);
+  border: 1px solid #d8def4;
+  border-radius: var(--pr-radius);
+  color: var(--pr-ink);
+  font-size: 13px;
+  line-height: 1.55;
+}
+#content .info-box p { margin: 0 0 6px; }
+#content .info-box p:last-child { margin-bottom: 0; }
+#content .info-box strong { color: var(--pr-ink); }
+
+#content .info-message {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  background: var(--pr-warning-soft);
+  border: 1px solid #efd9ad;
+  border-left: 3px solid var(--pr-warning);
+  border-radius: var(--pr-radius);
+  color: var(--pr-warning-ink);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
-.vendor-details .vendor-info-table {
-    width: 100%;
-    margin-bottom: 1em;
-    border-collapse: collapse;
+/* Intro banner with a leading icon */
+#content .pr-intro {
+  display: flex;
+  gap: 12px;
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  background: var(--pr-accent-soft);
+  border: 1px solid #d8def4;
+  border-radius: var(--pr-radius);
+  color: var(--pr-ink);
+  font-size: 13px;
+  line-height: 1.55;
+}
+#content .pr-intro p { margin: 0 0 6px; }
+#content .pr-intro p:last-child { margin-bottom: 0; }
+#content .pr-intro__icon {
+  flex-shrink: 0;
+  color: var(--pr-accent);
+  font-size: 16px;
+  line-height: 1.4;
+}
+#content .pr-intro strong { color: var(--pr-ink); }
+
+/* ---------------------------------------------------------------------------
+   6. Cards
+   ------------------------------------------------------------------------- */
+#content .pr-card,
+#content .dashboard-card,
+#content .capex-chart-container,
+#content .capex-details {
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius);
+  box-shadow: var(--pr-shadow-xs);
+  overflow: hidden;
 }
 
-.vendor-details .vendor-info-table th {
-    text-align: left;
-    padding: 0.5em 1em 0.5em 0;
-    width: 30%;
-    font-weight: bold;
-    vertical-align: top;
-    border-bottom: 1px solid #eee;
+#content .pr-card__header,
+#content .dashboard-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--pr-surface-subtle);
+  border-bottom: 1px solid var(--pr-border);
+}
+#content .pr-card__header h3,
+#content .pr-card__header h4,
+#content .dashboard-card-header h3,
+#content .capex-chart-title {
+  margin: 0;
+  color: var(--pr-ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .01em;
 }
 
-.vendor-details .vendor-info-table td {
-    padding: 0.5em 0;
-    border-bottom: 1px solid #eee;
+#content .pr-card__body,
+#content .dashboard-card-body { padding: 16px; }
+
+/* Responsive card grid for dashboards and report sections */
+#content .pr-grid,
+#content .dashboard-container,
+#content .capex-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+#content .pr-grid--wide { grid-template-columns: repeat(auto-fill, minmax(540px, 1fr)); }
+#content .pr-grid--narrow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+
+/* ---------------------------------------------------------------------------
+   7. Stat cards (KPIs)
+   ------------------------------------------------------------------------- */
+#content .pr-stats,
+#content .summary-stats,
+#content .capex-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin: 0 0 22px;
 }
 
-.vendor-status {
-    font-size: 0.9em;
-    font-weight: normal;
+#content .pr-stat,
+#content .stat-box,
+#content .capex-stat-card {
+  position: relative;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-left: 3px solid var(--pr-border-strong);
+  border-radius: var(--pr-radius);
+  box-shadow: var(--pr-shadow-xs);
+  text-align: left;
 }
 
-.status-active {
-    color: #469449;
-    font-weight: bold;
+#content .pr-stat__value,
+#content .stat-number,
+#content .capex-stat-value {
+  margin: 0 0 4px;
+  color: var(--pr-ink);
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -.01em;
 }
 
-.status-inactive {
-    color: #d9534f;
-    font-weight: bold;
+#content .pr-stat__label,
+#content .stat-label,
+#content .capex-stat-label {
+  color: var(--pr-ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .055em;
 }
 
-.vendor-notes {
-    margin-top: 1em;
+/* Accent edges — semantic meaning per card */
+#content .pr-stat--accent,
+#content .capex-stat-card.budget       { border-left-color: var(--pr-accent); }
+#content .pr-stat--success,
+#content .capex-stat-card.utilized     { border-left-color: var(--pr-success); }
+#content .pr-stat--warning,
+#content .capex-stat-card.remaining    { border-left-color: var(--pr-warning); }
+#content .pr-stat--violet,
+#content .capex-stat-card.utilization  { border-left-color: var(--pr-violet); }
+#content .pr-stat--danger              { border-left-color: var(--pr-danger); }
+
+/* Currency-coloured figures */
+#content .stat-currency,
+#content .pr-stat__value.is-currency { color: var(--pr-success-ink); }
+#content .pr-stat__value .currency,
+#content .pr-stat__value .currency-code { color: var(--pr-ink-faint); font-size: 12px; font-weight: 600; }
+
+#content .conversion-note {
+  display: block;
+  margin-top: 3px;
+  color: var(--pr-ink-faint);
+  font-size: 10px;
+  font-weight: 400;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
-.notes-content {
-    background: #f8f9fa;
-    padding: 1em;
-    border-radius: 4px;
-    border-left: 4px solid #007cba;
-    margin-top: 0.5em;
+/* ---------------------------------------------------------------------------
+   8. Tables
+   ------------------------------------------------------------------------- */
+#content table.pr-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0 0 18px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius);
+  overflow: hidden;
+  font-size: 13px;
 }
 
-.vendor-stats {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+#content table.pr-table thead th {
+  padding: 10px 12px;
+  background: var(--pr-surface-subtle);
+  border-bottom: 1px solid var(--pr-border);
+  color: var(--pr-ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .045em;
+  text-align: left;
+  white-space: nowrap;
 }
 
-.vendor-stats li {
-    padding: 0.5em 0;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
+#content table.pr-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pr-border);
+  color: var(--pr-ink);
+  vertical-align: middle;
+}
+#content table.pr-table tbody tr:last-child td { border-bottom: none; }
+#content table.pr-table tbody tr:hover { background: var(--pr-surface-hover); }
+#content table.pr-table tbody tr.closed,
+#content table.pr-table tbody tr.is-muted { color: var(--pr-ink-muted); }
+#content table.pr-table tbody tr.closed td:not(.buttons) { opacity: .72; }
+
+/* A quieter, borderless table for inside cards */
+#content table.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+#content table.dashboard-table th,
+#content table.dashboard-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--pr-border);
+}
+#content table.dashboard-table th {
+  background: transparent;
+  color: var(--pr-ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+#content table.dashboard-table tr:last-child td,
+#content table.dashboard-table tr:last-child th { border-bottom: none; }
+#content table.dashboard-table tr.total-row th,
+#content table.dashboard-table tr.total-row td,
+#content table.dashboard-table .total-value {
+  font-weight: 700;
+  color: var(--pr-ink);
+}
+#content table.dashboard-table .section-header {
+  padding-top: 12px;
+  color: var(--pr-accent-ink);
+  font-size: 11px;
 }
 
-.vendor-stats li:last-child {
-    border-bottom: none;
+/* Dense action column */
+#content table.pr-table td.buttons,
+#content td.buttons {
+  white-space: nowrap;
+  text-align: right;
+  width: 1%;
 }
 
-.status-badge {
-    padding: 0.2em 0.6em;
-    border-radius: 3px;
-    background: #f0f0f0;
-    font-size: 0.9em;
-    color: #666;
+/* Cell helpers */
+#content .pr-cell-id a,
+#content .pr-id-link {
+  color: var(--pr-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+#content .pr-cell-id a:hover,
+#content .pr-id-link:hover { text-decoration: underline; }
+#content .pr-title-link {
+  color: var(--pr-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+#content .pr-title-link:hover { color: var(--pr-accent); text-decoration: underline; }
+#content .description-preview {
+  margin-top: 3px;
+  color: var(--pr-ink-faint);
+  font-size: 12px;
+}
+#content .no-data,
+#content .no-prs,
+#content .nodata-inline {
+  color: var(--pr-ink-faint);
+  font-style: italic;
+  font-size: 12px;
+}
+#content .pagination-info {
+  margin-top: 12px;
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  text-align: center;
+}
+#content .pr-pagination,
+#content .pagination-wrapper { margin-top: 16px; text-align: center; }
+
+/* Stacked cell content (price, budget link, TPC code) */
+#content .price-display,
+#content .budget-link-container,
+#content .tpc-code-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+#content .price-amount { color: var(--pr-success-ink); font-weight: 700; }
+#content .price-display .currency-code { margin-left: 0; }
+#content .budget-link { font-size: 12px; }
+#content .date-display { color: var(--pr-ink-muted); font-size: 12px; }
+#content .tpc-code-display .tpc-number { font-size: 12px; }
+
+/* ---------------------------------------------------------------------------
+   9. Badges
+   ------------------------------------------------------------------------- */
+#content .pr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: var(--pr-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+#content .pr-badge--neutral { background: var(--pr-surface-sunken); color: var(--pr-ink-muted); }
+#content .pr-badge--accent  { background: var(--pr-accent-soft);  color: var(--pr-accent-ink); }
+#content .pr-badge--success { background: var(--pr-success-soft); color: var(--pr-success-ink); }
+#content .pr-badge--warning { background: var(--pr-warning-soft); color: var(--pr-warning-ink); }
+#content .pr-badge--danger  { background: var(--pr-danger-soft);  color: var(--pr-danger-ink); }
+#content .pr-badge--info    { background: var(--pr-info-soft);    color: var(--pr-info-ink); }
+#content .pr-badge--violet  { background: var(--pr-violet-soft);  color: var(--pr-violet-ink); }
+
+/* Status badge — carries its own colour via inline style="background-color:…" */
+#content .status-badge,
+#content .issue-status-badge,
+#content .subtask-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--pr-radius-pill);
+  background: var(--pr-ink-faint);
+  color: var(--pr-ink-invert);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .18);
 }
 
-.pagination-info {
-    font-style: italic;
-    color: #666;
-    margin-top: 1em;
-    text-align: center;
+/* Priority badge */
+#content .priority-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--pr-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+#content .priority-badge.low    { background: var(--pr-info-soft);    color: var(--pr-info-ink); }
+#content .priority-badge.normal { background: var(--pr-success-soft); color: var(--pr-success-ink); }
+#content .priority-badge.high   { background: var(--pr-warning-soft); color: var(--pr-warning-ink); }
+#content .priority-badge.urgent { background: var(--pr-danger-soft);  color: var(--pr-danger-ink); }
+
+/* CAPEX / OPEX lifecycle badge */
+#content .capex-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: var(--pr-radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+#content .capex-badge.active,
+#content .capex-badge.open       { background: var(--pr-success-soft); color: var(--pr-success-ink); }
+#content .capex-badge.completed  { background: var(--pr-info-soft);    color: var(--pr-info-ink); }
+#content .capex-badge.cancelled  { background: var(--pr-danger-soft);  color: var(--pr-danger-ink); }
+#content .capex-badge.on-hold    { background: var(--pr-warning-soft); color: var(--pr-warning-ink); }
+
+/* Source provenance badge (Direct / via CAPEX / via OPEX) */
+#content .tpc-source,
+#content .tpc-source-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--pr-radius-pill);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+#content .tpc-source.direct,
+#content .tpc-source-badge.direct { background: var(--pr-violet-soft); color: var(--pr-violet-ink); }
+#content .tpc-source.capex,
+#content .tpc-source-badge.capex  { background: var(--pr-accent-soft); color: var(--pr-accent-ink); }
+#content .tpc-source.opex,
+#content .tpc-source-badge.opex   { background: var(--pr-success-soft); color: var(--pr-success-ink); }
+
+/* Utilisation pill */
+#content .budget-utilization-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--pr-radius-pill);
+  background: var(--pr-success-soft);
+  color: var(--pr-success-ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+#content .budget-utilization-badge.over-budget { background: var(--pr-danger-soft); color: var(--pr-danger-ink); }
+
+/* Workflow progress chip on tabs */
+#content .workflow-progress-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: var(--pr-radius-pill);
+  background: var(--pr-success);
+  color: var(--pr-ink-invert);
+  font-size: 10px;
+  font-weight: 700;
 }
 
-/* Vendor search form */
-.vendor-search-form {
-    margin: 1em 0;
-    padding: 1em;
-    background: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
+/* Currency tag */
+#content .currency-code,
+#content .currency-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: var(--pr-radius-sm);
+  background: var(--pr-surface-sunken);
+  color: var(--pr-ink-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  vertical-align: middle;
 }
 
-.vendor-search-form .input-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
+/* TPC number */
+#content .tpc-number {
+  font-family: var(--pr-font-mono);
+  font-weight: 600;
+  color: var(--pr-ink);
 }
 
-.vendor-search-input {
-    flex: 1;
-    padding: 0.5em;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+/* ---------------------------------------------------------------------------
+   10. Progress meters
+   ------------------------------------------------------------------------- */
+#content .pr-meter,
+#content .capex-progress,
+#content .progress-bar,
+#content .utilization-bar,
+#content .workflow-progress-bar,
+#content .mini-progress-bar {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: var(--pr-surface-sunken);
+  border-radius: var(--pr-radius-pill);
+  overflow: hidden;
+}
+#content .progress-bar,
+#content .utilization-bar { height: 16px; }
+#content .workflow-progress-bar { height: 10px; }
+#content .mini-progress-bar { height: 16px; min-width: 60px; }
+
+#content .pr-meter__fill,
+#content .capex-progress-bar,
+#content .progress-fill,
+#content .utilization-fill,
+#content .workflow-progress-fill,
+#content .mini-progress-fill {
+  height: 100%;
+  background: var(--pr-success);
+  border-radius: var(--pr-radius-pill);
+  transition: width .35s ease;
 }
 
-/* Vendor management tabs */
-.vendor-management-tabs {
-    margin-top: 1em;
+/* Utilisation severity */
+#content .pr-meter__fill.low,    #content .capex-progress-bar.low    { background: var(--pr-success); }
+#content .pr-meter__fill.medium, #content .capex-progress-bar.medium { background: var(--pr-warning); }
+#content .pr-meter__fill.high,   #content .capex-progress-bar.high   { background: var(--pr-danger); }
+#content .pr-meter__fill.over,   #content .capex-progress-bar.over,
+#content .progress-fill.over-utilized,
+#content .utilization-fill.over-utilized { background: var(--pr-violet); }
+
+#content .progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pr-ink);
+}
+#content .progress-text.over-utilized { color: var(--pr-danger-ink); }
+#content .utilization-text { margin-left: 6px; font-size: 12px; color: var(--pr-ink-muted); }
+
+#content .mini-progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pr-ink);
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .vendor-details .splitcontent {
-        display: block;
-    }
-    
-    .vendor-details .splitcontentleft,
-    .vendor-details .splitcontentright {
-        width: 100%;
-        float: none;
-        margin: 0 0 1em 0;
-    }
-    
-    .vendor-details .vendor-info-table th {
-        width: 40%;
-    }
-    
-    .vendor-search-form .input-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .vendor-search-input {
-        margin-bottom: 0.5em;
-    }
+/* ---------------------------------------------------------------------------
+   11. Filter bar
+   ------------------------------------------------------------------------- */
+#content .pr-filters,
+#content fieldset.filters,
+#content div.filters {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius);
+}
+#content .pr-filters legend,
+#content fieldset.filters legend {
+  padding: 0 6px;
+  color: var(--pr-ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+#content .pr-filters__row,
+#content .filter-row,
+#content .filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+#content .pr-filters__row label,
+#content .filter-row label,
+#content .filter-options label {
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+#content .pr-filters input[type="text"],
+#content .pr-filters input[type="search"],
+#content .pr-filters select,
+#content .filter-row input[type="text"],
+#content .filter-row select,
+#content .filter-options input[type="text"],
+#content .filter-options select {
+  height: 32px;
+  padding: 5px 10px;
+  border: 1px solid var(--pr-border-strong);
+  border-radius: var(--pr-radius-sm);
+  background: var(--pr-surface);
+  color: var(--pr-ink);
+  font-size: 13px;
+}
+
+/* Search box (vendors, TPC codes) */
+#content .vendor-search-form { margin: 0 0 20px; }
+#content .vendor-search-form .input-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+#content .vendor-search-input {
+  flex: 1;
+  min-width: 220px;
+  height: 32px;
+  padding: 5px 11px;
+  border: 1px solid var(--pr-border-strong);
+  border-radius: var(--pr-radius-sm);
+  background: var(--pr-surface);
+  color: var(--pr-ink);
+  font-size: 13px;
+}
+#content .vendor-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+#content .migration-form { display: inline; }
+
+/* ---------------------------------------------------------------------------
+   12. Forms
+   ------------------------------------------------------------------------- */
+#content .form-row { margin-bottom: 18px; }
+#content .form-row:last-child { margin-bottom: 0; }
+#content .form-row > p { margin: 0; }
+
+/* Two fields side by side */
+#content .pr-field-pair {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+#content .pr-field-pair > div { flex: 1; min-width: 0; }
+#content .pr-field-pair > div > p { margin: 0; }
+
+#content .form-row label,
+#content .pr-field label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--pr-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#content .form-control,
+#content .pr-input,
+#content .quarterly-input,
+#content .capex-quarterly-field input,
+#content .currency-select,
+#content .price-field {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 460px;
+  padding: 8px 12px;
+  border: 1px solid var(--pr-border-strong);
+  border-radius: var(--pr-radius-sm);
+  background: var(--pr-surface);
+  color: var(--pr-ink);
+  font-family: var(--pr-font);
+  font-size: 13px;
+  line-height: 1.4;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+#content textarea.form-control { max-width: 640px; line-height: 1.5; }
+#content .form-control:focus,
+#content .pr-input:focus,
+#content .quarterly-input:focus,
+#content .capex-quarterly-field input:focus,
+#content .currency-select:focus,
+#content .price-field:focus {
+  outline: none;
+  border-color: var(--pr-accent);
+  box-shadow: 0 0 0 3px var(--pr-accent-soft);
+}
+#content .field_with_errors .form-control,
+#content .field_with_errors input,
+#content .capex-form .field_with_errors input {
+  border-color: var(--pr-danger);
+  box-shadow: 0 0 0 3px var(--pr-danger-soft);
+}
+
+/* Required marker and inline helper text */
+#content .required { color: var(--pr-danger); font-weight: 700; }
+#content em.info,
+#content .info,
+#content .pr-field__hint {
+  display: block;
+  margin-top: 4px;
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.5;
+}
+#content .error-message,
+#content .pr-field__error {
+  margin-top: 4px;
+  color: var(--pr-danger-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Grouped form section — flat, hairline-delimited */
+#content .form-section,
+#content .pr-section {
+  margin: 24px 0 0;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--pr-border);
+}
+#content .form-section:first-child,
+#content .pr-section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+#content .form-section-title,
+#content .pr-section__title {
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--pr-border);
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+/* Checkbox row */
+#content .pr-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+#content .pr-check input[type="checkbox"] { margin: 0; }
+#content .pr-check label {
+  margin: 0;
+  color: var(--pr-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+#content .pr-check em.info,
+#content .pr-check .info {
+  flex-basis: 100%;
+  margin-top: 2px;
+}
+
+/* Scope note + badge */
+#content .pr-scope-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+  color: var(--pr-ink-muted);
+  font-size: 13px;
+}
+#content .scope-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: var(--pr-radius-pill);
+  background: var(--pr-surface-sunken);
+  color: var(--pr-ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+#content .scope-badge.global  { background: var(--pr-info-soft);    color: var(--pr-info-ink); }
+#content .scope-badge.project { background: var(--pr-warning-soft); color: var(--pr-warning-ink); }
+
+/* Currency + price compound input */
+#content .currency-price-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#content .currency-select { width: auto; min-width: 130px; }
+#content .price-field { max-width: 220px; }
+
+/* Quarterly inputs */
+#content .quarterly-fields,
+#content .capex-quarterly-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 14px 0;
+}
+#content .capex-quarterly-grid { grid-template-columns: repeat(2, 1fr); }
+#content .capex-quarterly-field label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Totals validation banner */
+#content .capex-total-validation,
+#content .validation-message,
+#content .quarterly-validation .validation-message {
+  margin: 14px 0;
+  padding: 11px 14px;
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+  background: var(--pr-surface-subtle);
+  color: var(--pr-ink);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+#content .capex-total-validation.valid,
+#content .validation-message.success {
+  background: var(--pr-success-soft);
+  border-color: #b5dec0;
+  color: var(--pr-success-ink);
+}
+#content .capex-total-validation.invalid,
+#content .validation-message.error {
+  background: var(--pr-danger-soft);
+  border-color: #eecaca;
+  color: var(--pr-danger-ink);
+}
+
+/* Choice cards (budget type radios) */
+#content .budget-type-container,
+#content .budget-type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#content .budget-type-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--pr-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+#content .budget-option,
+#content .budget-type-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border-strong);
+  border-radius: var(--pr-radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+#content .budget-option:hover,
+#content .budget-type-option:hover {
+  border-color: var(--pr-accent);
+  background: var(--pr-accent-soft);
+}
+
+/* "No entries available" notice inside forms */
+#content .no-budget-entry {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: var(--pr-warning-soft);
+  border: 1px solid #efd9ad;
+  border-radius: var(--pr-radius-sm);
+}
+#content .no-entries-message { color: var(--pr-warning-ink); font-style: italic; }
+#content .budget-create-link { color: var(--pr-accent); font-weight: 600; }
+
+/* Over-allocation warning shown beneath quarterly fields */
+#content .allocation-warning,
+#content .allocation-warning-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 13px;
+  background: var(--pr-danger-soft);
+  border: 1px solid #eecaca;
+  border-left: 3px solid var(--pr-danger);
+  border-radius: var(--pr-radius-sm);
+  color: var(--pr-danger-ink);
+  font-size: 12px;
+}
+
+/* Inline budget detail tables shown in forms */
+#content .budget-details,
+#content .vendor-details {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-left: 3px solid var(--pr-accent);
+  border-radius: var(--pr-radius-sm);
+}
+#content .budget-info-table,
+#content .vendor-info-table { width: 100%; font-size: 12px; }
+#content .budget-info-table td,
+#content .vendor-info-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--pr-border);
+}
+#content .budget-info-table tr:last-child td,
+#content .vendor-info-table tr:last-child td { border-bottom: none; }
+#content .budget-label,
+#content .vendor-label {
+  width: 32%;
+  color: var(--pr-ink-muted);
+  font-weight: 600;
+}
+#content .budget-value,
+#content .vendor-value { color: var(--pr-ink); }
+
+/* File upload affordance */
+#content .attachments-field {
+  padding: 12px;
+  border: 2px dashed var(--pr-border-strong);
+  border-radius: var(--pr-radius-sm);
+  background: var(--pr-surface-subtle);
+  transition: border-color .15s ease, background-color .15s ease;
+}
+#content .attachments-field:hover { border-color: var(--pr-accent); background: var(--pr-accent-soft); }
+
+/* ---------------------------------------------------------------------------
+   13. Form shell (multi-tab create / edit / show layout)
+   ------------------------------------------------------------------------- */
+#content .pr-form-container {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+#content .pr-form-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--pr-border);
+}
+#content .pr-form-title h2 { margin: 0 0 6px; font-size: 21px; }
+#content .pr-form-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pr-ink-muted);
+  font-size: 13px;
+}
+#content .pr-form-status { margin-top: 2px; }
+#content .pr-status-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+#content .last-updated { color: var(--pr-ink-faint); font-size: 12px; }
+
+/* Stepper for the create flow */
+#content .pr-progress-indicator {
+  display: flex;
+  gap: 18px;
+}
+#content .pr-progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  opacity: .5;
+  transition: opacity .25s ease;
+}
+#content .pr-progress-step.active { opacity: 1; }
+#content .pr-step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--pr-surface-sunken);
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+#content .pr-progress-step.active .pr-step-number {
+  background: var(--pr-accent);
+  color: var(--pr-ink-invert);
+  box-shadow: 0 0 0 3px var(--pr-accent-soft);
+}
+#content .pr-step-label { color: var(--pr-ink-muted); font-size: 11px; font-weight: 600; }
+
+/* Card that wraps the tabbed form body */
+#content .pr-form-box {
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius);
+  box-shadow: var(--pr-shadow-xs);
+  overflow: hidden;
+}
+#content .pr-form-content { padding: 20px; }
+#content .pr-form-content .box.tabular { border: none; margin: 0; padding: 0; background: transparent; }
+#content .pr-form-instructions { margin-bottom: 18px; }
+
+/* Tabbed panes */
+#content .tab-pane,
+#content .tabbed-form { display: none; }
+#content .tab-pane.active,
+#content .tabbed-form.active,
+#content #tab-general.tabbed-form { display: block; }
+
+/* ---------------------------------------------------------------------------
+   14. Tabs
+   ------------------------------------------------------------------------- */
+#content .pr-tabs {
+  background: var(--pr-surface-subtle);
+  border-bottom: 1px solid var(--pr-border);
+}
+#content .pr-tab-nav {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#content .pr-tab-item { margin: 0; }
+#content .pr-tab-link {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 18px;
+  border-bottom: 2px solid transparent;
+  color: var(--pr-ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+}
+#content .pr-tab-link:hover {
+  color: var(--pr-ink);
+  background: var(--pr-surface-hover);
+}
+#content .pr-tab-item.active .pr-tab-link {
+  background: var(--pr-surface);
+  color: var(--pr-accent);
+  border-bottom-color: var(--pr-accent);
+}
+
+/* ---------------------------------------------------------------------------
+   15. Alerts
+   ------------------------------------------------------------------------- */
+#content .pr-alert {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 13px 15px;
+  border: 1px solid transparent;
+  border-left-width: 3px;
+  border-radius: var(--pr-radius-sm);
+  font-size: 13px;
+  line-height: 1.55;
+}
+#content .pr-alert:last-child { margin-bottom: 0; }
+#content .pr-alert .icon { flex-shrink: 0; }
+#content .pr-alert-content { flex: 1; }
+#content .pr-alert-content h4 { margin: 0 0 6px; font-size: 13px; font-weight: 700; }
+#content .pr-alert-content p  { margin: 0 0 6px; }
+#content .pr-alert-content p:last-child { margin-bottom: 0; }
+
+#content .pr-alert-info {
+  background: var(--pr-info-soft);
+  border-color: #c3d9f0;
+  border-left-color: var(--pr-info);
+  color: var(--pr-info-ink);
+}
+#content .pr-alert-success {
+  background: var(--pr-success-soft);
+  border-color: #b5dec0;
+  border-left-color: var(--pr-success);
+  color: var(--pr-success-ink);
+}
+#content .pr-alert-warning {
+  background: var(--pr-warning-soft);
+  border-color: #efd9ad;
+  border-left-color: var(--pr-warning);
+  color: var(--pr-warning-ink);
+}
+#content .pr-alert-danger {
+  background: var(--pr-danger-soft);
+  border-color: #eecaca;
+  border-left-color: var(--pr-danger);
+  color: var(--pr-danger-ink);
+}
+
+#content .pr-checklist { margin: 8px 0 0; padding-left: 18px; }
+#content .pr-checklist li { margin-bottom: 4px; }
+#content .pr-request-title {
+  margin-top: 8px;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, .65);
+  border-radius: var(--pr-radius-sm);
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------------------
+   16. Empty states
+   ------------------------------------------------------------------------- */
+#content .pr-empty,
+#content .empty-state,
+#content .no-capex-data {
+  margin: 20px 0;
+  padding: 48px 24px;
+  background: var(--pr-surface-subtle);
+  border: 1px dashed var(--pr-border-strong);
+  border-radius: var(--pr-radius);
+  text-align: center;
+}
+#content .pr-empty .empty-icon,
+#content .empty-state .empty-icon,
+#content .pr-empty__icon {
+  margin-bottom: 14px;
+  font-size: 42px;
+  line-height: 1;
+  opacity: .5;
+}
+#content .pr-empty h3,
+#content .empty-state h3,
+#content .no-capex-data h3 {
+  margin: 0 0 6px;
+  color: var(--pr-ink);
+  font-size: 16px;
+}
+#content .pr-empty p,
+#content .empty-state p,
+#content .no-capex-data p {
+  margin: 0 0 16px;
+  color: var(--pr-ink-muted);
+  font-size: 13px;
+}
+#content .pr-empty p:last-child,
+#content .empty-state p:last-child,
+#content .no-capex-data p:last-child { margin-bottom: 0; }
+
+/* Redmine's plain .nodata, when used inside cards */
+#content .dashboard-card-body p.nodata,
+#content .pr-card__body p.nodata {
+  margin: 8px 0;
+  padding: 18px;
+  color: var(--pr-ink-faint);
+  font-style: italic;
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   17. Detail / definition layouts
+   ------------------------------------------------------------------------- */
+#content .details-section { margin-bottom: 22px; }
+#content .details-section:last-child { margin-bottom: 0; }
+#content .details-section h4,
+#content .pr-section-heading {
+  margin: 0 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--pr-border);
+  color: var(--pr-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#content .details-columns,
+#content .pr-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+}
+#content .details-columns .column,
+#content .pr-columns .column { flex: 1; min-width: 280px; }
+
+#content .details-grid,
+#content .pr-detail {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) 1fr;
+  gap: 8px 16px;
+}
+#content .grid-row { display: contents; }
+#content .grid-row .label,
+#content .pr-detail__label {
+  color: var(--pr-ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+#content .grid-row .value,
+#content .pr-detail__value {
+  color: var(--pr-ink);
+  font-size: 13px;
+  word-break: break-word;
+}
+#content .grid-row .value.price { color: var(--pr-success-ink); font-weight: 700; }
+
+/* Meta strip (created / author / due date) */
+#content .purchase-meta,
+#content .pr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius);
+}
+#content .meta-item .label {
+  margin-right: 5px;
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+#content .meta-item .value { color: var(--pr-ink); font-size: 13px; }
+#content .meta-item .value.overdue { color: var(--pr-danger-ink); font-weight: 700; }
+
+/* Nested provenance panels (vendor / capex / opex / tpc detail blocks) */
+#content .vendor-details-display,
+#content .capex-details-display,
+#content .opex-details-display,
+#content .tpc-code-details-display,
+#content .quarterly-allocation-display {
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-left: 3px solid var(--pr-accent);
+  border-radius: var(--pr-radius-sm);
+  font-size: 12px;
+}
+#content .opex-details-display { border-left-color: var(--pr-success); }
+#content .tpc-code-details-display { border-left-color: var(--pr-violet); }
+#content .vendor-details-display div,
+#content .capex-details-display div,
+#content .opex-details-display div,
+#content .tpc-owner-info div,
+#content .quarterly-allocation-display div { margin: 3px 0; }
+
+#content .tpc-main-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--pr-border);
+}
+#content .tpc-code-details-display .tpc-number { font-size: 15px; color: var(--pr-violet-ink); }
+
+/* Notes block */
+#content .notes,
+#content .notes-content {
+  padding: 12px 14px;
+  background: var(--pr-warning-soft);
+  border-left: 3px solid var(--pr-warning);
+  border-radius: var(--pr-radius-sm);
+  font-size: 13px;
+}
+#content .notes-content { background: var(--pr-surface-subtle); border-left-color: var(--pr-accent); }
+
+/* Value helpers */
+#content .over-budget,
+#content .text-danger { color: var(--pr-danger-ink) !important; font-weight: 700; }
+#content .remaining-budget { color: var(--pr-success-ink); font-weight: 700; }
+#content .utilization-percentage { color: var(--pr-warning-ink); font-weight: 700; }
+#content .amount,
+#content .pr-amount,
+#content .currency-amount,
+#content .price-amount { font-weight: 600; }
+#content .amount.utilized  { color: var(--pr-accent-ink); }
+#content .amount.remaining { color: var(--pr-success-ink); }
+#content .amount.over-budget { color: var(--pr-danger-ink); }
+#content .capex-currency,
+#content .capex-amount { color: var(--pr-accent-ink); font-weight: 700; }
+#content .capex-link,
+#content .budget-link.capex-link,
+#content .pr-link { color: var(--pr-accent); text-decoration: none; font-weight: 600; }
+#content .opex-link,
+#content .budget-link.opex-link { color: var(--pr-success-ink); text-decoration: none; font-weight: 600; }
+#content .capex-link:hover,
+#content .opex-link:hover,
+#content .pr-link:hover,
+#content .budget-link:hover { text-decoration: underline; }
+#content .vendor-name-link {
+  color: var(--pr-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+#content .vendor-name-link:hover { text-decoration: underline; }
+#content .status-active   { color: var(--pr-success-ink); font-weight: 700; }
+#content .status-inactive { color: var(--pr-danger-ink);  font-weight: 700; }
+
+/* ---------------------------------------------------------------------------
+   18. Workflow panel
+   ------------------------------------------------------------------------- */
+#content .workflow-main-issue {
+  padding: 16px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius);
+}
+#content .workflow-issue-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+#content .workflow-issue-link { color: var(--pr-accent); font-weight: 600; text-decoration: none; }
+#content .workflow-issue-link:hover { text-decoration: underline; }
+#content .workflow-progress-container { margin-bottom: 18px; }
+#content .workflow-progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+}
+#content .progress-percentage { color: var(--pr-ink); font-weight: 700; }
+
+#content .workflow-subtasks { margin-top: 16px; }
+#content .workflow-subtasks h4,
+#content .workflow-subtasks h5 {
+  margin: 0 0 10px;
+  color: var(--pr-ink);
+  font-size: 13px;
+}
+#content table.workflow-subtasks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+#content table.workflow-subtasks-table th {
+  padding: 8px 10px;
+  background: var(--pr-surface-sunken);
+  border-bottom: 1px solid var(--pr-border);
+  color: var(--pr-ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  text-align: left;
+}
+#content table.workflow-subtasks-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--pr-border);
+}
+#content table.workflow-subtasks-table tr.subtask-completed td { color: var(--pr-ink-muted); }
+
+#content .workflow-complete-notice,
+#content .workflow-next-task,
+#content .workflow-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-radius: var(--pr-radius-sm);
+  font-size: 13px;
+}
+#content .workflow-complete-notice {
+  background: var(--pr-success-soft);
+  border: 1px solid #b5dec0;
+  color: var(--pr-success-ink);
+}
+#content .workflow-next-task {
+  background: var(--pr-warning-soft);
+  border: 1px solid #efd9ad;
+  color: var(--pr-warning-ink);
+}
+#content .workflow-not-started,
+#content .workflow-not-enabled {
+  padding: 22px;
+  text-align: center;
+  border-radius: var(--pr-radius);
+}
+#content .workflow-not-started { background: var(--pr-info-soft); border: 1px solid #c3d9f0; }
+#content .workflow-not-enabled { background: var(--pr-warning-soft); border: 1px solid #efd9ad; }
+#content .workflow-notice { justify-content: center; margin: 0 0 12px; color: var(--pr-ink-muted); }
+#content .workflow-create-button { display: inline-flex; }
+
+/* ---------------------------------------------------------------------------
+   19. Charts (native SVG / bar helpers used on dashboards)
+   ------------------------------------------------------------------------- */
+#content .chart-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 250px;
+  margin-top: 10px;
+  background: var(--pr-surface-subtle);
+  border-radius: var(--pr-radius-sm);
+  color: var(--pr-ink-faint);
+  font-style: italic;
+}
+#content .chart-pie-container,
+#content .capex-donut-container {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 6px 0 12px;
+}
+#content .chart-pie {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+#content .capex-donut {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+}
+#content .chart-pie-legend,
+#content .capex-donut-container > div:last-child { flex: 1; }
+#content .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0;
+  font-size: 13px;
+  color: var(--pr-ink);
+}
+#content .legend-color {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+/* Inline colour chip for table cells / inline legends */
+#content .pr-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 7px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+#content .chart-bar-container,
+#content .capex-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 150px;
+  margin: 10px 0 24px;
+  padding: 10px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+}
+/* Line/trend charts size to their SVG instead of a fixed bar-chart box */
+#content .chart-line-container {
+  display: block;
+  margin: 10px 0 24px;
+  padding: 10px;
+  background: var(--pr-surface);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+  overflow-x: auto;
+}
+#content .chart-line-container svg {
+  display: block;
+}
+#content .chart-bar,
+#content .capex-quarter-bar {
+  flex: 1;
+  min-width: 26px;
+  min-height: 4px;
+  border-radius: 3px 3px 0 0;
+  background: var(--pr-accent);
+  position: relative;
+  transition: filter .2s ease;
+}
+#content .chart-bar:hover,
+#content .capex-quarter-bar:hover { filter: brightness(1.08); }
+#content .chart-bar-value,
+#content .capex-quarter-value {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pr-ink);
+  white-space: nowrap;
+}
+#content .chart-bar-label,
+#content .capex-quarter-label {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--pr-ink-muted);
+  white-space: nowrap;
+}
+#content .capex-donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--pr-ink);
+}
+
+/* Status indicator dot used in dashboard legends */
+#content .status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+#content .status-indicator.status-total      { background: var(--pr-accent); }
+#content .status-indicator.status-utilized   { background: var(--pr-warning); }
+#content .status-indicator.status-remaining  { background: var(--pr-info); }
+#content .status-indicator.status-overbudget { background: var(--pr-danger); }
+
+/* ---------------------------------------------------------------------------
+   20. Utilities
+   ------------------------------------------------------------------------- */
+#content .pr-stack > * + * { margin-top: 14px; }
+#content .pr-section-title {
+  margin: 26px 0 12px;
+  color: var(--pr-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+#content .autoscroll { border-radius: var(--pr-radius); }
+
+/* ---------------------------------------------------------------------------
+   21. Responsive
+   ------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  #content .pr-grid,
+  #content .dashboard-container,
+  #content .capex-charts { grid-template-columns: 1fr; }
+  #content .quarterly-fields { grid-template-columns: 1fr 1fr; }
+  #content .pr-form-header { flex-direction: column; }
+}
+@media (max-width: 560px) {
+  #content .pr-stats,
+  #content .summary-stats,
+  #content .capex-stats-grid { grid-template-columns: 1fr 1fr; }
+  #content .quarterly-fields,
+  #content .capex-quarterly-grid { grid-template-columns: 1fr; }
+  #content .pr-tab-link { padding: 10px 12px; }
+  #content .form-control { max-width: 100%; }
 }
