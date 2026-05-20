@@ -1,13 +1,25 @@
-<h2><%= l(:label_edit_status) %></h2>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
 
-<%= form_for @status do |f| %>
-  <%= render partial: 'form', locals: { f: f } %>
-  <div class="pr-form-actions">
-    <%= f.submit l(:button_update), class: 'pr-button pr-button-primary' %>
-    <%= link_to l(:button_cancel), purchase_request_statuses_path, class: 'pr-button pr-button-cancel' %>
+<% html_title l(:label_edit_status) %>
+
+<div class="contextual">
+  <%= link_to purchase_request_statuses_path, class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel"><%= l(:label_purchase_request_statuses, default: 'Back to Statuses') %></span>
+  <% end %>
+</div>
+
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2><%= l(:label_edit_status) %></h2>
+    </div>
   </div>
-<% end %>
 
-<%= link_to purchase_request_statuses_path, class: 'pr-button-icon pr-button pr-button-secondary small' do %>
-  <span class="icon icon-back"><%= l(:button_back) %></span> 
-<% end %>
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= render 'form' %>
+    </div>
+  </div>
+</div>

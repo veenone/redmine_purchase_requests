@@ -1,29 +1,64 @@
-<%= error_messages_for 'status' %>
+<%= form_with model: @status, url: (@status.new_record? ? purchase_request_statuses_path : purchase_request_status_path(@status)), method: (@status.new_record? ? :post : :patch), local: true, html: { class: 'status-form' } do |f| %>
+  <% if @status.errors.any? %>
+    <div class="pr-alert pr-alert-danger">
+      <span class="icon icon-warning"></span>
+      <div class="pr-alert-content">
+        <h4><%= pluralize(@status.errors.count, 'error') %> prohibited this status from being saved:</h4>
+        <ul>
+          <% @status.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
 
-<div class="box tabular">
-  <p>
-    <%= f.label :name, l(:label_status_name) %><span class="required"> *</span>
-    <%= f.text_field :name, required: true, size: 30 %>
-  </p>
-  
-  <p>
-    <%= f.label :position, l(:label_position) %>
-    <%= f.number_field :position, min: 1, value: @status.position || 1 %>
-  </p>
-  
-  <p>
-    <%= f.label :is_closed, l(:label_status_is_closed) %>
-    <%= f.check_box :is_closed %>
-  </p>
-  
-  <p>
-    <%= f.label :color, l(:label_color) %>
-    <%= f.color_field :color, value: @status.color || '#777777' %>
-  </p>
+  <div class="form-section">
+    <div class="form-section-title"><%= l(:label_status_name) %></div>
 
-  <p>
-    <%= f.label :is_default, l(:label_is_default) %>
-    <%= f.check_box :is_default %>
-    <em class="info"><%= l(:text_is_default_info) %></em>
-  </p>
-</div>
+    <div class="form-row">
+      <%= f.label :name, l(:label_status_name) %> <span class="required">*</span>
+      <%= f.text_field :name, required: true, class: 'form-control' %>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :position, l(:label_position) %>
+      <%= f.number_field :position, min: 1, value: @status.position || 1, class: 'form-control' %>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title"><%= l(:label_status_color) %></div>
+
+    <div class="form-row">
+      <%= f.label :color, l(:label_color) %>
+      <%= f.color_field :color, value: @status.color || '#777777', class: 'form-control' %>
+      <em class="info">Choose a color to visually identify this status in lists and badges.</em>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Behavior</div>
+
+    <div class="form-row">
+      <div class="pr-check">
+        <%= f.check_box :is_closed %>
+        <%= f.label :is_closed, l(:label_status_is_closed) %>
+        <em class="info">Closed statuses indicate a request has reached a terminal state.</em>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="pr-check">
+        <%= f.check_box :is_default %>
+        <%= f.label :is_default, l(:label_is_default) %>
+        <em class="info"><%= l(:text_is_default_info) %></em>
+      </div>
+    </div>
+  </div>
+
+  <div class="pr-form-actions">
+    <%= f.submit (@status.new_record? ? l(:button_create) : l(:button_update)), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel), purchase_request_statuses_path, class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
