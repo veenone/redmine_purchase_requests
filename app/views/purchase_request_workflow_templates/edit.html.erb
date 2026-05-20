@@ -1,3 +1,29 @@
-<h2><%= l(:label_edit_workflow_template, default: 'Edit Workflow Template') %>: <%= @template.name %></h2>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
 
-<%= render 'form' %>
+<% html_title l(:label_edit_workflow_template, default: 'Edit Workflow Template') %>
+
+<div class="contextual">
+  <%= link_to plugin_settings_path('redmine_purchase_requests', tab: 'workflow'), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel"><%= l(:label_workflow_templates, default: 'Back to Workflow') %></span>
+  <% end %>
+</div>
+
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2><%= l(:label_edit_workflow_template, default: 'Edit Workflow Template') %></h2>
+      <div class="pr-form-subtitle">
+        <span class="icon icon-edit"></span>
+        <%= @template.name %>
+      </div>
+    </div>
+  </div>
+
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= render 'form' %>
+    </div>
+  </div>
+</div>

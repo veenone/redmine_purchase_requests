@@ -1,3 +1,35 @@
-<h2><%= l(:label_new_workflow_template, default: 'New Workflow Template') %></h2>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
 
-<%= render 'form' %>
+<% html_title l(:label_new_workflow_template, default: 'New Workflow Template') %>
+
+<div class="contextual">
+  <%= link_to plugin_settings_path('redmine_purchase_requests', tab: 'workflow'), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel"><%= l(:label_workflow_templates, default: 'Back to Workflow') %></span>
+  <% end %>
+</div>
+
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2><%= l(:label_new_workflow_template, default: 'New Workflow Template') %></h2>
+    </div>
+  </div>
+
+  <div class="pr-form-instructions">
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <h4><%= l(:label_new_workflow_template, default: 'New Workflow Template') %></h4>
+        <p>Define a subtask template that can be auto-created for workflow issues.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= render 'form' %>
+    </div>
+  </div>
+</div>
