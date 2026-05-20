@@ -1,13 +1,13 @@
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/capex/_form.html.erb %>
+<%# filepath: app/views/capex/_form.html.erb %>
 <% form_url = @capex.new_record? ? project_capex_index_path(@project) : project_capex_path(@project, @capex) %>
 <% form_method = @capex.new_record? ? :post : :patch %>
 
-<%= form_for [@project, @capex], url: form_url, method: form_method, html: { class: 'pr-form' } do |f| %>
+<%= form_for [@project, @capex], url: form_url, method: form_method, html: { class: 'capex-form' } do |f| %>
   <% if @capex.errors.any? %>
     <div class="pr-alert pr-alert-danger">
-      <span class="icon icon-exclamation"></span>
+      <span class="icon icon-warning"></span>
       <div class="pr-alert-content">
-        <h4><%= pluralize(@capex.errors.count, "error") %> prohibited this CAPEX entry from being saved:</h4>
+        <h4><%= pluralize(@capex.errors.count, 'error') %> prohibited this CAPEX entry from being saved:</h4>
         <ul>
           <% @capex.errors.full_messages.each do |message| %>
             <li><%= message %></li>
@@ -17,101 +17,104 @@
     </div>
   <% end %>
 
-  <div class="box pr-form-box">
-    <div class="pr-form-content">
-      <div class="pr-form-fields">
-        <div class="pr-field-group">
-          <div class="pr-field">
-            <%= f.label :year, 'CAPEX Year', class: 'pr-label required' %>
-            <%= f.number_field :year, required: true, min: 2000, max: 2100, 
-                                value: @capex.year || Date.current.year, class: 'pr-input' %>
-          </div>
-          
-          <div class="pr-field">
-            <%= f.label :description, 'Description', class: 'pr-label required' %>
-            <%= f.text_field :description, required: true, class: 'pr-input' %>
-          </div>
-        </div>
+  <div class="form-section">
+    <div class="form-section-title">Basic Information</div>
 
-        <div class="pr-field-group">
-          <div class="pr-field">
-            <%= f.label :total_amount, 'Total Amount', class: 'pr-label required' %>
-            <%= f.number_field :total_amount, required: true, step: 0.01, min: 0, class: 'pr-input' %>
-          </div>
-          
-          <div class="pr-field">
-            <%= f.label :currency, 'Currency', class: 'pr-label required' %>
-            <%= f.select :currency, 
-                         options_for_select([
-                           ['USD - US Dollar', 'USD'], ['EUR - Euro', 'EUR'], ['GBP - British Pound', 'GBP'],
-                           ['JPY - Japanese Yen', 'JPY'], ['CAD - Canadian Dollar', 'CAD'], ['AUD - Australian Dollar', 'AUD'],
-                           ['CHF - Swiss Franc', 'CHF'], ['CNY - Chinese Yuan', 'CNY'], ['SEK - Swedish Krona', 'SEK'],
-                           ['NZD - New Zealand Dollar', 'NZD'], ['MXN - Mexican Peso', 'MXN'], ['SGD - Singapore Dollar', 'SGD'],
-                           ['HKD - Hong Kong Dollar', 'HKD'], ['IDR - Indonesian Rupiah', 'IDR'], ['NOK - Norwegian Krone', 'NOK'],
-                           ['KRW - South Korean Won', 'KRW'], ['TRY - Turkish Lira', 'TRY'], ['RUB - Russian Ruble', 'RUB'],
-                           ['INR - Indian Rupee', 'INR'], ['BRL - Brazilian Real', 'BRL'], ['ZAR - South African Rand', 'ZAR']
-                         ], @capex.currency), { required: true }, { class: 'pr-select' } %>
-          </div>
-        </div>
-
-        <div class="pr-field-group">
-          <div class="pr-field">
-            <%= f.label :tpc_code_id, 'TPC Code', class: 'pr-label' %>
-            <%= f.collection_select :tpc_code_id, 
-                                   TpcCode.available_for_project(@project).active.ordered, 
-                                   :id, :display_name, 
-                                   { prompt: 'Select TPC Code (optional)' }, 
-                                   { class: 'pr-select', id: 'capex_tpc_code_id' } %>
-            <em class="pr-field-info">Link this CAPEX entry to a TPC code for tracking</em>
-          </div>
-          
-          <div class="pr-field tpc-code-field">
-            <%= f.label :tpc_code, 'Legacy TPC Code', class: 'pr-label' %>
-            <%= f.text_field :tpc_code, maxlength: 50, id: 'capex_tpc_code', class: 'pr-input' %>
-            <em class="pr-field-info">Unique identifier for this CAPEX entry (only required if no TPC code is selected above)</em>
-          </div>
-        </div>
-
-        <div class="pr-quarterly-section">
-          <h3>Quarterly Distribution</h3>
-          <div class="pr-quarterly-info">
-            <span class="icon icon-info"></span>
-            <p>Distribute the total amount across quarters. The sum of all quarters must equal the total amount.</p>
-          </div>
-          
-          <div class="pr-quarterly-fields">
-            <div class="pr-field">
-              <%= f.label :q1_amount, 'Q1 Amount', class: 'pr-label' %>
-              <%= f.number_field :q1_amount, required: true, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
-            </div>
-            
-            <div class="pr-field">
-              <%= f.label :q2_amount, 'Q2 Amount', class: 'pr-label' %>
-              <%= f.number_field :q2_amount, required: true, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
-            </div>
-            
-            <div class="pr-field">
-              <%= f.label :q3_amount, 'Q3 Amount', class: 'pr-label' %>
-              <%= f.number_field :q3_amount, required: true, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
-            </div>
-            
-            <div class="pr-field">
-              <%= f.label :q4_amount, 'Q4 Amount', class: 'pr-label' %>
-              <%= f.number_field :q4_amount, required: true, step: 0.01, min: 0, class: 'pr-input quarterly-input' %>
-            </div>
-          </div>
-          
-          <div class="quarterly-validation">
-            <div class="validation-message" id="quarterly-validation"></div>
-          </div>
-        </div>
-
-        <div class="pr-field full-width">
-          <%= f.label :notes, 'Notes', class: 'pr-label' %>
-          <%= f.text_area :notes, rows: 3, class: 'pr-textarea' %>
-          <em class="pr-field-info">Optional notes or comments about this CAPEX entry</em>
-        </div>
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :year, 'CAPEX Year' %> <span class="required">*</span>
+        <%= f.number_field :year, required: true, min: 2000, max: 2100,
+                            value: @capex.year || Date.current.year, class: 'form-control' %>
       </div>
+      <div class="form-row">
+        <%= f.label :description, 'Description' %> <span class="required">*</span>
+        <%= f.text_field :description, required: true, class: 'form-control' %>
+      </div>
+    </div>
+
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :total_amount, 'Total Amount' %> <span class="required">*</span>
+        <%= f.number_field :total_amount, required: true, step: 0.01, min: 0, class: 'form-control' %>
+      </div>
+      <div class="form-row">
+        <%= f.label :currency, 'Currency' %> <span class="required">*</span>
+        <%= f.select :currency,
+                     options_for_select([
+                       ['USD - US Dollar', 'USD'], ['EUR - Euro', 'EUR'], ['GBP - British Pound', 'GBP'],
+                       ['JPY - Japanese Yen', 'JPY'], ['CAD - Canadian Dollar', 'CAD'], ['AUD - Australian Dollar', 'AUD'],
+                       ['CHF - Swiss Franc', 'CHF'], ['CNY - Chinese Yuan', 'CNY'], ['SEK - Swedish Krona', 'SEK'],
+                       ['NZD - New Zealand Dollar', 'NZD'], ['MXN - Mexican Peso', 'MXN'], ['SGD - Singapore Dollar', 'SGD'],
+                       ['HKD - Hong Kong Dollar', 'HKD'], ['IDR - Indonesian Rupiah', 'IDR'], ['NOK - Norwegian Krone', 'NOK'],
+                       ['KRW - South Korean Won', 'KRW'], ['TRY - Turkish Lira', 'TRY'], ['RUB - Russian Ruble', 'RUB'],
+                       ['INR - Indian Rupee', 'INR'], ['BRL - Brazilian Real', 'BRL'], ['ZAR - South African Rand', 'ZAR']
+                     ], @capex.currency), { required: true }, { class: 'form-control' } %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">TPC Code</div>
+
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :tpc_code_id, 'TPC Code' %>
+        <%= f.collection_select :tpc_code_id,
+                               TpcCode.available_for_project(@project).active.ordered,
+                               :id, :display_name,
+                               { prompt: 'Select TPC Code (optional)' },
+                               { class: 'form-control', id: 'capex_tpc_code_id' } %>
+        <em class="info">Link this CAPEX entry to a TPC code for tracking</em>
+      </div>
+      <div class="form-row tpc-code-field">
+        <%= f.label :tpc_code, 'Legacy TPC Code' %>
+        <%= f.text_field :tpc_code, maxlength: 50, id: 'capex_tpc_code', class: 'form-control' %>
+        <em class="info">Unique identifier (only required if no TPC code is selected above)</em>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Quarterly Distribution</div>
+
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <p>Distribute the total amount across quarters. The sum of all quarters must equal the total amount.</p>
+      </div>
+    </div>
+
+    <div class="capex-quarterly-grid">
+      <div class="capex-quarterly-field">
+        <%= f.label :q1_amount, 'Q1 Amount' %>
+        <%= f.number_field :q1_amount, required: true, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+      <div class="capex-quarterly-field">
+        <%= f.label :q2_amount, 'Q2 Amount' %>
+        <%= f.number_field :q2_amount, required: true, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+      <div class="capex-quarterly-field">
+        <%= f.label :q3_amount, 'Q3 Amount' %>
+        <%= f.number_field :q3_amount, required: true, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+      <div class="capex-quarterly-field">
+        <%= f.label :q4_amount, 'Q4 Amount' %>
+        <%= f.number_field :q4_amount, required: true, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+    </div>
+
+    <div class="quarterly-validation">
+      <div class="capex-total-validation" id="quarterly-validation"></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Notes</div>
+
+    <div class="form-row">
+      <%= f.label :notes, 'Notes' %>
+      <%= f.text_area :notes, rows: 3, class: 'form-control' %>
+      <em class="info">Optional notes or comments about this CAPEX entry</em>
     </div>
   </div>
 
@@ -121,345 +124,88 @@
   </div>
 <% end %>
 
-<style>
-  .pr-form-container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  
-  .pr-form-instructions {
-    margin-bottom: 20px;
-  }
-  
-  .pr-alert {
-    padding: 15px;
-    border-radius: 6px;
-    border: 1px solid;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .pr-alert-info {
-    background-color: #f0f8ff;
-    border-color: #b3d9ff;
-    color: #1a5490;
-  }
-  
-  .pr-alert-danger {
-    background-color: #ffebee;
-    border-color: #ffcdd2;
-    color: #c62828;
-  }
-  
-  .pr-alert-content h4 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .pr-alert-content ul {
-    margin: 0;
-    padding-left: 20px;
-  }
-  
-  .pr-form-box {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  
-  .pr-form-content {
-    padding: 20px;
-  }
-  
-  .pr-form-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .pr-field-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-  
-  .pr-field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .pr-field.full-width {
-    grid-column: 1 / -1;
-  }
-  
-  .pr-label {
-    font-weight: 600;
-    color: #333;
-    font-size: 14px;
-  }
-  
-  .pr-label.required::after {
-    content: ' *';
-    color: #d32f2f;
-  }
-  
-  .pr-input,
-  .pr-select,
-  .pr-textarea {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-    color: #333 !important;
-    background-color: #fff !important;
-    transition: border-color 0.3s ease;
-    opacity: 1 !important;
-    visibility: visible !important;
-    text-indent: 0 !important;
-    line-height: 1.5 !important;
-    min-height: 38px !important;
-  }
-
-  .pr-select {
-    width: auto;
-    min-width: 200px;
-    height: 38px !important;
-    padding: 6px 12px !important;
-    line-height: 1.5 !important;
-    -webkit-appearance: menulist !important;
-    -moz-appearance: menulist !important;
-    appearance: menulist !important;
-  }
-
-  .pr-select option {
-    color: #333 !important;
-    background-color: #fff !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  select.pr-select {
-    color: #333 !important;
-    background-color: #fff !important;
-  }
-  
-  .pr-input:focus,
-  .pr-select:focus,
-  .pr-textarea:focus {
-    outline: none;
-    border-color: #0078d4;
-    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
-  }
-  
-  .pr-field-info {
-    font-size: 12px;
-    color: #666;
-    font-style: italic;
-  }
-  
-  .pr-quarterly-section {
-    margin-top: 20px;
-  }
-  
-  .pr-quarterly-section h3 {
-    margin: 0 0 10px 0;
-    font-size: 16px;
-    color: #333;
-  }
-  
-  .pr-quarterly-info {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 15px;
-  }
-  
-  .pr-quarterly-info p {
-    margin: 0;
-    font-size: 14px;
-    color: #666;
-  }
-  
-  .pr-quarterly-fields {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-  }
-  
-  .quarterly-validation {
-    margin-top: 15px;
-  }
-  
-  .validation-message {
-    padding: 10px;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-  
-  .validation-message.success {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
-  }
-  
-  .validation-message.error {
-    background-color: #ffebee;
-    color: #c62828;
-    border: 1px solid #ffcdd2;
-  }
-  
-  .pr-form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .pr-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: background-color 0.3s ease;
-  }
-  
-  .pr-button-primary {
-    background-color: #0078d4;
-    color: white;
-  }
-  
-  .pr-button-primary:hover {
-    background-color: #005a9e;
-  }
-  
-  .pr-button-cancel {
-    background-color: #f5f5f5;
-    color: #666;
-  }
-  
-  .pr-button-cancel:hover {
-    background-color: #e0e0e0;
-  }
-  
-  .tpc-code-field.disabled {
-    opacity: 0.6;
-  }
-  
-  .tpc-code-field.disabled .pr-input {
-    background-color: #f5f5f5;
-    color: #666;
-  }
-  
-  @media (max-width: 768px) {
-    .pr-field-group {
-      grid-template-columns: 1fr;
-    }
-    
-    .pr-quarterly-fields {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .pr-quarterly-fields {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const totalAmountInput = document.getElementById('capex_total_amount');
-  const quarterlyInputs = document.querySelectorAll('.quarterly-input');
-  const validationDiv = document.getElementById('quarterly-validation');
-  const tpcCodeSelect = document.getElementById('capex_tpc_code_id');
-  const tpcCodeField = document.querySelector('.tpc-code-field');
-  const tpcCodeInput = document.getElementById('capex_tpc_code');
-  
+  var totalAmountInput = document.getElementById('capex_total_amount');
+  var quarterlyInputs = document.querySelectorAll('.quarterly-input');
+  var validationDiv = document.getElementById('quarterly-validation');
+  var tpcCodeSelect = document.getElementById('capex_tpc_code_id');
+  var tpcCodeField = document.querySelector('.tpc-code-field');
+  var tpcCodeInput = document.getElementById('capex_tpc_code');
+
   // Function to update quarterly validation
   function updateQuarterlyValidation() {
-    const totalAmount = parseFloat(totalAmountInput.value) || 0;
-    let quarterlySum = 0;
-    
-    quarterlyInputs.forEach(input => {
+    var totalAmount = parseFloat(totalAmountInput.value) || 0;
+    var quarterlySum = 0;
+
+    quarterlyInputs.forEach(function(input) {
       quarterlySum += parseFloat(input.value) || 0;
     });
-    
-    const difference = Math.abs(totalAmount - quarterlySum);
-    
+
+    var difference = Math.abs(totalAmount - quarterlySum);
+
     if (totalAmount === 0) {
-      validationDiv.innerHTML = '';
+      validationDiv.textContent = '';
+      validationDiv.className = 'capex-total-validation';
       return;
     }
-    
+
     if (difference < 0.01) {
-      validationDiv.innerHTML = '<div class="validation-message success">✓ Quarterly amounts match the total amount</div>';
+      validationDiv.textContent = '✓ Quarterly amounts match the total amount';
+      validationDiv.className = 'capex-total-validation valid';
     } else {
-      validationDiv.innerHTML = '<div class="validation-message error">⚠ Quarterly amounts (' + quarterlySum.toFixed(2) + ') do not match total amount (' + totalAmount.toFixed(2) + ')</div>';
+      validationDiv.textContent = '⚠ Quarterly amounts (' + quarterlySum.toFixed(2) + ') do not match total amount (' + totalAmount.toFixed(2) + ')';
+      validationDiv.className = 'capex-total-validation invalid';
     }
   }
-  
+
   // Function to handle TPC code selection
   function updateTpcCodeFields() {
-    const tpcCodeSelected = tpcCodeSelect.value && tpcCodeSelect.value !== '';
-    
+    var tpcCodeSelected = tpcCodeSelect.value && tpcCodeSelect.value !== '';
+
     if (tpcCodeSelected) {
-      tpcCodeField.classList.add('disabled');
+      tpcCodeField.style.opacity = '0.6';
       tpcCodeInput.readOnly = true;
       tpcCodeInput.required = false;
-      
-      // Get the selected TPC code text and set it as the value
-      const selectedOption = tpcCodeSelect.options[tpcCodeSelect.selectedIndex];
+
+      var selectedOption = tpcCodeSelect.options[tpcCodeSelect.selectedIndex];
       if (selectedOption && selectedOption.text) {
-        const tpcNumber = selectedOption.text.split(' - ')[0];
+        var tpcNumber = selectedOption.text.split(' - ')[0];
         tpcCodeInput.value = tpcNumber;
       }
     } else {
-      tpcCodeField.classList.remove('disabled');
+      tpcCodeField.style.opacity = '1';
       tpcCodeInput.readOnly = false;
       tpcCodeInput.required = true;
     }
   }
-  
+
   // Function to distribute total amount equally
   function distributeEqually() {
-    const totalAmount = parseFloat(totalAmountInput.value) || 0;
-    const quarterAmount = (totalAmount / 4).toFixed(2);
-    
-    quarterlyInputs.forEach(input => {
+    var totalAmount = parseFloat(totalAmountInput.value) || 0;
+    var quarterAmount = (totalAmount / 4).toFixed(2);
+
+    quarterlyInputs.forEach(function(input) {
       input.value = quarterAmount;
     });
-    
+
     updateQuarterlyValidation();
   }
-  
+
   // Event listeners
   totalAmountInput.addEventListener('input', updateQuarterlyValidation);
-  quarterlyInputs.forEach(input => {
+  quarterlyInputs.forEach(function(input) {
     input.addEventListener('input', updateQuarterlyValidation);
   });
-  
+
   totalAmountInput.addEventListener('blur', function() {
     if (this.value && confirm('Would you like to distribute the total amount equally across all quarters?')) {
       distributeEqually();
     }
   });
-  
+
   tpcCodeSelect.addEventListener('change', updateTpcCodeFields);
-  
+
   // Initialize
   updateQuarterlyValidation();
   updateTpcCodeFields();
