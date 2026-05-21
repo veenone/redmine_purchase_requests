@@ -1,1 +1,30 @@
-<%= render template: 'tpc_codes/new' %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% html_title "Edit TPC Code" %>
+
+<div class="contextual">
+  <%= link_to (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel">Back to TPC Codes</span>
+  <% end %>
+</div>
+
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2>Edit TPC Code</h2>
+      <div class="pr-form-subtitle">
+        <span class="icon icon-edit"></span>
+        <%= @tpc_code.tpc_number %>
+      </div>
+    </div>
+  </div>
+
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= render 'form' %>
+    </div>
+  </div>
+</div>

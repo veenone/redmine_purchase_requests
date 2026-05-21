@@ -1,0 +1,89 @@
+<%= form_with model: @tpc_code,
+              url: (@tpc_code.new_record? ?
+                    (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path) :
+                    (@project ? project_tpc_code_path(@project, @tpc_code) : global_tpc_code_path(@tpc_code))),
+              method: (@tpc_code.new_record? ? :post : :patch),
+              local: true, html: { class: 'tpc-code-form' } do |f| %>
+  <% if @tpc_code.errors.any? %>
+    <div class="pr-alert pr-alert-danger">
+      <span class="icon icon-warning"></span>
+      <div class="pr-alert-content">
+        <h4><%= pluralize(@tpc_code.errors.count, 'error') %> prohibited this TPC code from being saved:</h4>
+        <ul>
+          <% @tpc_code.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-section">
+    <div class="form-section-title">TPC Code Details</div>
+
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :tpc_number %> <span class="required">*</span>
+        <%= f.text_field :tpc_number, required: true, maxlength: 50, class: 'form-control' %>
+        <em class="info">Unique TPC number (e.g., TPC-2025-001)</em>
+      </div>
+      <div class="form-row">
+        <%= f.label :tpc_owner_name %> <span class="required">*</span>
+        <%= f.text_field :tpc_owner_name, required: true, maxlength: 100, class: 'form-control' %>
+        <em class="info">Full name of the TPC owner</em>
+      </div>
+    </div>
+
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :department %>
+        <%= f.text_field :department, maxlength: 100, class: 'form-control' %>
+        <em class="info">Department name (optional)</em>
+      </div>
+      <div class="form-row">
+        <%= f.label :tpc_email %> <span class="required">*</span>
+        <%= f.email_field :tpc_email, required: true, maxlength: 255, class: 'form-control' %>
+        <em class="info">Email address of the TPC owner</em>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :description %>
+      <%= f.text_area :description, rows: 3, maxlength: 1000, class: 'form-control' %>
+      <em class="info">Brief description of the TPC code purpose (optional)</em>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :notes %>
+      <%= f.text_area :notes, rows: 4, maxlength: 2000, class: 'form-control' %>
+      <em class="info">Additional notes or comments (optional)</em>
+    </div>
+
+    <div class="form-row">
+      <div class="pr-check">
+        <%= f.check_box :is_active %>
+        <%= f.label :is_active %>
+        <em class="info">Uncheck to deactivate this TPC code</em>
+      </div>
+    </div>
+  </div>
+
+  <% if @project %>
+    <div class="pr-scope-note">
+      <span class="scope-badge project">Project</span>
+      <span>This TPC code will be specific to the &ldquo;<%= @project.name %>&rdquo; project.</span>
+    </div>
+  <% else %>
+    <div class="pr-scope-note">
+      <span class="scope-badge global">Global</span>
+      <span>This TPC code will be available to all projects.</span>
+    </div>
+  <% end %>
+
+  <div class="pr-form-actions">
+    <%= f.submit (@tpc_code.new_record? ? l(:button_create) : l(:button_save)), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel),
+                (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path),
+                class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
