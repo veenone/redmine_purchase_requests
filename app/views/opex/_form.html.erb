@@ -1,0 +1,199 @@
+<%= form_with model: [@project, @opex],
+              url: (@opex.new_record? ? project_opex_index_path(@project) : project_opex_path(@project, @opex)),
+              method: (@opex.new_record? ? :post : :patch),
+              local: true, html: { class: 'opex-form' } do |f| %>
+  <% if @opex.errors.any? %>
+    <div class="pr-alert pr-alert-danger">
+      <span class="icon icon-warning"></span>
+      <div class="pr-alert-content">
+        <h4><%= pluralize(@opex.errors.count, 'error') %> prohibited this OPEX entry from being saved:</h4>
+        <ul>
+          <% @opex.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-section">
+    <div class="form-section-title">General Information</div>
+
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :year, l(:field_opex_year) %> <span class="required">*</span>
+        <%= f.number_field :year, min: 2000, max: 2100, required: true, value: @opex.year, class: 'form-control' %>
+      </div>
+      <div class="form-row">
+        <%= f.label :description, l(:field_opex_description) %> <span class="required">*</span>
+        <%= f.text_field :description, required: true, class: 'form-control' %>
+      </div>
+    </div>
+
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :total_amount, l(:field_opex_total_amount) %> <span class="required">*</span>
+        <%= f.number_field :total_amount, step: 0.01, min: 0, required: true, class: 'form-control' %>
+      </div>
+      <div class="form-row">
+        <%= f.label :currency, l(:field_opex_currency) %> <span class="required">*</span>
+        <%= f.select :currency,
+                     options_for_select([
+                       ['USD - US Dollar', 'USD'], ['EUR - Euro', 'EUR'], ['GBP - British Pound', 'GBP'],
+                       ['JPY - Japanese Yen', 'JPY'], ['CAD - Canadian Dollar', 'CAD'], ['AUD - Australian Dollar', 'AUD'],
+                       ['CHF - Swiss Franc', 'CHF'], ['CNY - Chinese Yuan', 'CNY'], ['SEK - Swedish Krona', 'SEK'],
+                       ['NZD - New Zealand Dollar', 'NZD'], ['MXN - Mexican Peso', 'MXN'], ['SGD - Singapore Dollar', 'SGD'],
+                       ['HKD - Hong Kong Dollar', 'HKD'], ['IDR - Indonesian Rupiah', 'IDR'], ['NOK - Norwegian Krone', 'NOK'],
+                       ['KRW - South Korean Won', 'KRW'], ['TRY - Turkish Lira', 'TRY'], ['RUB - Russian Ruble', 'RUB'],
+                       ['INR - Indian Rupee', 'INR'], ['BRL - Brazilian Real', 'BRL'], ['ZAR - South African Rand', 'ZAR']
+                     ], @opex.currency), { required: true }, { class: 'form-control' } %>
+      </div>
+    </div>
+
+    <div class="pr-field-pair">
+      <div class="form-row">
+        <%= f.label :category_id, l(:field_opex_category) %> <span class="required">*</span>
+        <%= f.collection_select :category_id, OpexCategory.all, :id, :name,
+                               { prompt: 'Select a category' },
+                               { required: true, class: 'form-control' } %>
+      </div>
+      <div class="form-row">
+        <%= f.label :tpc_code_id, 'TPC Code' %>
+        <%= f.collection_select :tpc_code_id,
+                               TpcCode.available_for_project(@project).active.ordered,
+                               :id, :tpc_number_with_description,
+                               { include_blank: 'Select TPC Code (optional)' },
+                               { class: 'form-control', id: 'opex_tpc_code_id' } %>
+        <em class="info">Link this OPEX entry to a TPC code for tracking (owner and budget responsibility)</em>
+      </div>
+    </div>
+
+    <div class="pr-field-pair">
+      <div class="form-row opex-code-field">
+        <%= f.label :opex_code, l(:field_opex_code) %>
+        <%= f.text_field :opex_code, id: 'opex_opex_code', class: 'form-control' %>
+        <em class="info">Legacy OPEX code (only required if no TPC code is selected above)</em>
+      </div>
+      <div class="form-row">
+        <%= f.label :cost_center, l(:field_opex_cost_center) %>
+        <%= f.text_field :cost_center, class: 'form-control' %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Quarterly Distribution</div>
+
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        Distribute the total amount across quarters. The sum of all quarters must equal the total amount.
+      </div>
+    </div>
+
+    <div class="capex-quarterly-grid">
+      <div class="capex-quarterly-field">
+        <%= f.label :q1_amount, l(:field_opex_q1_amount) %>
+        <%= f.number_field :q1_amount, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+      <div class="capex-quarterly-field">
+        <%= f.label :q2_amount, l(:field_opex_q2_amount) %>
+        <%= f.number_field :q2_amount, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+      <div class="capex-quarterly-field">
+        <%= f.label :q3_amount, l(:field_opex_q3_amount) %>
+        <%= f.number_field :q3_amount, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+      <div class="capex-quarterly-field">
+        <%= f.label :q4_amount, l(:field_opex_q4_amount) %>
+        <%= f.number_field :q4_amount, step: 0.01, min: 0, class: 'form-control quarterly-input' %>
+      </div>
+    </div>
+
+    <div id="quarterly-validation" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Notes</div>
+
+    <div class="form-row">
+      <%= f.label :notes, l(:field_opex_notes) %>
+      <%= f.text_area :notes, rows: 3, class: 'form-control' %>
+    </div>
+  </div>
+
+  <div class="pr-form-actions">
+    <%= f.submit (@opex.new_record? ? l(:button_create) : l(:button_save)), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel), project_opex_index_path(@project), class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var tpcCodeSelect = document.getElementById('opex_tpc_code_id');
+  var opexCodeInput = document.getElementById('opex_opex_code');
+  var opexCodeField = opexCodeInput ? opexCodeInput.closest('.opex-code-field') : null;
+  var totalAmountInput = document.querySelector('input[name="opex[total_amount]"]');
+  var quarterlyInputs = document.querySelectorAll('.quarterly-input');
+  var validationDiv = document.getElementById('quarterly-validation');
+
+  function updateOpexCodeFields() {
+    if (!tpcCodeSelect || !opexCodeInput) return;
+    var tpcCodeSelected = tpcCodeSelect.value && tpcCodeSelect.value !== '';
+    if (tpcCodeSelected) {
+      if (opexCodeField) opexCodeField.style.opacity = '0.6';
+      opexCodeInput.disabled = true;
+      opexCodeInput.required = false;
+      opexCodeInput.placeholder = 'TPC code will be used';
+    } else {
+      if (opexCodeField) opexCodeField.style.opacity = '1';
+      opexCodeInput.disabled = false;
+      opexCodeInput.required = true;
+      opexCodeInput.placeholder = 'Enter OPEX code or leave blank for auto-generation';
+    }
+  }
+
+  function validateQuarterlyAmounts() {
+    if (!totalAmountInput || !validationDiv) return;
+    var totalAmount = parseFloat(totalAmountInput.value) || 0;
+    var quarterlySum = 0;
+    quarterlyInputs.forEach(function(input) {
+      quarterlySum += parseFloat(input.value) || 0;
+    });
+    var difference = Math.abs(totalAmount - quarterlySum);
+
+    while (validationDiv.firstChild) { validationDiv.removeChild(validationDiv.firstChild); }
+
+    if (totalAmount === 0) return;
+
+    var alertDiv = document.createElement('div');
+    var contentDiv = document.createElement('div');
+    contentDiv.className = 'pr-alert-content';
+    var textNode;
+
+    if (difference < 0.01) {
+      alertDiv.className = 'pr-alert pr-alert-success';
+      textNode = document.createTextNode('✓ Quarterly amounts sum equals total amount');
+    } else {
+      alertDiv.className = 'pr-alert pr-alert-warning';
+      var shortfall = totalAmount - quarterlySum;
+      var msg = shortfall > 0
+        ? '⚠ Missing ' + shortfall.toFixed(2) + ' from quarterly distribution'
+        : '⚠ Quarterly amounts exceed total by ' + Math.abs(shortfall).toFixed(2);
+      textNode = document.createTextNode(msg);
+    }
+    contentDiv.appendChild(textNode);
+    alertDiv.appendChild(contentDiv);
+    validationDiv.appendChild(alertDiv);
+  }
+
+  updateOpexCodeFields();
+  validateQuarterlyAmounts();
+
+  if (tpcCodeSelect) tpcCodeSelect.addEventListener('change', updateOpexCodeFields);
+  if (totalAmountInput) totalAmountInput.addEventListener('input', validateQuarterlyAmounts);
+  quarterlyInputs.forEach(function(input) {
+    input.addEventListener('input', validateQuarterlyAmounts);
+  });
+});
+</script>
