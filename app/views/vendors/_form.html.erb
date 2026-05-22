@@ -1,254 +1,136 @@
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/_form.html.erb %>
-<%= error_messages_for 'vendor' %>
+<% if @vendor.errors.any? %>
+  <div class="pr-alert pr-alert-danger">
+    <span class="icon icon-warning"></span>
+    <div class="pr-alert-content">
+      <h4><%= pluralize(@vendor.errors.count, 'error') %> prohibited this vendor from being saved:</h4>
+      <ul>
+        <% @vendor.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>
 
-<div class="box tabular">
-  <p>
-    <%= f.label :name, l(:field_vendor_name), class: 'required' %><span class="required"> *</span>
-    <%= f.text_field :name, required: true, size: 40 %>
-  </p>
-  
-  <p>
-    <%= f.label :vendor_id, l(:field_vendor_id) %>
-    <%= f.text_field :vendor_id, size: 30 %>
-  </p>
-  
-  <p>
-    <%= f.label :address, l(:field_address) %>
-    <%= f.text_area :address, rows: 3, cols: 40 %>
-  </p>
+<div class="form-section">
+  <div class="form-section-title">Basic Information</div>
 
-  <p>
-    <%= f.label :country, l(:field_country) %>
-    <% countries = [
-      ['-- Unspecified --', ''],
-      ['Afghanistan', 'Afghanistan'],
-      ['Albania', 'Albania'],
-      ['Algeria', 'Algeria'],
-      ['Andorra', 'Andorra'],
-      ['Angola', 'Angola'],
-      ['Antigua and Barbuda', 'Antigua and Barbuda'],
-      ['Argentina', 'Argentina'],
-      ['Armenia', 'Armenia'],
-      ['Australia', 'Australia'],
-      ['Austria', 'Austria'],
-      ['Azerbaijan', 'Azerbaijan'],
-      ['Bahamas', 'Bahamas'],
-      ['Bahrain', 'Bahrain'],
-      ['Bangladesh', 'Bangladesh'],
-      ['Barbados', 'Barbados'],
-      ['Belarus', 'Belarus'],
-      ['Belgium', 'Belgium'],
-      ['Belize', 'Belize'],
-      ['Benin', 'Benin'],
-      ['Bhutan', 'Bhutan'],
-      ['Bolivia', 'Bolivia'],
-      ['Bosnia and Herzegovina', 'Bosnia and Herzegovina'],
-      ['Botswana', 'Botswana'],
-      ['Brazil', 'Brazil'],
-      ['Brunei', 'Brunei'],
-      ['Bulgaria', 'Bulgaria'],
-      ['Burkina Faso', 'Burkina Faso'],
-      ['Burundi', 'Burundi'],
-      ['Cambodia', 'Cambodia'],
-      ['Cameroon', 'Cameroon'],
-      ['Canada', 'Canada'],
-      ['Cape Verde', 'Cape Verde'],
-      ['Central African Republic', 'Central African Republic'],
-      ['Chad', 'Chad'],
-      ['Chile', 'Chile'],
-      ['China', 'China'],
-      ['Colombia', 'Colombia'],
-      ['Comoros', 'Comoros'],
-      ['Congo (Democratic Republic)', 'Congo (Democratic Republic)'],
-      ['Congo (Republic)', 'Congo (Republic)'],
-      ['Costa Rica', 'Costa Rica'],
-      ['Croatia', 'Croatia'],
-      ['Cuba', 'Cuba'],
-      ['Cyprus', 'Cyprus'],
-      ['Czech Republic', 'Czech Republic'],
-      ['Denmark', 'Denmark'],
-      ['Djibouti', 'Djibouti'],
-      ['Dominica', 'Dominica'],
-      ['Dominican Republic', 'Dominican Republic'],
-      ['East Timor', 'East Timor'],
-      ['Ecuador', 'Ecuador'],
-      ['Egypt', 'Egypt'],
-      ['El Salvador', 'El Salvador'],
-      ['Equatorial Guinea', 'Equatorial Guinea'],
-      ['Eritrea', 'Eritrea'],
-      ['Estonia', 'Estonia'],
-      ['Eswatini', 'Eswatini'],
-      ['Ethiopia', 'Ethiopia'],
-      ['Fiji', 'Fiji'],
-      ['Finland', 'Finland'],
-      ['France', 'France'],
-      ['Gabon', 'Gabon'],
-      ['Gambia', 'Gambia'],
-      ['Georgia', 'Georgia'],
-      ['Germany', 'Germany'],
-      ['Ghana', 'Ghana'],
-      ['Greece', 'Greece'],
-      ['Grenada', 'Grenada'],
-      ['Guatemala', 'Guatemala'],
-      ['Guinea', 'Guinea'],
-      ['Guinea-Bissau', 'Guinea-Bissau'],
-      ['Guyana', 'Guyana'],
-      ['Haiti', 'Haiti'],
-      ['Honduras', 'Honduras'],
-      ['Hungary', 'Hungary'],
-      ['Iceland', 'Iceland'],
-      ['India', 'India'],
-      ['Indonesia', 'Indonesia'],
-      ['Iran', 'Iran'],
-      ['Iraq', 'Iraq'],
-      ['Ireland', 'Ireland'],
-      ['Israel', 'Israel'],
-      ['Italy', 'Italy'],
-      ['Ivory Coast', 'Ivory Coast'],
-      ['Jamaica', 'Jamaica'],
-      ['Japan', 'Japan'],
-      ['Jordan', 'Jordan'],
-      ['Kazakhstan', 'Kazakhstan'],
-      ['Kenya', 'Kenya'],
-      ['Kiribati', 'Kiribati'],
-      ['Korea (North)', 'Korea (North)'],
-      ['Korea (South)', 'Korea (South)'],
-      ['Kosovo', 'Kosovo'],
-      ['Kuwait', 'Kuwait'],
-      ['Kyrgyzstan', 'Kyrgyzstan'],
-      ['Laos', 'Laos'],
-      ['Latvia', 'Latvia'],
-      ['Lebanon', 'Lebanon'],
-      ['Lesotho', 'Lesotho'],
-      ['Liberia', 'Liberia'],
-      ['Libya', 'Libya'],
-      ['Liechtenstein', 'Liechtenstein'],
-      ['Lithuania', 'Lithuania'],
-      ['Luxembourg', 'Luxembourg'],
-      ['Madagascar', 'Madagascar'],
-      ['Malawi', 'Malawi'],
-      ['Malaysia', 'Malaysia'],
-      ['Maldives', 'Maldives'],
-      ['Mali', 'Mali'],
-      ['Malta', 'Malta'],
-      ['Marshall Islands', 'Marshall Islands'],
-      ['Mauritania', 'Mauritania'],
-      ['Mauritius', 'Mauritius'],
-      ['Mexico', 'Mexico'],
-      ['Micronesia', 'Micronesia'],
-      ['Moldova', 'Moldova'],
-      ['Monaco', 'Monaco'],
-      ['Mongolia', 'Mongolia'],
-      ['Montenegro', 'Montenegro'],
-      ['Morocco', 'Morocco'],
-      ['Mozambique', 'Mozambique'],
-      ['Myanmar', 'Myanmar'],
-      ['Namibia', 'Namibia'],
-      ['Nauru', 'Nauru'],
-      ['Nepal', 'Nepal'],
-      ['Netherlands', 'Netherlands'],
-      ['New Zealand', 'New Zealand'],
-      ['Nicaragua', 'Nicaragua'],
-      ['Niger', 'Niger'],
-      ['Nigeria', 'Nigeria'],
-      ['North Macedonia', 'North Macedonia'],
-      ['Norway', 'Norway'],
-      ['Oman', 'Oman'],
-      ['Pakistan', 'Pakistan'],
-      ['Palau', 'Palau'],
-      ['Palestine', 'Palestine'],
-      ['Panama', 'Panama'],
-      ['Papua New Guinea', 'Papua New Guinea'],
-      ['Paraguay', 'Paraguay'],
-      ['Peru', 'Peru'],
-      ['Philippines', 'Philippines'],
-      ['Poland', 'Poland'],
-      ['Portugal', 'Portugal'],
-      ['Qatar', 'Qatar'],
-      ['Romania', 'Romania'],
-      ['Russia', 'Russia'],
-      ['Rwanda', 'Rwanda'],
-      ['Saint Kitts and Nevis', 'Saint Kitts and Nevis'],
-      ['Saint Lucia', 'Saint Lucia'],
-      ['Saint Vincent and the Grenadines', 'Saint Vincent and the Grenadines'],
-      ['Samoa', 'Samoa'],
-      ['San Marino', 'San Marino'],
-      ['Sao Tome and Principe', 'Sao Tome and Principe'],
-      ['Saudi Arabia', 'Saudi Arabia'],
-      ['Senegal', 'Senegal'],
-      ['Serbia', 'Serbia'],
-      ['Seychelles', 'Seychelles'],
-      ['Sierra Leone', 'Sierra Leone'],
-      ['Singapore', 'Singapore'],
-      ['Slovakia', 'Slovakia'],
-      ['Slovenia', 'Slovenia'],
-      ['Solomon Islands', 'Solomon Islands'],
-      ['Somalia', 'Somalia'],
-      ['South Africa', 'South Africa'],
-      ['South Sudan', 'South Sudan'],
-      ['Spain', 'Spain'],
-      ['Sri Lanka', 'Sri Lanka'],
-      ['Sudan', 'Sudan'],
-      ['Suriname', 'Suriname'],
-      ['Sweden', 'Sweden'],
-      ['Switzerland', 'Switzerland'],
-      ['Syria', 'Syria'],
-      ['Taiwan', 'Taiwan'],
-      ['Tajikistan', 'Tajikistan'],
-      ['Tanzania', 'Tanzania'],
-      ['Thailand', 'Thailand'],
-      ['Togo', 'Togo'],
-      ['Tonga', 'Tonga'],
-      ['Trinidad and Tobago', 'Trinidad and Tobago'],
-      ['Tunisia', 'Tunisia'],
-      ['Turkey', 'Turkey'],
-      ['Turkmenistan', 'Turkmenistan'],
-      ['Tuvalu', 'Tuvalu'],
-      ['Uganda', 'Uganda'],
-      ['Ukraine', 'Ukraine'],
-      ['United Arab Emirates', 'United Arab Emirates'],
-      ['United Kingdom', 'United Kingdom'],
-      ['United States', 'United States'],
-      ['Uruguay', 'Uruguay'],
-      ['Uzbekistan', 'Uzbekistan'],
-      ['Vanuatu', 'Vanuatu'],
-      ['Vatican City', 'Vatican City'],
-      ['Venezuela', 'Venezuela'],
-      ['Vietnam', 'Vietnam'],
-      ['Yemen', 'Yemen'],
-      ['Zambia', 'Zambia'],
-      ['Zimbabwe', 'Zimbabwe']
-    ] %>
-    <%= f.select :country, countries, {}, { class: 'country-select' } %>
-  </p>
-  
-  <p>
-    <%= f.label :phone, l(:field_phone) %>
-    <%= f.text_field :phone, size: 30 %>
-  </p>
-  
-  <p>
-    <%= f.label :contact_person, l(:field_contact_person) %>
-    <%= f.text_field :contact_person, size: 40 %>
-  </p>
-  
-  <p>
-    <%= f.label :email, l(:field_email) %>
-    <%= f.email_field :email, size: 40 %>
-  </p>
-  
-  <p>
-    <%= f.label :website, l(:field_website) %>
-    <%= f.url_field :website, size: 40 %>
-  </p>
-  
-  <p>
+  <div class="pr-field-pair">
+    <div class="form-row">
+      <%= f.label :name, l(:field_vendor_name) %> <span class="required">*</span>
+      <%= f.text_field :name, required: true, class: 'form-control' %>
+      <em class="info">The name of the vendor or company.</em>
+    </div>
+    <div class="form-row">
+      <%= f.label :vendor_id, l(:field_vendor_id) %>
+      <%= f.text_field :vendor_id, class: 'form-control' %>
+      <em class="info">Optional vendor ID or code.</em>
+    </div>
+  </div>
+
+  <div class="pr-field-pair">
+    <div class="form-row">
+      <%= f.label :email, l(:field_email) %>
+      <%= f.email_field :email, class: 'form-control' %>
+      <em class="info">Primary contact email.</em>
+    </div>
+    <div class="form-row">
+      <%= f.label :phone, l(:field_phone) %>
+      <%= f.telephone_field :phone, class: 'form-control' %>
+      <em class="info">Primary contact phone number.</em>
+    </div>
+  </div>
+
+  <div class="pr-field-pair">
+    <div class="form-row">
+      <%= f.label :contact_person, l(:field_contact_person) %>
+      <%= f.text_field :contact_person, class: 'form-control' %>
+      <em class="info">Name of primary contact person.</em>
+    </div>
+    <div class="form-row">
+      <%= f.label :website, l(:field_website) %>
+      <%= f.url_field :website, class: 'form-control' %>
+      <em class="info">Company website URL.</em>
+    </div>
+  </div>
+</div>
+
+<div class="form-section">
+  <div class="form-section-title">Location &amp; Additional Information</div>
+
+  <div class="pr-field-pair">
+    <div class="form-row">
+      <%= f.label :country, l(:field_country) %>
+      <% countries = [
+        ['-- Unspecified --', ''],
+        ['Afghanistan', 'Afghanistan'], ['Albania', 'Albania'], ['Algeria', 'Algeria'], ['Andorra', 'Andorra'], ['Angola', 'Angola'],
+        ['Antigua and Barbuda', 'Antigua and Barbuda'], ['Argentina', 'Argentina'], ['Armenia', 'Armenia'], ['Australia', 'Australia'],
+        ['Austria', 'Austria'], ['Azerbaijan', 'Azerbaijan'], ['Bahamas', 'Bahamas'], ['Bahrain', 'Bahrain'], ['Bangladesh', 'Bangladesh'],
+        ['Barbados', 'Barbados'], ['Belarus', 'Belarus'], ['Belgium', 'Belgium'], ['Belize', 'Belize'], ['Benin', 'Benin'],
+        ['Bhutan', 'Bhutan'], ['Bolivia', 'Bolivia'], ['Bosnia and Herzegovina', 'Bosnia and Herzegovina'], ['Botswana', 'Botswana'],
+        ['Brazil', 'Brazil'], ['Brunei', 'Brunei'], ['Bulgaria', 'Bulgaria'], ['Burkina Faso', 'Burkina Faso'], ['Burundi', 'Burundi'],
+        ['Cambodia', 'Cambodia'], ['Cameroon', 'Cameroon'], ['Canada', 'Canada'], ['Cape Verde', 'Cape Verde'],
+        ['Central African Republic', 'Central African Republic'], ['Chad', 'Chad'], ['Chile', 'Chile'], ['China', 'China'],
+        ['Colombia', 'Colombia'], ['Comoros', 'Comoros'], ['Congo (Democratic Republic)', 'Congo (Democratic Republic)'],
+        ['Congo (Republic)', 'Congo (Republic)'], ['Costa Rica', 'Costa Rica'], ['Croatia', 'Croatia'], ['Cuba', 'Cuba'],
+        ['Cyprus', 'Cyprus'], ['Czech Republic', 'Czech Republic'], ['Denmark', 'Denmark'], ['Djibouti', 'Djibouti'],
+        ['Dominica', 'Dominica'], ['Dominican Republic', 'Dominican Republic'], ['East Timor', 'East Timor'], ['Ecuador', 'Ecuador'],
+        ['Egypt', 'Egypt'], ['El Salvador', 'El Salvador'], ['Equatorial Guinea', 'Equatorial Guinea'], ['Eritrea', 'Eritrea'],
+        ['Estonia', 'Estonia'], ['Eswatini', 'Eswatini'], ['Ethiopia', 'Ethiopia'], ['Fiji', 'Fiji'], ['Finland', 'Finland'],
+        ['France', 'France'], ['Gabon', 'Gabon'], ['Gambia', 'Gambia'], ['Georgia', 'Georgia'], ['Germany', 'Germany'],
+        ['Ghana', 'Ghana'], ['Greece', 'Greece'], ['Grenada', 'Grenada'], ['Guatemala', 'Guatemala'], ['Guinea', 'Guinea'],
+        ['Guinea-Bissau', 'Guinea-Bissau'], ['Guyana', 'Guyana'], ['Haiti', 'Haiti'], ['Honduras', 'Honduras'], ['Hungary', 'Hungary'],
+        ['Iceland', 'Iceland'], ['India', 'India'], ['Indonesia', 'Indonesia'], ['Iran', 'Iran'], ['Iraq', 'Iraq'],
+        ['Ireland', 'Ireland'], ['Israel', 'Israel'], ['Italy', 'Italy'], ['Ivory Coast', 'Ivory Coast'], ['Jamaica', 'Jamaica'],
+        ['Japan', 'Japan'], ['Jordan', 'Jordan'], ['Kazakhstan', 'Kazakhstan'], ['Kenya', 'Kenya'], ['Kiribati', 'Kiribati'],
+        ['Korea (North)', 'Korea (North)'], ['Korea (South)', 'Korea (South)'], ['Kosovo', 'Kosovo'], ['Kuwait', 'Kuwait'],
+        ['Kyrgyzstan', 'Kyrgyzstan'], ['Laos', 'Laos'], ['Latvia', 'Latvia'], ['Lebanon', 'Lebanon'], ['Lesotho', 'Lesotho'],
+        ['Liberia', 'Liberia'], ['Libya', 'Libya'], ['Liechtenstein', 'Liechtenstein'], ['Lithuania', 'Lithuania'],
+        ['Luxembourg', 'Luxembourg'], ['Madagascar', 'Madagascar'], ['Malawi', 'Malawi'], ['Malaysia', 'Malaysia'],
+        ['Maldives', 'Maldives'], ['Mali', 'Mali'], ['Malta', 'Malta'], ['Marshall Islands', 'Marshall Islands'],
+        ['Mauritania', 'Mauritania'], ['Mauritius', 'Mauritius'], ['Mexico', 'Mexico'], ['Micronesia', 'Micronesia'],
+        ['Moldova', 'Moldova'], ['Monaco', 'Monaco'], ['Mongolia', 'Mongolia'], ['Montenegro', 'Montenegro'], ['Morocco', 'Morocco'],
+        ['Mozambique', 'Mozambique'], ['Myanmar', 'Myanmar'], ['Namibia', 'Namibia'], ['Nauru', 'Nauru'], ['Nepal', 'Nepal'],
+        ['Netherlands', 'Netherlands'], ['New Zealand', 'New Zealand'], ['Nicaragua', 'Nicaragua'], ['Niger', 'Niger'],
+        ['Nigeria', 'Nigeria'], ['North Macedonia', 'North Macedonia'], ['Norway', 'Norway'], ['Oman', 'Oman'],
+        ['Pakistan', 'Pakistan'], ['Palau', 'Palau'], ['Palestine', 'Palestine'], ['Panama', 'Panama'],
+        ['Papua New Guinea', 'Papua New Guinea'], ['Paraguay', 'Paraguay'], ['Peru', 'Peru'], ['Philippines', 'Philippines'],
+        ['Poland', 'Poland'], ['Portugal', 'Portugal'], ['Qatar', 'Qatar'], ['Romania', 'Romania'], ['Russia', 'Russia'],
+        ['Rwanda', 'Rwanda'], ['Saint Kitts and Nevis', 'Saint Kitts and Nevis'], ['Saint Lucia', 'Saint Lucia'],
+        ['Saint Vincent and the Grenadines', 'Saint Vincent and the Grenadines'], ['Samoa', 'Samoa'], ['San Marino', 'San Marino'],
+        ['Sao Tome and Principe', 'Sao Tome and Principe'], ['Saudi Arabia', 'Saudi Arabia'], ['Senegal', 'Senegal'],
+        ['Serbia', 'Serbia'], ['Seychelles', 'Seychelles'], ['Sierra Leone', 'Sierra Leone'], ['Singapore', 'Singapore'],
+        ['Slovakia', 'Slovakia'], ['Slovenia', 'Slovenia'], ['Solomon Islands', 'Solomon Islands'], ['Somalia', 'Somalia'],
+        ['South Africa', 'South Africa'], ['South Sudan', 'South Sudan'], ['Spain', 'Spain'], ['Sri Lanka', 'Sri Lanka'],
+        ['Sudan', 'Sudan'], ['Suriname', 'Suriname'], ['Sweden', 'Sweden'], ['Switzerland', 'Switzerland'], ['Syria', 'Syria'],
+        ['Taiwan', 'Taiwan'], ['Tajikistan', 'Tajikistan'], ['Tanzania', 'Tanzania'], ['Thailand', 'Thailand'], ['Togo', 'Togo'],
+        ['Tonga', 'Tonga'], ['Trinidad and Tobago', 'Trinidad and Tobago'], ['Tunisia', 'Tunisia'], ['Turkey', 'Turkey'],
+        ['Turkmenistan', 'Turkmenistan'], ['Tuvalu', 'Tuvalu'], ['Uganda', 'Uganda'], ['Ukraine', 'Ukraine'],
+        ['United Arab Emirates', 'United Arab Emirates'], ['United Kingdom', 'United Kingdom'], ['United States', 'United States'],
+        ['Uruguay', 'Uruguay'], ['Uzbekistan', 'Uzbekistan'], ['Vanuatu', 'Vanuatu'], ['Vatican City', 'Vatican City'],
+        ['Venezuela', 'Venezuela'], ['Vietnam', 'Vietnam'], ['Yemen', 'Yemen'], ['Zambia', 'Zambia'], ['Zimbabwe', 'Zimbabwe']
+      ] %>
+      <%= f.select :country, countries, {}, { class: 'form-control' } %>
+      <em class="info">Country where vendor is located.</em>
+    </div>
+    <div class="form-row">
+      <%= f.label :address, l(:field_address) %>
+      <%= f.text_area :address, rows: 3, class: 'form-control' %>
+      <em class="info">Company address.</em>
+    </div>
+  </div>
+
+  <div class="form-row">
     <%= f.label :notes, l(:field_notes) %>
-    <%= f.text_area :notes, rows: 3, cols: 40 %>
-  </p>
-  
-  <p>
-    <%= f.check_box :is_active %>
-    <%= f.label :is_active, l(:field_is_active) %>
-  </p>
+    <%= f.text_area :notes, rows: 4, class: 'form-control' %>
+    <em class="info">Additional notes or comments about this vendor.</em>
+  </div>
+
+  <div class="form-row">
+    <div class="pr-check">
+      <%= f.check_box :is_active %>
+      <%= f.label :is_active, l(:field_is_active) %>
+      <em class="info">Uncheck to mark vendor as inactive.</em>
+    </div>
+  </div>
 </div>

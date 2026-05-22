@@ -1,337 +1,52 @@
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/vendors/new.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
-<% html_title("New Global Vendor") %>
+<% html_title "New Global Vendor" %>
 
 <div class="contextual">
-  <%= link_to vendors_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-cancel">Back to Vendor List</span> 
+  <%= link_to vendors_path, class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel">Back to Vendor List</span>
   <% end %>
 </div>
 
-<h2>
-  New Global Vendor
-</h2>
-
-<div class="info-box">
-  <p><strong>Creating Global Vendor</strong></p>
-  <p>This vendor will be available to all projects in the system. Global vendors can be used by any project and managed centrally.</p>
-</div>
-
-<%= form_with model: @vendor, local: true, html: { class: 'vendor-form' } do |f| %>
-  <% if @vendor.errors.any? %>
-    <div id="errorExplanation" class="errorExplanation">
-      <h2><%= pluralize(@vendor.errors.count, "error") %> prohibited this vendor from being saved:</h2>
-      <ul>
-        <% @vendor.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
-  <div class="vendor-form-container">
-    <div class="vendor-form-section">
-      <h3>Basic Information</h3>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <%= f.label :name, class: 'required' %>
-          <%= f.text_field :name, required: true, class: 'form-control' %>
-          <small class="form-help">The name of the vendor or company</small>
-        </div>
-        
-        <div class="form-group">
-          <%= f.label :vendor_id %>
-          <%= f.text_field :vendor_id, class: 'form-control' %>
-          <small class="form-help">Optional vendor ID or code</small>
-        </div>
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <%= f.label :email %>
-          <%= f.email_field :email, class: 'form-control' %>
-          <small class="form-help">Primary contact email</small>
-        </div>
-        
-        <div class="form-group">
-          <%= f.label :phone %>
-          <%= f.telephone_field :phone, class: 'form-control' %>
-          <small class="form-help">Primary contact phone number</small>
-        </div>
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <%= f.label :contact_person %>
-          <%= f.text_field :contact_person, class: 'form-control' %>
-          <small class="form-help">Name of primary contact person</small>
-        </div>
-
-        <div class="form-group">
-          <%= f.label :website %>
-          <%= f.url_field :website, class: 'form-control' %>
-          <small class="form-help">Company website URL</small>
-        </div>
-      </div>
-    </div>
-
-    <div class="vendor-form-section">
-      <h3>Location & Additional Information</h3>
-
-      <div class="form-row">
-        <div class="form-group">
-          <%= f.label :country %>
-          <% countries = [
-            ['-- Unspecified --', ''],
-            ['Afghanistan', 'Afghanistan'], ['Albania', 'Albania'], ['Algeria', 'Algeria'], ['Andorra', 'Andorra'], ['Angola', 'Angola'],
-            ['Antigua and Barbuda', 'Antigua and Barbuda'], ['Argentina', 'Argentina'], ['Armenia', 'Armenia'], ['Australia', 'Australia'],
-            ['Austria', 'Austria'], ['Azerbaijan', 'Azerbaijan'], ['Bahamas', 'Bahamas'], ['Bahrain', 'Bahrain'], ['Bangladesh', 'Bangladesh'],
-            ['Barbados', 'Barbados'], ['Belarus', 'Belarus'], ['Belgium', 'Belgium'], ['Belize', 'Belize'], ['Benin', 'Benin'],
-            ['Bhutan', 'Bhutan'], ['Bolivia', 'Bolivia'], ['Bosnia and Herzegovina', 'Bosnia and Herzegovina'], ['Botswana', 'Botswana'],
-            ['Brazil', 'Brazil'], ['Brunei', 'Brunei'], ['Bulgaria', 'Bulgaria'], ['Burkina Faso', 'Burkina Faso'], ['Burundi', 'Burundi'],
-            ['Cambodia', 'Cambodia'], ['Cameroon', 'Cameroon'], ['Canada', 'Canada'], ['Cape Verde', 'Cape Verde'],
-            ['Central African Republic', 'Central African Republic'], ['Chad', 'Chad'], ['Chile', 'Chile'], ['China', 'China'],
-            ['Colombia', 'Colombia'], ['Comoros', 'Comoros'], ['Congo (Democratic Republic)', 'Congo (Democratic Republic)'],
-            ['Congo (Republic)', 'Congo (Republic)'], ['Costa Rica', 'Costa Rica'], ['Croatia', 'Croatia'], ['Cuba', 'Cuba'],
-            ['Cyprus', 'Cyprus'], ['Czech Republic', 'Czech Republic'], ['Denmark', 'Denmark'], ['Djibouti', 'Djibouti'],
-            ['Dominica', 'Dominica'], ['Dominican Republic', 'Dominican Republic'], ['East Timor', 'East Timor'], ['Ecuador', 'Ecuador'],
-            ['Egypt', 'Egypt'], ['El Salvador', 'El Salvador'], ['Equatorial Guinea', 'Equatorial Guinea'], ['Eritrea', 'Eritrea'],
-            ['Estonia', 'Estonia'], ['Eswatini', 'Eswatini'], ['Ethiopia', 'Ethiopia'], ['Fiji', 'Fiji'], ['Finland', 'Finland'],
-            ['France', 'France'], ['Gabon', 'Gabon'], ['Gambia', 'Gambia'], ['Georgia', 'Georgia'], ['Germany', 'Germany'],
-            ['Ghana', 'Ghana'], ['Greece', 'Greece'], ['Grenada', 'Grenada'], ['Guatemala', 'Guatemala'], ['Guinea', 'Guinea'],
-            ['Guinea-Bissau', 'Guinea-Bissau'], ['Guyana', 'Guyana'], ['Haiti', 'Haiti'], ['Honduras', 'Honduras'], ['Hungary', 'Hungary'],
-            ['Iceland', 'Iceland'], ['India', 'India'], ['Indonesia', 'Indonesia'], ['Iran', 'Iran'], ['Iraq', 'Iraq'],
-            ['Ireland', 'Ireland'], ['Israel', 'Israel'], ['Italy', 'Italy'], ['Ivory Coast', 'Ivory Coast'], ['Jamaica', 'Jamaica'],
-            ['Japan', 'Japan'], ['Jordan', 'Jordan'], ['Kazakhstan', 'Kazakhstan'], ['Kenya', 'Kenya'], ['Kiribati', 'Kiribati'],
-            ['Korea (North)', 'Korea (North)'], ['Korea (South)', 'Korea (South)'], ['Kosovo', 'Kosovo'], ['Kuwait', 'Kuwait'],
-            ['Kyrgyzstan', 'Kyrgyzstan'], ['Laos', 'Laos'], ['Latvia', 'Latvia'], ['Lebanon', 'Lebanon'], ['Lesotho', 'Lesotho'],
-            ['Liberia', 'Liberia'], ['Libya', 'Libya'], ['Liechtenstein', 'Liechtenstein'], ['Lithuania', 'Lithuania'],
-            ['Luxembourg', 'Luxembourg'], ['Madagascar', 'Madagascar'], ['Malawi', 'Malawi'], ['Malaysia', 'Malaysia'],
-            ['Maldives', 'Maldives'], ['Mali', 'Mali'], ['Malta', 'Malta'], ['Marshall Islands', 'Marshall Islands'],
-            ['Mauritania', 'Mauritania'], ['Mauritius', 'Mauritius'], ['Mexico', 'Mexico'], ['Micronesia', 'Micronesia'],
-            ['Moldova', 'Moldova'], ['Monaco', 'Monaco'], ['Mongolia', 'Mongolia'], ['Montenegro', 'Montenegro'], ['Morocco', 'Morocco'],
-            ['Mozambique', 'Mozambique'], ['Myanmar', 'Myanmar'], ['Namibia', 'Namibia'], ['Nauru', 'Nauru'], ['Nepal', 'Nepal'],
-            ['Netherlands', 'Netherlands'], ['New Zealand', 'New Zealand'], ['Nicaragua', 'Nicaragua'], ['Niger', 'Niger'],
-            ['Nigeria', 'Nigeria'], ['North Macedonia', 'North Macedonia'], ['Norway', 'Norway'], ['Oman', 'Oman'],
-            ['Pakistan', 'Pakistan'], ['Palau', 'Palau'], ['Palestine', 'Palestine'], ['Panama', 'Panama'],
-            ['Papua New Guinea', 'Papua New Guinea'], ['Paraguay', 'Paraguay'], ['Peru', 'Peru'], ['Philippines', 'Philippines'],
-            ['Poland', 'Poland'], ['Portugal', 'Portugal'], ['Qatar', 'Qatar'], ['Romania', 'Romania'], ['Russia', 'Russia'],
-            ['Rwanda', 'Rwanda'], ['Saint Kitts and Nevis', 'Saint Kitts and Nevis'], ['Saint Lucia', 'Saint Lucia'],
-            ['Saint Vincent and the Grenadines', 'Saint Vincent and the Grenadines'], ['Samoa', 'Samoa'], ['San Marino', 'San Marino'],
-            ['Sao Tome and Principe', 'Sao Tome and Principe'], ['Saudi Arabia', 'Saudi Arabia'], ['Senegal', 'Senegal'],
-            ['Serbia', 'Serbia'], ['Seychelles', 'Seychelles'], ['Sierra Leone', 'Sierra Leone'], ['Singapore', 'Singapore'],
-            ['Slovakia', 'Slovakia'], ['Slovenia', 'Slovenia'], ['Solomon Islands', 'Solomon Islands'], ['Somalia', 'Somalia'],
-            ['South Africa', 'South Africa'], ['South Sudan', 'South Sudan'], ['Spain', 'Spain'], ['Sri Lanka', 'Sri Lanka'],
-            ['Sudan', 'Sudan'], ['Suriname', 'Suriname'], ['Sweden', 'Sweden'], ['Switzerland', 'Switzerland'], ['Syria', 'Syria'],
-            ['Taiwan', 'Taiwan'], ['Tajikistan', 'Tajikistan'], ['Tanzania', 'Tanzania'], ['Thailand', 'Thailand'], ['Togo', 'Togo'],
-            ['Tonga', 'Tonga'], ['Trinidad and Tobago', 'Trinidad and Tobago'], ['Tunisia', 'Tunisia'], ['Turkey', 'Turkey'],
-            ['Turkmenistan', 'Turkmenistan'], ['Tuvalu', 'Tuvalu'], ['Uganda', 'Uganda'], ['Ukraine', 'Ukraine'],
-            ['United Arab Emirates', 'United Arab Emirates'], ['United Kingdom', 'United Kingdom'], ['United States', 'United States'],
-            ['Uruguay', 'Uruguay'], ['Uzbekistan', 'Uzbekistan'], ['Vanuatu', 'Vanuatu'], ['Vatican City', 'Vatican City'],
-            ['Venezuela', 'Venezuela'], ['Vietnam', 'Vietnam'], ['Yemen', 'Yemen'], ['Zambia', 'Zambia'], ['Zimbabwe', 'Zimbabwe']
-          ] %>
-          <%= f.select :country, countries, {}, { class: 'form-control' } %>
-          <small class="form-help">Country where vendor is located</small>
-        </div>
-
-        <div class="form-group">
-          <%= f.label :address %>
-          <%= f.text_area :address, rows: 3, class: 'form-control' %>
-          <small class="form-help">Company address</small>
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <%= f.label :notes %>
-        <%= f.text_area :notes, rows: 4, class: 'form-control' %>
-        <small class="form-help">Additional notes or comments about this vendor</small>
-      </div>
-      
-      <div class="form-group">
-        <div class="checkbox-group">
-          <%= f.check_box :is_active, checked: true %>
-          <%= f.label :is_active, "Active vendor" %>
-          <small class="form-help">Uncheck to mark vendor as inactive</small>
-        </div>
-      </div>
-      
-      <div class="project-scope-indicator">
-        <div class="scope-badge global">GLOBAL</div>
-        <span>This vendor will be available to all projects in the system</span>
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2>New Global Vendor</h2>
+      <div class="pr-form-subtitle">
+        <span class="icon icon-info"></span>
+        Available to all projects
       </div>
     </div>
   </div>
 
-  <div class="form-actions">
-    <%= f.submit "Create Global Vendor", class: 'pr-button pr-button-primary pr-button-icon' do %>
-      <span class="icon icon-add">Create Global Vendor</span>
-    <% end %>
-    
-    <%= link_to vendors_path, class: 'pr-button pr-button-secondary' do %>
-      Cancel
-    <% end %>
+  <div class="pr-form-instructions">
+    <div class="pr-alert pr-alert-info">
+      <span class="icon icon-info"></span>
+      <div class="pr-alert-content">
+        <h4>Creating a Global Vendor</h4>
+        <p>This vendor will be available to all projects in the system and managed centrally.</p>
+      </div>
+    </div>
   </div>
-<% end %>
 
-<% content_for :header_tags do %>
-<style>
-  .info-box {
-    background-color: #e7f3ff;
-    border: 1px solid #b3d9ff;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-  
-  .info-box p {
-    margin: 0 0 10px 0;
-  }
-  
-  .info-box p:last-child {
-    margin-bottom: 0;
-  }
-  
-  .vendor-form-container {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  
-  .vendor-form-section {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .vendor-form-section:last-child {
-    border-bottom: none;
-  }
-  
-  .vendor-form-section h3 {
-    margin: 0 0 20px 0;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-  }
-  
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 15px;
-  }
-  
-  .form-group {
-    margin-bottom: 15px;
-  }
-  
-  .form-group label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #333;
-  }
-  
-  .form-group label.required::after {
-    content: " *";
-    color: #d9534f;
-  }
-  
-  .form-control {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-  
-  .form-control:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-  
-  .form-help {
-    display: block;
-    margin-top: 5px;
-    font-size: 12px;
-    color: #666;
-    font-style: italic;
-  }
-  
-  .checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .checkbox-group input[type="checkbox"] {
-    margin: 0;
-  }
-  
-  .project-scope-indicator {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 4px;
-    margin-top: 15px;
-  }
-  
-  .scope-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-  
-  .scope-badge.global {
-    background-color: #2196F3;
-    color: white;
-  }
-  
-  .scope-badge.project {
-    background-color: #FF9800;
-    color: white;
-  }
-  
-  .form-actions {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  
-  .errorExplanation {
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-    color: #721c24;
-    padding: 15px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-  }
-  
-  .errorExplanation h2 {
-    margin: 0 0 10px 0;
-    font-size: 16px;
-  }
-  
-  .errorExplanation ul {
-    margin: 0;
-    padding-left: 20px;
-  }
-  
-  h2 {
-    color: #333;
-    margin-bottom: 20px;
-  }
-</style>
-<% end %>
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= form_with model: @vendor, local: true, html: { class: 'vendor-form' } do |f| %>
+        <%= render partial: 'form', locals: { f: f } %>
+
+        <div class="pr-scope-note">
+          <span class="scope-badge global">Global</span>
+          <span>This vendor will be available to all projects in the system.</span>
+        </div>
+
+        <div class="pr-form-actions">
+          <%= f.submit "Create Global Vendor", class: 'pr-button pr-button-primary' %>
+          <%= link_to "Cancel", vendors_path, class: 'pr-button pr-button-cancel' %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
