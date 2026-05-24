@@ -5,6 +5,27 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-05-24
+
+### Changed
+- **Unified design system for all CRUD forms**: Statuses, workflow templates, CAPEX, OPEX, TPC codes, vendors (global + project-scoped), and purchase requests now share one canonical form pattern (`pr-form-container` → header / instructions / box → flat hairline `.form-section` blocks with `.pr-field-pair` two-up rows).
+- **Shared form CSS rework**: Flat section treatment replaces the old grey card; new `.pr-check` (checkbox row) and `.pr-scope-note` + `.scope-badge` (global/project) patterns.
+- **Input sizing**: `.form-control`, `.pr-input`, `select.form-control`, and friends bumped to `min-height: 38px` and `9px 14px` padding so longer combobox text no longer clips.
+- **List, show, dashboard, report, and settings views** brought onto the same `pr-` design system as the forms.
+
+### Added
+- **Shared `_form.html.erb` partials** for OPEX, TPC codes, and vendors — `new`/`edit` actions now render one partial instead of duplicating inline markup.
+- **`.chart-hbar-container` CSS class** for horizontal bar charts (display:block, mirrors `.chart-line-container`). Used by the TPC dashboard's Top-TPCs / By-Department / By-Cost charts.
+
+### Fixed
+- **TPC dashboard chart layout**: the three horizontal-bar charts were reusing `.chart-bar-container` (which is `flex; align-items:flex-end; height:150px` for vertical CAPEX columns), collapsing every row into a single 150px strip. They now use `.chart-hbar-container` and stack vertically.
+- **Project vendor `new` 500 error**: `Missing partial project_vendors/_form` — the render call was looking up the partial in the controller-relative path. Switched to the qualified `vendors/form` path so the shared partial is found.
+- **Vendor edit redirect**: kept `project_id` in the edit form's URL so the controller's project-aware post-save redirect continues to land on the project's vendor list.
+
+### Removed
+- **Bespoke inline `<style>` blocks** from vendor forms, TPC dashboard, and the various list/show/dashboard/report views (~1300+ lines of duplicated CSS).
+- **Redundant `class: 'required'` on labels** in the purchase request form (the `<span class="required">*</span>` marker already conveys this).
+
 ## [1.3.2] - 2025-07-08
 
 ### Fixed
