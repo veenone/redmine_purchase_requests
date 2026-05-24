@@ -390,7 +390,7 @@
     <div class="box tabular general-fields">
       <div class="form-row">
         <p>
-          <%= form.label :title, l(:field_title), class: 'required' %> <span class="required">*</span>
+          <%= form.label :title, l(:field_title) %> <span class="required">*</span>
           <%= form.text_field :title, required: true, size: 60, maxlength: 255, class: 'form-control' %>
           <em class="info"><%= l(:text_purchase_title_info) %></em>
         </p>
@@ -406,7 +406,7 @@
       
       <div class="form-row">
         <p>
-          <%= form.label :status_id, l(:field_status), class: 'required' %> <span class="required">*</span>
+          <%= form.label :status_id, l(:field_status) %> <span class="required">*</span>
           <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name, 
                                    { selected: purchase_request.status_id || PurchaseRequestStatus.default&.id || PurchaseRequestStatus.first&.id },
                                    { required: true, class: 'form-control' } %>
