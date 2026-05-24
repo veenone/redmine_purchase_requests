@@ -22,7 +22,7 @@
     <span class="icon icon-pdf">Export PDF</span>
   <% end %>
 
-  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
+  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-secondary pr-button-icon' do %>
     <span class="icon icon-csv-file">Export CSV</span>
   <% end %>
 </div>
@@ -31,161 +31,154 @@
 <h2>
   Purchase Requests Report
   <% if @project %>
-    <span class="project-badge"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--accent" style="font-size:13px;margin-left:10px;vertical-align:middle;"><%= @project.name %></span>
   <% end %>
 </h2>
 
-<div class="report-meta">
-  <p><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
+<div class="info-box" style="margin-bottom:24px;">
+  <p style="margin:0 0 4px;"><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
   <% if @project %>
-    <p><strong>Scope:</strong> Project-specific data for <%= @project.name %></p>
+    <p style="margin:0;"><strong>Scope:</strong> Project-specific data for <%= @project.name %></p>
   <% else %>
-    <p><strong>Scope:</strong> System-wide data across all projects</p>
+    <p style="margin:0;"><strong>Scope:</strong> System-wide data across all projects</p>
   <% end %>
 </div>
 
 <!-- Executive Summary -->
-<div class="report-section">
-  <h3>Executive Summary</h3>
-
-  <div class="summary-cards">
-    <div class="summary-card">
-      <div class="card-icon"><span class="icon icon-package"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:total_count] %></div>
-        <div class="card-label">Total Requests</div>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Executive Summary</h3>
+  </div>
+  <div class="dashboard-card-body">
+    <div class="summary-stats">
+      <div class="stat-box pr-stat--accent">
+        <div class="stat-number"><%= @report_data[:summary][:total_count] %></div>
+        <div class="stat-label">Total Requests</div>
       </div>
-    </div>
-
-    <div class="summary-card open">
-      <div class="card-icon"><span class="icon icon-time"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:open_count] %></div>
-        <div class="card-label">Open Requests</div>
+      <div class="stat-box pr-stat--warning">
+        <div class="stat-number"><%= @report_data[:summary][:open_count] %></div>
+        <div class="stat-label">Open Requests</div>
       </div>
-    </div>
-
-    <div class="summary-card closed">
-      <div class="card-icon"><span class="icon icon-checked"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:closed_count] %></div>
-        <div class="card-label">Closed Requests</div>
+      <div class="stat-box pr-stat--success">
+        <div class="stat-number"><%= @report_data[:summary][:closed_count] %></div>
+        <div class="stat-label">Closed Requests</div>
       </div>
-    </div>
-
-    <div class="summary-card financial">
-      <div class="card-icon"><span class="icon icon-money"></span></div>
-      <div class="card-content">
-        <div class="card-value">$<%= number_with_delimiter(@report_data[:summary][:total_estimated_value].round(0)) %></div>
-        <div class="card-label">Total Est. Value</div>
+      <div class="stat-box pr-stat--violet">
+        <div class="stat-number stat-currency">$<%= number_with_delimiter(@report_data[:summary][:total_estimated_value].round(0)) %></div>
+        <div class="stat-label">Total Est. Value</div>
       </div>
-    </div>
-
-    <div class="summary-card avg">
-      <div class="card-icon"><span class="icon icon-stats"></span></div>
-      <div class="card-content">
-        <div class="card-value">$<%= number_with_delimiter(@report_data[:summary][:avg_estimated_value].round(0)) %></div>
-        <div class="card-label">Avg. Est. Value</div>
+      <div class="stat-box">
+        <div class="stat-number stat-currency">$<%= number_with_delimiter(@report_data[:summary][:avg_estimated_value].round(0)) %></div>
+        <div class="stat-label">Avg. Est. Value</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Budget Source Analysis -->
-<div class="report-section">
-  <h3>Purchase Requests by Budget Source</h3>
-
-  <div class="budget-analysis">
-    <div class="chart-half">
-      <h4>By Count</h4>
-      <div class="chart-container-sm">
-        <canvas id="budgetSourceChart" height="250"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-half">
-      <h4>By Value</h4>
-      <div class="chart-container-sm">
-        <canvas id="budgetValueChart" height="250"></canvas>
-      </div>
-    </div>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Purchase Requests by Budget Source</h3>
   </div>
+  <div class="dashboard-card-body">
+    <div class="charts-row">
+      <div class="chart-half">
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Count</h4>
+        <div class="chart-container-sm">
+          <canvas id="budgetSourceChart" height="250"></canvas>
+        </div>
+      </div>
 
-  <div class="budget-breakdown">
-    <div class="budget-item capex">
-      <div class="budget-label">CAPEX</div>
-      <div class="budget-count"><%= @report_data[:budget_source_breakdown]['CAPEX'] %> requests</div>
-      <div class="budget-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['CAPEX'].round(0)) %></div>
+      <div class="chart-half">
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Value</h4>
+        <div class="chart-container-sm">
+          <canvas id="budgetValueChart" height="250"></canvas>
+        </div>
+      </div>
     </div>
-    <div class="budget-item opex">
-      <div class="budget-label">OPEX</div>
-      <div class="budget-count"><%= @report_data[:budget_source_breakdown]['OPEX'] %> requests</div>
-      <div class="budget-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['OPEX'].round(0)) %></div>
-    </div>
-    <div class="budget-item direct-tpc">
-      <div class="budget-label">Direct TPC</div>
-      <div class="budget-count"><%= @report_data[:budget_source_breakdown]['Direct TPC'] %> requests</div>
-      <div class="budget-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['Direct TPC'].round(0)) %></div>
-    </div>
-    <div class="budget-item non-budgeted">
-      <div class="budget-label">Non-budgeted</div>
-      <div class="budget-count"><%= @report_data[:budget_source_breakdown]['Non-budgeted'] %> requests</div>
-      <div class="budget-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['Non-budgeted'].round(0)) %></div>
+
+    <div class="budget-breakdown-grid">
+      <div class="budget-breakdown-item budget-breakdown-item--capex">
+        <div class="budget-breakdown-label">CAPEX</div>
+        <div class="budget-breakdown-count"><%= @report_data[:budget_source_breakdown]['CAPEX'] %> requests</div>
+        <div class="budget-breakdown-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['CAPEX'].round(0)) %></div>
+      </div>
+      <div class="budget-breakdown-item budget-breakdown-item--opex">
+        <div class="budget-breakdown-label">OPEX</div>
+        <div class="budget-breakdown-count"><%= @report_data[:budget_source_breakdown]['OPEX'] %> requests</div>
+        <div class="budget-breakdown-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['OPEX'].round(0)) %></div>
+      </div>
+      <div class="budget-breakdown-item budget-breakdown-item--direct-tpc">
+        <div class="budget-breakdown-label">Direct TPC</div>
+        <div class="budget-breakdown-count"><%= @report_data[:budget_source_breakdown]['Direct TPC'] %> requests</div>
+        <div class="budget-breakdown-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['Direct TPC'].round(0)) %></div>
+      </div>
+      <div class="budget-breakdown-item budget-breakdown-item--non-budgeted">
+        <div class="budget-breakdown-label">Non-budgeted</div>
+        <div class="budget-breakdown-count"><%= @report_data[:budget_source_breakdown]['Non-budgeted'] %> requests</div>
+        <div class="budget-breakdown-value">$<%= number_with_delimiter(@report_data[:budget_source_value]['Non-budgeted'].round(0)) %></div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Status & Priority Analysis -->
-<div class="report-section">
-  <h3>Status & Priority Distribution</h3>
-
-  <div class="charts-row">
-    <div class="chart-half">
-      <h4>Status Distribution</h4>
-      <div class="chart-container-sm">
-        <canvas id="statusChart" height="250"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-half">
-      <h4>Priority Distribution</h4>
-      <div class="chart-container-sm">
-        <canvas id="priorityChart" height="250"></canvas>
-      </div>
-    </div>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Status &amp; Priority Distribution</h3>
   </div>
-
-  <div class="priority-breakdown">
-    <% @report_data[:priority_breakdown].each do |priority, count| %>
-      <div class="priority-item priority-<%= priority %>">
-        <span class="priority-label"><%= priority.capitalize %></span>
-        <span class="priority-count"><%= count %></span>
+  <div class="dashboard-card-body">
+    <div class="charts-row">
+      <div class="chart-half">
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">Status Distribution</h4>
+        <div class="chart-container-sm">
+          <canvas id="statusChart" height="250"></canvas>
+        </div>
       </div>
-    <% end %>
+
+      <div class="chart-half">
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">Priority Distribution</h4>
+        <div class="chart-container-sm">
+          <canvas id="priorityChart" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="priority-breakdown">
+      <% @report_data[:priority_breakdown].each do |priority, count| %>
+        <div class="priority-chip priority-chip--<%= priority %>">
+          <span class="priority-chip-label"><%= priority.capitalize %></span>
+          <span class="priority-chip-count"><%= count %></span>
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>
 
 <!-- Requester Analysis -->
 <% if @report_data[:requester_breakdown].any? %>
-<div class="report-section">
-  <h3>Purchase Requests by Requester</h3>
-
-  <div class="charts-row">
-    <div class="chart-half">
-      <div class="chart-container-sm">
-        <canvas id="requesterChart" height="300"></canvas>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Purchase Requests by Requester</h3>
+  </div>
+  <div class="dashboard-card-body">
+    <div class="charts-row">
+      <div class="chart-half">
+        <div class="chart-container-sm">
+          <canvas id="requesterChart" height="300"></canvas>
+        </div>
       </div>
-    </div>
 
-    <div class="chart-half">
-      <div class="requester-list">
-        <% @report_data[:requester_breakdown].each_with_index do |requester, index| %>
-          <div class="requester-item">
-            <span class="requester-rank">#<%= index + 1 %></span>
-            <span class="requester-name"><%= requester[:name] %></span>
-            <span class="requester-count"><%= requester[:count] %> requests</span>
-          </div>
-        <% end %>
+      <div class="chart-half">
+        <div class="ranked-list">
+          <% @report_data[:requester_breakdown].each_with_index do |requester, index| %>
+            <div class="ranked-list-item">
+              <span class="ranked-list-rank"><%="##{index + 1}" %></span>
+              <span class="ranked-list-name"><%= requester[:name] %></span>
+              <span class="ranked-list-count"><%= requester[:count] %> requests</span>
+            </div>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
@@ -194,135 +187,148 @@
 
 <!-- TPC Code Distribution -->
 <% if @report_data[:tpc_distribution].any? %>
-<div class="report-section">
-  <h3>Distribution by TPC Code</h3>
-
-  <div class="charts-row">
-    <div class="chart-half">
-      <h4>By Request Count</h4>
-      <div class="chart-container-sm">
-        <canvas id="tpcCountChart" height="300"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-half">
-      <h4>By Total Value</h4>
-      <div class="chart-container-sm">
-        <canvas id="tpcValueChart" height="300"></canvas>
-      </div>
-    </div>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Distribution by TPC Code</h3>
   </div>
-
-  <div class="tpc-breakdown">
-    <% @report_data[:tpc_distribution].each_with_index do |(tpc_number, count), index| %>
-      <div class="tpc-item">
-        <span class="tpc-rank">#<%= index + 1 %></span>
-        <div class="tpc-details">
-          <div class="tpc-code"><%= tpc_number %></div>
-          <div class="tpc-stats"><%= count %> requests</div>
-        </div>
-        <div class="tpc-value">
-          <% value = @report_data[:tpc_value_distribution][tpc_number] || 0 %>
-          $<%= number_with_delimiter(value.round(0)) %>
+  <div class="dashboard-card-body">
+    <div class="charts-row">
+      <div class="chart-half">
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Request Count</h4>
+        <div class="chart-container-sm">
+          <canvas id="tpcCountChart" height="300"></canvas>
         </div>
       </div>
-    <% end %>
+
+      <div class="chart-half">
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Total Value</h4>
+        <div class="chart-container-sm">
+          <canvas id="tpcValueChart" height="300"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="ranked-list" style="margin-top:20px;">
+      <% @report_data[:tpc_distribution].each_with_index do |(tpc_number, count), index| %>
+        <div class="ranked-list-item">
+          <span class="ranked-list-rank"><%="##{index + 1}" %></span>
+          <div style="flex:1;">
+            <div class="tpc-number" style="font-size:13px;"><%= tpc_number %></div>
+            <div style="font-size:12px;color:var(--pr-ink-muted);"><%= count %> requests</div>
+          </div>
+          <% value = @report_data[:tpc_value_distribution][tpc_number] || 0 %>
+          <span style="font-size:14px;font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(value.round(0)) %></span>
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>
 <% end %>
 
 <!-- Cost Consumption Trend -->
-<div class="report-section">
-  <h3>Total Cost Consumption Trend (Last 12 Months)</h3>
-
-  <div class="trend-chart-container">
-    <canvas id="costTrendChart" height="300"></canvas>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Total Cost Consumption Trend (Last 12 Months)</h3>
+  </div>
+  <div class="dashboard-card-body">
+    <div class="trend-chart-container">
+      <canvas id="costTrendChart" height="300"></canvas>
+    </div>
   </div>
 </div>
 
 <!-- Monthly Creation Trend -->
-<div class="report-section">
-  <h3>Monthly Creation Trend (Last 12 Months)</h3>
-
-  <div class="chart-container">
-    <canvas id="trendChart" height="250"></canvas>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Monthly Creation Trend (Last 12 Months)</h3>
+  </div>
+  <div class="dashboard-card-body">
+    <div class="trend-chart-container">
+      <canvas id="trendChart" height="250"></canvas>
+    </div>
   </div>
 </div>
 
 <!-- Vendor Analysis -->
 <% if @report_data[:vendor_stats].any? %>
-<div class="report-section">
-  <h3>Top Vendors by Request Count</h3>
-
-  <div class="vendor-stats">
-    <% @report_data[:vendor_stats].each_with_index do |(vendor_info, count), index| %>
-      <div class="vendor-stat-item">
-        <span class="vendor-rank">#<%= index + 1 %></span>
-        <span class="vendor-name"><%= vendor_info.first %></span>
-        <span class="vendor-count"><%= count %> requests</span>
-      </div>
-    <% end %>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Top Vendors by Request Count</h3>
+  </div>
+  <div class="dashboard-card-body">
+    <div class="ranked-list">
+      <% @report_data[:vendor_stats].each_with_index do |(vendor_info, count), index| %>
+        <div class="ranked-list-item">
+          <span class="ranked-list-rank"><%="##{index + 1}" %></span>
+          <span class="ranked-list-name"><%= vendor_info.first %></span>
+          <span class="ranked-list-count"><%= count %> requests</span>
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>
 <% end %>
 
 <!-- Recent Requests -->
-<div class="report-section">
-  <h3>Recent Purchase Requests</h3>
-
-  <div class="autoscroll">
-    <table class="list recent-requests">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Title</th>
-          <th>Project</th>
-          <th>Budget Source</th>
-          <th>Status</th>
-          <th>Priority</th>
-          <th>Est. Price</th>
-          <th>Created</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @report_data[:recent_requests].each do |request| %>
+<div class="report-section dashboard-card">
+  <div class="dashboard-card-header">
+    <h3>Recent Purchase Requests</h3>
+  </div>
+  <div class="dashboard-card-body">
+    <div class="autoscroll">
+      <table class="pr-table">
+        <thead>
           <tr>
-            <td><%= request.id %></td>
-            <td><%= truncate(request.title, length: 40) %></td>
-            <td><%= request.project&.name %></td>
-            <td>
-              <% if request.capex_id %>
-                <span class="source-badge capex">CAPEX</span>
-              <% elsif request.opex_id %>
-                <span class="source-badge opex">OPEX</span>
-              <% elsif request.tpc_code_id %>
-                <span class="source-badge direct-tpc">Direct TPC</span>
-              <% else %>
-                <span class="source-badge non-budgeted">Non-budgeted</span>
-              <% end %>
-            </td>
-            <td>
-              <span class="status-badge">
-                <%= request.status&.name %>
-              </span>
-            </td>
-            <td>
-              <span class="priority-badge priority-<%= request.priority %>">
-                <%= request.priority&.capitalize %>
-              </span>
-            </td>
-            <td>
-              <% if request.estimated_price %>
-                <%= request.currency %> <%= number_with_delimiter(request.estimated_price) %>
-              <% else %>
-                -
-              <% end %>
-            </td>
-            <td><%= request.created_at.strftime('%Y-%m-%d') %></td>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Project</th>
+            <th>Budget Source</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Est. Price</th>
+            <th>Created</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @report_data[:recent_requests].each do |request| %>
+            <tr>
+              <td><%= request.id %></td>
+              <td><%= truncate(request.title, length: 40) %></td>
+              <td><%= request.project&.name %></td>
+              <td>
+                <% if request.capex_id %>
+                  <span class="pr-badge pr-badge--accent">CAPEX</span>
+                <% elsif request.opex_id %>
+                  <span class="pr-badge pr-badge--success">OPEX</span>
+                <% elsif request.tpc_code_id %>
+                  <span class="pr-badge pr-badge--warning">Direct TPC</span>
+                <% else %>
+                  <span class="pr-badge pr-badge--neutral">Non-budgeted</span>
+                <% end %>
+              </td>
+              <td>
+                <span class="status-badge">
+                  <%= request.status&.name %>
+                </span>
+              </td>
+              <td>
+                <span class="priority-badge <%= request.priority %>">
+                  <%= request.priority&.capitalize %>
+                </span>
+              </td>
+              <td>
+                <% if request.estimated_price %>
+                  <%= request.currency %> <%= number_with_delimiter(request.estimated_price) %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td><%= request.created_at.strftime('%Y-%m-%d') %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -693,386 +699,163 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <% content_for :header_tags do %>
 <style>
-  .project-badge {
-    background: #e3f2fd;
-    color: #1976d2;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: normal;
-    margin-left: 15px;
-  }
-
-  .report-meta {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 25px;
-  }
-
-  .report-meta p {
-    margin: 0 0 5px 0;
-  }
-
-  .report-section {
-    margin-bottom: 40px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 25px;
-  }
-
-  .report-section h3 {
-    margin: 0 0 20px 0;
-    color: #333;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
-  }
-
-  .report-section h4 {
-    margin: 0 0 15px 0;
-    color: #555;
-    font-size: 14px;
-    text-align: center;
-  }
-
-  .summary-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
-  }
-
-  .summary-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-
-  .summary-card.open {
-    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
-  }
-
-  .summary-card.closed {
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-  }
-
-  .summary-card.financial {
-    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
-  }
-
-  .summary-card.avg {
-    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-  }
-
-  .card-icon {
-    font-size: 24px;
-    opacity: 0.9;
-  }
-
-  .card-value {
-    font-size: 22px;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  .card-label {
-    font-size: 13px;
-    opacity: 0.9;
-  }
-
-  .charts-row, .budget-analysis {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 20px;
-  }
-
-  .chart-half {
-    min-height: 280px;
-  }
-
-  .chart-container {
-    max-width: 800px;
-    height: 300px;
-    margin: 20px auto;
-  }
-
-  .chart-container-sm {
-    height: 280px;
-  }
-
-  .trend-chart-container {
-    height: 350px;
-    margin: 20px 0;
-  }
-
-  .budget-breakdown {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-  }
-
-  .budget-item {
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    color: white;
-  }
-
-  .budget-item.capex {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-  }
-
-  .budget-item.opex {
-    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  }
-
-  .budget-item.direct-tpc {
-    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-  }
-
-  .budget-item.non-budgeted {
-    background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%);
-  }
-
-  .budget-label {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
-
-  .budget-count {
-    font-size: 12px;
-    opacity: 0.9;
-    margin-bottom: 5px;
-  }
-
-  .budget-value {
-    font-size: 18px;
-    font-weight: bold;
-  }
-
-  .priority-breakdown {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    margin-top: 20px;
-    justify-content: center;
-  }
-
-  .priority-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 15px;
-    border-radius: 8px;
-    min-width: 100px;
-  }
-
-  .priority-item.priority-low { background: #4CAF50; color: white; }
-  .priority-item.priority-normal { background: #2196F3; color: white; }
-  .priority-item.priority-high { background: #FF9800; color: white; }
-  .priority-item.priority-urgent { background: #F44336; color: white; }
-
-  .priority-label {
-    font-size: 14px;
-    margin-bottom: 5px;
-  }
-
-  .priority-count {
-    font-size: 20px;
-    font-weight: bold;
-  }
-
-  .requester-list {
-    display: grid;
-    gap: 10px;
-  }
-
-  .requester-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-  }
-
-  .requester-rank {
-    background: #2196F3;
-    color: white;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 12px;
-  }
-
-  .requester-name {
-    flex: 1;
-    font-weight: 500;
-  }
-
-  .requester-count {
-    color: #666;
-    font-size: 14px;
-  }
-
-  .tpc-breakdown {
-    display: grid;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .tpc-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-  }
-
-  .tpc-rank {
-    background: #9C27B0;
-    color: white;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 12px;
-  }
-
-  .tpc-details {
-    flex: 1;
-  }
-
-  .tpc-code {
-    font-weight: 600;
-    font-family: 'Monaco', 'Menlo', monospace;
-  }
-
-  .tpc-stats {
-    font-size: 12px;
-    color: #666;
-  }
-
-  .tpc-value {
-    font-size: 16px;
-    font-weight: bold;
-    color: #4CAF50;
-  }
-
-  .vendor-stats {
-    display: grid;
-    gap: 10px;
-  }
-
-  .vendor-stat-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 4px;
-  }
-
-  .vendor-rank {
-    background: #007bff;
-    color: white;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 12px;
-  }
-
-  .vendor-name {
-    flex: 1;
-    font-weight: 500;
-  }
-
-  .vendor-count {
-    color: #666;
-    font-size: 14px;
-  }
-
-  .source-badge {
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .source-badge.capex { background: #2196F3; color: white; }
-  .source-badge.opex { background: #4CAF50; color: white; }
-  .source-badge.direct-tpc { background: #FF9800; color: white; }
-  .source-badge.non-budgeted { background: #9E9E9E; color: white; }
-
-  .status-badge, .priority-badge {
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .status-badge { background: #f0f0f0; color: #333; }
-  .priority-badge.priority-low { background: #4CAF50; color: white; }
-  .priority-badge.priority-normal { background: #2196F3; color: white; }
-  .priority-badge.priority-high { background: #FF9800; color: white; }
-  .priority-badge.priority-urgent { background: #F44336; color: white; }
-
+  /* ---- icon helpers ---- */
   .icon-pdf {
     background-image: url('<%= asset_path("files/pdf.png") %>');
     background-size: 16px 16px;
     background-repeat: no-repeat;
-    background-position: center;
+    background-position: 0 50%;
     padding-left: 20px;
   }
-
   .icon-csv-file {
     background-image: url('<%= asset_path("files/text.png") %>');
     background-size: 16px 16px;
     background-repeat: no-repeat;
-    background-position: center;
+    background-position: 0 50%;
     padding-left: 20px;
   }
 
+  /* ---- section spacing ---- */
+  .report-section { margin-bottom: 22px; }
+
+  /* ---- chart layout ---- */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 20px;
+  }
+
+  .chart-half { min-height: 260px; }
+
+  .chart-container-sm { height: 260px; }
+
+  .trend-chart-container { height: 320px; margin: 4px 0 0; }
+
+  /* ---- budget source breakdown tiles ---- */
+  .budget-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .budget-breakdown-item {
+    padding: 14px 16px;
+    border-radius: var(--pr-radius);
+    background: var(--pr-surface-subtle);
+    border: 1px solid var(--pr-border);
+    border-left: 3px solid var(--pr-border-strong);
+    text-align: center;
+  }
+  .budget-breakdown-item--capex       { border-left-color: var(--pr-accent); }
+  .budget-breakdown-item--opex        { border-left-color: var(--pr-success); }
+  .budget-breakdown-item--direct-tpc  { border-left-color: var(--pr-warning); }
+  .budget-breakdown-item--non-budgeted{ border-left-color: var(--pr-ink-faint); }
+
+  .budget-breakdown-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pr-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+  }
+
+  .budget-breakdown-count {
+    font-size: 12px;
+    color: var(--pr-ink-faint);
+    margin-bottom: 4px;
+  }
+
+  .budget-breakdown-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--pr-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- priority chips ---- */
+  .priority-breakdown {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    justify-content: center;
+  }
+
+  .priority-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 20px;
+    border-radius: var(--pr-radius);
+    min-width: 90px;
+    border: 1px solid var(--pr-border);
+    background: var(--pr-surface-subtle);
+    border-top: 3px solid var(--pr-border-strong);
+  }
+  .priority-chip--low     { border-top-color: var(--pr-info); }
+  .priority-chip--normal  { border-top-color: var(--pr-success); }
+  .priority-chip--high    { border-top-color: var(--pr-warning); }
+  .priority-chip--urgent  { border-top-color: var(--pr-danger); }
+
+  .priority-chip-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--pr-ink-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 4px;
+  }
+
+  .priority-chip-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--pr-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- ranked list (requesters, vendors, TPC) ---- */
+  .ranked-list { display: grid; gap: 8px; }
+
+  .ranked-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--pr-surface-subtle);
+    border: 1px solid var(--pr-border);
+    border-radius: var(--pr-radius-sm);
+    font-size: 13px;
+  }
+
+  .ranked-list-rank {
+    background: var(--pr-accent);
+    color: var(--pr-ink-invert);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 11px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ranked-list-name { flex: 1; font-weight: 600; color: var(--pr-ink); }
+  .ranked-list-count { color: var(--pr-ink-muted); font-size: 12px; }
+
+  /* ---- responsive ---- */
   @media (max-width: 992px) {
-    .charts-row, .budget-analysis {
-      grid-template-columns: 1fr;
-    }
+    .charts-row { grid-template-columns: 1fr; }
   }
 
   @media (max-width: 768px) {
-    .summary-cards {
-      grid-template-columns: 1fr;
-    }
-
-    .priority-breakdown {
-      justify-content: center;
-    }
-
-    .budget-breakdown {
-      grid-template-columns: 1fr;
-    }
+    .budget-breakdown-grid { grid-template-columns: 1fr 1fr; }
+    .priority-breakdown { justify-content: center; }
   }
 
   <% if @print_mode %>
@@ -1085,7 +868,7 @@ document.addEventListener('DOMContentLoaded', function() {
       background: #fff;
     }
 
-    .chart-container, .chart-container-sm, .trend-chart-container {
+    .chart-container-sm, .trend-chart-container {
       display: none !important;
     }
 
@@ -1097,17 +880,6 @@ document.addEventListener('DOMContentLoaded', function() {
     h2, h3 {
       color: #000;
       border-bottom: 1px solid #ccc;
-    }
-
-    .summary-cards {
-      display: block;
-    }
-
-    .summary-card {
-      display: inline-block;
-      width: 200px;
-      margin: 10px;
-      page-break-inside: avoid;
     }
   }
   <% end %>

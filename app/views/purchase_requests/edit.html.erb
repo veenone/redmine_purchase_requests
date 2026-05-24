@@ -1,21 +1,18 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/edit.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
-
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/edit.html.erb %>
-<%# Assets are loaded via hooks - no need for direct includes %>
 
 <% @purchase_request = PurchaseRequest.find(params[:id]) %>
 <% html_title "#{l(:label_edit_purchase_request)} ##{@purchase_request.id}: #{h(@purchase_request.title)}" %>
 
 <div class="contextual">
   <%= link_to project_purchase_request_path(@project, @purchase_request), class: 'pr-button pr-button-secondary pr-button-icon small', title: l(:button_show) do %>
-    <span class="icon icon-magnifier"><%= l(:button_show) %></span> 
+    <span class="icon icon-magnifier"><%= l(:button_show) %></span>
   <% end %>
   <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back_to_list) do %>
-    <span class="icon icon-cancel"><%= l(:button_back_to_list) %></span> 
+    <span class="icon icon-cancel"><%= l(:button_back_to_list) %></span>
   <% end %>
 </div>
 
@@ -42,7 +39,7 @@
       </div>
     </div>
   </div>
-  
+
   <div class="pr-form-instructions">
     <div class="pr-alert pr-alert-info">
       <span class="icon icon-info"></span>
@@ -54,7 +51,7 @@
         </div>
       </div>
     </div>
-    
+
     <% if @purchase_request.capex.present? || @purchase_request.opex.present? %>
       <div class="pr-alert pr-alert-success">
         <span class="icon icon-info"></span>
@@ -77,10 +74,10 @@
               </span></span>
             </div>
           <% end %>
-          
+
           <% if @purchase_request.has_quarterly_allocation? %>
             <div class="quarterly-info">
-              <strong>Quarterly Allocation:</strong> <%= @purchase_request.quarter_name %> - 
+              <strong>Quarterly Allocation:</strong> <%= @purchase_request.quarter_name %> -
               <%= @purchase_request.formatted_price(@purchase_request.allocated_amount) %>
             </div>
           <% end %>
@@ -89,28 +86,22 @@
     <% end %>
   </div>
 
-  <div class="box pr-form-box">
+  <div class="pr-form-box">
     <div class="pr-tabs">
       <ul class="pr-tab-nav">
         <li class="pr-tab-item active">
           <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
-            <span class="icon icon-edit">
-            <%= l(:label_basic_information) %>
-            </span>
+            <span class="icon icon-edit"><%= l(:label_basic_information) %></span>
           </a>
         </li>
         <li class="pr-tab-item">
           <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
-            <span class="icon icon-package">
-            <%= l(:label_product_details) %>
-            </span>
+            <span class="icon icon-package"><%= l(:label_product_details) %></span>
           </a>
         </li>
         <li class="pr-tab-item">
           <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments">
-            <span class="icon icon-attachment">
-            <%= l(:label_attachments_and_notes) %>
-            </span>
+            <span class="icon icon-attachment"><%= l(:label_attachments_and_notes) %></span>
           </a>
         </li>
         <li class="pr-tab-item">
@@ -124,7 +115,7 @@
         </li>
       </ul>
     </div>
-    
+
     <div class="pr-form-content">
       <%= render partial: 'form', locals: {
         purchase_request: @purchase_request,
@@ -136,320 +127,42 @@
   </div>
 </div>
 
-<style>
-  .pr-form-container {
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-  
-  .pr-form-header {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #e5e5e5;
-    padding-bottom: 20px;
-  }
-  
-  .pr-form-title h2 {
-    margin: 0 0 10px 0;
-    font-size: 24px;
-    color: #333;
-  }
-  
-  .request-id {
-    color: #777;
-    font-size: 0.9em;
-  }
-  
-  .pr-form-subtitle {
-    color: #666;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  
-  .pr-form-status {
-    margin-top: 15px;
-  }
-  
-  .pr-status-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-  
-  .status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    color: white;
-    font-size: 12px;
-    font-weight: 500;
-  }
-  
-  .last-updated {
-    color: #666;
-    font-size: 0.9em;
-  }
-  
-  .pr-form-instructions {
-    margin-bottom: 20px;
-  }
-  
-  .pr-alert {
-    padding: 15px;
-    border-radius: 6px;
-    border: 1px solid;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .pr-alert-info {
-    background-color: #f0f8ff;
-    border-color: #b3d9ff;
-    color: #1a5490;
-  }
-  
-  .pr-alert-success {
-    background-color: #f0f8f0;
-    border-color: #b3d9b3;
-    color: #2e7d32;
-  }
-  
-  .pr-alert-content h4 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .pr-alert-content p {
-    margin: 0 0 8px 0;
-    font-size: 13px;
-  }
-  
-  .budget-info {
-    font-size: 12px;
-    margin-top: 5px;
-    color: #666;
-  }
-  
-  .quarterly-info {
-    font-size: 12px;
-    margin-top: 5px;
-    padding: 5px;
-    background-color: rgba(255,255,255,0.5);
-    border-radius: 3px;
-  }
-  
-  .over-budget {
-    color: #f44336;
-    font-weight: bold;
-  }
-  
-  .remaining-budget {
-    color: #4caf50;
-    font-weight: bold;
-  }
-  
-  .pr-request-title {
-    font-size: 13px;
-    margin-top: 8px;
-    padding: 8px;
-    background-color: rgba(255,255,255,0.7);
-    border-radius: 4px;
-  }
-  
-  .pr-form-box {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  
-  .pr-tabs {
-    border-bottom: 1px solid #ddd;
-    background-color: #f8f9fa;
-  }
-  
-  .pr-tab-nav {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-  }
-  
-  .pr-tab-item {
-    margin: 0;
-  }
-  
-  .pr-tab-link {
-    display: block;
-    padding: 12px 20px;
-    color: #666;
-    text-decoration: none;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .pr-tab-item.active .pr-tab-link,
-  .pr-tab-link:hover {
-    color: #333;
-    border-bottom-color: #0078d4;
-    background-color: white;
-  }
-  
-  .pr-form-content {
-    padding: 20px;
-  }
-  
-  /* Form styling consistency */
-  .required {
-    color: #d00;
-    font-weight: bold;
-  }
-  
-  .currency-wrapper {
-    position: relative;
-    display: inline-block;
-  }
-  
-  .currency-symbol {
-    position: absolute;
-    top: 50%;
-    left: 10px;
-    transform: translateY(-50%);
-    color: #666;
-  }
-  
-  .currency-field {
-    padding-left: 25px;
-  }
-  
-  .existing-attachments {
-    margin-top: 15px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 3px;
-  }
-  
-  .info {
-    display: block;
-    color: #888;
-    font-size: 0.9em;
-    margin-top: 2px;
-  }
-
-  .currency-price-wrapper {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 5px;
-  }
-  
-  .currency-select {
-    min-width: 150px;
-    flex: 0 0 auto;
-  }
-  
-  .price-field {
-    flex: 1;
-    min-width: 100px;
-  }
-  
-  .form-layout {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .form-layout th {
-    text-align: right;
-    padding-right: 15px;
-    vertical-align: top;
-    width: 25%;
-    padding-top: 8px;
-    font-weight: normal;
-  }
-  
-  .form-layout td {
-    vertical-align: top;
-    padding-bottom: 10px;
-    width: 75%;
-  }
-
-  .tab-content {
-    margin-top: 10px;
-  }
-  
-  .tabbed-form {
-    display: none;
-  }
-  
-  #tab-general.tabbed-form {
-    display: block;
-  }
-
-  .workflow-progress-badge {
-    display: inline-block;
-    background-color: #4caf50;
-    color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    margin-left: 5px;
-  }
-</style>
-
 <%= javascript_tag do %>
 $(document).ready(function() {
-  // Modern tab functionality
+  // Tab switching
   $('.pr-tab-link').click(function(e) {
     e.preventDefault();
     var tabId = $(this).data('tab');
-    
-    // Hide all tabbed forms
+
     $('.tabbed-form').hide();
-    
-    // Show the selected tab content
     $('#' + tabId).show();
-    
-    // Update tab selection
+
     $('.pr-tab-item').removeClass('active');
     $(this).parent('.pr-tab-item').addClass('active');
-    
+
     return false;
   });
-  
-  // Initialize tab content - first tab is shown by default
+
+  // First tab is shown by default
   $('.tabbed-form').not('#tab-general').hide();
-  
-  // Add smooth hover effects for buttons
-  $('.pr-button').hover(
-    function() { $(this).addClass('button-highlight'); },
-    function() { $(this).removeClass('button-highlight'); }
-  );
-  
-  // Focus on the most important field when the page loads
+
+  // Focus the most important field on load
   $('#purchase_request_title').focus();
-  
-  // Initialize any JS-based controls
   $('#purchase_request_description').addClass('wiki-edit');
-  
-  // Show confirmation if user attempts to leave page with unsaved changes
+
+  // Warn on unsaved changes
   var formChanged = false;
-  
+
   $('#purchase-request-form input, #purchase-request-form textarea, #purchase-request-form select').change(function() {
     formChanged = true;
   });
-  
+
   $(window).on('beforeunload', function() {
     if (formChanged) {
       return '<%= l(:text_unsaved_changes_confirmation) %>';
     }
   });
-  
-  // Submit button disables form changed flag
+
   $('#purchase-request-form input[type="submit"]').click(function() {
     formChanged = false;
   });

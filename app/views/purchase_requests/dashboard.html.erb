@@ -1,291 +1,19 @@
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
-
-<style>
-  .dashboard-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-    gap: 20px;
-    margin-bottom: 20px;
-  }
-
-  .dashboard-card {
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.1);
-    overflow: hidden;
-    transition: box-shadow 0.3s ease;
-  }
-
-  .dashboard-card:hover {
-    box-shadow: 0 3px 8px rgba(0,0,0,.15);
-  }
-
-  .dashboard-card-header {
-    background-color: #f5f5f5;
-    padding: 12px 15px;
-    border-bottom: 1px solid #e5e5e5;
-  }
-
-  .dashboard-card-header h3 {
-    margin: 0;
-    font-size: 15px;
-    color: #333;
-  }
-
-  .dashboard-card-body {
-    padding: 15px;
-  }
-
-  .summary-stats {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-
-  .stat-box {
-    flex: 1;
-    min-width: 200px;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.1);
-    padding: 15px;
-    margin: 0 10px 10px 0;
-    text-align: center;
-  }
-
-  .stat-number {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 8px;
-  }
-
-  .stat-label {
-    font-size: 13px;
-    color: #666;
-  }
-
-  .stat-currency {
-    color: #2e7d32;
-  }
-
-  table.dashboard-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  table.dashboard-table th,
-  table.dashboard-table td {
-    text-align: left;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
-  }
-
-  table.dashboard-table tr:last-child td {
-    border-bottom: none;
-  }
-
-  table.dashboard-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-  }
-
-  .tpc-code-cell {
-    font-family: monospace;
-    color: #6f42c1;
-    font-size: 13px;
-  }
-
-  .tpc-code-cell strong {
-    font-weight: 600;
-  }
-
-  .chart-container {
-    width: 100%;
-    height: 250px;
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f9f9f9;
-    color: #666;
-    font-style: italic;
-  }
-
-  .exchange-rates-info {
-    margin-top: 20px;
-  }
-
-  .exchange-rates-info h4 {
-    margin-bottom: 10px;
-    color: #333;
-  }
-
-  .info-text {
-    margin-bottom: 15px;
-    color: #666;
-    font-size: 14px;
-  }
-
-  /* Native Chart Styles */
-  .native-chart {
-    margin: 15px 0;
-    padding: 10px;
-    background: #f9f9f9;
-    border-radius: 5px;
-  }
-
-  .chart-bar-container {
-    display: flex;
-    align-items: flex-end;
-    height: 150px;
-    margin: 10px 0;
-    padding: 10px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-  }
-
-  .chart-bar {
-    background: linear-gradient(to top, #007bff, #0056b3);
-    margin: 0 2px;
-    border-radius: 2px 2px 0 0;
-    position: relative;
-    min-width: 30px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    transition: all 0.3s ease;
-  }
-
-  .chart-bar:hover {
-    background: linear-gradient(to top, #0056b3, #003d82);
-    transform: scale(1.05);
-  }
-
-  .chart-bar-value {
-    position: absolute;
-    top: -25px;
-    font-size: 11px;
-    font-weight: bold;
-    color: #333;
-    white-space: nowrap;
-  }
-
-  .chart-bar-label {
-    position: absolute;
-    bottom: -20px;
-    font-size: 10px;
-    color: #666;
-    white-space: nowrap;
-    text-align: center;
-  }
-
-  .chart-pie-container {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin: 10px 0;
-  }
-
-  .chart-pie {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    position: relative;
-  }
-
-  .chart-pie-legend {
-    flex: 1;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    margin: 5px 0;
-    font-size: 13px;
-  }
-
-  .legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-    margin-right: 8px;
-  }
-
-  .chart-line-container {
-    height: 150px;
-    position: relative;
-    margin: 10px 0;
-    padding: 10px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-  }
-
-  .chart-line-grid {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-  }
-
-  .chart-line-grid-line {
-    position: absolute;
-    width: 100%;
-    height: 1px;
-    background: #eee;
-  }
-
-  .chart-line-path {
-    stroke: #007bff;
-    stroke-width: 2;
-    fill: none;
-  }
-
-  .chart-line-point {
-    fill: #007bff;
-    stroke: white;
-    stroke-width: 2;
-  }
-</style>
 
 <% html_title l(:label_purchase_request_dashboard) %>
 
 <%
-  # Define currency symbols at the beginning of the template so it's available everywhere
+  # Currency symbols, available everywhere in this template
   symbol_map = {
-    'USD' => '$',
-    'EUR' => '€',
-    'GBP' => '£',
-    'JPY' => '¥',
-    'CAD' => 'C$',
-    'AUD' => 'A$',
-    'CHF' => 'CHF',
-    'CNY' => '¥',
-    'SEK' => 'kr',
-    'NZD' => 'NZ$',
-    'MXN' => 'Mex$',
-    'SGD' => 'S$',
-    'HKD' => 'HK$',
-    'IDR' => 'Rp',
-    'NOK' => 'kr',
-    'KRW' => '₩',
-    'TRY' => '₺',
-    'RUB' => '₽',
-    'INR' => '₹',
-    'BRL' => 'R$',
-    'ZAR' => 'R'
+    'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥', 'CAD' => 'C$',
+    'AUD' => 'A$', 'CHF' => 'CHF', 'CNY' => '¥', 'SEK' => 'kr', 'NZD' => 'NZ$',
+    'MXN' => 'Mex$', 'SGD' => 'S$', 'HKD' => 'HK$', 'IDR' => 'Rp', 'NOK' => 'kr',
+    'KRW' => '₩', 'TRY' => '₺', 'RUB' => '₽', 'INR' => '₹', 'BRL' => 'R$', 'ZAR' => 'R'
   }
 
-  # Helper function to get currency symbol - renamed to avoid conflict with helper method
   def local_currency_symbol(currency_code, symbol_map)
     symbol_map[currency_code] || currency_code
   end
@@ -294,56 +22,60 @@
 <h2><%= l(:label_purchase_request_dashboard) %></h2>
 
 <div class="contextual">
-  <%= link_to l(:label_purchase_requests), project_purchase_requests_path(@project), class: 'icon icon-list' %>
-  <%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'icon icon-add' %>
+  <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-list"><%= l(:label_purchase_requests) %></span>
+  <% end %>
+  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+    <span class="icon icon-add"><%= l(:label_new_purchase_request) %></span>
+  <% end %>
   <% if User.current.allowed_to?(:view_tpc_codes, @project) %>
-    <%= link_to l(:label_tpc_codes), project_tpc_codes_path(@project), class: 'icon icon-projects' %>
+    <%= link_to project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+      <span class="icon icon-projects"><%= l(:label_tpc_codes) %></span>
+    <% end %>
   <% end %>
 </div>
 
-<!-- Year Filter Section -->
-<div class="dashboard-filter-section" style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
-  <%= form_tag dashboard_project_purchase_requests_path(@project), method: :get, style: 'margin: 0;' do %>
-    <div style="display: flex; align-items: center; gap: 15px;">
-      <label for="year_filter" style="font-weight: bold; margin: 0;">Filter by Year:</label>
+<!-- Year Filter -->
+<fieldset class="pr-filters">
+  <legend>Filter</legend>
+  <%= form_tag dashboard_project_purchase_requests_path(@project), method: :get do %>
+    <div class="filter-row">
+      <label for="year_filter">Filter by Year:</label>
       <%= select_tag :year,
                      options_for_select([['All Years', '']] + @available_years.map { |y| [y.to_s, y.to_s] }, @selected_year),
                      id: 'year_filter',
-                     class: 'pr-select',
-                     style: 'width: 150px; height: 38px !important; padding: 6px 12px !important; color: #333 !important; background-color: #fff !important;',
                      onchange: 'this.form.submit();' %>
       <% if @selected_year.present? %>
-        <span style="color: #666; font-size: 13px;">
+        <span class="no-data">
           Showing data for <%= @selected_year %>
-          <%= link_to 'Clear Filter', dashboard_project_purchase_requests_path(@project), style: 'margin-left: 10px; color: #2196F3;' %>
         </span>
+        <%= link_to 'Clear', dashboard_project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel small' %>
       <% end %>
     </div>
   <% end %>
-</div>
+</fieldset>
 
 <div class="summary-stats">
-  <div class="stat-box">
+  <div class="stat-box pr-stat--accent">
     <div class="stat-number"><%= @total_requests %></div>
     <div class="stat-label"><%= l(:label_total_requests) %></div>
   </div>
 
-  <div class="stat-box">
+  <div class="stat-box pr-stat--warning">
     <div class="stat-number"><%= @open_requests %></div>
     <div class="stat-label"><%= l(:label_open_requests) %></div>
   </div>
 
-  <div class="stat-box">
+  <div class="stat-box pr-stat--success">
     <div class="stat-number"><%= @closed_requests %></div>
     <div class="stat-label"><%= l(:label_closed_requests) %></div>
   </div>
 
   <%
-    # Get currency symbol for top stats
     summary_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
     summary_symbol = local_currency_symbol(summary_currency, symbol_map)
   %>
-  <div class="stat-box">
+  <div class="stat-box pr-stat--violet">
     <div class="stat-number stat-currency"><%= summary_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
     <div class="stat-label"><%= l(:label_total_estimated_cost) %></div>
   </div>
@@ -357,11 +89,8 @@
     </div>
     <div class="dashboard-card-body">
       <% if @status_distribution.present? && @status_distribution.any? %>
-        <!-- Native Pie Chart -->
         <div class="chart-pie-container">
-          <div class="chart-pie" id="status-pie-chart">
-            <!-- SVG Pie Chart will be generated here -->
-          </div>
+          <div class="chart-pie" id="status-pie-chart"></div>
           <div class="chart-pie-legend">
             <% @status_distribution.each do |status| %>
               <div class="legend-item">
@@ -371,7 +100,7 @@
             <% end %>
           </div>
         </div>
-        
+
         <table class="dashboard-table">
           <tr>
             <th><%= l(:field_status) %></th>
@@ -381,7 +110,7 @@
           <% @status_distribution.each do |status| %>
             <tr>
               <td>
-                <span style="display: inline-block; width: 12px; height: 12px; background-color: <%= status[:color] || '#777777' %>; margin-right: 8px; border-radius: 2px;"></span>
+                <span class="pr-swatch" style="background-color: <%= status[:color] || '#777777' %>;"></span>
                 <%= status[:name] %>
               </td>
               <td><%= status[:count] %></td>
@@ -402,31 +131,28 @@
     </div>
     <div class="dashboard-card-body">
       <% if @priority_distribution.present? && @priority_distribution.values.sum > 0 %>
-        <!-- Native Pie Chart -->
         <div class="chart-pie-container">
-          <div class="chart-pie" id="priority-pie-chart">
-            <!-- SVG Pie Chart will be generated here -->
-          </div>
+          <div class="chart-pie" id="priority-pie-chart"></div>
           <div class="chart-pie-legend">
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #f44336;"></div>
+              <div class="legend-color" style="background-color: #dc3a3a;"></div>
               <span><%= l(:label_priority_urgent) %> (<%= @priority_distribution[:urgent] %> - <%= @priority_percentages[:urgent] %>%)</span>
             </div>
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #ff9800;"></div>
+              <div class="legend-color" style="background-color: #df8709;"></div>
               <span><%= l(:label_priority_high) %> (<%= @priority_distribution[:high] %> - <%= @priority_percentages[:high] %>%)</span>
             </div>
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #4caf50;"></div>
+              <div class="legend-color" style="background-color: #2f9e44;"></div>
               <span><%= l(:label_priority_normal) %> (<%= @priority_distribution[:normal] %> - <%= @priority_percentages[:normal] %>%)</span>
             </div>
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #2196f3;"></div>
+              <div class="legend-color" style="background-color: #2272c4;"></div>
               <span><%= l(:label_priority_low) %> (<%= @priority_distribution[:low] %> - <%= @priority_percentages[:low] %>%)</span>
             </div>
           </div>
         </div>
-        
+
         <table class="dashboard-table">
           <tr>
             <th><%= l(:field_priority) %></th>
@@ -434,40 +160,28 @@
             <th><%= l(:label_percentage) %></th>
           </tr>
           <tr>
-            <td>
-              <span style="display: inline-block; width: 12px; height: 12px; background-color: #f44336; margin-right: 8px; border-radius: 2px;"></span>
-              <%= l(:label_priority_urgent) %>
-            </td>
+            <td><span class="pr-swatch" style="background-color: #dc3a3a;"></span><%= l(:label_priority_urgent) %></td>
             <td><%= @priority_distribution[:urgent] %></td>
             <td><%= @priority_percentages[:urgent] %>%</td>
           </tr>
           <tr>
-            <td>
-              <span style="display: inline-block; width: 12px; height: 12px; background-color: #ff9800; margin-right: 8px; border-radius: 2px;"></span>
-              <%= l(:label_priority_high) %>
-            </td>
+            <td><span class="pr-swatch" style="background-color: #df8709;"></span><%= l(:label_priority_high) %></td>
             <td><%= @priority_distribution[:high] %></td>
             <td><%= @priority_percentages[:high] %>%</td>
           </tr>
           <tr>
-            <td>
-              <span style="display: inline-block; width: 12px; height: 12px; background-color: #4caf50; margin-right: 8px; border-radius: 2px;"></span>
-              <%= l(:label_priority_normal) %>
-            </td>
+            <td><span class="pr-swatch" style="background-color: #2f9e44;"></span><%= l(:label_priority_normal) %></td>
             <td><%= @priority_distribution[:normal] %></td>
             <td><%= @priority_percentages[:normal] %>%</td>
           </tr>
           <tr>
-            <td>
-              <span style="display: inline-block; width: 12px; height: 12px; background-color: #2196f3; margin-right: 8px; border-radius: 2px;"></span>
-              <%= l(:label_priority_low) %>
-            </td>
+            <td><span class="pr-swatch" style="background-color: #2272c4;"></span><%= l(:label_priority_low) %></td>
             <td><%= @priority_distribution[:low] %></td>
             <td><%= @priority_percentages[:low] %>%</td>
           </tr>
         </table>
       <% else %>
-        <p><%= l(:label_no_data) %></p>
+        <p class="nodata"><%= l(:label_no_data) %></p>
       <% end %>
     </div>
   </div>
@@ -478,58 +192,55 @@
       <h3><%= l(:label_financial_overview) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <div class="financial-stats">
-        <table class="dashboard-table">
-          <%
-            default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            default_symbol = local_currency_symbol(default_currency, symbol_map)
-          %>
+      <table class="dashboard-table">
+        <%
+          default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+          default_symbol = local_currency_symbol(default_currency, symbol_map)
+        %>
+        <tr>
+          <th><%= l(:label_total_estimated_cost) %></th>
+          <td class="stat-currency">
+            <%= default_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
+            <span class="currency-code"><%= default_currency %></span>
+          </td>
+        </tr>
+        <tr>
+          <th><%= l(:label_pending_cost) %></th>
+          <td class="stat-currency">
+            <%= default_symbol %><%= number_with_precision(@pending_cost, precision: 2, delimiter: ',') %>
+            <span class="currency-code"><%= default_currency %></span>
+          </td>
+        </tr>
+        <tr>
+          <th><%= l(:label_approved_cost) %></th>
+          <td class="stat-currency">
+            <%= default_symbol %><%= number_with_precision(@approved_cost, precision: 2, delimiter: ',') %>
+            <span class="currency-code"><%= default_currency %></span>
+          </td>
+        </tr>
+        <tr>
+          <th><%= l(:label_average_request_amount) %></th>
+          <td class="stat-currency">
+            <% avg = @total_requests > 0 ? @total_estimated_cost / @total_requests : 0 %>
+            <%= default_symbol %><%= number_with_precision(avg, precision: 2, delimiter: ',') %>
+            <span class="currency-code"><%= default_currency %></span>
+          </td>
+        </tr>
 
+        <% if @currency_distribution && @currency_distribution.size > 1 %>
           <tr>
-            <th><%= l(:label_total_estimated_cost) %></th>
-            <td class="stat-currency">
-              <%= default_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
-              <span class="currency-code">(<%= default_currency %>)</span>
-            </td>
+            <th colspan="2" class="section-header"><%= l(:label_currency_breakdown) %></th>
           </tr>
-          <tr>
-            <th><%= l(:label_pending_cost) %></th>
-            <td class="stat-currency">
-              <%= default_symbol %><%= number_with_precision(@pending_cost, precision: 2, delimiter: ',') %>
-              <span class="currency-code">(<%= default_currency %>)</span>
-            </td>
-          </tr>
-          <tr>
-            <th><%= l(:label_approved_cost) %></th>
-            <td class="stat-currency">
-              <%= default_symbol %><%= number_with_precision(@approved_cost, precision: 2, delimiter: ',') %>
-              <span class="currency-code">(<%= default_currency %>)</span>
-            </td>
-          </tr>
-          <tr>
-            <th><%= l(:label_average_request_amount) %></th>
-            <td class="stat-currency">
-              <% avg = @total_requests > 0 ? @total_estimated_cost / @total_requests : 0 %>
-              <%= default_symbol %><%= number_with_precision(avg, precision: 2, delimiter: ',') %>
-              <span class="currency-code">(<%= default_currency %>)</span>
-            </td>
-          </tr>
-
-          <% if @currency_distribution && @currency_distribution.size > 1 %>
+          <% @currency_distribution.each do |currency, amount| %>
             <tr>
-              <th colspan="2" class="section-header"><%= l(:label_currency_breakdown) %></th>
+              <th><%= currency %></th>
+              <td class="stat-currency">
+                <%= local_currency_symbol(currency, symbol_map) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+              </td>
             </tr>
-            <% @currency_distribution.each do |currency, amount| %>
-              <tr>
-                <th><%= currency %></th>
-                <td class="stat-currency">
-                  <%= local_currency_symbol(currency, symbol_map) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
-                </td>
-              </tr>
-            <% end %>
           <% end %>
-        </table>
-      </div>
+        <% end %>
+      </table>
     </div>
   </div>
 
@@ -547,7 +258,6 @@
             <th><%= l(:label_total_cost) %></th>
           </tr>
           <%
-            # Get default currency for requesters table
             requester_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
             requester_symbol = local_currency_symbol(requester_currency, symbol_map)
           %>
@@ -572,11 +282,8 @@
     </div>
     <div class="dashboard-card-body">
       <% if @monthly_trends.present? && @monthly_trends.any? %>
-        <!-- Native Bar Chart -->
-        <div class="chart-bar-container" id="monthly-trends-chart">
-          <!-- Bar chart will be generated here -->
-        </div>
-        
+        <div class="chart-bar-container" id="monthly-trends-chart"></div>
+
         <table class="dashboard-table">
           <tr>
             <th><%= l(:label_month) %></th>
@@ -615,10 +322,10 @@
           </tr>
           <% @recent_requests.each do |request| %>
             <tr>
-              <td><%= link_to "##{request.id}", project_purchase_request_path(@project, request) %></td>
-              <td><%= link_to truncate(request.title, length: 30), project_purchase_request_path(@project, request) %></td>
+              <td><%= link_to "##{request.id}", project_purchase_request_path(@project, request), class: 'pr-id-link' %></td>
+              <td><%= link_to truncate(request.title, length: 30), project_purchase_request_path(@project, request), class: 'pr-title-link' %></td>
               <td>
-                <span class="status-badge" style="background-color: <%= request.status.color.presence || '#777777' %>; color: white; padding: 2px 5px; border-radius: 3px; font-size: 11px;">
+                <span class="status-badge" style="background-color: <%= request.status.color.presence || '#777777' %>">
                   <%= request.status.name %>
                 </span>
               </td>
@@ -646,7 +353,6 @@
             <th><%= l(:label_total_cost) %></th>
           </tr>
           <%
-            # Get default currency for vendors table
             vendor_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
             vendor_symbol = local_currency_symbol(vendor_currency, symbol_map)
           %>
@@ -678,7 +384,6 @@
             <th>Total Cost</th>
           </tr>
           <%
-            # Get default currency for TPC table
             tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
             tpc_symbol = local_currency_symbol(tpc_currency, symbol_map)
           %>
@@ -691,10 +396,7 @@
           <% end %>
         </table>
 
-        <!-- Native Bar Chart for TPC Distribution -->
-        <div class="chart-bar-container" id="tpc-distribution-chart" style="margin-top: 20px;">
-          <!-- Bar chart will be generated here -->
-        </div>
+        <div class="chart-bar-container" id="tpc-distribution-chart"></div>
       <% else %>
         <p class="nodata">No TPC code data available</p>
       <% end %>
@@ -707,7 +409,7 @@
       <h3><%= l(:label_average_response_time) %></h3>
     </div>
     <div class="dashboard-card-body">
-      <div class="stat-box" style="width: 100%; box-shadow: none; margin: 0;">
+      <div class="stat-box pr-stat--accent">
         <div class="stat-number"><%= @avg_response_days %> <%= l(:label_days) %></div>
         <div class="stat-label"><%= l(:label_avg_processing_time) %></div>
       </div>
@@ -751,26 +453,25 @@
         </table>
 
         <%
-          # Display exchange rates if available
           exchange_rates = Setting.plugin_redmine_purchase_requests['exchange_rates'] || {}
           if exchange_rates.any?
         %>
-          <div class="exchange-rates-info">
-            <h4><%= l(:label_exchange_rates) %></h4>
-            <p class="info-text"><%= l(:text_exchange_rates_info) %></p>
-            <table class="dashboard-table">
-              <tr>
-                <th><%= l(:field_currency) %></th>
-                <th><%= l(:label_rate_to) %> <%= default_currency %></th>
-              </tr>
-              <% exchange_rates.each do |currency, rate| %>
-                <tr>
-                  <td><%= currency %></td>
-                  <td><%= number_with_precision(rate.to_f, precision: 6) %></td>
-                </tr>
-              <% end %>
-            </table>
+          <div class="pr-section-title">
+            <%= l(:label_exchange_rates) %>
           </div>
+          <p class="info"><%= l(:text_exchange_rates_info) %></p>
+          <table class="dashboard-table">
+            <tr>
+              <th><%= l(:field_currency) %></th>
+              <th><%= l(:label_rate_to) %> <%= default_currency %></th>
+            </tr>
+            <% exchange_rates.each do |currency, rate| %>
+              <tr>
+                <td><%= currency %></td>
+                <td><%= number_with_precision(rate.to_f, precision: 6) %></td>
+              </tr>
+            <% end %>
+          </table>
         <% end %>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -779,12 +480,13 @@
   </div>
 </div>
 
-<div class="box">
-  <p><%= l(:text_dashboard_info) %></p>
-  <p>
-    <span class="icon icon-magnifier"><%= link_to l(:label_view_all_requests), project_purchase_requests_path(@project), class: 'button' %></span>
-    <span class="icon icon-add"><%= link_to l(:label_new_purchase_request), new_project_purchase_request_path(@project), class: 'button button-positive' %></span>
-  </p>
+<div class="pr-form-actions left-aligned">
+  <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-magnifier"><%= l(:label_view_all_requests) %></span>
+  <% end %>
+  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+    <span class="icon icon-add"><%= l(:label_new_purchase_request) %></span>
+  <% end %>
 </div>
 
 <script>
@@ -801,167 +503,135 @@ document.addEventListener('DOMContentLoaded', function() {
     <% end %>
   ]);
   <% end %>
-  
+
   // Generate Priority Distribution Pie Chart
   <% if @priority_distribution.present? && @priority_distribution.values.sum > 0 %>
   generatePieChart('priority-pie-chart', [
     <% if @priority_distribution[:urgent] > 0 %>
-      {
-        label: '<%= j(l(:label_priority_urgent)) %>',
-        value: <%= @priority_distribution[:urgent] %>,
-        color: '#f44336'
-      },
+      { label: '<%= j(l(:label_priority_urgent)) %>', value: <%= @priority_distribution[:urgent] %>, color: '#dc3a3a' },
     <% end %>
     <% if @priority_distribution[:high] > 0 %>
-      {
-        label: '<%= j(l(:label_priority_high)) %>',
-        value: <%= @priority_distribution[:high] %>,
-        color: '#ff9800'
-      },
+      { label: '<%= j(l(:label_priority_high)) %>', value: <%= @priority_distribution[:high] %>, color: '#df8709' },
     <% end %>
     <% if @priority_distribution[:normal] > 0 %>
-      {
-        label: '<%= j(l(:label_priority_normal)) %>',
-        value: <%= @priority_distribution[:normal] %>,
-        color: '#4caf50'
-      },
+      { label: '<%= j(l(:label_priority_normal)) %>', value: <%= @priority_distribution[:normal] %>, color: '#2f9e44' },
     <% end %>
     <% if @priority_distribution[:low] > 0 %>
-      {
-        label: '<%= j(l(:label_priority_low)) %>',
-        value: <%= @priority_distribution[:low] %>,
-        color: '#2196f3'
-      },
+      { label: '<%= j(l(:label_priority_low)) %>', value: <%= @priority_distribution[:low] %>, color: '#2272c4' },
     <% end %>
   ]);
   <% end %>
-  
+
   // Generate Monthly Trends Bar Chart
   <% if @monthly_trends.present? && @monthly_trends.any? %>
   generateBarChart('monthly-trends-chart', [
     <% @monthly_trends.each do |trend| %>
-      {
-        label: '<%= j(trend[:month]) %>',
-        value: <%= trend[:count] %>,
-        amount: <%= trend[:amount] %>
-      },
+      { label: '<%= j(trend[:month]) %>', value: <%= trend[:count] %>, amount: <%= trend[:amount] %> },
     <% end %>
   ]);
   <% end %>
 });
 
-// Function to generate native pie charts using SVG
+// Native pie chart (SVG)
 function generatePieChart(containerId, data) {
   const container = document.getElementById(containerId);
   if (!container || !data.length) return;
-  
+
   const size = 120;
   const radius = size / 2 - 10;
   const centerX = size / 2;
   const centerY = size / 2;
-  
-  // Create SVG
+
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', size);
   svg.setAttribute('height', size);
   svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
-  
-  // Calculate total
+
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  
   if (total === 0) return;
-  
+
   let currentAngle = 0;
-  
-  data.forEach((item, index) => {
+
+  data.forEach((item) => {
     const percentage = item.value / total;
     const angle = percentage * 2 * Math.PI;
-    
+
     if (percentage > 0) {
-      // Create path for pie slice
       const startAngle = currentAngle;
       const endAngle = currentAngle + angle;
-      
+
       const x1 = centerX + radius * Math.cos(startAngle);
       const y1 = centerY + radius * Math.sin(startAngle);
       const x2 = centerX + radius * Math.cos(endAngle);
       const y2 = centerY + radius * Math.sin(endAngle);
-      
+
       const largeArcFlag = angle > Math.PI ? 1 : 0;
-      
+
       const pathData = [
         `M ${centerX} ${centerY}`,
         `L ${x1} ${y1}`,
         `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
         'Z'
       ].join(' ');
-      
+
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', pathData);
       path.setAttribute('fill', item.color);
       path.setAttribute('stroke', '#fff');
       path.setAttribute('stroke-width', '1');
       path.setAttribute('class', 'pie-slice');
-      
-      // Add hover effect
+
       path.addEventListener('mouseenter', function() {
         this.style.opacity = '0.8';
         this.style.transform = 'scale(1.05)';
         this.style.transformOrigin = `${centerX}px ${centerY}px`;
       });
-      
+
       path.addEventListener('mouseleave', function() {
         this.style.opacity = '1';
         this.style.transform = 'scale(1)';
       });
-      
+
       svg.appendChild(path);
       currentAngle += angle;
     }
   });
-  
+
   container.appendChild(svg);
 }
 
-// Function to generate native bar charts
+// Native bar chart
 function generateBarChart(containerId, data) {
   const container = document.getElementById(containerId);
   if (!container || !data.length) return;
-  
-  // Clear existing content
-  container.innerHTML = '';
-  
-  // Find max value for scaling
+
+  container.replaceChildren();
+
   const maxValue = Math.max(...data.map(item => item.value));
-  
   if (maxValue === 0) return;
-  
-  data.forEach((item, index) => {
-    const barHeight = (item.value / maxValue) * 120; // Max height 120px
-    
+
+  data.forEach((item) => {
+    const barHeight = (item.value / maxValue) * 120;
+
     const bar = document.createElement('div');
     bar.className = 'chart-bar';
     bar.style.height = barHeight + 'px';
-    bar.style.backgroundColor = '#007bff';
-    
-    // Add value label
+
     const valueLabel = document.createElement('div');
     valueLabel.className = 'chart-bar-value';
     valueLabel.textContent = item.value;
     bar.appendChild(valueLabel);
-    
-    // Add month label
+
     const monthLabel = document.createElement('div');
     monthLabel.className = 'chart-bar-label';
     monthLabel.textContent = item.label;
     bar.appendChild(monthLabel);
-    
-    // Add hover effect with amount
+
     bar.title = `${item.label}: ${item.value} requests`;
     if (item.amount !== undefined) {
       bar.title += ` (Total: $${item.amount.toLocaleString()})`;
     }
-    
+
     container.appendChild(bar);
   });
 }
@@ -978,12 +648,7 @@ if (tpcChartContainer && tpcDistributionData.length > 0) {
     count: item.count
   }));
 
-  generateBarChart(tpcChartContainer, tpcChartData, {
-    valueLabel: (value) => `$${value.toLocaleString()}`,
-    color: '#6f42c1',
-    showValues: true,
-    title: (item) => `${item.label}: ${item.count} requests ($${item.value.toLocaleString()})`
-  });
+  generateBarChart('tpc-distribution-chart', tpcChartData);
 }
 <% end %>
 </script>

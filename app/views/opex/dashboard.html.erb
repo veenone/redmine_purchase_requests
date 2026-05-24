@@ -1,473 +1,25 @@
+<%# filepath: app/views/opex/dashboard.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= stylesheet_link_tag 'capex', plugin: 'redmine_purchase_requests' %>
-  <style>
-    .dashboard-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .dashboard-card {
-      background-color: #fff;
-      border-radius: 5px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.1);
-      overflow: hidden;
-      transition: box-shadow 0.3s ease;
-    }
-
-    .dashboard-card:hover {
-      box-shadow: 0 3px 8px rgba(0,0,0,.15);
-    }
-
-    .dashboard-card-header {
-      background-color: #f5f5f5;
-      padding: 12px 15px;
-      border-bottom: 1px solid #e5e5e5;
-    }
-
-    .dashboard-card-header h3 {
-      margin: 0;
-      font-size: 15px;
-      color: #333;
-    }
-
-    .dashboard-card-body {
-      padding: 15px;
-    }
-
-    .summary-stats {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .stat-box {
-      flex: 1;
-      min-width: 200px;
-      margin: 0 10px;
-      text-align: center;
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 5px;
-      border: 1px solid #dee2e6;
-    }
-
-    .stat-number {
-      font-size: 28px;
-      font-weight: bold;
-      color: #28a745;
-      margin-bottom: 5px;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .stat-currency {
-      color: #007bff;
-      font-weight: bold;
-    }
-
-    .dashboard-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-
-    .dashboard-table th,
-    .dashboard-table td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .dashboard-table th {
-      background-color: #f5f5f5;
-      font-weight: bold;
-      color: #333;
-    }
-
-    .dashboard-table tr:hover {
-      background-color: #f9f9f9;
-    }
-
-    .status-indicator {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 5px;
-    }
-
-    .status-total { background-color: #28a745; }
-    .status-utilized { background-color: #ffc107; }
-    .status-remaining { background-color: #17a2b8; }
-    .status-overbudget { background-color: #dc3545; }
-
-    .utilization-bar {
-      width: 100%;
-      height: 20px;
-      background-color: #e9ecef;
-      border-radius: 10px;
-      overflow: hidden;
-      margin: 5px 0;
-    }
-
-    .utilization-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #28a745 0%, #ffc107 70%, #dc3545 100%);
-      transition: width 0.3s ease;
-    }
-
-    .currency-breakdown {
-      margin-top: 20px;
-    }
-
-    .currency-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .currency-item {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 5px;
-      border: 1px solid #dee2e6;
-      text-align: center;
-    }
-
-    .currency-header {
-      font-weight: bold;
-      color: #495057;
-      margin-bottom: 10px;
-    }
-
-    .currency-amount {
-      font-size: 18px;
-      color: #007bff;
-      font-weight: bold;
-    }
-
-    .category-grouping {
-      margin-top: 30px;
-    }
-
-    .category-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-top: 15px;
-    }
-
-    .category-card {
-      background: #fff;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .category-header {
-      background: #f8f9fa;
-      padding: 15px;
-      border-bottom: 1px solid #dee2e6;
-    }
-
-    .category-name {
-      font-weight: bold;
-      color: #495057;
-      font-size: 16px;
-    }
-
-    .category-body {
-      padding: 15px;
-    }
-
-    .category-stats {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-    }
-
-    .category-stat {
-      text-align: center;
-    }
-
-    .category-stat-value {
-      font-size: 18px;
-      font-weight: bold;
-      color: #007bff;
-    }
-
-    .category-stat-label {
-      font-size: 12px;
-      color: #666;
-      text-transform: uppercase;
-    }
-
-    .opex-table-section {
-      margin-top: 30px;
-    }
-
-    .opex-dashboard {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .opex-dashboard th,
-    .opex-dashboard td {
-      padding: 8px 12px;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .opex-dashboard th {
-      background-color: #f5f5f5;
-      font-weight: bold;
-      color: #333;
-    }
-
-    .opex-dashboard tr:hover {
-      background-color: #f9f9f9;
-    }
-
-    /* Column width adjustments */
-    .opex-dashboard .opex-code {
-      width: 12%;
-    }
-
-    .opex-dashboard .category {
-      width: 12%;
-    }
-
-    .opex-dashboard .description {
-      width: 22%;
-    }
-
-    .opex-dashboard .budget,
-    .opex-dashboard .utilized,
-    .opex-dashboard .remaining {
-      width: 12%;
-    }
-
-    .opex-dashboard .utilization {
-      width: 10%;
-    }
-
-    .opex-dashboard .linked-prs {
-      width: 8%;
-    }
-
-    .opex-dashboard .buttons {
-      width: 140px;
-      min-width: 140px;
-    }
-
-    .text-danger {
-      color: #dc3545 !important;
-    }
-
-    .currency-code {
-      font-size: 11px;
-      color: #777;
-      background-color: #f5f5f5;
-      padding: 1px 4px;
-      border-radius: 2px;
-      margin-left: 3px;
-    }
-
-    .utilization-text {
-      font-size: 12px;
-      margin-left: 5px;
-    }
-
-    .pr-link {
-      color: #007bff;
-      text-decoration: none;
-    }
-
-    .pr-link:hover {
-      text-decoration: underline;
-    }
-
-    .no-prs {
-      color: #999;
-    }
-
-    .no-opex-data {
-      text-align: center;
-      padding: 40px;
-      background: #f9f9f9;
-      border-radius: 8px;
-      border: 1px solid #e0e0e0;
-    }
-
-    .conversion-note {
-      font-size: 11px;
-      color: #888;
-      font-style: italic;
-      display: block;
-      margin-top: 3px;
-    }
-
-    /* Actions column styling */
-    .buttons {
-      width: 140px;
-      min-width: 140px;
-      text-align: left;
-      white-space: nowrap;
-      padding-left: 8px !important;
-    }
-
-    .buttons a {
-      display: inline-block;
-      margin: 0 6px 2px 0;
-      padding: 4px 8px;
-      border-radius: 3px;
-      text-decoration: none;
-      transition: background-color 0.2s ease;
-      font-size: 11px;
-      border: 1px solid transparent;
-      line-height: 1.2;
-    }
-
-    .buttons a:hover {
-      background-color: #e6f3ff;
-      border-color: #b3d9ff;
-    }
-
-    .buttons .icon {
-      width: 12px;
-      height: 12px;
-      background-repeat: no-repeat;
-      background-position: center;
-      margin-right: 4px;
-      display: inline-block;
-      vertical-align: middle;
-    }
-
-    /* Ensure actions wrap to new line if needed */
-    .buttons {
-      line-height: 1.4;
-    }
-
-    /* Native Chart Styles for OPEX */
-    .opex-chart {
-      margin: 15px 0;
-      padding: 10px;
-      background: #f9f9f9;
-      border-radius: 5px;
-    }
-
-    .opex-donut-container {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      margin: 10px 0;
-    }
-
-    .opex-donut {
-      width: 140px;
-      height: 140px;
-      position: relative;
-    }
-
-    .opex-donut-center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      font-size: 12px;
-      color: #333;
-    }
-
-    .opex-bar-chart {
-      display: flex;
-      align-items: flex-end;
-      height: 120px;
-      margin: 10px 0;
-      padding: 10px;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 3px;
-      gap: 8px;
-    }
-
-    .opex-quarter-bar {
-      background: linear-gradient(to top, #28a745, #20c997);
-      border-radius: 3px 3px 0 0;
-      position: relative;
-      flex: 1;
-      min-height: 10px;
-      transition: all 0.3s ease;
-    }
-
-    .opex-quarter-bar:hover {
-      background: linear-gradient(to top, #20c997, #17a2b8);
-      transform: scaleY(1.05);
-    }
-
-    .opex-quarter-label {
-      position: absolute;
-      bottom: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      color: #666;
-      font-weight: bold;
-    }
-
-    .opex-quarter-value {
-      position: absolute;
-      top: -25px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 10px;
-      color: #333;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 768px) {
-      .summary-stats {
-        flex-direction: column;
-      }
-      
-      .stat-box {
-        margin: 5px 0;
-      }
-      
-      .dashboard-container {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/opex/dashboard.html.erb %>
 <% html_title "OPEX Dashboard - #{@project.name}" %>
 
 <div class="contextual">
   <%= link_to project_opex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-cancel">Back to OPEX List</span> 
+    <span class="icon icon-cancel">Back to OPEX List</span>
   <% end %>
-  
+
   <% if User.current.allowed_to?(:view_tpc_codes, @project) %>
     <%= link_to project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-projects">TPC Codes</span> 
+      <span class="icon icon-projects">TPC Codes</span>
     <% end %>
   <% end %>
-  
+
   <% if User.current.allowed_to?(:manage_opex, @project) %>
     <%= link_to new_project_opex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-      <span class="icon icon-add">New OPEX Entry</span> 
+      <span class="icon icon-add">New OPEX Entry</span>
     <% end %>
   <% end %>
 </div>
@@ -475,27 +27,29 @@
 <h2>OPEX Dashboard - <%= @current_year %></h2>
 
 <%= form_tag dashboard_project_opex_index_path(@project), method: :get, local: true do %>
-  <fieldset class="filters">
+  <fieldset class="pr-filters">
     <legend>Year Filter</legend>
-    <%= select_tag 'year', 
-                   options_for_select((2020..2030).map { |y| [y, y] }, @current_year), 
-                   onchange: 'this.form.submit()' %>
+    <div class="filter-row">
+      <%= select_tag 'year',
+                     options_for_select((2020..2030).map { |y| [y, y] }, @current_year),
+                     onchange: 'this.form.submit()' %>
+    </div>
   </fieldset>
 <% end %>
 
 <% if @opex_entries.any? %>
-  <!-- Summary Cards -->
+  <!-- Summary stat tiles -->
   <div class="summary-stats">
-    <div class="stat-box">
-      <div class="stat-number">
+    <div class="stat-box pr-stat--accent">
+      <div class="stat-number stat-currency">
         <% if @use_exchange_rates %>
           <%= opex_currency_symbol(@default_currency) %>
           <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
-          <span class="currency"><%= @default_currency %></span>
+          <span class="currency-code"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
           <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
           <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
-          <span class="currency"><%= @currency_breakdown.keys.first %></span>
+          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
           Multi-Currency
         <% end %>
@@ -503,55 +57,55 @@
       <div class="stat-label">
         Total OPEX Budget
         <% if @use_exchange_rates %>
-          <span class="conversion-note">(Converted to <%= @default_currency %>)</span>
+          <span style="display:block; font-size:10px; color:var(--pr-ink-faint); font-style:italic;">(Converted to <%= @default_currency %>)</span>
         <% end %>
       </div>
     </div>
-    
-    <div class="stat-box">
+
+    <div class="stat-box pr-stat--warning">
       <div class="stat-number stat-currency">
         <% if @use_exchange_rates %>
           <%= opex_currency_symbol(@default_currency) %>
           <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-          <span class="currency"><%= @default_currency %></span>
+          <span class="currency-code"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
           <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
           <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-          <span class="currency"><%= @currency_breakdown.keys.first %></span>
+          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
           Multi-Currency
         <% end %>
       </div>
       <div class="stat-label">Total Utilized (<%= @utilization_percentage %>%)</div>
-      <div class="utilization-bar">
+      <div class="utilization-bar" style="margin-top:8px;">
         <div class="utilization-fill" style="width: <%= @utilization_percentage %>%"></div>
       </div>
     </div>
-    
-    <div class="stat-box">
-      <div class="stat-number">
+
+    <div class="stat-box pr-stat--success">
+      <div class="stat-number stat-currency">
         <% if @use_exchange_rates %>
           <%= opex_currency_symbol(@default_currency) %>
           <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-          <span class="currency"><%= @default_currency %></span>
+          <span class="currency-code"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
           <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
           <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-          <span class="currency"><%= @currency_breakdown.keys.first %></span>
+          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
           Multi-Currency
         <% end %>
       </div>
       <div class="stat-label">Total Remaining (<%= (100 - @utilization_percentage).round(2) %>%)</div>
     </div>
-    
-    <div class="stat-box">
+
+    <div class="stat-box pr-stat--info">
       <div class="stat-number"><%= @opex_entries.count %></div>
       <div class="stat-label">Active OPEX Entries</div>
     </div>
   </div>
 
-  <!-- Dashboard Content -->
+  <!-- Dashboard cards -->
   <div class="dashboard-container">
     <!-- Budget Utilization Overview -->
     <div class="dashboard-card">
@@ -559,19 +113,19 @@
         <h3>Budget Utilization Overview</h3>
       </div>
       <div class="dashboard-card-body">
-        <!-- Native Donut Chart -->
-        <div class="opex-donut-container">
-          <div class="opex-donut" id="utilization-donut-chart">
-            <!-- SVG Donut Chart will be generated here -->
-            <div class="opex-donut-center">
-              <div style="font-weight: bold; font-size: 14px;"><%= @utilization_percentage %>%</div>
-              <div style="font-size: 10px; color: #666;">Utilized</div>
+        <div class="capex-donut-container">
+          <div class="capex-donut" id="utilization-donut-chart">
+            <div class="capex-donut-center">
+              <div style="font-weight:bold; font-size:14px;"><%= @utilization_percentage %>%</div>
+              <div style="font-size:10px; color:var(--pr-ink-muted);">Utilized</div>
             </div>
           </div>
-          <div style="flex: 1;">
+          <div style="flex:1;">
             <table class="dashboard-table">
               <tr>
-                <td><span class="status-indicator status-utilized"></span>Utilized</td>
+                <td>
+                  <span class="status-indicator status-utilized"></span>Utilized
+                </td>
                 <td class="stat-currency">
                   <% if @use_exchange_rates %>
                     <%= opex_currency_symbol(@default_currency) %>
@@ -587,7 +141,9 @@
                 </td>
               </tr>
               <tr>
-                <td><span class="status-indicator status-remaining"></span>Remaining</td>
+                <td>
+                  <span class="status-indicator status-remaining"></span>Remaining
+                </td>
                 <td class="stat-currency">
                   <% if @use_exchange_rates %>
                     <%= opex_currency_symbol(@default_currency) %>
@@ -607,79 +163,38 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Quarterly Distribution -->
     <div class="dashboard-card">
       <div class="dashboard-card-header">
         <h3>Quarterly Distribution</h3>
       </div>
       <div class="dashboard-card-body">
-        <!-- Native Bar Chart -->
-        <div class="opex-bar-chart" id="quarterly-bar-chart">
-          <!-- Quarterly bars will be generated here -->
+        <div class="capex-bar-chart" id="quarterly-bar-chart">
+          <!-- Bars generated by script -->
         </div>
-        
+
         <table class="dashboard-table">
           <tr>
             <th>Quarter</th>
             <th>Budget</th>
           </tr>
-          <tr>
-            <td>Q1</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= opex_currency_symbol(@default_currency) %>
-                <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <td>Q2</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= opex_currency_symbol(@default_currency) %>
-                <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <td>Q3</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= opex_currency_symbol(@default_currency) %>
-                <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <td>Q4</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= opex_currency_symbol(@default_currency) %>
-                <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
+          <% [:q1, :q2, :q3, :q4].each_with_index do |q, i| %>
+            <tr>
+              <td>Q<%= i + 1 %></td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= opex_currency_symbol(@default_currency) %>
+                  <%= number_with_precision(@quarterly_data[q], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
+                  <%= number_with_precision(@quarterly_data[q], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[q], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
         </table>
       </div>
     </div>
@@ -687,37 +202,37 @@
 
   <!-- Category Grouping -->
   <% if @category_grouping && @category_grouping.any? %>
-    <div class="category-grouping">
-      <h3>Budget by Category</h3>
-      <div class="category-grid">
+    <div class="details-section" style="margin-top:30px;">
+      <h4>Budget by Category</h4>
+      <div class="dashboard-container">
         <% @category_grouping.each do |category_name, data| %>
-          <div class="category-card">
-            <div class="category-header">
-              <div class="category-name"><%= category_name %></div>
+          <div class="dashboard-card">
+            <div class="dashboard-card-header">
+              <h3><%= category_name %></h3>
             </div>
-            <div class="category-body">
-              <div class="category-stats">
-                <div class="category-stat">
-                  <div class="category-stat-value">
+            <div class="dashboard-card-body">
+              <div class="summary-stats" style="margin-bottom:12px;">
+                <div class="stat-box pr-stat--accent" style="min-width:0; flex:1;">
+                  <div class="stat-number stat-currency" style="font-size:16px;">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
                   </div>
-                  <div class="category-stat-label">Total Budget</div>
+                  <div class="stat-label">Total Budget</div>
                 </div>
-                <div class="category-stat">
-                  <div class="category-stat-value">
+                <div class="stat-box pr-stat--warning" style="min-width:0; flex:1;">
+                  <div class="stat-number stat-currency" style="font-size:16px;">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
                   </div>
-                  <div class="category-stat-label">Utilized</div>
+                  <div class="stat-label">Utilized</div>
                 </div>
-                <div class="category-stat">
-                  <div class="category-stat-value"><%= data[:entries_count] %></div>
-                  <div class="category-stat-label">Entries</div>
+                <div class="stat-box pr-stat--info" style="min-width:0; flex:1;">
+                  <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
+                  <div class="stat-label">Entries</div>
                 </div>
               </div>
               <div class="utilization-bar">
                 <div class="utilization-fill" style="width: <%= data[:utilization_percentage] %>%"></div>
               </div>
-              <div style="text-align: center; margin-top: 10px; font-size: 14px; color: #666;">
+              <div style="text-align:center; margin-top:6px; font-size:13px; color:var(--pr-ink-muted);">
                 <%= data[:utilization_percentage] %>% Utilized
               </div>
             </div>
@@ -727,29 +242,28 @@
     </div>
   <% end %>
 
-  <!-- Currency Breakdown (if multi-currency) -->
+  <!-- Currency Breakdown (multi-currency) -->
   <% if @currency_breakdown.keys.length > 1 %>
-    <div class="currency-breakdown">
-      <h3>Budget by Currency</h3>
-      <div class="currency-grid">
+    <div class="details-section" style="margin-top:30px;">
+      <h4>Budget by Currency</h4>
+      <div class="summary-stats" style="flex-wrap:wrap; gap:12px;">
         <% @currency_breakdown.each do |currency, amount| %>
-          <div class="currency-item">
-            <div class="currency-header"><%= currency %></div>
-            <div class="currency-amount">
-              <%= Opex.new(currency: currency).currency_symbol %>
-              <%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+          <div class="stat-box pr-stat--accent" style="min-width:180px;">
+            <div class="stat-number stat-currency">
+              <%= Opex.new(currency: currency).currency_symbol %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
             </div>
+            <div class="stat-label"><span class="currency-code"><%= currency %></span></div>
           </div>
         <% end %>
       </div>
     </div>
   <% end %>
 
-  <!-- OPEX Entries Table -->
-  <div class="opex-table-section">
-    <h3>OPEX Entries Details</h3>
+  <!-- OPEX Entries Details Table -->
+  <div class="details-section" style="margin-top:30px;">
+    <h4>OPEX Entries Details</h4>
     <div class="autoscroll">
-      <table class="list opex-dashboard">
+      <table class="pr-table">
         <thead>
           <tr>
             <th>OPEX Code</th>
@@ -766,61 +280,65 @@
         <tbody>
           <% @opex_entries.each do |opex| %>
             <tr class="<%= cycle('odd', 'even') %>">
-              <td class="opex-code">
+              <td class="tpc-number">
                 <strong><%= opex.opex_code %></strong>
               </td>
-              <td class="category">
-                <%= opex.opex_category&.name %>
+              <td>
+                <span class="pr-badge pr-badge--info"><%= opex.opex_category&.name %></span>
               </td>
-              <td class="description">
+              <td>
                 <%= truncate(opex.description, length: 80) %>
               </td>
-              <td class="budget">
-                <span class="currency-amount">
-                  <%= opex.currency_symbol %><%= number_with_precision(opex.total_amount, precision: 2, delimiter: ',') %>
-                  <span class="currency-code"><%= opex.currency %></span>
-                </span>
+              <td class="stat-currency">
+                <%= opex.currency_symbol %><%= number_with_precision(opex.total_amount, precision: 2, delimiter: ',') %>
+                <span class="currency-code"><%= opex.currency %></span>
               </td>
-              <td class="utilized">
-                <span class="currency-amount">
-                  <%= opex.currency_symbol %><%= number_with_precision(opex.utilized_amount, precision: 2, delimiter: ',') %>
-                </span>
+              <td class="stat-currency">
+                <%= opex.currency_symbol %><%= number_with_precision(opex.utilized_amount, precision: 2, delimiter: ',') %>
               </td>
-              <td class="remaining">
-                <span class="currency-amount <%= 'text-danger' if opex.remaining_amount < 0 %>">
+              <td>
+                <span class="<%= opex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
                   <%= opex.currency_symbol %><%= number_with_precision(opex.remaining_amount, precision: 2, delimiter: ',') %>
                 </span>
               </td>
-              <td class="utilization">
-                <div class="utilization-bar" style="width: 80px; height: 12px;">
+              <td>
+                <div class="utilization-bar" style="width:80px; height:12px; display:inline-block; vertical-align:middle;">
                   <div class="utilization-fill" style="width: <%= [opex.utilization_percentage, 100].min %>%"></div>
                 </div>
-                <span class="utilization-text"><%= opex.utilization_percentage %>%</span>
+                <span style="font-size:12px; margin-left:4px;"><%= opex.utilization_percentage %>%</span>
               </td>
-              <td class="linked-prs">
+              <td>
                 <% linked_prs = opex.purchase_requests %>
                 <% if linked_prs.any? %>
                   <% linked_prs.limit(3).each do |pr| %>
-                    <%= link_to "##{pr.id}", project_purchase_request_path(@project, pr), class: 'pr-link', title: pr.title %>
+                    <%= link_to "##{pr.id}", project_purchase_request_path(@project, pr), title: pr.title %>
                   <% end %>
                   <% if linked_prs.count > 3 %>
                     <span title="<%= linked_prs.count %> total PRs">+<%= linked_prs.count - 3 %></span>
                   <% end %>
                 <% else %>
-                  <span class="no-prs">None</span>
+                  <span class="no-data">None</span>
                 <% end %>
-              </td>              <td class="buttons">
-                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                  <%= link_to project_opex_path(@project, opex), class: 'icon icon-zoom-in', title: 'View OPEX' do %>
-                    <span>&nbsp;&nbsp;&nbsp;View</span>
+              </td>
+              <td class="buttons">
+                <div class="pr-table-actions">
+                  <%= link_to project_opex_path(@project, opex),
+                              class: 'pr-button pr-button-secondary pr-button-icon small',
+                              title: 'View OPEX' do %>
+                    <span class="icon icon-magnifier">View</span>
                   <% end %>
                   <% if User.current.allowed_to?(:manage_opex, @project) %>
-                    &nbsp;&nbsp;<%= link_to edit_project_opex_path(@project, opex), class: 'icon icon-edit', title: 'Edit OPEX' do %>
-                      <span>&nbsp;&nbsp;&nbsp;Edit</span>
+                    <%= link_to edit_project_opex_path(@project, opex),
+                                class: 'pr-button pr-button-secondary pr-button-icon small',
+                                title: 'Edit OPEX' do %>
+                      <span class="icon icon-edit">Edit</span>
                     <% end %>
-                    &nbsp;&nbsp;<%= link_to project_opex_path(@project, opex), method: :delete, 
-                               data: { confirm: 'Are you sure?' }, class: 'icon icon-del', title: 'Delete OPEX' do %>
-                      <span>&nbsp;&nbsp;&nbsp;Delete</span>
+                    <%= link_to project_opex_path(@project, opex),
+                                method: :delete,
+                                data: { confirm: 'Are you sure?' },
+                                class: 'pr-button pr-button-danger pr-button-icon small',
+                                title: 'Delete OPEX' do %>
+                      <span class="icon icon-del">Delete</span>
                     <% end %>
                   <% end %>
                 </div>
@@ -833,57 +351,91 @@
   </div>
 
 <% else %>
-  <div class="no-opex-data">
-    <h3>No OPEX Data Available</h3>
-    <p>There are no OPEX entries for the year <%= @current_year %>.</p>
+  <div class="pr-empty">
+    <div class="pr-empty__icon">📊</div>
+    <h3>No OPEX Data for <%= @current_year %></h3>
+    <p>There are no OPEX entries for the selected year.</p>
     <% if User.current.allowed_to?(:manage_opex, @project) %>
-      <%= link_to 'Create First OPEX Entry', new_project_opex_path(@project), class: 'pr-button pr-button-primary' %>
+      <p>
+        <%= link_to new_project_opex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+          <span class="icon icon-add"></span> Create First OPEX Entry
+        <% end %>
+      </p>
     <% end %>
   </div>
 <% end %>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Generate SVG donut chart for utilization
-    var utilizationChart = document.getElementById('utilization-donut-chart');
-    if (utilizationChart) {
-      var percentage = <%= @utilization_percentage %>;
-      var circumference = 2 * Math.PI * 50;
-      var strokeDasharray = (percentage / 100) * circumference;
-      var strokeDashoffset = circumference - strokeDasharray;
-      
-      var svg = '<svg width="140" height="140" viewBox="0 0 140 140">' +
-                '<circle cx="70" cy="70" r="50" fill="none" stroke="#e9ecef" stroke-width="20"></circle>' +
-                '<circle cx="70" cy="70" r="50" fill="none" stroke="#28a745" stroke-width="20" ' +
-                'stroke-dasharray="' + circumference + '" stroke-dashoffset="' + strokeDashoffset + '" ' +
-                'stroke-linecap="round" transform="rotate(-90 70 70)"></circle>' +
-                '</svg>';
-      
-      utilizationChart.innerHTML = svg + utilizationChart.innerHTML;
-    }
-    
-    // Generate quarterly bar chart
-    var quarterlyChart = document.getElementById('quarterly-bar-chart');
-    if (quarterlyChart) {
-      var quarterlyData = [
-        { label: 'Q1', value: <%= @quarterly_data[:q1] %> },
-        { label: 'Q2', value: <%= @quarterly_data[:q2] %> },
-        { label: 'Q3', value: <%= @quarterly_data[:q3] %> },
-        { label: 'Q4', value: <%= @quarterly_data[:q4] %> }
-      ];
-      
-      var maxValue = Math.max.apply(Math, quarterlyData.map(function(d) { return d.value; }));
-      if (maxValue === 0) maxValue = 1; // Prevent division by zero
-      
-      quarterlyData.forEach(function(quarter) {
-        var height = (quarter.value / maxValue) * 100;
-        var bar = document.createElement('div');
-        bar.className = 'opex-quarter-bar';
-        bar.style.height = height + '%';
-        bar.innerHTML = '<div class="opex-quarter-label">' + quarter.label + '</div>' +
-                       '<div class="opex-quarter-value">' + quarter.value.toLocaleString() + '</div>';
-        quarterlyChart.appendChild(bar);
-      });
-    }
-  });
+document.addEventListener('DOMContentLoaded', function() {
+  // Generate SVG donut chart for utilization
+  var utilizationChart = document.getElementById('utilization-donut-chart');
+  if (utilizationChart) {
+    var percentage = <%= @utilization_percentage %>;
+    var circumference = 2 * Math.PI * 50;
+    var strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', '140');
+    svg.setAttribute('height', '140');
+    svg.setAttribute('viewBox', '0 0 140 140');
+
+    var bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    bgCircle.setAttribute('cx', '70');
+    bgCircle.setAttribute('cy', '70');
+    bgCircle.setAttribute('r', '50');
+    bgCircle.setAttribute('fill', 'none');
+    bgCircle.setAttribute('stroke', 'var(--pr-surface-sunken)');
+    bgCircle.setAttribute('stroke-width', '20');
+
+    var fgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    fgCircle.setAttribute('cx', '70');
+    fgCircle.setAttribute('cy', '70');
+    fgCircle.setAttribute('r', '50');
+    fgCircle.setAttribute('fill', 'none');
+    fgCircle.setAttribute('stroke', 'var(--pr-warning)');
+    fgCircle.setAttribute('stroke-width', '20');
+    fgCircle.setAttribute('stroke-dasharray', String(circumference));
+    fgCircle.setAttribute('stroke-dashoffset', String(strokeDashoffset));
+    fgCircle.setAttribute('stroke-linecap', 'round');
+    fgCircle.setAttribute('transform', 'rotate(-90 70 70)');
+
+    svg.appendChild(bgCircle);
+    svg.appendChild(fgCircle);
+    utilizationChart.insertBefore(svg, utilizationChart.firstChild);
+  }
+
+  // Generate quarterly bar chart using capex-quarter-* classes (shared design-system styles)
+  var quarterlyChart = document.getElementById('quarterly-bar-chart');
+  if (quarterlyChart) {
+    var quarterlyData = [
+      { label: 'Q1', value: <%= @quarterly_data[:q1] %> },
+      { label: 'Q2', value: <%= @quarterly_data[:q2] %> },
+      { label: 'Q3', value: <%= @quarterly_data[:q3] %> },
+      { label: 'Q4', value: <%= @quarterly_data[:q4] %> }
+    ];
+
+    var maxValue = Math.max.apply(Math, quarterlyData.map(function(d) { return d.value; }));
+    if (maxValue === 0) maxValue = 1;
+
+    quarterlyData.forEach(function(quarter) {
+      var height = (quarter.value / maxValue) * 100;
+      var bar = document.createElement('div');
+      bar.className = 'capex-quarter-bar';
+      bar.style.height = height + '%';
+      bar.title = quarter.label + ': ' + quarter.value.toLocaleString();
+
+      var labelEl = document.createElement('div');
+      labelEl.className = 'capex-quarter-label';
+      labelEl.textContent = quarter.label;
+
+      var valueEl = document.createElement('div');
+      valueEl.className = 'capex-quarter-value';
+      valueEl.textContent = quarter.value.toLocaleString();
+
+      bar.appendChild(labelEl);
+      bar.appendChild(valueEl);
+      quarterlyChart.appendChild(bar);
+    });
+  }
+});
 </script>

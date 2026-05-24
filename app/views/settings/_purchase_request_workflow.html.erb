@@ -1,80 +1,109 @@
-<div class="workflow-settings">
+<div class="pr-settings-header">
   <h3><%= l(:label_workflow_settings, default: 'Issue Workflow Settings') %></h3>
+</div>
 
-  <p class="info-box">
-    <%= l(:text_workflow_description, default: 'Link purchase requests with Redmine issues to track workflow progress. Each purchase request can have a parent issue with configurable subtasks.') %>
-  </p>
+<div class="info-box" style="margin-bottom: 18px;">
+  <%= l(:text_workflow_description, default: 'Link purchase requests with Redmine issues to track workflow progress. Each purchase request can have a parent issue with configurable subtasks.') %>
+</div>
 
-  <fieldset class="box">
-    <legend><%= l(:label_workflow_general, default: 'General Settings') %></legend>
+<!-- General Settings -->
+<div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card-header">
+    <h3><%= l(:label_workflow_general, default: 'General Settings') %></h3>
+  </div>
+  <div class="dashboard-card-body">
 
-    <p>
-      <label>
-        <%= hidden_field_tag 'settings[workflow_enabled]', '0' %>
-        <%= check_box_tag 'settings[workflow_enabled]', '1',
-            @settings['workflow_enabled'] == '1',
-            id: 'settings_workflow_enabled' %>
-        <%= l(:label_enable_workflow, default: 'Enable issue workflow for purchase requests') %>
-      </label>
-    </p>
+    <div class="form-row">
+      <p>
+        <label>
+          <%= hidden_field_tag 'settings[workflow_enabled]', '0' %>
+          <%= check_box_tag 'settings[workflow_enabled]', '1',
+              @settings['workflow_enabled'] == '1',
+              id: 'settings_workflow_enabled' %>
+          <%= l(:label_enable_workflow, default: 'Enable issue workflow for purchase requests') %>
+        </label>
+      </p>
+    </div>
 
-    <p>
-      <label>
-        <%= hidden_field_tag 'settings[workflow_auto_create]', '0' %>
-        <%= check_box_tag 'settings[workflow_auto_create]', '1',
-            @settings['workflow_auto_create'] == '1',
-            id: 'settings_workflow_auto_create' %>
-        <%= l(:label_auto_create_issues, default: 'Automatically create issues when a new purchase request is created') %>
-      </label>
-    </p>
+    <div class="form-row">
+      <p>
+        <label>
+          <%= hidden_field_tag 'settings[workflow_auto_create]', '0' %>
+          <%= check_box_tag 'settings[workflow_auto_create]', '1',
+              @settings['workflow_auto_create'] == '1',
+              id: 'settings_workflow_auto_create' %>
+          <%= l(:label_auto_create_issues, default: 'Automatically create issues when a new purchase request is created') %>
+        </label>
+      </p>
+    </div>
 
-    <p>
-      <label>
-        <%= hidden_field_tag 'settings[workflow_sync_status]', '0' %>
-        <%= check_box_tag 'settings[workflow_sync_status]', '1',
-            @settings['workflow_sync_status'] == '1',
-            id: 'settings_workflow_sync_status' %>
-        <%= l(:label_sync_issue_status, default: 'Sync purchase request status when issue is closed') %>
-      </label>
-      <span class="form-hint"><%= l(:hint_sync_issue_status, default: 'When enabled, closing the linked issue will automatically close the purchase request') %></span>
-    </p>
-  </fieldset>
+    <div class="form-row">
+      <p>
+        <label>
+          <%= hidden_field_tag 'settings[workflow_sync_status]', '0' %>
+          <%= check_box_tag 'settings[workflow_sync_status]', '1',
+              @settings['workflow_sync_status'] == '1',
+              id: 'settings_workflow_sync_status' %>
+          <%= l(:label_sync_issue_status, default: 'Sync purchase request status when issue is closed') %>
+        </label>
+        <em class="info"><%= l(:hint_sync_issue_status, default: 'When enabled, closing the linked issue will automatically close the purchase request') %></em>
+      </p>
+    </div>
+  </div>
+</div>
 
-  <fieldset class="box">
-    <legend><%= l(:label_tracker_settings, default: 'Tracker Settings') %></legend>
+<!-- Tracker Settings -->
+<div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card-header">
+    <h3><%= l(:label_tracker_settings, default: 'Tracker Settings') %></h3>
+  </div>
+  <div class="dashboard-card-body">
 
-    <p>
-      <label for="settings_workflow_tracker_id">
-        <%= l(:label_main_issue_tracker, default: 'Main Issue Tracker') %>
-      </label>
-      <%= select_tag 'settings[workflow_tracker_id]',
-          options_from_collection_for_select(Tracker.sorted, :id, :name, @settings['workflow_tracker_id'].to_i),
-          include_blank: true,
-          id: 'settings_workflow_tracker_id' %>
-      <span class="form-hint"><%= l(:hint_main_tracker, default: 'Tracker used for the main purchase request issue') %></span>
-    </p>
+    <div class="form-row">
+      <p>
+        <label for="settings_workflow_tracker_id" class="pr-settings-label">
+          <%= l(:label_main_issue_tracker, default: 'Main Issue Tracker') %>
+        </label>
+        <%= select_tag 'settings[workflow_tracker_id]',
+            options_from_collection_for_select(Tracker.sorted, :id, :name, @settings['workflow_tracker_id'].to_i),
+            include_blank: true,
+            id: 'settings_workflow_tracker_id',
+            class: 'form-control',
+            style: 'max-width: 300px;' %>
+        <em class="info"><%= l(:hint_main_tracker, default: 'Tracker used for the main purchase request issue') %></em>
+      </p>
+    </div>
 
-    <p>
-      <label for="settings_workflow_subtask_tracker_id">
-        <%= l(:label_subtask_tracker, default: 'Subtask Tracker') %>
-      </label>
-      <%= select_tag 'settings[workflow_subtask_tracker_id]',
-          options_from_collection_for_select(Tracker.sorted, :id, :name, @settings['workflow_subtask_tracker_id'].to_i),
-          include_blank: l(:label_same_as_main, default: '-- Same as main tracker --'),
-          id: 'settings_workflow_subtask_tracker_id' %>
-      <span class="form-hint"><%= l(:hint_subtask_tracker, default: 'Tracker used for workflow subtasks (defaults to main tracker if not specified)') %></span>
-    </p>
-  </fieldset>
+    <div class="form-row">
+      <p>
+        <label for="settings_workflow_subtask_tracker_id" class="pr-settings-label">
+          <%= l(:label_subtask_tracker, default: 'Subtask Tracker') %>
+        </label>
+        <%= select_tag 'settings[workflow_subtask_tracker_id]',
+            options_from_collection_for_select(Tracker.sorted, :id, :name, @settings['workflow_subtask_tracker_id'].to_i),
+            include_blank: l(:label_same_as_main, default: '-- Same as main tracker --'),
+            id: 'settings_workflow_subtask_tracker_id',
+            class: 'form-control',
+            style: 'max-width: 300px;' %>
+        <em class="info"><%= l(:hint_subtask_tracker, default: 'Tracker used for workflow subtasks (defaults to main tracker if not specified)') %></em>
+      </p>
+    </div>
+  </div>
+</div>
 
-  <fieldset class="box">
-    <legend><%= l(:label_workflow_templates, default: 'Workflow Subtask Templates') %></legend>
+<!-- Workflow Templates -->
+<div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card-header">
+    <h3><%= l(:label_workflow_templates, default: 'Workflow Subtask Templates') %></h3>
+  </div>
+  <div class="dashboard-card-body">
 
-    <p class="info-box">
+    <div class="info-box" style="margin-bottom: 14px;">
       <%= l(:text_workflow_templates_description, default: 'Define the subtasks that will be created for each purchase request. These represent the workflow steps.') %>
-    </p>
+    </div>
 
     <div id="workflow-templates-container">
-      <table class="list workflow-templates-table">
+      <table class="pr-table">
         <thead>
           <tr>
             <th><%= l(:field_position, default: 'Order') %></th>
@@ -91,40 +120,44 @@
           <% if templates.any? %>
             <% templates.each do |template| %>
               <tr class="workflow-template-row" data-id="<%= template.id %>">
-                <td class="position"><%= template.position %></td>
-                <td class="name"><%= template.name %></td>
-                <td class="description"><%= truncate(template.description, length: 50) %></td>
-                <td class="tracker"><%= template.tracker&.name || l(:label_default, default: 'Default') %></td>
-                <td class="active">
+                <td>
+                  <span class="pr-badge pr-badge--neutral"><%= template.position %></span>
+                </td>
+                <td style="font-weight: 500; color: var(--pr-ink);"><%= template.name %></td>
+                <td style="color: var(--pr-ink-muted); font-size: 12px;"><%= truncate(template.description, length: 50) %></td>
+                <td style="color: var(--pr-ink-muted);"><%= template.tracker&.name || l(:label_default, default: 'Default') %></td>
+                <td>
                   <% if template.is_active? %>
-                    <span class="badge badge-success"><%= l(:general_text_Yes, default: 'Yes') %></span>
+                    <span class="pr-badge pr-badge--success"><%= l(:general_text_Yes, default: 'Yes') %></span>
                   <% else %>
-                    <span class="badge badge-secondary"><%= l(:general_text_No, default: 'No') %></span>
+                    <span class="pr-badge pr-badge--neutral"><%= l(:general_text_No, default: 'No') %></span>
                   <% end %>
                 </td>
-                <td class="auto-create">
+                <td>
                   <% if template.auto_create? %>
-                    <span class="badge badge-info"><%= l(:general_text_Yes, default: 'Yes') %></span>
+                    <span class="pr-badge pr-badge--info"><%= l(:general_text_Yes, default: 'Yes') %></span>
                   <% else %>
-                    <span class="badge badge-secondary"><%= l(:general_text_No, default: 'No') %></span>
+                    <span class="pr-badge pr-badge--neutral"><%= l(:general_text_No, default: 'No') %></span>
                   <% end %>
                 </td>
-                <td class="actions">
-                  <%= link_to l(:button_edit, default: 'Edit'),
-                      edit_purchase_request_workflow_template_path(template),
-                      class: 'icon icon-edit',
-                      remote: true %>
-                  <%= link_to l(:button_delete, default: 'Delete'),
-                      purchase_request_workflow_template_path(template),
-                      method: :delete,
-                      data: { confirm: l(:text_are_you_sure, default: 'Are you sure?') },
-                      class: 'icon icon-del' %>
+                <td>
+                  <div class="pr-table-actions">
+                    <%= link_to l(:button_edit, default: 'Edit'),
+                        edit_purchase_request_workflow_template_path(template),
+                        class: 'pr-button pr-button-secondary pr-button-icon small',
+                        remote: true %>
+                    <%= link_to l(:button_delete, default: 'Delete'),
+                        purchase_request_workflow_template_path(template),
+                        method: :delete,
+                        data: { confirm: l(:text_are_you_sure, default: 'Are you sure?') },
+                        class: 'pr-button pr-button-danger pr-button-icon small' %>
+                  </div>
                 </td>
               </tr>
             <% end %>
           <% else %>
-            <tr class="no-templates">
-              <td colspan="7" class="nodata">
+            <tr>
+              <td colspan="7" style="text-align: center; padding: 30px 20px; color: var(--pr-ink-faint); font-style: italic;">
                 <%= l(:label_no_workflow_templates, default: 'No workflow templates defined. Click "Add Template" to create one or "Create Defaults" to add standard templates.') %>
               </td>
             </tr>
@@ -133,123 +166,41 @@
       </table>
     </div>
 
-    <div class="workflow-template-actions">
+    <div class="pr-form-actions left-aligned" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--pr-border);">
       <%= link_to l(:button_add_template, default: 'Add Template'),
           new_purchase_request_workflow_template_path,
-          class: 'icon icon-add',
+          class: 'pr-button pr-button-primary pr-button-icon',
           remote: true %>
 
       <%= link_to l(:button_create_defaults, default: 'Create Default Templates'),
           create_defaults_purchase_request_workflow_templates_path,
           method: :post,
           data: { confirm: l(:text_create_default_templates_confirm, default: 'This will create the default workflow templates (Vendor Registration, PR Creation, PO Creation, Payment Finalization). Continue?') },
-          class: 'icon icon-reload' %>
+          class: 'pr-button pr-button-secondary pr-button-icon' %>
     </div>
-  </fieldset>
+  </div>
 </div>
 
 <style>
-.workflow-settings .info-box {
-  background-color: #e7f3ff;
-  border: 1px solid #b3d9ff;
-  border-radius: 4px;
-  padding: 10px 15px;
-  margin-bottom: 15px;
-  font-size: 13px;
-}
-
-.workflow-settings fieldset.box {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: #fafafa;
-}
-
-.workflow-settings fieldset.box legend {
-  font-weight: bold;
-  padding: 0 10px;
-  color: #333;
-}
-
-.workflow-settings p {
-  margin-bottom: 12px;
-}
-
-.workflow-settings label {
-  display: inline-block;
-  min-width: 200px;
-  font-weight: normal;
-}
-
-.workflow-settings .form-hint {
-  display: block;
-  font-size: 11px;
-  color: #666;
-  margin-top: 3px;
-  margin-left: 205px;
-}
-
-.workflow-templates-table {
-  width: 100%;
-  margin-top: 10px;
-}
-
-.workflow-templates-table th {
-  background: #f0f0f0;
-  padding: 8px 10px;
-  text-align: left;
-  font-weight: bold;
-  border-bottom: 2px solid #ddd;
-}
-
-.workflow-templates-table td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #eee;
-  vertical-align: middle;
-}
-
-.workflow-templates-table tr:hover {
-  background: #f9f9f9;
-}
-
-.workflow-templates-table .nodata {
-  text-align: center;
-  color: #999;
-  font-style: italic;
-  padding: 20px;
-}
-
-.workflow-template-actions {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.workflow-template-actions a {
-  margin-right: 15px;
-}
-
-.badge {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: bold;
-}
-
-.badge-success {
-  background-color: #28a745;
-  color: white;
-}
-
-.badge-info {
-  background-color: #17a2b8;
-  color: white;
-}
-
-.badge-secondary {
-  background-color: #6c757d;
-  color: white;
-}
+  .pr-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--pr-border);
+  }
+  .pr-settings-header h3 {
+    margin: 0;
+    color: var(--pr-ink);
+    font-size: 1.2em;
+    font-weight: 700;
+  }
+  .pr-settings-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--pr-ink-muted);
+    font-weight: 600;
+    font-size: 0.9em;
+  }
 </style>

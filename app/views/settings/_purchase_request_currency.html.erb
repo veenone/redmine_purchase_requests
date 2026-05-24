@@ -1,59 +1,63 @@
 <%# app/views/settings/_purchase_request_currency.html.erb %>
 <div class="box tabular settings">
-  <div class="settings-header">
+  <div class="pr-settings-header">
     <h3><%= l(:label_currency_settings) %></h3>
   </div>
 
   <!-- Default Currency Section -->
-  <div class="settings-section">
-    <div class="section-header">
-      <h4>Default Currency</h4>
-      <p class="section-description" align="left">Select the primary currency for your purchase requests</p>
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3>Default Currency</h3>
     </div>
-    
-    <div class="form-group">
-      <span class="form-label"><%= l(:label_default_currency) %></span>
-      <% 
-        currency_options = [
-          ['US Dollar ($)', 'USD'],
-          ['Euro (€)', 'EUR'],
-          ['British Pound (£)', 'GBP'],
-          ['Japanese Yen (¥)', 'JPY'],
-          ['Canadian Dollar (C$)', 'CAD'],
-          ['Australian Dollar (A$)', 'AUD'],
-          ['Swiss Franc (CHF)', 'CHF'],
-          ['Chinese Yuan (¥)', 'CNY'],
-          ['Swedish Krona (kr)', 'SEK'],
-          ['New Zealand Dollar (NZ$)', 'NZD'],
-          ['Mexican Peso (Mex$)', 'MXN'],
-          ['Singapore Dollar (S$)', 'SGD'],
-          ['Hong Kong Dollar (HK$)', 'HKD'],
-          ['Indonesian Rupiah (Rp)', 'IDR'],
-          ['Norwegian Krone (kr)', 'NOK'],
-          ['South Korean Won (₩)', 'KRW'],
-          ['Turkish Lira (₺)', 'TRY'],
-          ['Russian Ruble (₽)', 'RUB'],
-          ['Indian Rupee (₹)', 'INR'],
-          ['Brazilian Real (R$)', 'BRL'],
-          ['South African Rand (R)', 'ZAR']
-        ]
-        current_currency = @settings['default_currency'].to_s || 'USD'
-      %>
-      <%= select_tag 'settings[default_currency]',
-                    options_for_select(currency_options, current_currency),
-                    class: 'form-select currency-select',
-                    id: 'settings_default_currency' %>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead">Select the primary currency for your purchase requests</p>
+      <div class="form-row">
+        <p>
+          <label class="pr-settings-label"><%= l(:label_default_currency) %></label>
+          <%
+            currency_options = [
+              ['US Dollar ($)', 'USD'],
+              ['Euro (€)', 'EUR'],
+              ['British Pound (£)', 'GBP'],
+              ['Japanese Yen (¥)', 'JPY'],
+              ['Canadian Dollar (C$)', 'CAD'],
+              ['Australian Dollar (A$)', 'AUD'],
+              ['Swiss Franc (CHF)', 'CHF'],
+              ['Chinese Yuan (¥)', 'CNY'],
+              ['Swedish Krona (kr)', 'SEK'],
+              ['New Zealand Dollar (NZ$)', 'NZD'],
+              ['Mexican Peso (Mex$)', 'MXN'],
+              ['Singapore Dollar (S$)', 'SGD'],
+              ['Hong Kong Dollar (HK$)', 'HKD'],
+              ['Indonesian Rupiah (Rp)', 'IDR'],
+              ['Norwegian Krone (kr)', 'NOK'],
+              ['South Korean Won (₩)', 'KRW'],
+              ['Turkish Lira (₺)', 'TRY'],
+              ['Russian Ruble (₽)', 'RUB'],
+              ['Indian Rupee (₹)', 'INR'],
+              ['Brazilian Real (R$)', 'BRL'],
+              ['South African Rand (R)', 'ZAR']
+            ]
+            current_currency = @settings['default_currency'].to_s || 'USD'
+          %>
+          <%= select_tag 'settings[default_currency]',
+                        options_for_select(currency_options, current_currency),
+                        class: 'form-control',
+                        id: 'settings_default_currency',
+                        style: 'max-width: 300px;' %>
+        </p>
+      </div>
     </div>
   </div>
 
   <!-- Enabled Currencies Section -->
-  <div class="settings-section">
-    <div class="section-header">
-      <h4>Enabled Currencies</h4>
-      <p class="section-description">Choose which currencies are available for purchase requests</p>
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3>Enabled Currencies</h3>
     </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead">Choose which currencies are available for purchase requests</p>
 
-    <div class="table-container currencies-container">
       <% all_currencies = [
         ['US Dollar ($)', 'USD'],
         ['Euro (€)', 'EUR'],
@@ -77,568 +81,157 @@
         ['Brazilian Real (R$)', 'BRL'],
         ['South African Rand (R)', 'ZAR']
       ] %>
-      
+
       <% enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD']) %>
-      
-      <table class="list currencies-table">
-        <thead>
-          <tr>
-            <th class="currency-name"><%= l(:field_currency) %></th>
-            <th class="currency-code">Code</th>
-            <th class="currency-enabled">
-              <span class="select-all-toggle" title="Toggle All">Enabled</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <% all_currencies.each_with_index do |(currency_name, currency_code), index| %>
-            <tr class="currency-row">
-              <td class="currency-name-cell">
-                <span for="currency_<%= currency_code %>" class="currency-label">
-                  <span class="currency-name-text"><%= currency_name %></span>
-                </span>
-              </td>
-              <td class="currency-code-cell">
-                <span class="currency-code-badge"><%= currency_code %></span>
-              </td>
-              <td class="currency-enabled-cell">
-                <div class="checkbox-wrapper">
-                  <%= check_box_tag "settings[enabled_currencies][]", currency_code, 
-                                  enabled_currencies.include?(currency_code),
-                                  id: "currency_#{currency_code}",
-                                  class: 'form-checkbox currency-checkbox' %>
-                  <span for="currency_<%= currency_code %>" class="checkbox-label"></span>
-                </div>
-              </td>
-             </tr>
-          <% end %>
-        </tbody>
-      </table>
-      
-      <%= hidden_field_tag "settings[enabled_currencies][]", "" %>
-    </div>
-  </div>
 
-  <!-- Exchange Rates Section -->
-  <div class="settings-section">
-    <div class="section-header">
-      <h4>Exchange Rates</h4>
-      <p class="section-description">Configure currency conversion rates</p>
-    </div>
-
-    <div class="form-group checkbox-group">
-      <div class="checkbox-wrapper">
-        <%= check_box_tag 'settings[show_exchange_rates]', '1', @settings['show_exchange_rates'] == '1', 
-                          class: 'form-checkbox', id: 'show_exchange_rates' %>
-        <span for="show_exchange_rates" class="checkbox-label-text">
-          <%= l(:label_show_exchange_rates) %>
-        </span>
-      </div>
-      <p class="form-help-text">
-        <%= l(:text_show_exchange_rates_info) rescue 'Enable this option to configure exchange rates for multi-currency support' %>
-      </p>
-    </div>
-
-    <div class="exchange-rates-section" id="exchange_rates_section">
-      <div class="info-message">
-        <span class="icon icon-info"></span>
-        <div class="info-content">
-          <%= l(:text_exchange_rates_setup_info) rescue 'Configure exchange rates for currency conversion. Enter the rate to convert to your default currency.' %>
-        </div>
-      </div>
-      
-      <% 
-        default_currency = @settings['default_currency'] || 'USD'
-        exchange_rates = @settings['exchange_rates'].is_a?(Hash) ? @settings['exchange_rates'] : {}
-        enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD'])
-      %>
-      
-      <div class="table-container">
-        <table class="list exchange-rates-table">
+      <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--pr-border); border-radius: var(--pr-radius);">
+        <table class="pr-table" style="margin: 0;">
           <thead>
             <tr>
-              <th class="rate-currency"><%= l(:field_currency) %></th>
-              <th class="rate-value"><%= l(:label_rate_to) %> <span class="default-currency-badge"><%= default_currency %></span></th>
-              <th class="rate-example"><%= l(:field_description) %></th>
+              <th style="width: 55%;"><%= l(:field_currency) %></th>
+              <th style="width: 25%;">Code</th>
+              <th style="width: 20%; text-align: center;">
+                <span class="select-all-toggle" title="Toggle All" style="cursor: pointer; color: var(--pr-accent);">Enabled</span>
+              </th>
             </tr>
           </thead>
           <tbody>
-            <% enabled_currencies.each do |currency| %>
-              <% next if currency == default_currency %>
-              <tr class="rate-row">
-                <td class="rate-currency-cell">
-                  <span class="currency-code-badge large"><%= currency %></span>
+            <% all_currencies.each_with_index do |(currency_name, currency_code), index| %>
+              <tr class="currency-row">
+                <td>
+                  <span style="font-weight: 500; color: var(--pr-ink);">
+                    <label for="currency_<%= currency_code %>" style="cursor: pointer; margin: 0; font-weight: 500;">
+                      <%= currency_name %>
+                    </label>
+                  </span>
                 </td>
-                <td class="rate-value-cell">
-                  <div class="rate-input-wrapper">
-                    <span class="rate-prefix">1 <%= currency %> =</span>
-                    <%= text_field_tag "settings[exchange_rate_#{currency}]", 
-                                   exchange_rates[currency].to_s, 
-                                   class: 'form-input exchange-rate-input',
-                                   placeholder: '1.0',
-                                   step: '0.0001' %>
-                    <span class="rate-suffix"><%= default_currency %></span>
-                  </div>
+                <td>
+                  <span class="pr-badge pr-badge--neutral pr-mono"><%= currency_code %></span>
                 </td>
-                <td class="rate-example-cell">
-                  <div class="exchange-example">
-                    <span class="example-text">
-                      100 <%= currency %> = <%= (100.0 / (exchange_rates[currency].to_f > 0 ? exchange_rates[currency].to_f : 1.0)).round(2) %> <%= default_currency %>
-                    </span>
-                  </div>
+                <td style="text-align: center;">
+                  <%= check_box_tag "settings[enabled_currencies][]", currency_code,
+                                  enabled_currencies.include?(currency_code),
+                                  id: "currency_#{currency_code}",
+                                  class: 'currency-checkbox' %>
                 </td>
               </tr>
             <% end %>
           </tbody>
         </table>
       </div>
-      
-      <div class="note-message">
-        <span class="icon icon-warning"></span>
-        <span class="note-text">
+
+      <%= hidden_field_tag "settings[enabled_currencies][]", "" %>
+    </div>
+  </div>
+
+  <!-- Exchange Rates Section -->
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3>Exchange Rates</h3>
+    </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead">Configure currency conversion rates</p>
+
+      <div class="form-row">
+        <p>
+          <label>
+            <%= check_box_tag 'settings[show_exchange_rates]', '1', @settings['show_exchange_rates'] == '1',
+                              id: 'show_exchange_rates' %>
+            <%= l(:label_show_exchange_rates) %>
+          </label>
+          <em class="info"><%= l(:text_show_exchange_rates_info) rescue 'Enable this option to configure exchange rates for multi-currency support' %></em>
+        </p>
+      </div>
+
+      <div id="exchange_rates_section">
+        <div class="pr-alert pr-alert-info" style="margin-bottom: 16px;">
+          <span class="icon icon-info"></span>
+          <%= l(:text_exchange_rates_setup_info) rescue 'Configure exchange rates for currency conversion. Enter the rate to convert to your default currency.' %>
+        </div>
+
+        <%
+          default_currency = @settings['default_currency'] || 'USD'
+          exchange_rates = @settings['exchange_rates'].is_a?(Hash) ? @settings['exchange_rates'] : {}
+          enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD'])
+        %>
+
+        <table class="pr-table">
+          <thead>
+            <tr>
+              <th style="width: 20%;"><%= l(:field_currency) %></th>
+              <th style="width: 40%;"><%= l(:label_rate_to) %> <span class="pr-badge pr-badge--accent pr-mono"><%= default_currency %></span></th>
+              <th style="width: 40%;"><%= l(:field_description) %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% enabled_currencies.each do |currency| %>
+              <% next if currency == default_currency %>
+              <tr class="rate-row">
+                <td>
+                  <span class="pr-badge pr-badge--neutral pr-mono"><%= currency %></span>
+                </td>
+                <td>
+                  <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="color: var(--pr-ink-faint); font-size: 12px;">1 <%= currency %> =</span>
+                    <%= text_field_tag "settings[exchange_rate_#{currency}]",
+                                   exchange_rates[currency].to_s,
+                                   class: 'form-control exchange-rate-input',
+                                   placeholder: '1.0',
+                                   step: '0.0001',
+                                   style: 'width: 100px; display: inline-block; margin: 0 4px;' %>
+                    <span style="color: var(--pr-ink-faint); font-size: 12px;"><%= default_currency %></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="example-text pr-capex-example">
+                    100 <%= currency %> = <%= (100.0 / (exchange_rates[currency].to_f > 0 ? exchange_rates[currency].to_f : 1.0)).round(2) %> <%= default_currency %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+
+        <div class="pr-alert pr-alert-warning" style="margin-top: 12px;">
+          <span class="icon icon-warning"></span>
           <%= l(:text_exchange_rates_note) rescue 'Exchange rates should be updated regularly. Ensure they are accurate for financial reporting.' %>
-        </span>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <style>
-  /* Settings Layout */
-  .settings-header {
+  .pr-settings-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--pr-border);
   }
-
-  .settings-header h3 {
+  .pr-settings-header h3 {
     margin: 0;
-    color: #333;
-    font-size: 1.4em;
-    font-weight: 600;
+    color: var(--pr-ink);
+    font-size: 1.2em;
+    font-weight: 700;
   }
-
-  /* Settings Sections */
-  .settings-section {
-    margin-bottom: 40px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e5e5;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .section-header {
-    padding: 20px 24px 0;
-    margin-bottom: 20px;
-  }
-
-  .section-header h4 {
-    margin: 0 0 8px 0;
-    color: #333;
-    font-size: 1.1em;
-    font-weight: 600;
-  }
-
-  .section-description {
-    margin: 0;
-    color: #6c757d;
-    font-size: 0.9em;
-    padding-left: 0 !important;
-  }
-
-  /* Form Elements */
-  .form-group {
-    padding: 0 24px 24px;
-  }
-
-  .form-label {
+  .pr-settings-label {
     display: block;
-    margin-bottom: 8px;
-    color: #495057;
-    font-weight: 500;
-    font-size: 0.9em;
-  }
-
-  .form-select {
-    width: 100%;
-    max-width: 300px;
-    padding: 12px 16px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 0.9em;
-    background: #fff;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .form-select:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  .form-input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9em;
-    background: #fff;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  /* Checkbox Styling */
-  .checkbox-group {
-    padding: 20px 24px;
-    background: #f8f9fa;
-    border-top: 1px solid #e5e5e5;
-    margin: 0;
-  }
-
-  .checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .form-checkbox {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    cursor: pointer;
-  }
-
-  .checkbox-label-text {
-    color: #495057;
-    font-weight: 500;
-    cursor: pointer;
-    margin: 0;
-  }
-
-  .form-help-text {
-    margin: 8px 0 0 26px;
-    color: #6c757d;
-    font-size: 0.85em;
-    font-style: italic;
-    padding-left: 0 !important;
-  }
-
-  /* Table Container */
-  .table-container {
-    overflow: hidden;
-    border-radius: 0 0 8px 8px;
-  }
-
-  .currencies-container {
-    max-height: 400px;
-    overflow-y: auto;
-    border-radius: 0;
-  }
-
-  /* Currencies Table */
-  .currencies-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-  }
-
-  .currencies-table thead {
-    background: #f8f9fa;
-    border-bottom: 2px solid #e5e5e5;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-
-  .currencies-table th {
-    padding: 16px 12px;
-    text-align: left;
+    margin-bottom: 6px;
+    color: var(--pr-ink-muted);
     font-weight: 600;
-    color: #495057;
     font-size: 0.9em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
-
-  .currencies-table td {
-    padding: 12px;
-    border-bottom: 1px solid #f1f3f4;
-    vertical-align: middle;
-  }
-
-  .currency-name { width: 50%; }
-  .currency-code { width: 25%; }
-  .currency-enabled { width: 25%; text-align: center; }
-
-  .currency-row:hover {
-    background-color: #f8f9fa;
-    transition: background-color 0.2s ease;
-  }
-
-  .currency-row:last-child td {
-    border-bottom: none;
-  }
-
-  .currency-label {
-    cursor: pointer;
-    display: block;
-    margin: 0;
-  }
-
-  .currency-name-text {
-    font-weight: 500;
-    color: #333;
-  }
-
-  .currency-code-badge {
+  .pr-capex-example {
     display: inline-block;
-    background: #e9ecef;
-    color: #495057;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.8em;
+    padding: 5px 10px;
+    background: var(--pr-success-soft);
+    border-left: 2px solid var(--pr-success);
+    border-radius: var(--pr-radius-sm);
+    color: var(--pr-success-ink);
+    font-size: 12px;
     font-weight: 500;
-  }
-
-  .currency-code-badge.large {
-    padding: 6px 10px;
-    font-size: 0.9em;
-  }
-
-  .currency-enabled-cell {
-    text-align: center;
-  }
-
-  .select-all-toggle {
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .select-all-toggle:hover {
-    color: #007bff;
-  }
-
-  /* Exchange Rates Section */
-  .exchange-rates-section {
-    padding: 20px 24px 24px;
-    background: #f8f9fa;
-    border-top: 1px solid #e5e5e5;
-    margin: 0;
-  }
-
-  .info-message {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
-    border-radius: 4px;
-    margin-bottom: 20px;
-  }
-
-  .info-message .icon {
-    color: #1976d2;
-    font-size: 16px;
-    margin-top: 2px;
-  }
-
-  .info-content {
-    color: #1565c0;
-    font-size: 0.9em;
-    line-height: 1.4;
-  }
-
-  /* Exchange Rates Table */
-  .exchange-rates-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #e5e5e5;
-  }
-
-  .exchange-rates-table thead {
-    background: #f8f9fa;
-    border-bottom: 2px solid #e5e5e5;
-  }
-
-  .exchange-rates-table th {
-    padding: 16px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #495057;
-    font-size: 0.9em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .exchange-rates-table td {
-    padding: 16px 12px;
-    border-bottom: 1px solid #f1f3f4;
-    vertical-align: middle;
-  }
-
-  .rate-currency { width: 20%; }
-  .rate-value { width: 40%; }
-  .rate-example { width: 40%; }
-
-  .rate-row:hover {
-    background-color: #f8f9fa;
-    transition: background-color 0.2s ease;
-  }
-
-  .rate-row:last-child td {
-    border-bottom: none;
-  }
-
-  .rate-input-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .rate-prefix,
-  .rate-suffix {
-    color: #6c757d;
-    font-size: 0.9em;
-    font-weight: 500;
-  }
-
-  .exchange-rate-input {
-    width: 100px;
-    text-align: center;
-  }
-
-  .default-currency-badge {
-    background: #007bff;
-    color: #fff;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.8em;
-    font-weight: 500;
-  }
-
-  .exchange-example {
-    background: #f8f9fa;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border-left: 3px solid #28a745;
-  }
-
-  .example-text {
-    color: #155724;
-    font-size: 0.85em;
-    font-weight: 500;
-  }
-
-  /* Note Message */
-  .note-message {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 20px;
-    padding: 12px 16px;
-    background: #fff3cd;
-    border-left: 4px solid #ffc107;
-    border-radius: 4px;
-  }
-
-  .note-message .icon {
-    color: #856404;
-    font-size: 16px;
-  }
-
-  .note-text {
-    color: #856404;
-    font-size: 0.9em;
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .section-header,
-    .form-group,
-    .checkbox-group,
-    .exchange-rates-section {
-      padding-left: 16px;
-      padding-right: 16px;
-    }
-
-    .form-select {
-      max-width: 100%;
-    }
-
-    .currencies-container {
-      max-height: 300px;
-    }
-
-    .currencies-table,
-    .exchange-rates-table {
-      font-size: 0.9em;
-    }
-
-    .rate-input-wrapper {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 4px;
-    }
-
-    .exchange-rate-input {
-      width: 100%;
-    }
-  }
-
-  /* Dark Mode Support */
-  @media (prefers-color-scheme: dark) {
-    .settings-section {
-      background: #7382e6;
-      border-color: #cddcff;
-    }
-
-    .section-header h4 {
-      color: #e2e8f0;
-    }
-
-    .section-description {
-      color: #000000;
-      padding-left: 0 !important;
-    }
-
-    .currencies-table,
-    .exchange-rates-table {
-      background: #7382e6;
-    }
-
-    .currencies-table thead,
-    .exchange-rates-table thead {
-      background: #cddcff;
-    }
-
-    .currencies-table th,
-    .exchange-rates-table th {
-      color: #e2e8f0;
-    }
-
-    .currency-row:hover,
-    .rate-row:hover {
-      background-color: #cddcff;
-    }
-
-    .checkbox-group,
-    .exchange-rates-section {
-      background: #cddcff;
-    }
   }
 </style>
 
@@ -655,7 +248,7 @@
           checkbox.checked = true;
         }
       });
-      
+
       // Initially make sure default currency is checked
       var defaultCurrency = defaultCurrencySelect.value;
       var defaultCheckbox = document.getElementById('currency_' + defaultCurrency);
@@ -663,24 +256,24 @@
         defaultCheckbox.checked = true;
       }
     }
-    
+
     // Toggle all checkboxes
     var selectAllToggle = document.querySelector('.select-all-toggle');
     if (selectAllToggle) {
       selectAllToggle.addEventListener('click', function() {
         var checkboxes = document.querySelectorAll('.currency-checkbox');
         var allChecked = true;
-        
+
         checkboxes.forEach(function(cb) {
           if (!cb.checked) {
             allChecked = false;
           }
         });
-        
+
         checkboxes.forEach(function(cb) {
           cb.checked = !allChecked;
         });
-        
+
         // Ensure default currency is always checked
         if (defaultCurrencySelect) {
           var defaultCurrency = defaultCurrencySelect.value;
@@ -695,7 +288,7 @@
     // Show/hide exchange rates section
     var showExchangeRatesCheckbox = document.getElementById('show_exchange_rates');
     var exchangeRatesSection = document.getElementById('exchange_rates_section');
-    
+
     if (showExchangeRatesCheckbox && exchangeRatesSection) {
       function toggleExchangeRatesSection() {
         if (showExchangeRatesCheckbox.checked) {
@@ -704,10 +297,10 @@
           exchangeRatesSection.style.display = 'none';
         }
       }
-      
+
       // Initial state
       toggleExchangeRatesSection();
-      
+
       // Toggle on change
       showExchangeRatesCheckbox.addEventListener('change', toggleExchangeRatesSection);
     }

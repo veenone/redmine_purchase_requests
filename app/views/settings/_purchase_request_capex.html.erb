@@ -1,719 +1,331 @@
 <div class="box tabular settings">
-  <div class="settings-header">
+  <div class="pr-settings-header">
     <h3><%= l(:label_capex_settings) %></h3>
   </div>
 
   <!-- Basic CAPEX Settings Section -->
-  <div class="settings-section">
-    <div class="section-header">
-      <h4>CAPEX Configuration</h4>
-      <p class="section-description">Configure basic CAPEX functionality and requirements</p>
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3>CAPEX Configuration</h3>
     </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead">Configure basic CAPEX functionality and requirements</p>
 
-    <div class="form-group checkbox-group">
-      <div class="checkbox-wrapper">
-        <%= check_box_tag 'settings[enable_capex]', '1', @settings['enable_capex'] == '1', 
-                          class: 'form-checkbox', id: 'enable_capex' %>
-        <span for="enable_capex" class="checkbox-label-text">
-          <%= l(:label_enable_capex) %>
-        </span>
+      <div class="form-row">
+        <p>
+          <label>
+            <%= check_box_tag 'settings[enable_capex]', '1', @settings['enable_capex'] == '1',
+                              id: 'enable_capex' %>
+            <%= l(:label_enable_capex) %>
+          </label>
+          <em class="info"><%= l(:text_enable_capex_info) %></em>
+        </p>
       </div>
-      <p class="form-help-text">
-        <%= l(:text_enable_capex_info) %>
-      </p>
-    </div>
 
-    <div class="form-group checkbox-group">
-      <div class="checkbox-wrapper">
-        <%= check_box_tag 'settings[require_capex_for_pr]', '1', @settings['require_capex_for_pr'] == '1', 
-                          class: 'form-checkbox', id: 'require_capex_for_pr' %>
-        <span for="require_capex_for_pr" class="checkbox-label-text">
-          <%= l(:label_require_capex_for_pr) %>
-        </span>
+      <div class="form-row">
+        <p>
+          <label>
+            <%= check_box_tag 'settings[require_capex_for_pr]', '1', @settings['require_capex_for_pr'] == '1',
+                              id: 'require_capex_for_pr' %>
+            <%= l(:label_require_capex_for_pr) %>
+          </label>
+          <em class="info"><%= l(:text_require_capex_for_pr_info) %></em>
+        </p>
       </div>
-      <p class="form-help-text">
-        <%= l(:text_require_capex_for_pr_info) %>
-      </p>
-    </div>
 
-    <div class="form-group">
-      <span class="form-label" for="capex_budget_alert_threshold">
-        <%= l(:label_capex_budget_alert_threshold) %>
-      </span>
-      <div class="input-group">
-        <%= number_field_tag 'settings[capex_budget_alert_threshold]', 
-                             @settings['capex_budget_alert_threshold'] || '80',
-                             min: 0, max: 100, step: 1, 
-                             class: 'form-input threshold-input',
-                             id: 'capex_budget_alert_threshold' %>
-        <span class="input-suffix">%</span>
+      <div class="form-row">
+        <p>
+          <label for="capex_budget_alert_threshold" class="pr-settings-label">
+            <%= l(:label_capex_budget_alert_threshold) %>
+          </label>
+          <span class="pr-input-group">
+            <%= number_field_tag 'settings[capex_budget_alert_threshold]',
+                                 @settings['capex_budget_alert_threshold'] || '80',
+                                 min: 0, max: 100, step: 1,
+                                 class: 'form-control',
+                                 id: 'capex_budget_alert_threshold',
+                                 style: 'width: 100px; display: inline-block;' %>
+            <span class="pr-input-addon">%</span>
+          </span>
+          <em class="info"><%= l(:text_capex_budget_alert_threshold_info) %></em>
+        </p>
       </div>
-      <p class="form-help-text">
-        <%= l(:text_capex_budget_alert_threshold_info) %>
-      </p>
     </div>
   </div>
 
   <!-- Default Values Section -->
-  <div class="settings-section">
-    <div class="section-header">
-      <h4>Default Values</h4>
-      <p class="section-description">Configure default settings for new CAPEX entries</p>
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3>Default Values</h3>
     </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead">Configure default settings for new CAPEX entries</p>
 
-    <div class="form-group">
-      <span class="form-label" for="default_capex_currency">
-        <%= l(:label_default_capex_currency) %>
-      </span>
-      <% 
-        available_currencies = [
-          ['US Dollar ($)', 'USD'],
-          ['Euro (€)', 'EUR'],
-          ['British Pound (£)', 'GBP'],
-          ['Japanese Yen (¥)', 'JPY'],
-          ['Canadian Dollar (C$)', 'CAD'],
-          ['Australian Dollar (A$)', 'AUD'],
-          ['Swiss Franc (CHF)', 'CHF'],
-          ['Chinese Yuan (¥)', 'CNY'],
-          ['Swedish Krona (kr)', 'SEK'],
-          ['New Zealand Dollar (NZ$)', 'NZD'],
-          ['Mexican Peso (Mex$)', 'MXN'],
-          ['Singapore Dollar (S$)', 'SGD'],
-          ['Hong Kong Dollar (HK$)', 'HKD'],
-          ['Indonesian Rupiah (Rp)', 'IDR'],
-          ['Norwegian Krone (kr)', 'NOK'],
-          ['South Korean Won (₩)', 'KRW'],
-          ['Turkish Lira (₺)', 'TRY'],
-          ['Russian Ruble (₽)', 'RUB'],
-          ['Indian Rupee (₹)', 'INR'],
-          ['Brazilian Real (R$)', 'BRL'],
-          ['South African Rand (R)', 'ZAR']
-        ]
-      %>
-      <%= select_tag 'settings[default_capex_currency]',
-                     options_for_select(available_currencies, @settings['default_capex_currency'] || 'USD'),
-                     class: 'form-select',
-                     id: 'default_capex_currency' %>
-      <p class="form-help-text">
-        <%= l(:text_default_capex_currency_info) %>
-      </p>
-    </div>
-
-    <div class="form-group checkbox-group">
-      <div class="checkbox-wrapper">
-        <%= check_box_tag 'settings[capex_auto_distribute_quarters]', '1', @settings['capex_auto_distribute_quarters'] == '1', 
-                          class: 'form-checkbox', id: 'capex_auto_distribute_quarters' %>
-        <span for="capex_auto_distribute_quarters" class="checkbox-label-text">
-          <%= l(:label_capex_auto_distribute_quarters) %>
-        </span>
+      <div class="form-row">
+        <p>
+          <label for="default_capex_currency" class="pr-settings-label">
+            <%= l(:label_default_capex_currency) %>
+          </label>
+          <%
+            available_currencies = [
+              ['US Dollar ($)', 'USD'],
+              ['Euro (€)', 'EUR'],
+              ['British Pound (£)', 'GBP'],
+              ['Japanese Yen (¥)', 'JPY'],
+              ['Canadian Dollar (C$)', 'CAD'],
+              ['Australian Dollar (A$)', 'AUD'],
+              ['Swiss Franc (CHF)', 'CHF'],
+              ['Chinese Yuan (¥)', 'CNY'],
+              ['Swedish Krona (kr)', 'SEK'],
+              ['New Zealand Dollar (NZ$)', 'NZD'],
+              ['Mexican Peso (Mex$)', 'MXN'],
+              ['Singapore Dollar (S$)', 'SGD'],
+              ['Hong Kong Dollar (HK$)', 'HKD'],
+              ['Indonesian Rupiah (Rp)', 'IDR'],
+              ['Norwegian Krone (kr)', 'NOK'],
+              ['South Korean Won (₩)', 'KRW'],
+              ['Turkish Lira (₺)', 'TRY'],
+              ['Russian Ruble (₽)', 'RUB'],
+              ['Indian Rupee (₹)', 'INR'],
+              ['Brazilian Real (R$)', 'BRL'],
+              ['South African Rand (R)', 'ZAR']
+            ]
+          %>
+          <%= select_tag 'settings[default_capex_currency]',
+                         options_for_select(available_currencies, @settings['default_capex_currency'] || 'USD'),
+                         class: 'form-control',
+                         id: 'default_capex_currency',
+                         style: 'max-width: 300px;' %>
+          <em class="info"><%= l(:text_default_capex_currency_info) %></em>
+        </p>
       </div>
-      <p class="form-help-text">
-        <%= l(:text_capex_auto_distribute_quarters_info) %>
-      </p>
-    </div>
 
-    <div class="form-group checkbox-group">
-      <div class="checkbox-wrapper">
-        <%= check_box_tag 'settings[capex_use_exchange_rates]', '1', @settings['capex_use_exchange_rates'] == '1', 
-                          class: 'form-checkbox', id: 'capex_use_exchange_rates' %>
-        <span for="capex_use_exchange_rates" class="checkbox-label-text">
-          <%= l(:label_capex_use_exchange_rates) %>
-        </span>
+      <div class="form-row">
+        <p>
+          <label>
+            <%= check_box_tag 'settings[capex_auto_distribute_quarters]', '1', @settings['capex_auto_distribute_quarters'] == '1',
+                              id: 'capex_auto_distribute_quarters' %>
+            <%= l(:label_capex_auto_distribute_quarters) %>
+          </label>
+          <em class="info"><%= l(:text_capex_auto_distribute_quarters_info) %></em>
+        </p>
       </div>
-      <p class="form-help-text">
-        <%= l(:text_capex_use_exchange_rates_info) %>
-      </p>
+
+      <div class="form-row">
+        <p>
+          <label>
+            <%= check_box_tag 'settings[capex_use_exchange_rates]', '1', @settings['capex_use_exchange_rates'] == '1',
+                              id: 'capex_use_exchange_rates' %>
+            <%= l(:label_capex_use_exchange_rates) %>
+          </label>
+          <em class="info"><%= l(:text_capex_use_exchange_rates_info) %></em>
+        </p>
+      </div>
     </div>
   </div>
 
   <!-- Exchange Rates Section -->
-  <div class="settings-section">
-    <div class="section-header">
-      <h4>Exchange Rates</h4>
-      <p class="section-description">Configure yearly exchange rates for CAPEX calculations</p>
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3>Exchange Rates</h3>
     </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead">Configure yearly exchange rates for CAPEX calculations</p>
 
-    <div class="exchange-rates-section">
-      <div class="info-message">
+      <div class="pr-alert pr-alert-info" style="margin-bottom: 16px;">
         <span class="icon icon-info"></span>
-        <div class="info-content">
-          <%= l(:text_capex_exchange_rates_setup_info) %>
-        </div>
+        <%= l(:text_capex_exchange_rates_setup_info) %>
       </div>
-      
-      <% 
+
+      <%
         default_currency = @settings['default_capex_currency'] || @settings['default_currency'] || 'USD'
         enabled_currencies = @settings['enabled_currencies'].is_a?(Array) ? @settings['enabled_currencies'] : (@settings['enabled_currencies'] ? @settings['enabled_currencies'].split(',') : ['USD'])
         current_year = Date.current.year
         available_years = (current_year-2..current_year+3).to_a
         filtered_currencies = enabled_currencies.reject { |c| c == default_currency }
       %>
-      
+
       <!-- Year Filter Control -->
-      <div class="filter-controls">
-        <div class="year-filter-wrapper">
-          <label for="capex_year_filter" class="filter-label">
+      <div class="pr-capex-filter-bar">
+        <div class="pr-capex-filter-left">
+          <label for="capex_year_filter" style="color: var(--pr-ink-muted); font-weight: 600; margin-right: 8px;">
             <span class="icon icon-calendar"></span>
             <%= l(:field_capex_year) %>:
           </label>
-          <select id="capex_year_filter" class="form-select year-filter-select">
+          <select id="capex_year_filter" class="form-control" style="display: inline-block; width: auto; min-width: 120px;">
             <option value="all">All Years</option>
             <% available_years.each do |year| %>
               <option value="<%= year %>" <%= 'selected' if year == current_year %>><%= year %></option>
             <% end %>
           </select>
         </div>
-        <div class="filter-info">
-          <span class="default-currency-info">
-            Base Currency: <span class="currency-badge"><%= default_currency %></span>
-          </span>
+        <div>
+          <span style="color: var(--pr-ink-faint); font-size: 12px;">Base Currency:</span>
+          <span class="pr-badge pr-badge--accent currency-badge" style="margin-left: 4px;"><%= default_currency %></span>
         </div>
       </div>
-      
-      <div class="table-container">
-        <table class="list capex-exchange-rates-table" id="capex-rates-table">
-          <thead>
-            <tr>
-              <th class="year-column">Year</th>
-              <th class="currency-column"><%= l(:field_currency) %></th>
-              <th class="rate-column">Rate to <%= default_currency %></th>
-              <th class="description-column">Example</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% available_years.each do |year| %>
-              <% 
-                year_exchange_rates = @settings["capex_exchange_rates_#{year}"].is_a?(Hash) ? @settings["capex_exchange_rates_#{year}"] : {}
-              %>
-              <% filtered_currencies.each do |currency| %>
-                <tr class="rate-row year-row" data-year="<%= year %>">
-                  <td class="year-cell">
-                    <span class="year-badge"><%= year %></span>
-                  </td>
-                  <td class="currency-cell">
-                    <span class="currency-code-badge"><%= currency %></span>
-                  </td>
-                  <td class="rate-cell">
-                    <div class="rate-input-wrapper">
-                      <span class="rate-prefix">1 <%= currency %> =</span>
-                      <%= text_field_tag "settings[capex_exchange_rate_#{year}_#{currency}]", 
-                                     year_exchange_rates[currency].to_s, 
-                                     class: 'form-input exchange-rate-input',
-                                     placeholder: '1.0',
-                                     step: '0.0001',
-                                     data: { currency: currency, year: year } %>
-                      <span class="rate-suffix"><%= default_currency %></span>
-                    </div>
-                  </td>
-                  <td class="example-cell">
-                    <div class="exchange-example">
-                      <span class="example-text" data-currency="<%= currency %>" data-rate="<%= year_exchange_rates[currency] || '1.0' %>">
-                        100 <%= currency %> = <%= (100.0 / (year_exchange_rates[currency].to_f > 0 ? year_exchange_rates[currency].to_f : 1.0)).round(2) %> <%= default_currency %>
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              <% end %>
+
+      <table class="pr-table" id="capex-rates-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Year</th>
+            <th style="width: 20%;"><%= l(:field_currency) %></th>
+            <th style="width: 35%;">Rate to <%= default_currency %></th>
+            <th style="width: 30%;">Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% available_years.each do |year| %>
+            <%
+              year_exchange_rates = @settings["capex_exchange_rates_#{year}"].is_a?(Hash) ? @settings["capex_exchange_rates_#{year}"] : {}
+            %>
+            <% filtered_currencies.each do |currency| %>
+              <tr class="rate-row year-row" data-year="<%= year %>">
+                <td>
+                  <span class="pr-badge pr-badge--neutral"><%= year %></span>
+                </td>
+                <td>
+                  <span class="pr-badge pr-badge--accent pr-mono"><%= currency %></span>
+                </td>
+                <td>
+                  <span class="pr-capex-rate-wrap">
+                    <span style="color: var(--pr-ink-faint); font-size: 12px;">1 <%= currency %> =</span>
+                    <%= text_field_tag "settings[capex_exchange_rate_#{year}_#{currency}]",
+                                   year_exchange_rates[currency].to_s,
+                                   class: 'form-control exchange-rate-input',
+                                   placeholder: '1.0',
+                                   step: '0.0001',
+                                   style: 'width: 100px; display: inline-block; margin: 0 6px;',
+                                   data: { currency: currency, year: year } %>
+                    <span style="color: var(--pr-ink-faint); font-size: 12px;"><%= default_currency %></span>
+                  </span>
+                </td>
+                <td>
+                  <span class="example-text pr-capex-example" data-currency="<%= currency %>" data-rate="<%= year_exchange_rates[currency] || '1.0' %>">
+                    100 <%= currency %> = <%= (100.0 / (year_exchange_rates[currency].to_f > 0 ? year_exchange_rates[currency].to_f : 1.0)).round(2) %> <%= default_currency %>
+                  </span>
+                </td>
+              </tr>
             <% end %>
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="note-message">
+          <% end %>
+        </tbody>
+      </table>
+
+      <div class="pr-alert pr-alert-warning" style="margin-top: 12px;">
         <span class="icon icon-warning"></span>
-        <span class="note-text">
-          <%= l(:text_capex_exchange_rates_note) %>
-        </span>
+        <%= l(:text_capex_exchange_rates_note) %>
       </div>
     </div>
   </div>
 
   <!-- Approval Workflow Section -->
-  <div class="settings-section">
-    <div class="section-header">
-      <h4>Approval Workflow</h4>
-      <p class="section-description">Configure approval requirements and thresholds</p>
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3>Approval Workflow</h3>
     </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead">Configure approval requirements and thresholds</p>
 
-    <div class="form-group checkbox-group">
-      <div class="checkbox-wrapper">
-        <%= check_box_tag 'settings[require_capex_approval]', '1', @settings['require_capex_approval'] == '1', 
-                          class: 'form-checkbox', id: 'require_capex_approval' %>
-        <span for="require_capex_approval" class="checkbox-label-text">
-          <%= l(:label_require_capex_approval) %>
-        </span>
+      <div class="form-row">
+        <p>
+          <label>
+            <%= check_box_tag 'settings[require_capex_approval]', '1', @settings['require_capex_approval'] == '1',
+                              id: 'require_capex_approval' %>
+            <%= l(:label_require_capex_approval) %>
+          </label>
+          <em class="info"><%= l(:text_require_capex_approval_info) %></em>
+        </p>
       </div>
-      <p class="form-help-text">
-        <%= l(:text_require_capex_approval_info) %>
-      </p>
-    </div>
 
-    <div class="form-group">
-      <span class="form-label" for="capex_approval_threshold">
-        <%= l(:label_capex_approval_threshold) %>
-      </span>
-      <div class="input-group">
-        <span class="input-prefix"><%= currency_symbol(@settings['default_currency'] || 'USD') %></span>
-        <%= number_field_tag 'settings[capex_approval_threshold]', 
-                             @settings['capex_approval_threshold'] || '10000',
-                             min: 0, step: '0.01', 
-                             class: 'form-input threshold-input',
-                             id: 'capex_approval_threshold' %>
+      <div class="form-row">
+        <p>
+          <label for="capex_approval_threshold" class="pr-settings-label">
+            <%= l(:label_capex_approval_threshold) %>
+          </label>
+          <span class="pr-input-group">
+            <span class="pr-input-addon"><%= currency_symbol(@settings['default_currency'] || 'USD') %></span>
+            <%= number_field_tag 'settings[capex_approval_threshold]',
+                                 @settings['capex_approval_threshold'] || '10000',
+                                 min: 0, step: '0.01',
+                                 class: 'form-control',
+                                 id: 'capex_approval_threshold',
+                                 style: 'width: 140px; display: inline-block;' %>
+          </span>
+          <em class="info"><%= l(:text_capex_approval_threshold_info) %></em>
+        </p>
       </div>
-      <p class="form-help-text">
-        <%= l(:text_capex_approval_threshold_info) %>
-      </p>
     </div>
   </div>
 </div>
 
 <style>
-  /* Settings Layout */
-  .settings-header {
+  .pr-settings-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--pr-border);
   }
-
-  .settings-header h3 {
+  .pr-settings-header h3 {
     margin: 0;
-    color: #333;
-    font-size: 1.4em;
-    font-weight: 600;
+    color: var(--pr-ink);
+    font-size: 1.2em;
+    font-weight: 700;
   }
-
-  /* Settings Sections */
-  .settings-section {
-    margin-bottom: 40px;
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e5e5;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  .section-header {
-    padding: 20px 24px 0;
-    margin-bottom: 20px;
-  }
-
-  .section-header h4 {
-    margin: 0 0 8px 0;
-    color: #333;
-    font-size: 1.1em;
-    font-weight: 600;
-  }
-
-  .section-description {
-    margin: 0;
-    color: #b4b4b4;
-    font-size: 0.9em;
-  }
-
-  /* Form Elements */
-  .form-group {
-    padding: 0 24px 24px;
-  }
-
-  .form-label {
+  .pr-settings-label {
     display: block;
-    margin-bottom: 8px;
-    color: #495057;
-    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--pr-ink-muted);
+    font-weight: 600;
     font-size: 0.9em;
   }
-
-  .form-select {
-    width: 100%;
-    max-width: 300px;
-    padding: 12px 16px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 0.9em;
-    background: #fff;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .form-select:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  .form-input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9em;
-    background: #fff;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .form-input:focus {
-    outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
-
-  /* Input Groups */
-  .input-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    max-width: 300px;
-  }
-
-  .input-prefix,
-  .input-suffix {
-    padding: 2px 5px;
-    background: #cddcff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    color: #b4b4b4;
-    font-weight: 500;
-    font-size: 0.9em;
-    white-space: nowrap;
-  }
-
-  .threshold-input {
-    width: 120px;
-  }
-
-  /* Checkbox Styling */
-  .checkbox-group {
-    padding: 20px 24px;
-    background: #f8f9fa;
-    border-top: 1px solid #e5e5e5;
-    margin: 0;
-  }
-
-  .checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .form-checkbox {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    cursor: pointer;
-  }
-
-  .checkbox-label-text {
-    color: #495057;
-    font-weight: 500;
-    cursor: pointer;
-    margin: 0;
-  }
-
-  .form-help-text {
-    margin: 8px 0 0 26px;
-    color: #b4b4b4;
-    font-size: 0.85em;
-    font-style: italic;
-  }
-
-  /* Exchange Rates Section */
-  .exchange-rates-section {
-    padding: 20px 24px 24px;
-    background: #f8f9fa;
-    border-top: 1px solid #e5e5e5;
-    margin: 0;
-  }
-
-  .info-message {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px;
-    background: #e3f2fd;
-    border-left: 4px solid #2196f3;
-    border-radius: 4px;
-    margin-bottom: 20px;
-  }
-
-  .info-message .icon {
-    color: #1976d2;
-    font-size: 16px;
-    margin-top: 2px;
-  }
-
-  .info-content {
-    color: #1565c0;
-    font-size: 0.9em;
-    line-height: 1.4;
-  }
-
-  /* Filter Controls */
-  .filter-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    background: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-    margin-bottom: 20px;
-  }
-
-  .year-filter-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .filter-label {
-    display: flex;
+  .pr-input-group {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
-    color: #495057;
-    font-weight: 500;
-    margin: 0;
   }
-
-  .year-filter-select {
-    min-width: 140px;
-    max-width: 140px;
-  }
-
-  .filter-info {
-    display: flex;
+  .pr-input-addon {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-  }
-
-  .default-currency-info {
-    color: #b4b4b4;
-    font-size: 0.9em;
-  }
-
-  .currency-badge {
-    background: #007bff;
-    color: #fff;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.8em;
-    font-weight: 500;
-  }
-
-  /* Table Container */
-  .table-container {
-    background: #fff;
-    border-radius: 8px;
-    border: 1px solid #e5e5e5;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  /* CAPEX Exchange Rates Table */
-  .capex-exchange-rates-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 0;
-  }
-
-  .capex-exchange-rates-table thead {
-    background: #f8f9fa;
-    border-bottom: 2px solid #e5e5e5;
-  }
-
-  .capex-exchange-rates-table th {
-    padding: 16px 12px;
-    text-align: left;
+    padding: 5px 9px;
+    background: var(--pr-surface-subtle);
+    border: 1px solid var(--pr-border);
+    border-radius: var(--pr-radius-sm);
+    color: var(--pr-ink-muted);
+    font-size: 12px;
     font-weight: 600;
-    color: #495057;
-    font-size: 0.9em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    white-space: nowrap;
   }
-
-  .capex-exchange-rates-table td {
-    padding: 16px 12px;
-    border-bottom: 1px solid #f1f3f4;
-    vertical-align: middle;
+  .pr-capex-filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--pr-surface-subtle);
+    border: 1px solid var(--pr-border);
+    border-radius: var(--pr-radius-sm);
+    margin-bottom: 14px;
   }
-
-  .year-column { width: 15%; }
-  .currency-column { width: 20%; }
-  .rate-column { width: 35%; }
-  .description-column { width: 30%; }
-
-  .rate-row:hover {
-    background-color: #f8f9fa;
-    transition: background-color 0.2s ease;
-  }
-
-  .rate-row:last-child td {
-    border-bottom: none;
-  }
-
-  .year-badge {
-    display: inline-block;
-    background: #b4b4b4;
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.85em;
-    font-weight: 600;
-    text-align: center;
-    min-width: 60px;
-  }
-
-  .currency-code-badge {
-    display: inline-block;
-    background: #e9ecef;
-    color: #495057;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.8em;
-    font-weight: 500;
-  }
-
-  .rate-input-wrapper {
+  .pr-capex-filter-left {
     display: flex;
     align-items: center;
-    gap: 8px;
   }
-
-  .rate-prefix,
-  .rate-suffix {
-    color: #b4b4b4;
-    font-size: 0.85em;
-    font-weight: 500;
-  }
-
-  .exchange-rate-input {
-    width: 100px;
-    text-align: center;
-  }
-
-  .exchange-example {
-    background: #f8f9fa;
-    padding: 8px 12px;
-    border-radius: 4px;
-    border-left: 3px solid #28a745;
-  }
-
-  .example-text {
-    color: #155724;
-    font-size: 0.85em;
-    font-weight: 500;
-  }
-
-  /* Note Message */
-  .note-message {
-    display: flex;
+  .pr-capex-rate-wrap {
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 20px;
-    padding: 12px 16px;
-    background: #fff3cd;
-    border-left: 4px solid #ffc107;
-    border-radius: 4px;
   }
-
-  .note-message .icon {
-    color: #856404;
-    font-size: 16px;
+  .pr-capex-example {
+    display: inline-block;
+    padding: 5px 10px;
+    background: var(--pr-success-soft);
+    border-left: 2px solid var(--pr-success);
+    border-radius: var(--pr-radius-sm);
+    color: var(--pr-success-ink);
+    font-size: 12px;
+    font-weight: 500;
   }
-
-  .note-text {
-    color: #856404;
-    font-size: 0.9em;
-  }
-
-  /* Hidden rows for filtering */
-  .year-row.hidden {
-    display: none;
-  }
-
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .section-header,
-    .form-group,
-    .checkbox-group,
-    .exchange-rates-section {
-      padding-left: 16px;
-      padding-right: 16px;
-    }
-
-    .filter-controls {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 12px;
-    }
-
-    .year-filter-wrapper {
-      justify-content: space-between;
-    }
-
-    .form-select,
-    .input-group {
-      max-width: 100%;
-    }
-
-    .capex-exchange-rates-table {
-      font-size: 0.85em;
-    }
-
-    .rate-input-wrapper {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 4px;
-    }
-
-    .exchange-rate-input {
-      width: 100%;
-    }
-  }
-
-  /* Dark Mode Support */
-  @media (prefers-color-scheme: dark) {
-    .settings-section {
-      background: #7382e6;
-      border-color: #cddcff;
-    }
-
-    .section-header h4 {
-      color: #e2e8f0;
-    }
-
-    .section-description {
-      color: #a0aec0;
-    }
-
-    .capex-exchange-rates-table {
-      background: #7382e6;
-    }
-
-    .capex-exchange-rates-table thead {
-      background: #cddcff;
-    }
-
-    .capex-exchange-rates-table th {
-      color: #e2e8f0;
-    }
-
-    .rate-row:hover {
-      background-color: #cddcff;
-    }
-
-    .checkbox-group,
-    .exchange-rates-section {
-      background: #cddcff;
-    }
-
-    .filter-controls {
-      background: #cddcff;
-      border-color: #7382e6;
-    }
-  }
+  .year-row.hidden { display: none; }
 </style>
 
 <script>
@@ -721,14 +333,14 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle year filter dropdown
   const yearFilter = document.getElementById('capex_year_filter');
   const tableRows = document.querySelectorAll('.year-row');
-  
+
   if (yearFilter) {
     yearFilter.addEventListener('change', function() {
       const selectedYear = this.value;
-      
+
       tableRows.forEach(function(row) {
         const rowYear = row.getAttribute('data-year');
-        
+
         if (selectedYear === 'all' || rowYear === selectedYear) {
           row.classList.remove('hidden');
           row.style.display = '';
@@ -737,17 +349,17 @@ document.addEventListener('DOMContentLoaded', function() {
           row.style.display = 'none';
         }
       });
-      
+
       // Update row striping after filtering
       updateRowStriping();
     });
-    
+
     // Initialize with current year selected
     if (yearFilter.value !== 'all') {
       yearFilter.dispatchEvent(new Event('change'));
     }
   }
-  
+
   function updateRowStriping() {
     const visibleRows = document.querySelectorAll('.year-row:not(.hidden)');
     visibleRows.forEach(function(row, index) {
@@ -779,13 +391,13 @@ document.addEventListener('DOMContentLoaded', function() {
       currencyBadges.forEach(function(badge) {
         badge.textContent = this.value;
       });
-      
+
       // Update rate suffixes
       const rateSuffixes = document.querySelectorAll('.rate-suffix');
       rateSuffixes.forEach(function(suffix) {
         suffix.textContent = this.value;
       });
-      
+
       // Update all examples
       exchangeRateInputs.forEach(function(input) {
         input.dispatchEvent(new Event('input'));

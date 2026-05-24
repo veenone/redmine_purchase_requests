@@ -1,22 +1,29 @@
+<%# filepath: app/views/capex/new.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= stylesheet_link_tag 'capex', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'capex', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/capex/new.html.erb %>
 <% html_title "New CAPEX Entry - #{@project.name}" %>
 
 <div class="contextual">
   <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-cancel">Back to CAPEX List</span> 
+    <span class="icon icon-cancel">Back to CAPEX List</span>
   <% end %>
 </div>
 
-<h2>New CAPEX Entry</h2>
-
 <div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2>New CAPEX Entry</h2>
+      <div class="pr-form-subtitle">
+        <span class="icon icon-info"></span>
+        <%= @project.name %>
+      </div>
+    </div>
+  </div>
+
   <div class="pr-form-instructions">
     <div class="pr-alert pr-alert-info">
       <span class="icon icon-info"></span>
@@ -27,5 +34,9 @@
     </div>
   </div>
 
-  <%= render 'form' %>
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= render 'form' %>
+    </div>
+  </div>
 </div>

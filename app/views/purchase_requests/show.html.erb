@@ -1,25 +1,22 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/show.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
-
-<%# Assets are loaded via hooks - no need for direct includes %>
 
 <% html_title "#{l(:label_purchase_request)} ##{@purchase_request.id}: #{h(@purchase_request.title)}" %>
 
 <div class="contextual">
   <% if User.current.allowed_to?(:edit_purchase_requests, @project) %>
     <%= link_to edit_project_purchase_request_path(@project, @purchase_request), class: 'pr-button pr-button-secondary pr-button-icon small', title: l(:button_edit) do %>
-      <span class="icon icon-edit"><%= l(:button_edit) %></span> 
+      <span class="icon icon-edit"><%= l(:button_edit) %></span>
     <% end %>
   <% end %>
   <% if User.current.allowed_to?(:delete_purchase_requests, @project) %>
-    <%= link_to project_purchase_request_path(@project, @purchase_request), 
-              method: :delete, 
-              data: { confirm: l(:text_are_you_sure) }, 
-              class: 'pr-button pr-button-secondary pr-button-icon small', 
+    <%= link_to project_purchase_request_path(@project, @purchase_request),
+              method: :delete,
+              data: { confirm: l(:text_are_you_sure) },
+              class: 'pr-button pr-button-danger pr-button-icon small',
               title: l(:button_delete) do %>
       <span class="icon icon-del"><%= l(:button_delete) %></span>
     <% end %>
@@ -55,7 +52,7 @@
       </div>
     </div>
   </div>
-  
+
   <div class="pr-form-instructions">
     <div class="pr-alert pr-alert-info">
       <span class="icon icon-info"></span>
@@ -68,21 +65,17 @@
     </div>
   </div>
 
-  <div class="box pr-form-box">
+  <div class="pr-form-box">
     <div class="pr-tabs">
       <ul class="pr-tab-nav">
         <li class="pr-tab-item active">
           <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
-            <span class="icon icon-edit">
-            <%= l(:label_general) %>
-            </span>
+            <span class="icon icon-edit"><%= l(:label_general) %></span>
           </a>
         </li>
         <li class="pr-tab-item">
           <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
-            <span class="icon icon-package">
-            <%= l(:label_details) %>
-            </span>
+            <span class="icon icon-package"><%= l(:label_details) %></span>
           </a>
         </li>
         <% if @purchase_request.attachments.any? %>
@@ -104,7 +97,7 @@
         </li>
       </ul>
     </div>
-    
+
     <div class="pr-form-content">
       <div class="purchase-request-content tab-content" id="tab-content">
     <div id="tab-general" class="tabbed-form">
@@ -126,7 +119,7 @@
           </div>
         <% end %>
       </div>
-      
+
       <div class="details-section">
         <h4><%= l(:field_description) %></h4>
         <div class="wiki">
@@ -134,7 +127,7 @@
         </div>
       </div>
     </div>
-    
+
     <div id="tab-details" class="tabbed-form" style="display: none;">
       <div class="details-columns">
         <div class="column">
@@ -147,16 +140,15 @@
                   <span class="value"><%= link_to @purchase_request.product_url, @purchase_request.product_url, target: "_blank", class: "external" %></span>
                 </div>
               <% end %>
-              
+
               <% if @purchase_request.vendor.present? || @purchase_request.vendor_id.present? %>
                 <div class="grid-row">
                   <span class="label"><%= l(:field_vendor) %>:</span>
                   <span class="value">
-                    <% 
-                      # Look up vendor from the database if ID is available
+                    <%
                       vendor_obj = nil
                       if @purchase_request.vendor_id.present?
-                        vendor_obj = Vendor.find_by(id: @purchase_request.vendor_id) 
+                        vendor_obj = Vendor.find_by(id: @purchase_request.vendor_id)
                         if vendor_obj
                           vendor_name = vendor_obj.name
                         else
@@ -167,27 +159,27 @@
                       end
                     %>
                     <%= vendor_name %>
-                    
+
                     <% if vendor_obj.present? %>
                       <div class="vendor-details-display">
                         <% if vendor_obj.vendor_id.present? %>
                           <div><strong><%= l(:field_vendor_id) %>:</strong> <%= vendor_obj.vendor_id %></div>
                         <% end %>
-                        
+
                         <% if vendor_obj.address.present? %>
                           <div><strong><%= l(:field_address) %>:</strong> <%= vendor_obj.address %></div>
                         <% end %>
-                        
+
                         <% if vendor_obj.contact_person.present? %>
                           <div><strong><%= l(:field_contact_person) %>:</strong> <%= vendor_obj.contact_person %></div>
                         <% end %>
-                        
+
                         <% if vendor_obj.phone.present? %>
                           <div><strong><%= l(:field_phone) %>:</strong> <%= vendor_obj.phone %></div>
                         <% end %>
-                        
+
                         <% if vendor_obj.email.present? %>
-                          <div><strong><%= l(:field_email) %>:</strong> 
+                          <div><strong><%= l(:field_email) %>:</strong>
                             <a href="mailto:<%= vendor_obj.email %>"><%= vendor_obj.email %></a>
                           </div>
                         <% end %>
@@ -196,7 +188,7 @@
                   </span>
                 </div>
               <% end %>
-              
+
               <% if @purchase_request.estimated_price.present? %>
                 <div class="grid-row">
                   <span class="label"><%= l(:field_estimated_price) %>:</span>
@@ -208,7 +200,7 @@
                   </span>
                 </div>
               <% end %>
-              
+
               <% if @purchase_request.capex.present? %>
                 <div class="grid-row">
                   <span class="label"><%= l(:field_capex_entry) %>:</span>
@@ -302,7 +294,7 @@
                   </span>
                 </div>
               <% end %>
-              
+
               <% if @purchase_request.has_quarterly_allocation? %>
                 <div class="grid-row">
                   <span class="label"><%= l(:label_quarterly_allocation) %>:</span>
@@ -312,21 +304,21 @@
                       <% allocation_impact = @purchase_request.allocation_impact_on_budget %>
                       <% if allocation_impact.any? %>
                         <div><strong><%= l(:field_selected_quarter) %>:</strong> <%= allocation_impact[:quarter_name] %></div>
-                        <div><strong><%= l(:field_allocated_amount) %>:</strong> 
+                        <div><strong><%= l(:field_allocated_amount) %>:</strong>
                           <%= format_price(allocation_impact[:allocated_amount], @purchase_request.currency) %>
                         </div>
-                        <div><strong><%= l(:field_original_quarter_budget) %>:</strong> 
+                        <div><strong><%= l(:field_original_quarter_budget) %>:</strong>
                           <%= format_price(allocation_impact[:original_amount], @purchase_request.currency) %>
                         </div>
-                        <div><strong><%= l(:field_remaining_quarter_budget) %>:</strong> 
+                        <div><strong><%= l(:field_remaining_quarter_budget) %>:</strong>
                           <span class="<%= allocation_impact[:is_over_allocated] ? 'over-budget' : 'remaining-budget' %>">
                             <%= format_price(allocation_impact[:remaining_amount], @purchase_request.currency) %>
                           </span>
                         </div>
                         <% if allocation_impact[:is_over_allocated] %>
-                          <div class="allocation-warning-display">
-                            <span class="icon icon-exclamation"></span>
-                            <strong><%= l(:warning_over_allocation) %></strong>
+                          <div class="pr-alert pr-alert-warning">
+                            <span class="icon icon-warning"></span>
+                            <div class="pr-alert-content"><strong><%= l(:warning_over_allocation) %></strong></div>
                           </div>
                         <% end %>
                       <% end %>
@@ -334,11 +326,11 @@
                   </span>
                 </div>
               <% end %>
-              
+
             </div>
           </div>
         </div>
-        
+
         <% if @purchase_request.notes.present? %>
           <div class="column">
             <div class="details-section">
@@ -351,7 +343,7 @@
         <% end %>
       </div>
     </div>
-    
+
     <% if @purchase_request.attachments.any? %>
       <div id="tab-attachments" class="tabbed-form" style="display: none;">
         <div class="details-section">
@@ -491,741 +483,24 @@
 </div>
 </div>
 
-<style>
-  .pr-form-container {
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-  
-  .pr-form-header {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #e5e5e5;
-    padding-bottom: 20px;
-  }
-  
-  .pr-form-title h2 {
-    margin: 0 0 10px 0;
-    font-size: 24px;
-    color: #333;
-  }
-  
-  .request-id {
-    color: #777;
-    font-size: 0.9em;
-  }
-  
-  .pr-form-subtitle {
-    color: #666;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  
-  .pr-form-status {
-    margin-top: 15px;
-  }
-  
-  .pr-status-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-  }
-  
-  .status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    color: white;
-    font-size: 12px;
-    font-weight: 500;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
-  }
-  
-  .priority-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-  
-  .priority-badge.low {
-    background-color: #e8eaf6;
-    color: #3949ab;
-  }
-  
-  .priority-badge.normal {
-    background-color: #e0f2f1;
-    color: #00897b;
-  }
-  
-  .priority-badge.high {
-    background-color: #fff8e1;
-    color: #ff8f00;
-  }
-  
-  .priority-badge.urgent {
-    background-color: #ffebee;
-    color: #d32f2f;
-  }
-  
-  .last-updated {
-    color: #666;
-    font-size: 0.9em;
-  }
-  
-  .pr-form-instructions {
-    margin-bottom: 20px;
-  }
-  
-  .pr-alert {
-    padding: 15px;
-    border-radius: 6px;
-    border: 1px solid;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .pr-alert-info {
-    background-color: #f0f8ff;
-    border-color: #b3d9ff;
-    color: #1a5490;
-  }
-  
-  .pr-alert-content h4 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  
-  .pr-request-title {
-    font-size: 14px;
-    margin-top: 8px;
-    padding: 8px;
-    background-color: rgba(255,255,255,0.7);
-    border-radius: 4px;
-  }
-  
-  .pr-form-box {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  
-  .pr-tabs {
-    border-bottom: 1px solid #ddd;
-    background-color: #f8f9fa;
-  }
-  
-  .pr-tab-nav {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-  }
-  
-  .pr-tab-item {
-    margin: 0;
-  }
-  
-  .pr-tab-link {
-    display: block;
-    padding: 12px 20px;
-    color: #666;
-    text-decoration: none;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .pr-tab-item.active .pr-tab-link,
-  .pr-tab-link:hover {
-    color: #333;
-    border-bottom-color: #0078d4;
-    background-color: white;
-  }
-  
-  .pr-form-content {
-    padding: 20px;
-  }
-  
-  .priority-badge.urgent {
-    background-color: #ffebee;
-    color: #c62828;
-  }
-  
-  .last-updated {
-    color: #666;
-    font-size: 0.9em;
-  }
-  
-  .purchase-request-title {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .purchase-request-title h3 {
-    margin: 0;
-    color: #333;
-    font-size: 1.5em;
-  }
-  
-  .tabs {
-    margin-bottom: 15px;
-  }
-  
-  .tabs ul {
-    display: flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .tabs ul li {
-    margin-right: 5px;
-  }
-  
-  .tabs ul li a {
-    display: block;
-    padding: 8px 15px;
-    text-decoration: none;
-    border: 1px solid transparent;
-    border-bottom: none;
-    border-radius: 3px 3px 0 0;
-    color: #555;
-  }
-  
-  .tabs ul li.selected a {
-    background-color: #fff;
-    border-color: #ddd;
-    border-bottom-color: #fff;
-    color: #333;
-    position: relative;
-    bottom: -1px;
-    font-weight: bold;
-  }
-  
-  .purchase-meta {
-    background-color: #f9f9f9;
-    padding: 10px;
-    border-radius: 3px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  
-  .meta-item {
-    display: inline-block;
-  }
-  
-  .meta-item .label {
-    font-weight: bold;
-    color: #555;
-  }
-  
-  .meta-item .value {
-    margin-left: 5px;
-  }
-  
-  .meta-item .value.overdue {
-    color: #c62828;
-    font-weight: bold;
-  }
-  
-  .details-section {
-    margin-bottom: 25px;
-  }
-  
-  .details-section h4 {
-    font-size: 1.1em;
-    color: #333;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #e5e5e5;
-    margin-bottom: 10px;
-  }
-  
-  .details-columns {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 30px;
-    margin-bottom: 20px;
-  }
-  
-  .column {
-    flex: 1;
-    min-width: 300px;
-  }
-  
-  .details-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 8px 15px;
-  }
-  
-  .grid-row {
-    display: contents;
-  }
-  
-  .grid-row .label {
-    font-weight: bold;
-    color: #555;
-  }
-  
-  .grid-row .value {
-    word-break: break-word;
-  }
-  
-  .grid-row .value.price {
-    font-weight: bold;
-    color: #2e7d32;
-  }
-  
-  .currency-badge {
-    background-color: #e0e0e0;
-    color: #333;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-size: 0.9em;
-    margin-left: 5px;
-  }
-  
-  .notes {
-    background-color: #fffde7;
-    padding: 10px;
-    border-left: 3px solid #ffd54f;
-    border-radius: 2px;
-  }
-  
-  .wiki {
-    margin-top: 10px;
-  }
-  
-  /* Using shared styles from purchase_request_buttons.css */
-  
-  .button-action {
-    margin-left: 5px;
-  }
-  
-  .button-highlight {
-    opacity: 0.8;
-  }
-  
-  .external:after {
-    content: "\f08e";
-    font-family: FontAwesome;
-    margin-left: 3px;
-    font-size: 0.8em;
-    color: #888;
-  }
-  
-  .attachments {
-    padding: 5px 0;
-  }
-
-  /* Vendor details display styling */
-  .vendor-details-display {
-    margin-top: 5px;
-    padding: 8px;
-    background-color: #f5f7fa;
-    border-radius: 3px;
-    border-left: 3px solid #3498db;
-    font-size: 0.9em;
-  }
-  
-  .vendor-details-display div {
-    margin: 3px 0;
-  }
-  
-  /* CAPEX details display styling */
-  .capex-details-display {
-    margin-top: 5px;
-    padding: 8px;
-    background-color: #f0f8ff;
-    border-radius: 3px;
-    border-left: 3px solid #2196f3;
-    font-size: 0.9em;
-  }
-  
-  .capex-details-display div {
-    margin: 3px 0;
-  }
-  
-  .capex-link {
-    color: #2196f3;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  
-  .capex-link:hover {
-    text-decoration: underline;
-  }
-  
-  .over-budget {
-    color: #f44336;
-    font-weight: bold;
-  }
-  
-  .remaining-budget {
-    color: #4caf50;
-    font-weight: bold;
-  }
-  
-  .utilization-percentage {
-    font-weight: bold;
-    color: #ff9800;
-  }
-
-  /* OPEX details display styling */
-  .opex-details-display {
-    margin-top: 5px;
-    padding: 8px;
-    background-color: #f1f8f4;
-    border-radius: 3px;
-    border-left: 3px solid #4caf50;
-    font-size: 0.9em;
-  }
-
-  .opex-details-display div {
-    margin: 3px 0;
-  }
-
-  .opex-link {
-    color: #4caf50;
-    text-decoration: none;
-    font-weight: bold;
-  }
-
-  .opex-link:hover {
-    text-decoration: underline;
-  }
-
-  /* TPC Code details display styling */
-  .tpc-code-details-display {
-    margin-top: 5px;
-    padding: 10px;
-    background-color: #f8f4ff;
-    border-radius: 4px;
-    border-left: 3px solid #6f42c1;
-    font-size: 0.9em;
-  }
-
-  .tpc-main-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e0d4f7;
-  }
-
-  .tpc-code-details-display .tpc-number {
-    font-size: 16px;
-    font-weight: bold;
-    color: #6f42c1;
-    font-family: monospace;
-  }
-
-  .tpc-source-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .tpc-source-badge.direct {
-    background-color: #6f42c1;
-    color: white;
-  }
-
-  .tpc-source-badge.capex {
-    background-color: #2196f3;
-    color: white;
-  }
-
-  .tpc-source-badge.opex {
-    background-color: #4caf50;
-    color: white;
-  }
-
-  .tpc-owner-info {
-    margin-top: 8px;
-  }
-
-  .tpc-owner-info div {
-    margin: 4px 0;
-    color: #555;
-  }
-
-  .tpc-owner-info strong {
-    color: #333;
-    margin-right: 5px;
-  }
-
-  /* Quarterly allocation display styling */
-  .quarterly-allocation-display {
-    margin-top: 5px;
-    padding: 8px;
-    background-color: #f0f8ff;
-    border-radius: 3px;
-    border-left: 3px solid #2196f3;
-    font-size: 0.9em;
-  }
-
-  .quarterly-allocation-display div {
-    margin: 3px 0;
-  }
-
-  /* Workflow tab styling */
-  .workflow-progress-badge {
-    display: inline-block;
-    background-color: #4caf50;
-    color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    margin-left: 5px;
-  }
-
-  .workflow-main-issue {
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 6px;
-  }
-
-  .workflow-issue-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-  }
-
-  .workflow-issue-link {
-    color: #0078d4;
-    font-weight: 500;
-    text-decoration: none;
-  }
-
-  .workflow-issue-link:hover {
-    text-decoration: underline;
-  }
-
-  .issue-status-badge,
-  .subtask-status-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 4px;
-    color: white;
-    font-size: 11px;
-    font-weight: 500;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
-    background-color: #6c757d;
-  }
-
-  .workflow-progress-container {
-    margin-bottom: 20px;
-  }
-
-  .workflow-progress-label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    font-size: 13px;
-    color: #555;
-  }
-
-  .progress-percentage {
-    font-weight: bold;
-    color: #333;
-  }
-
-  .workflow-progress-bar {
-    height: 10px;
-    background-color: #e0e0e0;
-    border-radius: 5px;
-    overflow: hidden;
-  }
-
-  .workflow-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4caf50, #8bc34a);
-    border-radius: 5px;
-    transition: width 0.3s ease;
-  }
-
-  .workflow-subtasks {
-    margin-top: 15px;
-  }
-
-  .workflow-subtasks h5 {
-    margin: 0 0 10px 0;
-    color: #333;
-    font-size: 14px;
-  }
-
-  .workflow-subtasks-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  .workflow-subtasks-table th {
-    background-color: #f0f0f0;
-    padding: 8px 10px;
-    text-align: left;
-    font-weight: 600;
-    color: #555;
-    border-bottom: 2px solid #ddd;
-  }
-
-  .workflow-subtasks-table td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-  }
-
-  .workflow-subtasks-table tr.subtask-completed {
-    background-color: #f8fff8;
-  }
-
-  .workflow-subtasks-table tr.subtask-completed td {
-    color: #666;
-  }
-
-  .workflow-subtasks-table tr.subtask-pending:hover {
-    background-color: #f5f5f5;
-  }
-
-  .mini-progress-bar {
-    position: relative;
-    height: 16px;
-    background-color: #e0e0e0;
-    border-radius: 8px;
-    overflow: hidden;
-    min-width: 60px;
-  }
-
-  .mini-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #4caf50, #8bc34a);
-    border-radius: 8px;
-    transition: width 0.3s ease;
-  }
-
-  .mini-progress-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 10px;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .workflow-complete-notice {
-    margin-top: 15px;
-    padding: 12px;
-    background-color: #e8f5e9;
-    border: 1px solid #a5d6a7;
-    border-radius: 4px;
-    color: #2e7d32;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .workflow-next-task {
-    margin-top: 15px;
-    padding: 12px;
-    background-color: #fff8e1;
-    border: 1px solid #ffe082;
-    border-radius: 4px;
-    color: #f57f17;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .workflow-not-started {
-    padding: 20px;
-    text-align: center;
-  }
-
-  .workflow-notice {
-    margin-bottom: 15px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-
-  .workflow-create-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .workflow-not-enabled {
-    padding: 20px;
-    text-align: center;
-    background-color: #fff3cd;
-    border: 1px solid #ffc107;
-    border-radius: 4px;
-  }
-
-  .workflow-not-enabled .workflow-notice {
-    color: #856404;
-    margin-bottom: 10px;
-  }
-
-  .workflow-setup-hint {
-    margin-top: 10px;
-  }
-
-  .workflow-setup-hint a {
-    color: #007bff;
-  }
-
-</style>
-
 <%= javascript_tag do %>
 $(document).ready(function() {
-  // Modern tab functionality
+  // Tab switching
   $('.pr-tab-link').click(function(e) {
     e.preventDefault();
     var tabId = $(this).data('tab');
-    
-    // Hide all tabbed forms
+
     $('.tabbed-form').hide();
-    
-    // Show the selected tab content
     $('#' + tabId).show();
-    
-    // Update tab selection
+
     $('.pr-tab-item').removeClass('active');
     $(this).parent('.pr-tab-item').addClass('active');
-    
+
     return false;
   });
-  
-  // Initialize tab content - first tab is shown by default
+
+  // First tab is shown by default
   $('.tabbed-form').hide();
   $('#tab-general').show();
-  
-  // Add smooth hover effects for buttons
-  $('.pr-button').hover(
-    function() { $(this).addClass('button-highlight'); },
-    function() { $(this).removeClass('button-highlight'); }
-  );
 });
 <% end %>

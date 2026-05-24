@@ -1,17 +1,21 @@
-<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/project_vendors/index.html.erb %>
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/project_vendors/index.html.erb %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
 <% html_title "Vendors" %>
 
 <div class="contextual">
   <% if User.current.allowed_to?(:manage_project_vendors, @project) %>
     <%= link_to manage_project_vendors_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-edit">Manage Vendors</span> 
+      <span class="icon icon-edit">Manage Vendors</span>
     <% end %>
   <% end %>
 </div>
 
 <h2>Vendors</h2>
 
-<div class="box">
+<div class="info-box">
   <p>These vendors are available for use in purchase requests across all projects.</p>
 </div>
 
@@ -19,9 +23,9 @@
   <%= form_tag project_vendors_path(@project), method: :get do %>
     <div class="input-group">
       <%= text_field_tag :search, params[:search], placeholder: "Search vendors by name or ID...", class: 'vendor-search-input' %>
-      <%= submit_tag "Search", class: 'button-small' %>
+      <%= submit_tag "Search", class: 'pr-button pr-button-secondary small' %>
       <% if params[:search].present? %>
-        <%= link_to "Clear", project_vendors_path(@project), class: 'button-small' %>
+        <%= link_to "Clear", project_vendors_path(@project), class: 'pr-button pr-button-cancel small' %>
       <% end %>
     </div>
   <% end %>
@@ -30,30 +34,30 @@
 <% has_vendors = @vendors && @vendors.any? %>
 
 <% if has_vendors %>
-  <%= render partial: 'vendors/vendor_list', locals: { 
-    vendors: @vendors, 
+  <%= render partial: 'vendors/vendor_list', locals: {
+    vendors: @vendors,
     admin_actions: false,
     empty_message: "No vendors found"
   } %>
 <% else %>
-  <p class="nodata">No vendors found</p>
-  
-  <% if User.current.allowed_to?(:manage_project_vendors, @project) %>
-    <div class="box">
-      <p>There are no vendors in the system yet.</p>
+  <div class="pr-empty">
+    <div class="pr-empty__icon">🏢</div>
+    <h3>No Vendors Found</h3>
+    <p>There are no vendors in the system yet.</p>
+    <% if User.current.allowed_to?(:manage_project_vendors, @project) %>
       <p>
         <%= link_to manage_project_vendors_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add">Add Vendor</span> 
+          <span class="icon icon-add">Add Vendor</span>
         <% end %>
       </p>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 <% end %>
 
 <% content_for :sidebar do %>
   <h3>Vendor Management</h3>
   <p>Vendors are managed globally but can be used in any project.</p>
-  
+
   <% if User.current.admin? %>
     <hr>
     <p>

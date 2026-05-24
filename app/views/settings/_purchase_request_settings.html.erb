@@ -5,12 +5,12 @@
 
 <%# Main form wrapper for Redmine plugin settings %>
 <%= form_tag(plugin_settings_path('redmine_purchase_requests'), method: :post, multipart: true, id: 'settings-form') do %>
-  
+
   <div class="tabs">
     <ul>
       <% purchase_request_settings_tabs.each do |tab| %>
-        <li><%= link_to l(tab[:label]), "#", 
-                      id: "tab-#{tab[:name]}", 
+        <li><%= link_to l(tab[:label]), "#",
+                      id: "tab-#{tab[:name]}",
                       class: (tab[:name] == @tab ? 'selected' : ''),
                       onclick: "showTab('#{tab[:name]}'); return false;" %></li>
       <% end %>
@@ -24,57 +24,55 @@
       </div>
     <% end %>
   </div>
-  
-  <%# Apply & Cancel buttons - aligned to leftmost %>
-  <div class="buttons-container">
-    <%= submit_tag l(:button_apply, default: 'Apply'), name: 'commit', class: 'btn btn-primary' %>
-    <%= link_to l(:button_cancel, default: 'Cancel'), 
-          { controller: 'settings', action: 'plugin', id: 'redmine_purchase_requests' }, 
-          class: 'btn btn-secondary' %>
+
+  <%# Apply & Cancel buttons %>
+  <div class="pr-form-actions left-aligned" style="margin-top: 0; border-top: none; padding: 16px 0 0;">
+    <%= submit_tag l(:button_apply, default: 'Apply'), name: 'commit', class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel, default: 'Cancel'),
+          { controller: 'settings', action: 'plugin', id: 'redmine_purchase_requests' },
+          class: 'pr-button pr-button-cancel' %>
   </div>
 
 <% end %>
 
-<%# JavaScript to hide any duplicate/outer apply buttons %>
+<%# JavaScript to manage tabs and hide duplicate Redmine buttons %>
 <%= javascript_tag do %>
   function showTab(name) {
     $('.tab-content').hide();
     $('#tab-content-' + name).show();
     $('.tabs ul li a').removeClass('selected');
     $('#tab-' + name).addClass('selected');
-    
+
     // Update URL hash
     if (history.pushState) {
       history.pushState(null, null, '#' + name);
     } else {
       window.location.hash = name;
     }
-    
+
     return false;
   }
-  
+
   $(function() {
     // Handle initial tab selection
     var hash = location.hash.replace(/^#/, '');
     if (hash && $('#tab-' + hash).length) {
       showTab(hash);
     } else {
-      // Default to the general tab if no hash is specified
       showTab('general');
     }
-    
+
     // Hide any duplicate apply buttons that might be added by Redmine
-    $('p.buttons').not('.buttons-container').hide();
-    $('input[name="commit"]').not('.buttons-container input').hide();
-    
+    $('p.buttons').not('.pr-form-actions').hide();
+    $('input[name="commit"]').not('.pr-form-actions input').hide();
+
     // Handle form submission feedback
     $('#settings-form').on('submit', function() {
-      var submitBtn = $(this).find('.btn-primary');
+      var submitBtn = $(this).find('.pr-button-primary');
       if (submitBtn.length) {
         submitBtn.text('Applying...');
         submitBtn.prop('disabled', true);
-        
-        // Re-enable after timeout in case of errors
+
         setTimeout(function() {
           if (submitBtn.prop('disabled')) {
             submitBtn.text('Apply');
@@ -87,209 +85,26 @@
 <% end %>
 
 <style>
-  .tabs {
-    margin-bottom: 20px;
-    clear: both;
+  /* Hide any duplicate buttons that Redmine might add */
+  p.buttons:not(.pr-form-actions) {
+    display: none !important;
   }
-  
-  .tabs ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    display: flex;
-    border-bottom: 2px solid #ddd;
-    flex-wrap: wrap;
-  }
-  
-  .tabs ul li {
-    margin: 0;
-    padding: 0;
-  }
-  
-  .tabs ul li a {
-    display: block;
-    padding: 10px 15px;
-    text-decoration: none;
-    color: #333;
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-bottom: none;
-    margin-right: 2px;
-    margin-bottom: 2px;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-  }
-  
-  .tabs ul li a:hover {
-    background: #fff;
-    text-decoration: none;
-  }
-  
-  .tabs ul li a.selected {
-    background: #fff;
-    border-bottom: 2px solid #fff;
-    margin-bottom: 0px;
-    font-weight: bold;
-    color: #000;
-  }
-  
-  .tab-content {
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-top: none;
-    min-height: 200px;
-  }
-  
+
   .tab-content.hidden {
     display: none;
   }
-  
-  /* Buttons container - consistent with settings sections */
-  .buttons-container {
-    padding: 20px 24px;
-    background: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 0 0 8px 8px;
-    margin-top: -1px;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  .tab-content {
+    padding: 20px;
+    background: var(--pr-surface);
+    border: 1px solid var(--pr-border);
+    border-top: none;
+    min-height: 200px;
   }
 
-  .buttons-container .btn {
-    margin: 0;
-  }
-
-  /* Primary button - Apply */
-  .btn-primary {
-    background: linear-gradient(135deg, #28a745 0%, #218838 100%);
-    color: #fff;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
-    min-width: 100px;
-  }
-
-  .btn-primary:hover {
-    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4);
-    transform: translateY(-1px);
-    text-decoration: none;
-    color: #fff;
-  }
-
-  .btn-primary:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(40, 167, 69, 0.3);
-  }
-
-  .btn-primary:disabled {
-    background: linear-gradient(135deg, #adb5bd 0%, #6c757d 100%);
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-  }
-
-  /* Secondary button - Cancel */
-  .btn-secondary {
-    background: #fff;
-    color: #495057;
-    border: 1px solid #dee2e6;
-    padding: 11px 24px;
-    border-radius: 6px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    min-width: 100px;
-  }
-
-  .btn-secondary:hover {
-    background: #f8f9fa;
-    border-color: #adb5bd;
-    color: #212529;
-    text-decoration: none;
-  }
-
-  .btn-secondary:active {
-    background: #e9ecef;
-  }
-  
-  /* Hide any duplicate buttons that Redmine might add */
-  p.buttons:not(.buttons-container) {
-    display: none !important;
-  }
-  
-  /* Ensure forms within tabs work properly */
-  .tab-content form {
-    margin-bottom: 15px;
-  }
-  
-  .tab-content input[type="submit"] {
-    margin-top: 10px;
-  }
-  
-  /* Responsive design for tabs */
   @media (max-width: 768px) {
-    .tabs ul {
-      flex-direction: column;
-    }
-
-    .tabs ul li {
-      flex: 1;
-    }
-
-    .tabs ul li a {
-      margin-right: 0;
-      text-align: center;
-    }
-
     .tab-content {
       padding: 15px;
-    }
-
-    .buttons-container {
-      padding: 16px;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .buttons-container .btn {
-      width: 100%;
-    }
-  }
-
-  /* Dark mode support for buttons */
-  @media (prefers-color-scheme: dark) {
-    .buttons-container {
-      background: #2d3748;
-      border-color: #4a5568;
-    }
-
-    .btn-secondary {
-      background: #4a5568;
-      color: #e2e8f0;
-      border-color: #718096;
-    }
-
-    .btn-secondary:hover {
-      background: #5a6778;
-      color: #fff;
     }
   }
 </style>

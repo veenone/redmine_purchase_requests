@@ -1,18 +1,16 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/index.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
 <% html_title("Purchase Requests - #{@project.name}") %>
 
 <div class="contextual">
-  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-icon' do %>
-    <span class="icon icon-add"><%= l(:label_new_purchase_request) %></span> 
+  <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
+    <span class="icon icon-add"><%= l(:label_new_purchase_request) %></span>
   <% end %>
-  
-  <%= link_to project_purchase_requests_path(@project, format: :csv), class: 'pr-button pr-button-icon' do %>
+  <%= link_to project_purchase_requests_path(@project, format: :csv), class: 'pr-button pr-button-secondary pr-button-icon' do %>
     <span class="icon icon-download">Export CSV</span>
   <% end %>
 </div>
@@ -28,63 +26,58 @@
 </div>
 
 <% if @purchase_requests.empty? %>
-  <div class="empty-state">
-    <div class="empty-icon">📋</div>
+  <div class="pr-empty">
+    <div class="pr-empty__icon">📋</div>
     <h3>No Purchase Requests Yet</h3>
     <p>No purchase requests have been created for this project.</p>
     <p>
-      <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-icon' do %>
+      <%= link_to new_project_purchase_request_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
         <span class="icon icon-add"></span> Create First Purchase Request
       <% end %>
     </p>
   </div>
 <% else %>
-  <div class="filters">
-    <%= form_with url: project_purchase_requests_path(@project), method: :get, local: true, class: 'query-form' do |f| %>
-      <fieldset>
-        <legend>Filters</legend>
-        
-        <div class="filter-row">
-          <label for="search">Search:</label>
-          <%= f.text_field :search, value: params[:search], placeholder: "Title, description, or ID" %>
-          
-          <label for="status_id">Status:</label>
-          <%= f.select :status_id, 
-                       options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, params[:status_id]), 
-                       { include_blank: 'All Statuses' } %>
-          
-          <%= f.submit 'Filter', class: 'pr-button pr-button-secondary small' %>
-          <% if params[:status_id].present? || params[:search].present? %>
-            <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel small' %>
-          <% end %>
-        </div>
-      </fieldset>
-    <% end %>
-  </div>
+  <%= form_with url: project_purchase_requests_path(@project), method: :get, local: true, class: 'pr-filter-form' do |f| %>
+    <fieldset class="pr-filters">
+      <legend>Filters</legend>
+      <div class="filter-row">
+        <label for="search">Search:</label>
+        <%= f.text_field :search, value: params[:search], placeholder: "Title, description, or ID" %>
+
+        <label for="status_id">Status:</label>
+        <%= f.select :status_id,
+                     options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, params[:status_id]),
+                     { include_blank: 'All Statuses' } %>
+
+        <%= f.submit 'Filter', class: 'pr-button pr-button-secondary small' %>
+        <% if params[:status_id].present? || params[:search].present? %>
+          <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel small' %>
+        <% end %>
+      </div>
+    </fieldset>
+  <% end %>
 
   <div class="autoscroll">
-    <table class="list purchase-requests">
+    <table class="pr-table">
       <thead>
         <tr>
-          <th class="id-column">ID</th>
-          <th class="title-column">Title</th>
-          <th class="status-column">Status</th>
-          <th class="author-column">Author</th>
-          <th class="price-column">Estimated Price</th>
-          <th class="budget-column">Budget Entry</th>
-          <th class="tpc-column">TPC Code</th>
-          <th class="date-column">Created</th>
-          <th class="date-column">Updated</th>
-          <th class="actions-column">Actions</th>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Status</th>
+          <th>Author</th>
+          <th>Estimated Price</th>
+          <th>Budget Entry</th>
+          <th>TPC Code</th>
+          <th>Created</th>
+          <th>Updated</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <% @purchase_requests.each do |purchase_request| %>
           <tr class="<%= cycle('odd', 'even') %> <%= purchase_request.status.is_closed? ? 'closed' : '' %>">
-            <td class="id">
-              <strong>
-                <%= link_to "##{purchase_request.id}", project_purchase_request_path(@project, purchase_request), class: 'pr-id-link' %>
-              </strong>
+            <td class="pr-cell-id">
+              <%= link_to "##{purchase_request.id}", project_purchase_request_path(@project, purchase_request) %>
             </td>
             <td class="title">
               <%= link_to purchase_request.title, project_purchase_request_path(@project, purchase_request), class: 'pr-title-link' %>
@@ -95,7 +88,7 @@
               <% end %>
             </td>
             <td class="status">
-              <span class="status-badge <%= purchase_request.status.is_closed? ? 'closed' : 'open' %>" 
+              <span class="status-badge"
                     style="background-color: <%= purchase_request.status.color.presence || '#777777' %>">
                 <%= purchase_request.status.name %>
               </span>
@@ -107,8 +100,7 @@
             <td class="price">
               <% if purchase_request.estimated_price.present? %>
                 <div class="price-display">
-                  <% 
-                    # Get the correct currency symbol for this purchase request
+                  <%
                     symbol_map = {
                       'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥',
                       'CAD' => 'C$', 'AUD' => 'A$', 'CHF' => 'CHF', 'CNY' => '¥',
@@ -171,31 +163,27 @@
               <% end %>
             </td>
             <td class="created-on">
-              <span class="date-display">
-                <%= format_time(purchase_request.created_at) %>
-              </span>
+              <span class="date-display"><%= format_time(purchase_request.created_at) %></span>
             </td>
             <td class="updated-on">
-              <span class="date-display">
-                <%= format_time(purchase_request.updated_at) %>
-              </span>
+              <span class="date-display"><%= format_time(purchase_request.updated_at) %></span>
             </td>
             <td class="buttons">
-              <div class="action-buttons">
-                <%= link_to project_purchase_request_path(@project, purchase_request), 
-                            class: 'pr-button pr-button-secondary pr-button-icon small', 
+              <div class="pr-table-actions">
+                <%= link_to project_purchase_request_path(@project, purchase_request),
+                            class: 'pr-button pr-button-secondary pr-button-icon small',
                             title: 'View Details' do %>
                   <span class="icon icon-magnifier">View</span>
                 <% end %>
-                <%= link_to edit_project_purchase_request_path(@project, purchase_request), 
-                            class: 'pr-button pr-button-secondary pr-button-icon small', 
+                <%= link_to edit_project_purchase_request_path(@project, purchase_request),
+                            class: 'pr-button pr-button-secondary pr-button-icon small',
                             title: 'Edit Request' do %>
                   <span class="icon icon-edit">Edit</span>
                 <% end %>
-                <%= link_to project_purchase_request_path(@project, purchase_request), 
-                            method: :delete, 
-                            data: { confirm: 'Are you sure you want to delete this purchase request?' }, 
-                            class: 'pr-button pr-button-secondary pr-button-icon small', 
+                <%= link_to project_purchase_request_path(@project, purchase_request),
+                            method: :delete,
+                            data: { confirm: 'Are you sure you want to delete this purchase request?' },
+                            class: 'pr-button pr-button-danger pr-button-icon small',
                             title: 'Delete Request' do %>
                   <span class="icon icon-del">Delete</span>
                 <% end %>
@@ -208,397 +196,8 @@
   </div>
 
   <% if defined?(@purchase_request_count) && @purchase_request_count && @purchase_request_count > @limit %>
-    <div class="pagination-wrapper">
+    <div class="pr-pagination">
       <%= pagination_links_full @pages, @purchase_request_count, per_page: @limit %>
     </div>
   <% end %>
-<% end %>
-
-<% content_for :header_tags do %>
-<style>
-  .info-box {
-    background-color: #e7f3ff;
-    border: 1px solid #b3d9ff;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 20px;
-  }
-  
-  .info-box p {
-    margin: 0 0 10px 0;
-  }
-  
-  .info-box p:last-child {
-    margin-bottom: 0;
-  }
-  
-  .count {
-    color: #666;
-    font-weight: normal;
-    font-size: 0.9em;
-  }
-  
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    margin: 20px 0;
-  }
-  
-  .empty-icon {
-    font-size: 48px;
-    margin-bottom: 20px;
-  }
-  
-  .empty-state h3 {
-    color: #333;
-    margin-bottom: 10px;
-  }
-  
-  .empty-state p {
-    color: #666;
-    margin-bottom: 20px;
-  }
-  
-  .filters {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-  
-  .filters fieldset {
-    border: none;
-    margin: 0;
-    padding: 20px;
-  }
-  
-  .filters legend {
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 15px;
-    padding: 0;
-  }
-  
-  .filter-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-  }
-  
-  .filter-row label {
-    font-weight: bold;
-    white-space: nowrap;
-  }
-  
-  .filter-row input[type="text"],
-  .filter-row select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    min-width: 150px;
-    height: 36px;
-    font-size: 13px;
-    line-height: 1.4;
-    box-sizing: border-box;
-  }
-
-  .filter-row select {
-    appearance: auto;
-    -webkit-appearance: auto;
-    -moz-appearance: auto;
-  }
-  
-  .list.purchase-requests {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  
-  .list.purchase-requests thead th {
-    background: #f8f9fa;
-    border-bottom: 2px solid #ddd;
-    padding: 12px 8px;
-    font-weight: bold;
-    color: #333;
-  }
-  
-  .list.purchase-requests tbody td {
-    padding: 12px 8px;
-    border-bottom: 1px solid #eee;
-    vertical-align: top;
-  }
-  
-  .list.purchase-requests tbody tr:hover {
-    background-color: #f5f5f5;
-  }
-  
-  .list.purchase-requests tbody tr.closed {
-    opacity: 0.7;
-  }
-  
-  .id-column { width: 60px; }
-  .title-column { width: 220px; }
-  .status-column { width: 110px; }
-  .author-column { width: 110px; }
-  .price-column { width: 120px; }
-  .budget-column { width: 140px; }
-  .tpc-column { width: 130px; }
-  .date-column { width: 110px; }
-  .actions-column { width: 140px; }
-  
-  .pr-id-link {
-    color: #007bff;
-    font-weight: bold;
-    text-decoration: none;
-  }
-  
-  .pr-id-link:hover {
-    text-decoration: underline;
-  }
-  
-  .pr-title-link {
-    color: #333;
-    text-decoration: none;
-    font-weight: 500;
-  }
-  
-  .pr-title-link:hover {
-    color: #007bff;
-    text-decoration: underline;
-  }
-  
-  .description-preview {
-    color: #666;
-    font-size: 12px;
-    margin-top: 4px;
-    font-style: italic;
-  }
-  
-  .status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    color: white;
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-    min-width: 60px;
-    text-align: center;
-  }
-  
-  .status-badge.closed {
-    opacity: 0.8;
-  }
-  
-  .price-display {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .price-amount {
-    font-weight: bold;
-    color: #28a745;
-  }
-  
-  .currency-code {
-    font-size: 10px;
-    color: #666;
-    text-transform: uppercase;
-  }
-  
-  .budget-link-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .budget-link {
-    text-decoration: none;
-    font-size: 12px;
-  }
-
-  .budget-link.capex-link {
-    color: #007bff;
-  }
-
-  .budget-link.opex-link {
-    color: #28a745;
-  }
-
-  .budget-link:hover {
-    text-decoration: underline;
-  }
-
-  .budget-utilization-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 10px;
-    background-color: #28a745;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-  }
-
-  .budget-utilization-badge.over-budget {
-    background-color: #dc3545;
-  }
-
-  .tpc-code-display {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-  }
-
-  .tpc-number {
-    font-weight: bold;
-    color: #333;
-    font-size: 12px;
-    font-family: monospace;
-  }
-
-  .tpc-source {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 9px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .tpc-source.direct {
-    background-color: #6f42c1;
-    color: white;
-  }
-
-  .tpc-source.capex {
-    background-color: #007bff;
-    color: white;
-  }
-
-  .tpc-source.opex {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  .date-display {
-    font-size: 12px;
-    color: #666;
-  }
-  
-  .no-data {
-    color: #999;
-    font-style: italic;
-    font-size: 12px;
-  }
-  
-  .action-buttons {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-  }
-  
-  .pr-button-small {
-    padding: 4px 6px;
-    font-size: 11px;
-    min-width: auto;
-    background: none !important;
-    border: 1px solid #ddd;
-    color: #333 !important;
-    text-decoration: none;
-  }
-
-  .pr-button-secondary {
-    background: none !important;   
-    border: none;   
-    text-decoration: none;
-    padding: 6px 12px;    
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: none;
-  }
-  
-  .pr-button-small:hover {
-    background: #f5f5f5 !important;
-    border-color: #999;
-    color: #000 !important;
-  }
-  
-  .pr-button-small.pr-button-danger {
-    border-color: #dc3545;
-    color: #dc3545 !important;
-  }
-  
-  .pr-button-small.pr-button-danger:hover {
-    background: #f8d7da !important;
-    color: #721c24 !important;
-  }
-  
-  .pagination-wrapper {
-    margin-top: 20px;
-    text-align: center;
-  }
-  
-  h2 {
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  /* Contextual buttons styling */
-  .contextual .pr-button {
-    background: none !important;
-    color: #333 !important;
-    text-decoration: none;
-    padding: 6px 12px;
-    border-radius: 3px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: none; !important;
-  }
-  
-  .contextual .pr-button:hover {
-    background: #f5f5f5 !important;
-    border-color: #999;
-    color: #000 !important;
-  }
-  
-  /* Filter buttons styling */
-  .filter-row .pr-button {
-    background: none !important;
-    border: 1px solid #ddd;
-    color: #333 !important;
-    text-decoration: none;
-    height: 36px;
-    padding: 8px 16px;
-    font-size: 13px;
-    line-height: 1.4;
-    box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-  }
-  
-  .filter-row .pr-button:hover {
-    background: #f5f5f5 !important;
-    border-color: #999;
-    color: #000 !important;
-  }
-  
-  .filter-row .pr-button.pr-button-cancel {
-    border-color: #dc3545;
-    color: #dc3545 !important;
-  }
-  
-  .filter-row .pr-button.pr-button-cancel:hover {
-    background: #f8d7da !important;
-    color: #721c24 !important;
-  }
-</style>
 <% end %>

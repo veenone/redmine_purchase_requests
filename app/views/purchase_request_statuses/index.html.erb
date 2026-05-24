@@ -1,58 +1,81 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
 <div class="contextual">
   <%= link_to new_purchase_request_status_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-    <span class="icon icon-add"><%= l(:label_status_new) %></span> 
+    <span class="icon icon-add"><%= l(:label_status_new) %></span>
   <% end %>
 </div>
 
 <h2><%= l(:label_purchase_request_statuses) %></h2>
 
-<table class="list" style="width: 100%; max-width: 800px;">
-  <thead>
-    <tr>
-      <th style="width: 30%"><%= l(:field_name) %></th>
-      <th style="width: 10%"><%= l(:field_position) %></th>
-      <th style="width: 15%"><%= l(:field_is_closed) %></th>
-      <th style="width: 15%"><%= l(:label_status_color) %></th>
-      <th style="width: 15%"><%= l(:label_status_is_default) %></th>
-      <th style="width: 15%"></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @statuses.each do |status| %>
-      <tr>
-        <td><%= status.name %></td>
-        <td><%= status.position %></td>
-        <td><%= checked_image status.is_closed? if status.respond_to?(:is_closed?) %></td>
-        <td style="text-align: center;">
-          <span class="color-preview" style="display: inline-block; background-color: <%= status.color.presence || '#777777' %>; width: 25px; height: 25px; vertical-align: middle; border-radius: 4px;"></span>
-          <span><%= status.color.presence || '#777777' %></span>
-        </td>
-        <td><%= checked_image status.is_default? if status.respond_to?(:is_default?) %></td>
-        <td class="buttons">
-          <%= link_to edit_purchase_request_status_path(status), class: 'pr-button pr-button-secondary pr-button-icon small' do %>
-            <span class="icon icon-edit"><%= l(:button_edit) %></span> 
-          <% end %>
-          <%= link_to purchase_request_status_path(status), 
-                    method: :delete,
-                    data: { confirm: l(:text_are_you_sure) },
-                    class: 'pr-button pr-button-danger pr-button-icon small' do %>
-            <span class="icon icon-del"><%= l(:button_delete) %></span> 
-          <% end %>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+<div class="info-box">
+  <p><strong>Purchase Request Statuses</strong></p>
+  <p>Define and manage the workflow states for purchase requests. Set colors, positions, and default status to control how requests move through your process.</p>
+</div>
 
-<%= link_to plugin_settings_path('redmine_purchase_requests'), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-  <span class="icon icon-cancel"><%= l(:button_back) %></span> 
+<% if @statuses.empty? %>
+  <div class="pr-empty">
+    <div class="pr-empty__icon">📋</div>
+    <h3>No Statuses Defined</h3>
+    <p>No purchase request statuses have been created yet.</p>
+    <p>
+      <%= link_to new_purchase_request_status_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
+        <span class="icon icon-add"></span> Create First Status
+      <% end %>
+    </p>
+  </div>
+<% else %>
+  <div class="autoscroll">
+    <table class="pr-table">
+      <thead>
+        <tr>
+          <th><%= l(:field_name) %></th>
+          <th><%= l(:field_position) %></th>
+          <th><%= l(:field_is_closed) %></th>
+          <th><%= l(:label_status_color) %></th>
+          <th><%= l(:label_status_is_default) %></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @statuses.each do |status| %>
+          <tr>
+            <td>
+              <span class="status-badge" style="background-color: <%= status.color.presence || '#777777' %>">
+                <%= status.name %>
+              </span>
+            </td>
+            <td><%= status.position %></td>
+            <td><%= checked_image status.is_closed? if status.respond_to?(:is_closed?) %></td>
+            <td>
+              <span style="display: inline-block; background-color: <%= status.color.presence || '#777777' %>; width: 22px; height: 22px; vertical-align: middle; border-radius: var(--pr-radius-sm); border: 1px solid var(--pr-border-strong);"></span>
+              <code style="font-family: var(--pr-font-mono); font-size: 12px; color: var(--pr-ink-muted);"><%= status.color.presence || '#777777' %></code>
+            </td>
+            <td><%= checked_image status.is_default? if status.respond_to?(:is_default?) %></td>
+            <td class="buttons">
+              <div class="pr-table-actions">
+                <%= link_to edit_purchase_request_status_path(status), class: 'pr-button pr-button-secondary pr-button-icon small' do %>
+                  <span class="icon icon-edit"><%= l(:button_edit) %></span>
+                <% end %>
+                <%= link_to purchase_request_status_path(status),
+                            method: :delete,
+                            data: { confirm: l(:text_are_you_sure) },
+                            class: 'pr-button pr-button-danger pr-button-icon small' do %>
+                  <span class="icon icon-del"><%= l(:button_delete) %></span>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 <% end %>
 
-<style>
-  table.list th, table.list td {
-    padding: 8px;
-  }
-  .color-preview {
-    border: 1px solid #ddd;
-  }
-</style>
+<div class="pr-form-actions left-aligned" style="border-top: none; margin-top: 16px; padding-top: 0;">
+  <%= link_to plugin_settings_path('redmine_purchase_requests'), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel"><%= l(:button_back) %></span>
+  <% end %>
+</div>

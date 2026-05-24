@@ -20,84 +20,80 @@
 
 <h2>
   <%= @project ? "#{@project.name} - " : "" %>Purchase Request Reports
-  <span class="report-scope"><%= @project ? "Project Scope" : "Global Scope" %></span>
+  <span class="pr-badge pr-badge--accent" style="font-size:13px;margin-left:10px;vertical-align:middle;"><%= @project ? "Project Scope" : "Global Scope" %></span>
 </h2>
 
 <div class="reports-dashboard">
-  <div class="reports-intro">
+  <div class="info-box">
     <p>Generate comprehensive reports for purchase request management features. Reports can be viewed online, exported as PDF documents, or downloaded as CSV files for further analysis.</p>
-    
     <% if @project %>
-      <div class="project-info">
-        <strong>Project:</strong> <%= @project.name %>
-        <br><strong>Identifier:</strong> <%= @project.identifier %>
-      </div>
+      <p style="margin:0;"><strong>Project:</strong> <%= @project.name %> &nbsp;&nbsp; <strong>Identifier:</strong> <%= @project.identifier %></p>
     <% end %>
   </div>
 
   <div class="reports-grid">
     <% @available_reports.each do |report| %>
-      <div class="report-card">
-        <div class="report-header">
-          <span class="<%= report[:icon] %>"></span>
-          <h3><%= report[:name] %></h3>
+      <div class="report-card dashboard-card">
+        <div class="dashboard-card-header">
+          <h3><span class="<%= report[:icon] %>" style="margin-right:8px;"></span><%= report[:name] %></h3>
         </div>
-        
-        <div class="report-description">
-          <p><%= report[:description] %></p>
-        </div>
-        
-        <div class="report-actions">
-          <% 
-            case report[:action]
-            when 'purchase_requests'
-              report_url = @project ? purchase_requests_project_reports_path(@project) : purchase_requests_reports_path
-            when 'vendors'
-              report_url = @project ? vendors_project_reports_path(@project) : vendors_reports_path
-            when 'tpc_codes'
-              report_url = @project ? tpc_codes_project_reports_path(@project) : tpc_codes_reports_path
-            when 'capex'
-              report_url = @project ? capex_project_reports_path(@project) : capex_reports_path
-            when 'opex'
-              report_url = @project ? opex_project_reports_path(@project) : opex_reports_path
-            when 'overview'
-              report_url = @project ? overview_project_reports_path(@project) : overview_reports_path
-            else
-              report_url = @project ? project_reports_path(@project) : reports_path
-            end
-          %>
-          
-          <%= link_to report_url, class: 'pr-button pr-button-primary pr-button-small' do %>
-            <span class="icon icon-magnifier">View Report</span>
-          <% end %>
-          
-          <%= link_to "#{report_url}?format=pdf", class: 'pr-button pr-button-secondary pr-button-small', target: '_blank' do %>
-            <span class="icon icon-pdf">PDF</span>
-          <% end %>
-          
-          <%= link_to "#{report_url}?format=csv", class: 'pr-button pr-button-outline pr-button-small' do %>
-            <span class="icon icon-csv-file">CSV</span>
-          <% end %>
+        <div class="dashboard-card-body">
+          <p style="color:var(--pr-ink-muted);font-size:13px;margin:0 0 16px;"><%= report[:description] %></p>
+
+          <div class="pr-form-actions left-aligned" style="margin-top:0;padding-top:0;border-top:none;">
+            <%
+              case report[:action]
+              when 'purchase_requests'
+                report_url = @project ? purchase_requests_project_reports_path(@project) : purchase_requests_reports_path
+              when 'vendors'
+                report_url = @project ? vendors_project_reports_path(@project) : vendors_reports_path
+              when 'tpc_codes'
+                report_url = @project ? tpc_codes_project_reports_path(@project) : tpc_codes_reports_path
+              when 'capex'
+                report_url = @project ? capex_project_reports_path(@project) : capex_reports_path
+              when 'opex'
+                report_url = @project ? opex_project_reports_path(@project) : opex_reports_path
+              when 'overview'
+                report_url = @project ? overview_project_reports_path(@project) : overview_reports_path
+              else
+                report_url = @project ? project_reports_path(@project) : reports_path
+              end
+            %>
+
+            <%= link_to report_url, class: 'pr-button pr-button-primary small' do %>
+              <span class="icon icon-magnifier">View Report</span>
+            <% end %>
+
+            <%= link_to "#{report_url}?format=pdf", class: 'pr-button pr-button-secondary small', target: '_blank' do %>
+              <span class="icon icon-pdf">PDF</span>
+            <% end %>
+
+            <%= link_to "#{report_url}?format=csv", class: 'pr-button pr-button-secondary small' do %>
+              <span class="icon icon-csv-file">CSV</span>
+            <% end %>
+          </div>
         </div>
       </div>
     <% end %>
   </div>
-  
-  <div class="reports-help">
-    <h3>Report Information</h3>
-    <ul>
-      <li><strong>View Report:</strong> Interactive HTML report with charts and detailed analysis</li>
-      <li><strong>PDF Export:</strong> Professional document suitable for printing and sharing</li>
-      <li><strong>CSV Export:</strong> Raw data for import into spreadsheet applications or custom analysis</li>
-    </ul>
-    
-    <div class="scope-info">
-      <h4>Report Scope</h4>
+
+  <div class="reports-help dashboard-card">
+    <div class="dashboard-card-header">
+      <h3>Report Information</h3>
+    </div>
+    <div class="dashboard-card-body">
+      <ul style="margin:0 0 16px;padding-left:20px;font-size:13px;color:var(--pr-ink);">
+        <li style="margin-bottom:6px;"><strong>View Report:</strong> Interactive HTML report with charts and detailed analysis</li>
+        <li style="margin-bottom:6px;"><strong>PDF Export:</strong> Professional document suitable for printing and sharing</li>
+        <li style="margin-bottom:6px;"><strong>CSV Export:</strong> Raw data for import into spreadsheet applications or custom analysis</li>
+      </ul>
+
+      <h4 style="margin:0 0 8px;color:var(--pr-ink);font-size:13px;font-weight:700;">Report Scope</h4>
       <% if @project %>
-        <p>These reports are filtered to show data specific to the <strong><%= @project.name %></strong> project. 
+        <p style="margin:0;font-size:13px;color:var(--pr-ink-muted);">These reports are filtered to show data specific to the <strong><%= @project.name %></strong> project.
            Global vendors and TPC codes available to this project are included where relevant.</p>
       <% else %>
-        <p>These reports show data from across all projects in the system. 
+        <p style="margin:0;font-size:13px;color:var(--pr-ink-muted);">These reports show data from across all projects in the system.
            Use project-specific reports for focused analysis of individual projects.</p>
       <% end %>
     </div>
@@ -106,177 +102,49 @@
 
 <% content_for :header_tags do %>
 <style>
-  .report-scope {
-    background: #e3f2fd;
-    color: #1976d2;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: normal;
-    margin-left: 15px;
-  }
-  
   .reports-dashboard {
     max-width: 1200px;
   }
-  
-  .reports-intro {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 30px;
-  }
-  
-  .reports-intro p {
-    margin: 0 0 15px 0;
-    font-size: 16px;
-    line-height: 1.5;
-  }
-  
-  .project-info {
-    background: #e7f3ff;
-    border: 1px solid #b3d9ff;
-    border-radius: 4px;
-    padding: 12px;
-    margin-top: 15px;
-    font-size: 14px;
-  }
-  
+
   .reports-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 25px;
-    margin-bottom: 40px;
+    gap: 20px;
+    margin-bottom: 24px;
   }
-  
+
   .report-card {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 0;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow .2s ease, transform .2s ease;
   }
-  
+
   .report-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--pr-shadow-md);
     transform: translateY(-2px);
   }
-  
-  .report-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-  
-  .report-header span[class*="icon"] {
-    font-size: 24px;
-    opacity: 0.9;
-  }
-  
-  .report-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-  }
-  
-  .report-description {
-    padding: 20px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .report-description p {
-    margin: 0;
-    color: #666;
-    line-height: 1.5;
-  }
-  
-  .report-actions {
-    padding: 15px 20px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .pr-button-small {
-    padding: 6px 12px;
-    font-size: 13px;
-    border-radius: 4px;
-  }
-  
-  .pr-button-small .icon {
-    margin-right: 6px;
-  }
-  
+
   .reports-help {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
-    border-radius: 8px;
-    padding: 25px;
-    margin-top: 30px;
+    margin-top: 4px;
   }
-  
-  .reports-help h3 {
-    margin: 0 0 15px 0;
-    color: #856404;
-  }
-  
-  .reports-help h4 {
-    margin: 20px 0 10px 0;
-    color: #856404;
-  }
-  
-  .reports-help ul {
-    margin: 0 0 15px 0;
-    padding-left: 20px;
-  }
-  
-  .reports-help li {
-    margin-bottom: 8px;
-    color: #856404;
-  }
-  
-  .scope-info p {
-    margin: 0;
-    color: #856404;
-    line-height: 1.5;
-  }
-  
-  .icon-pdf { 
-    background-image: url('<%= asset_path("files/pdf.png") %>'); 
+
+  .icon-pdf {
+    background-image: url('<%= asset_path("files/pdf.png") %>');
     background-size: 16px 16px;
     background-repeat: no-repeat;
-    background-position: center;
-    padding-left: 20px;
-  }
-  
-  .icon-csv-file { 
-    background-image: url('<%= asset_path("files/text.png") %>'); 
-    background-size: 16px 16px;
-    background-repeat: no-repeat;
-    background-position: center;
+    background-position: 0 50%;
     padding-left: 20px;
   }
 
-  /* Responsive adjustments */
+  .icon-csv-file {
+    background-image: url('<%= asset_path("files/text.png") %>');
+    background-size: 16px 16px;
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    padding-left: 20px;
+  }
+
   @media (max-width: 768px) {
     .reports-grid {
       grid-template-columns: 1fr;
-    }
-    
-    .report-actions {
-      flex-direction: column;
-    }
-    
-    .report-header {
-      flex-direction: column;
-      text-align: center;
-      gap: 10px;
     }
   }
 </style>

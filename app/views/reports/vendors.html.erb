@@ -9,7 +9,7 @@
 <% unless @print_mode %>
 <div class="contextual">
   <% reports_index_path = @project ? project_reports_path(@project) : reports_path %>
-  <%= link_to reports_index_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+  <%= link_to reports_index_path, class: 'pr-button pr-button-cancel pr-button-icon' do %>
     <span class="icon icon-cancel">Back to Reports</span>
   <% end %>
 
@@ -21,7 +21,7 @@
     <span class="icon icon-pdf">Export PDF</span>
   <% end %>
 
-  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-outline pr-button-icon' do %>
+  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-secondary pr-button-icon' do %>
     <span class="icon icon-csv-file">Export CSV</span>
   <% end %>
 </div>
@@ -30,247 +30,221 @@
 <h2>
   Vendors Report
   <% if @project %>
-    <span class="project-badge"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--info" style="font-size:13px;vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
   <% end %>
 </h2>
 
-<div class="report-meta">
+<div class="info-box">
   <p><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
-  <% if @project %>
-    <p><strong>Scope:</strong> Vendors available for <%= @project.name %> (including global vendors)</p>
-  <% else %>
-    <p><strong>Scope:</strong> All vendors across the system</p>
-  <% end %>
+  <p style="margin:0;">
+    <% if @project %>
+      <strong>Scope:</strong> Vendors available for <%= @project.name %> (including global vendors)
+    <% else %>
+      <strong>Scope:</strong> All vendors across the system
+    <% end %>
+  </p>
 </div>
 
 <!-- Executive Summary -->
-<div class="report-section">
-  <h3>Vendor Overview</h3>
-
-  <div class="summary-cards">
-    <div class="summary-card">
-      <div class="card-icon"><span class="icon icon-group"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:total_count] %></div>
-        <div class="card-label">Total Vendors</div>
+<div class="dashboard-card" style="margin-bottom:22px;">
+  <div class="dashboard-card-header"><h3>Vendor Overview</h3></div>
+  <div class="dashboard-card-body">
+    <div class="summary-stats">
+      <div class="stat-box pr-stat--accent">
+        <div class="stat-number"><%= @report_data[:summary][:total_count] %></div>
+        <div class="stat-label">Total Vendors</div>
       </div>
-    </div>
-
-    <div class="summary-card active">
-      <div class="card-icon"><span class="icon icon-checked"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:active_count] %></div>
-        <div class="card-label">Active Vendors</div>
+      <div class="stat-box pr-stat--success">
+        <div class="stat-number"><%= @report_data[:summary][:active_count] %></div>
+        <div class="stat-label">Active Vendors</div>
       </div>
-    </div>
-
-    <div class="summary-card inactive">
-      <div class="card-icon"><span class="icon icon-not-ok"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:inactive_count] %></div>
-        <div class="card-label">Inactive Vendors</div>
+      <div class="stat-box pr-stat--danger">
+        <div class="stat-number"><%= @report_data[:summary][:inactive_count] %></div>
+        <div class="stat-label">Inactive Vendors</div>
       </div>
-    </div>
-
-    <div class="summary-card global">
-      <div class="card-icon"><span class="icon icon-world"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:global_count] %></div>
-        <div class="card-label">Global Vendors</div>
+      <div class="stat-box pr-stat--violet">
+        <div class="stat-number"><%= @report_data[:summary][:global_count] %></div>
+        <div class="stat-label">Global Vendors</div>
       </div>
-    </div>
-
-    <div class="summary-card engaged">
-      <div class="card-icon"><span class="icon icon-package"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:vendors_with_requests] %></div>
-        <div class="card-label">With Purchase Requests</div>
+      <div class="stat-box pr-stat--accent">
+        <div class="stat-number"><%= @report_data[:summary][:vendors_with_requests] %></div>
+        <div class="stat-label">With Purchase Requests</div>
       </div>
-    </div>
-
-    <div class="summary-card unused">
-      <div class="card-icon"><span class="icon icon-warning"></span></div>
-      <div class="card-content">
-        <div class="card-value"><%= @report_data[:summary][:vendors_without_requests] %></div>
-        <div class="card-label">Without Requests</div>
+      <div class="stat-box pr-stat--warning">
+        <div class="stat-number"><%= @report_data[:summary][:vendors_without_requests] %></div>
+        <div class="stat-label">Without Requests</div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Vendor Activity -->
-<div class="report-section">
-  <h3>Top Active Vendors</h3>
-
-  <div class="charts-row">
-    <div class="chart-half">
-      <h4>By Purchase Request Count</h4>
-      <div class="vendor-activity-chart">
-        <canvas id="vendorActivityChart" height="300"></canvas>
+<div class="dashboard-card" style="margin-bottom:22px;">
+  <div class="dashboard-card-header"><h3>Top Active Vendors</h3></div>
+  <div class="dashboard-card-body">
+    <div class="pr-grid" style="margin-bottom:18px;">
+      <div>
+        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Purchase Request Count</p>
+        <div style="height:280px;"><canvas id="vendorActivityChart"></canvas></div>
+      </div>
+      <div>
+        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Total Value</p>
+        <div style="height:280px;"><canvas id="vendorValueChart"></canvas></div>
       </div>
     </div>
 
-    <div class="chart-half">
-      <h4>By Total Value</h4>
-      <div class="vendor-value-chart">
-        <canvas id="vendorValueChart" height="300"></canvas>
-      </div>
+    <div style="display:grid;gap:8px;margin-top:8px;">
+      <% @report_data[:vendor_activity].first(10).each_with_index do |(vendor_info, count), index| %>
+        <div style="display:flex;align-items:center;gap:13px;padding:11px 13px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
+          <span style="background:var(--pr-accent);color:var(--pr-ink-invert);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">#<%= index + 1 %></span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;color:var(--pr-ink);font-size:13px;margin-bottom:2px;"><%= vendor_info[1] %></div>
+            <div style="font-size:12px;color:var(--pr-ink-muted);"><%= count %> purchase requests</div>
+          </div>
+          <div style="width:90px;height:8px;background:var(--pr-surface-sunken);border-radius:var(--pr-radius-pill);overflow:hidden;flex-shrink:0;">
+            <% max_count = @report_data[:vendor_activity].first&.last || 1 %>
+            <div style="height:100%;background:var(--pr-accent);border-radius:var(--pr-radius-pill);width:<%= count > 0 ? [(count.to_f / max_count * 100), 100].min.round(1) : 0 %>%;"></div>
+          </div>
+        </div>
+      <% end %>
     </div>
-  </div>
-
-  <div class="vendor-activity-list">
-    <% @report_data[:vendor_activity].first(10).each_with_index do |(vendor_info, count), index| %>
-      <div class="vendor-activity-item">
-        <span class="vendor-rank">#<%= index + 1 %></span>
-        <div class="vendor-details">
-          <div class="vendor-name"><%= vendor_info[1] %></div>
-          <div class="vendor-requests"><%= count %> purchase requests</div>
-        </div>
-        <div class="activity-bar">
-          <% max_count = @report_data[:vendor_activity].first&.last || 1 %>
-          <div class="activity-fill" style="width: <%= count > 0 ? [(count.to_f / max_count * 100), 100].min : 0 %>%"></div>
-        </div>
-      </div>
-    <% end %>
   </div>
 </div>
 
 <!-- Vendor Status & Engagement Analysis -->
-<div class="report-section">
-  <h3>Vendor Status & Engagement Analysis</h3>
-
-  <div class="status-analysis">
-    <div class="status-chart">
-      <canvas id="statusChart" height="300"></canvas>
+<div class="dashboard-card" style="margin-bottom:22px;">
+  <div class="dashboard-card-header"><h3>Vendor Status &amp; Engagement Analysis</h3></div>
+  <div class="dashboard-card-body">
+    <div class="pr-grid" style="margin-bottom:18px;">
+      <div style="height:280px;"><canvas id="statusChart"></canvas></div>
+      <div style="height:280px;"><canvas id="engagementChart"></canvas></div>
     </div>
 
-    <div class="engagement-chart">
-      <canvas id="engagementChart" height="300"></canvas>
-    </div>
-  </div>
-
-  <div class="status-details">
-    <div class="status-detail-item active-status">
-      <div class="status-label">Active Vendors</div>
-      <div class="status-value"><%= @report_data[:summary][:active_count] %></div>
-      <div class="status-percentage">
-        <%= @report_data[:summary][:total_count] > 0 ?
-              "#{((@report_data[:summary][:active_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
-              "0%" %>
+    <div class="summary-stats" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
+      <div style="padding:14px 16px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-success);border-radius:var(--pr-radius-sm);">
+        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">Active Vendors</div>
+        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:active_count] %></div>
+        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+          <%= @report_data[:summary][:total_count] > 0 ?
+                "#{((@report_data[:summary][:active_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+                "0%" %>
+        </div>
       </div>
-    </div>
 
-    <div class="status-detail-item inactive-status">
-      <div class="status-label">Inactive Vendors</div>
-      <div class="status-value"><%= @report_data[:summary][:inactive_count] %></div>
-      <div class="status-percentage">
-        <%= @report_data[:summary][:total_count] > 0 ?
-              "#{((@report_data[:summary][:inactive_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
-              "0%" %>
+      <div style="padding:14px 16px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-ink-faint);border-radius:var(--pr-radius-sm);">
+        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">Inactive Vendors</div>
+        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:inactive_count] %></div>
+        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+          <%= @report_data[:summary][:total_count] > 0 ?
+                "#{((@report_data[:summary][:inactive_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+                "0%" %>
+        </div>
       </div>
-    </div>
 
-    <div class="status-detail-item engaged-status">
-      <div class="status-label">With Purchase Requests</div>
-      <div class="status-value"><%= @report_data[:summary][:vendors_with_requests] %></div>
-      <div class="status-percentage">
-        <%= @report_data[:summary][:total_count] > 0 ?
-              "#{((@report_data[:summary][:vendors_with_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
-              "0%" %>
+      <div style="padding:14px 16px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-accent);border-radius:var(--pr-radius-sm);">
+        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">With Purchase Requests</div>
+        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_with_requests] %></div>
+        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+          <%= @report_data[:summary][:total_count] > 0 ?
+                "#{((@report_data[:summary][:vendors_with_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+                "0%" %>
+        </div>
       </div>
-    </div>
 
-    <div class="status-detail-item unused-status">
-      <div class="status-label">Without Requests</div>
-      <div class="status-value"><%= @report_data[:summary][:vendors_without_requests] %></div>
-      <div class="status-percentage">
-        <%= @report_data[:summary][:total_count] > 0 ?
-              "#{((@report_data[:summary][:vendors_without_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
-              "0%" %>
+      <div style="padding:14px 16px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-warning);border-radius:var(--pr-radius-sm);">
+        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">Without Requests</div>
+        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_without_requests] %></div>
+        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+          <%= @report_data[:summary][:total_count] > 0 ?
+                "#{((@report_data[:summary][:vendors_without_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
+                "0%" %>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Monthly Trends -->
-<div class="report-section">
-  <h3>Monthly Trends</h3>
-
-  <div class="trend-chart-container">
-    <canvas id="monthlyTrendChart" height="250"></canvas>
+<div class="dashboard-card" style="margin-bottom:22px;">
+  <div class="dashboard-card-header"><h3>Monthly Trends</h3></div>
+  <div class="dashboard-card-body">
+    <div style="height:280px;"><canvas id="monthlyTrendChart"></canvas></div>
   </div>
 </div>
 
 <!-- Project Distribution (Global View Only) -->
 <% if @project.nil? && @report_data[:project_distribution] && @report_data[:project_distribution].any? %>
-<div class="report-section">
-  <h3>Project-Specific Vendor Distribution</h3>
-
-  <div class="chart-container">
-    <canvas id="projectDistributionChart" height="250"></canvas>
-  </div>
-
-  <div class="distribution-stats">
-    <% @report_data[:project_distribution].each do |project, count| %>
-      <div class="distribution-item">
-        <span class="project-name"><%= project %></span>
-        <span class="project-count"><%= count %> vendors</span>
-      </div>
-    <% end %>
+<div class="dashboard-card" style="margin-bottom:22px;">
+  <div class="dashboard-card-header"><h3>Project-Specific Vendor Distribution</h3></div>
+  <div class="dashboard-card-body">
+    <div style="height:280px;max-width:800px;margin:0 auto 18px;"><canvas id="projectDistributionChart"></canvas></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px;">
+      <% @report_data[:project_distribution].each do |project, count| %>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
+          <span style="font-weight:500;color:var(--pr-ink);font-size:13px;"><%= project %></span>
+          <span style="color:var(--pr-ink-muted);font-size:13px;font-variant-numeric:tabular-nums;"><%= count %> vendors</span>
+        </div>
+      <% end %>
+    </div>
   </div>
 </div>
 <% end %>
 
 <!-- Recent Vendors -->
-<div class="report-section">
-  <h3>Recently Added Vendors</h3>
-
-  <div class="autoscroll">
-    <table class="list recent-vendors">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Vendor ID</th>
-          <th>Contact</th>
-          <th>Scope</th>
-          <th>Status</th>
-          <th>Requests</th>
-          <th>Added</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @report_data[:recent_vendors].each do |vendor| %>
+<div class="dashboard-card" style="margin-bottom:22px;">
+  <div class="dashboard-card-header"><h3>Recently Added Vendors</h3></div>
+  <div class="dashboard-card-body">
+    <div class="autoscroll">
+      <table class="pr-table">
+        <thead>
           <tr>
-            <td><strong><%= vendor.name %></strong></td>
-            <td><%= vendor.vendor_id %></td>
-            <td>
-              <% if vendor.contact_person.present? %>
-                <%= vendor.contact_person %>
-                <% if vendor.email.present? %>
-                  <br><small><%= vendor.email %></small>
-                <% end %>
-              <% elsif vendor.email.present? %>
-                <%= vendor.email %>
-              <% else %>
-                -
-              <% end %>
-            </td>
-            <td>
-              <span class="scope-badge <%= vendor.project_id? ? 'project' : 'global' %>">
-                <%= vendor.project_id? ? 'Project' : 'Global' %>
-              </span>
-            </td>
-            <td>
-              <span class="status-badge <%= vendor.is_active? ? 'active' : 'inactive' %>">
-                <%= vendor.is_active? ? 'Active' : 'Inactive' %>
-              </span>
-            </td>
-            <td><%= vendor.purchase_requests.count %></td>
-            <td><%= vendor.created_at.strftime('%Y-%m-%d') %></td>
+            <th>Name</th>
+            <th>Vendor ID</th>
+            <th>Contact</th>
+            <th>Scope</th>
+            <th>Status</th>
+            <th>Requests</th>
+            <th>Added</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @report_data[:recent_vendors].each do |vendor| %>
+            <tr>
+              <td><strong><%= vendor.name %></strong></td>
+              <td><%= vendor.vendor_id %></td>
+              <td>
+                <% if vendor.contact_person.present? %>
+                  <%= vendor.contact_person %>
+                  <% if vendor.email.present? %>
+                    <br><small style="color:var(--pr-ink-faint);"><%= vendor.email %></small>
+                  <% end %>
+                <% elsif vendor.email.present? %>
+                  <%= vendor.email %>
+                <% else %>
+                  -
+                <% end %>
+              </td>
+              <td>
+                <% if vendor.project_id? %>
+                  <span class="pr-badge pr-badge--warning">Project</span>
+                <% else %>
+                  <span class="pr-badge pr-badge--accent">Global</span>
+                <% end %>
+              </td>
+              <td>
+                <% if vendor.is_active? %>
+                  <span class="pr-badge pr-badge--success">Active</span>
+                <% else %>
+                  <span class="pr-badge pr-badge--neutral">Inactive</span>
+                <% end %>
+              </td>
+              <td><%= vendor.purchase_requests.count %></td>
+              <td><%= vendor.created_at.strftime('%Y-%m-%d') %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -519,312 +493,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <% content_for :header_tags do %>
 <style>
-  .project-badge {
-    background: #e3f2fd;
-    color: #1976d2;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: normal;
-    margin-left: 15px;
-  }
-
-  .report-meta {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 15px;
-    margin-bottom: 25px;
-  }
-
-  .report-meta p {
-    margin: 0 0 5px 0;
-  }
-
-  .report-section {
-    margin-bottom: 40px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 25px;
-  }
-
-  .report-section h3 {
-    margin: 0 0 20px 0;
-    color: #333;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
-  }
-
-  .report-section h4 {
-    margin: 0 0 15px 0;
-    color: #555;
-    font-size: 14px;
-  }
-
-  .summary-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
-  }
-
-  .summary-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-
-  .card-icon {
-    font-size: 24px;
-    opacity: 0.9;
-  }
-
-  .card-value {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  .card-label {
-    font-size: 13px;
-    opacity: 0.9;
-  }
-
-  .summary-card.active {
-    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
-  }
-
-  .summary-card.inactive {
-    background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);
-  }
-
-  .summary-card.global {
-    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-  }
-
-  .summary-card.engaged {
-    background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);
-  }
-
-  .summary-card.unused {
-    background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
-  }
-
-  .charts-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
-  }
-
-  .chart-half {
-    min-height: 320px;
-  }
-
-  .vendor-activity-chart,
-  .vendor-value-chart {
-    height: 300px;
-  }
-
-  .chart-container {
-    max-width: 800px;
-    height: 300px;
-    margin: 20px auto;
-  }
-
-  .trend-chart-container {
-    height: 300px;
-    margin: 20px 0;
-  }
-
-  .vendor-activity-list {
-    display: grid;
-    gap: 12px;
-    margin-top: 20px;
-  }
-
-  .vendor-activity-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-  }
-
-  .vendor-rank {
-    background: #007bff;
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 13px;
-    flex-shrink: 0;
-  }
-
-  .vendor-details {
-    flex: 1;
-  }
-
-  .vendor-name {
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-
-  .vendor-requests {
-    font-size: 13px;
-    color: #666;
-  }
-
-  .activity-bar {
-    width: 100px;
-    height: 8px;
-    background: #e9ecef;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-
-  .activity-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #007bff, #0056b3);
-    transition: width 0.3s ease;
-  }
-
-  .status-analysis {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
-  }
-
-  .status-chart,
-  .engagement-chart {
-    height: 300px;
-  }
-
-  .status-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-  }
-
-  .status-detail-item {
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    border-left: 4px solid #007bff;
-  }
-
-  .status-detail-item.active-status {
-    border-left-color: #4CAF50;
-  }
-
-  .status-detail-item.inactive-status {
-    border-left-color: #9E9E9E;
-  }
-
-  .status-detail-item.engaged-status {
-    border-left-color: #2196F3;
-  }
-
-  .status-detail-item.unused-status {
-    border-left-color: #FF9800;
-  }
-
-  .status-label {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 5px;
-  }
-
-  .status-value {
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
-  }
-
-  .status-percentage {
-    font-size: 12px;
-    color: #007bff;
-    font-weight: 500;
-  }
-
-  .distribution-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-  }
-
-  .distribution-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 4px;
-  }
-
-  .project-name {
-    font-weight: 500;
-  }
-
-  .project-count {
-    color: #666;
-    font-size: 14px;
-  }
-
-  .scope-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .scope-badge.global {
-    background-color: #2196F3;
-    color: white;
-  }
-
-  .scope-badge.project {
-    background-color: #FF9800;
-    color: white;
-  }
-
-  .status-badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
-  }
-
-  .status-badge.active {
-    background-color: #4CAF50;
-    color: white;
-  }
-
-  .status-badge.inactive {
-    background-color: #9E9E9E;
-    color: white;
-  }
-
   .icon-pdf {
     background-image: url('<%= asset_path("files/pdf.png") %>');
     background-size: 16px 16px;
     background-repeat: no-repeat;
-    background-position: center;
+    background-position: 0 50%;
     padding-left: 20px;
   }
 
@@ -832,26 +505,12 @@ document.addEventListener('DOMContentLoaded', function() {
     background-image: url('<%= asset_path("files/text.png") %>');
     background-size: 16px 16px;
     background-repeat: no-repeat;
-    background-position: center;
+    background-position: 0 50%;
     padding-left: 20px;
   }
 
   @media (max-width: 992px) {
-    .charts-row {
-      grid-template-columns: 1fr;
-    }
-
-    .status-analysis {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .distribution-stats {
-      grid-template-columns: 1fr;
-    }
-
-    .status-details {
+    #content .pr-grid {
       grid-template-columns: 1fr;
     }
   }
