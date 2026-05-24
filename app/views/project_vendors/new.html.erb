@@ -38,7 +38,7 @@
   <div class="pr-form-box">
     <div class="pr-form-content">
       <%= form_with model: [@project, @vendor], local: true, html: { class: 'vendor-form' } do |f| %>
-        <%= render partial: 'form', locals: { f: f } %>
+        <%= render partial: 'vendors/form', locals: { f: f } %>
 
         <div class="pr-scope-note">
           <span class="scope-badge project">Project</span>
