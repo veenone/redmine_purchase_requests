@@ -23,12 +23,17 @@
   <span class="pr-badge pr-badge--accent" style="font-size:13px;margin-left:10px;vertical-align:middle;"><%= @project ? "Project Scope" : "Global Scope" %></span>
 </h2>
 
+<%= render 'year_filter', filter_path: (@project ? project_reports_path(@project) : reports_path) %>
+
 <div class="reports-dashboard">
-  <div class="info-box">
-    <p>Generate comprehensive reports for purchase request management features. Reports can be viewed online, exported as PDF documents, or downloaded as CSV files for further analysis.</p>
-    <% if @project %>
-      <p style="margin:0;"><strong>Project:</strong> <%= @project.name %> &nbsp;&nbsp; <strong>Identifier:</strong> <%= @project.identifier %></p>
-    <% end %>
+  <div class="pr-alert pr-alert-info">
+    <span class="icon icon-info"></span>
+    <div class="pr-alert-content">
+      <p>Generate comprehensive reports for purchase request management features. Reports can be viewed online, exported as PDF documents, downloaded as DOCX or CSV files for further analysis. The selected year above is preserved across exports.</p>
+      <% if @project %>
+        <p style="margin:0;"><strong>Project:</strong> <%= @project.name %> &nbsp;&nbsp; <strong>Identifier:</strong> <%= @project.identifier %></p>
+      <% end %>
+    </div>
   </div>
 
   <div class="reports-grid">
@@ -60,15 +65,21 @@
               end
             %>
 
-            <%= link_to report_url, class: 'pr-button pr-button-primary small' do %>
+            <% view_url = @selected_year.present? ? "#{report_url}?year=#{@selected_year}" : report_url %>
+
+            <%= link_to view_url, class: 'pr-button pr-button-primary small' do %>
               <span class="icon icon-magnifier">View Report</span>
             <% end %>
 
-            <%= link_to "#{report_url}?format=pdf", class: 'pr-button pr-button-secondary small', target: '_blank' do %>
+            <%= link_to "#{report_url}?#{report_export_params(:pdf)}", class: 'pr-button pr-button-secondary small', target: '_blank' do %>
               <span class="icon icon-pdf">PDF</span>
             <% end %>
 
-            <%= link_to "#{report_url}?format=csv", class: 'pr-button pr-button-secondary small' do %>
+            <%= link_to "#{report_url}?#{report_export_params(:docx)}", class: 'pr-button pr-button-secondary small' do %>
+              <span class="icon icon-document">DOCX</span>
+            <% end %>
+
+            <%= link_to "#{report_url}?#{report_export_params(:csv)}", class: 'pr-button pr-button-secondary small' do %>
               <span class="icon icon-csv-file">CSV</span>
             <% end %>
           </div>

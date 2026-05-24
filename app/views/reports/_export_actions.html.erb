@@ -1,0 +1,10 @@
+<%# Export buttons for reports. Locals: report_path_base (String). %>
+<%= link_to "#{report_path_base}?#{report_export_params(:pdf)}", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
+  <span class="icon icon-pdf">Export PDF</span>
+<% end %>
+<%= link_to "#{report_path_base}?#{report_export_params(:docx)}", class: 'pr-button pr-button-secondary pr-button-icon' do %>
+  <span class="icon icon-document">Export DOCX</span>
+<% end %>
+<%= link_to "#{report_path_base}?#{report_export_params(:csv)}", class: 'pr-button pr-button-secondary pr-button-icon' do %>
+  <span class="icon icon-csv-file">Export CSV</span>
+<% end %>

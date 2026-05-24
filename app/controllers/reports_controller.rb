@@ -5,7 +5,8 @@ class ReportsController < ApplicationController
 
   before_action :find_optional_project
   before_action :authorize_reports
-  
+  before_action :set_year_filter
+
   # Main reports dashboard
   def index
     @available_reports = [
@@ -177,11 +178,56 @@ class ReportsController < ApplicationController
       end
     end
   end
+
+  # Year filter: defaults to the current year. Pass `year=` (empty) to
+  # explicitly include all years. @available_years lists every year that
+  # has any data across CAPEX, OPEX, and purchase requests.
+  def set_year_filter
+    if params.key?(:year)
+      @selected_year = params[:year].to_s.strip
+      @selected_year = nil if @selected_year.empty?
+    else
+      @selected_year = Date.current.year.to_s
+    end
+
+    capex_scope = @project ? @project.capex : Capex.all
+    opex_scope  = @project ? @project.opex  : Opex.all
+    pr_scope    = @project ? @project.purchase_requests : PurchaseRequest.all
+
+    years = []
+    years.concat(capex_scope.distinct.pluck(:year))
+    years.concat(opex_scope.distinct.pluck(:year))
+
+    pr_min = pr_scope.minimum(:created_at)
+    pr_max = pr_scope.maximum(:created_at)
+    if pr_min && pr_max
+      (pr_min.year..pr_max.year).each { |y| years << y }
+    end
+
+    current_year = Date.current.year
+    @available_years = (years + [current_year]).compact.map(&:to_i).uniq.sort.reverse
+  end
+
+  # Year window used by date-scoped reports (PRs, vendors, TPC, overview).
+  def selected_year_range
+    return nil if @selected_year.blank?
+    year = @selected_year.to_i
+    Date.new(year, 1, 1).beginning_of_day..Date.new(year, 12, 31).end_of_day
+  end
+
+  # Returns a scope filtered by the selected year, or the original scope
+  # if no year is selected. `column` is the timestamp column to filter on
+  # (defaults to :created_at).
+  def scope_by_year(relation, column: :created_at)
+    range = selected_year_range
+    range ? relation.where(column => range) : relation
+  end
   
   def generate_purchase_requests_report
     # Scope data based on project context
     purchase_requests = @project ? @project.purchase_requests : PurchaseRequest.all
     purchase_requests = purchase_requests.includes(:project, :status, :vendor, :user, :capex, :opex, :tpc_code)
+    purchase_requests = scope_by_year(purchase_requests)
 
     # Basic statistics
     total_count = purchase_requests.count
@@ -351,6 +397,13 @@ class ReportsController < ApplicationController
     # Scope data based on project context
     base_vendors = @project ? Vendor.available_for_project(@project) : Vendor.all
 
+    # Year filter: restrict to vendors that have at least one PR in the year
+    if (range = selected_year_range)
+      year_pr_scope = (@project ? @project.purchase_requests : PurchaseRequest.all).where(created_at: range)
+      vendor_ids_with_activity = year_pr_scope.where.not(vendor_id: nil).distinct.pluck(:vendor_id)
+      base_vendors = base_vendors.where(id: vendor_ids_with_activity)
+    end
+
     # Basic statistics (avoid includes for simple counts)
     total_count = base_vendors.count
     active_count = base_vendors.active.count
@@ -440,6 +493,15 @@ class ReportsController < ApplicationController
 
     # Purchase request base scope
     pr_base_scope = @project ? @project.purchase_requests : PurchaseRequest.all
+    pr_base_scope = scope_by_year(pr_base_scope)
+
+    # Year filter: restrict to TPC codes with PR activity in the year
+    if @selected_year.present?
+      active_tpc_ids = pr_base_scope.where.not(tpc_code_id: nil).distinct.pluck(:tpc_code_id)
+      active_tpc_ids.concat(pr_base_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).distinct.pluck('capex.tpc_code_id'))
+      active_tpc_ids.concat(pr_base_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).distinct.pluck('opex.tpc_code_id'))
+      tpc_codes = tpc_codes.where(id: active_tpc_ids.uniq.compact)
+    end
 
     # Basic statistics
     total_count = tpc_codes.count
@@ -619,6 +681,7 @@ class ReportsController < ApplicationController
     # Scope data based on project context
     capex_items = @project ? @project.capex : Capex.all
     capex_items = capex_items.includes(:project, :tpc_code_record, :purchase_requests)
+    capex_items = capex_items.for_year(@selected_year) if @selected_year.present?
 
     # Year-based analysis
     current_year = Date.current.year
@@ -747,6 +810,7 @@ class ReportsController < ApplicationController
     # Scope data based on project context
     opex_items = @project ? @project.opex : Opex.all
     opex_items = opex_items.includes(:project, :tpc_code, :opex_category, :purchase_requests)
+    opex_items = opex_items.for_year(@selected_year) if @selected_year.present?
     
     # Year-based analysis
     current_year = Date.current.year

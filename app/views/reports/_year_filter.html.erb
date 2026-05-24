@@ -1,0 +1,19 @@
+<%# Year filter for reports. Locals: filter_path (String). %>
+<fieldset class="pr-filters">
+  <legend>Filter</legend>
+  <%= form_tag filter_path, method: :get, style: 'margin:0;' do %>
+    <div class="filter-row">
+      <label for="year_filter">Filter by Year:</label>
+      <%= select_tag :year,
+                     options_for_select([['All Years', '']] + (@available_years || []).map { |y| [y.to_s, y.to_s] }, @selected_year),
+                     id: 'year_filter',
+                     onchange: 'this.form.submit();' %>
+      <% if @selected_year.present? %>
+        <em class="info">Showing data for <strong><%= @selected_year %></strong></em>
+        <%= link_to 'Show All Years', "#{filter_path}?year=", class: 'pr-button pr-button-cancel small' %>
+      <% else %>
+        <em class="info">Showing <strong>all years</strong></em>
+      <% end %>
+    </div>
+  <% end %>
+</fieldset>

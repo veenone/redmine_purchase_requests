@@ -17,22 +17,20 @@
        opex_project_reports_path(@project) :
        opex_reports_path %>
 
-  <%= link_to "#{report_path_base}?format=pdf", class: 'pr-button pr-button-primary pr-button-icon', target: '_blank' do %>
-    <span class="icon icon-pdf">Export PDF</span>
-  <% end %>
-
-  <%= link_to "#{report_path_base}?format=csv", class: 'pr-button pr-button-secondary pr-button-icon' do %>
-    <span class="icon icon-csv-file">Export CSV</span>
-  <% end %>
+  <%= render 'export_actions', report_path_base: report_path_base %>
 </div>
 <% end %>
 
 <h2>
-  OPEX Report
+  OPEX Report<%= report_year_suffix %>
   <% if @project %>
     <span class="pr-badge pr-badge--success" style="font-size:13px;vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
   <% end %>
 </h2>
+
+<% unless @print_mode %>
+<%= render 'year_filter', filter_path: report_path_base %>
+<% end %>
 
 <div class="info-box">
   <p><strong>Generated:</strong> <%= @report_data[:generated_at].strftime('%B %d, %Y at %I:%M %p') %></p>
