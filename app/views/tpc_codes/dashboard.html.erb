@@ -79,7 +79,7 @@
     </div>
     <div class="dashboard-card-body">
       <% if @tpc_by_purchase_request.any? %>
-        <div class="chart-bar-container" id="tpc-by-pr-chart"></div>
+        <div class="chart-hbar-container" id="tpc-by-pr-chart"></div>
       <% else %>
         <p class="no-data">No purchase requests with TPC codes</p>
       <% end %>
@@ -93,7 +93,7 @@
     </div>
     <div class="dashboard-card-body">
       <% if @tpc_by_department.any? %>
-        <div class="chart-bar-container" id="tpc-by-department-chart"></div>
+        <div class="chart-hbar-container" id="tpc-by-department-chart"></div>
       <% else %>
         <p class="no-data">No departments assigned</p>
       <% end %>
@@ -132,7 +132,7 @@
             <% end %>
           </tbody>
         </table>
-        <div class="chart-bar-container" id="tpc-cost-chart" style="margin-top: 20px;"></div>
+        <div class="chart-hbar-container" id="tpc-cost-chart" style="margin-top: 20px;"></div>
       <% else %>
         <p class="no-data">No utilization data available</p>
       <% end %>
