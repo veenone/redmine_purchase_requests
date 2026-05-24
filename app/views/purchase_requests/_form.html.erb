@@ -1,378 +1,10 @@
 <%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/_form.html.erb %>
 <% content_for :header_tags do %>
   <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <%= stylesheet_link_tag 'purchase_request_buttons', plugin: 'redmine_purchase_requests' %>
   <%= javascript_include_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
-  <style>
-    .budget-details {
-      margin-top: 10px;
-      padding: 10px;
-      background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-radius: 4px;
-    }
-    
-    .budget-info-table {
-      width: 100%;
-      font-size: 12px;
-    }
-    
-    .budget-info-table td {
-      padding: 4px 8px;
-      border-bottom: 1px solid #e9ecef;
-    }
-    
-    .budget-label {
-      font-weight: bold;
-      color: #495057;
-      width: 30%;
-    }
-    
-    .budget-value {
-      color: #007bff;
-    }
-    
-    .no-budget-entry {
-      color: #6c757d;
-      font-style: italic;
-    }
-    
-    .budget-create-link {
-      color: #28a745;
-      text-decoration: none;
-    }
-    
-    .budget-create-link:hover {
-      text-decoration: underline;
-    }
-    
-    .form-row .form-control {
-      max-width: 400px;
-    }
-    
-    .form-section {
-      border: 1px solid #e0e0e0;
-      border-radius: 5px;
-      padding: 15px;
-      margin-bottom: 20px;
-      background-color: #fafafa;
-    }
-    
-    .form-section-title {
-      font-weight: bold;
-      color: #333;
-      margin-bottom: 10px;
-      padding-bottom: 5px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    .budget-type-selector {
-      margin: 10px 0;
-    }
-
-    .budget-type-container {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      background-color: #fff;
-    }
-
-    .budget-option {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background-color: #f8f9fa;
-      cursor: pointer;
-    }
-
-    .budget-option:hover {
-      background-color: #e9ecef;
-    }
-
-    .budget-option:last-child {
-      margin-bottom: 0;
-    }
-
-    .budget-type-radio {
-      margin-right: 10px;
-    }
-
-    .budget-type-option {
-      font-weight: normal;
-      color: #333;
-      cursor: pointer;
-    }
-
-    .budget-type-label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 10px;
-      color: #333;
-    }
-
-    .budget-type-container {
-      width: 100%;
-      max-width: 100%;
-      overflow: hidden;
-    }
-
-    .form-section .form-row {
-      margin-bottom: 15px;
-    }
-
-    .form-section .form-row:last-child {
-      margin-bottom: 0;
-    }
-    
-    /* Quarterly Allocation Styles */
-    .quarterly-allocation-section {
-      margin-top: 20px;
-      border-top: 1px solid #e0e0e0;
-      padding-top: 20px;
-    }
-    
-    
-    .quarterly-info {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      background-color: #f8f9fa;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 15px;
-    }
-    
-    .quarterly-info p {
-      margin: 0;
-      font-size: 14px;
-      color: #666;
-    }
-    
-    .quarterly-fields {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 15px;
-      margin-bottom: 15px;
-    }
-    
-    .quarterly-input {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: border-color 0.3s ease;
-    }
-    
-    .quarterly-input:focus {
-      outline: none;
-      border-color: #0078d4;
-      box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
-    }
-    
-    .quarterly-validation {
-      margin-top: 15px;
-    }
-    
-    .validation-message {
-      padding: 10px;
-      border-radius: 4px;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    
-    .validation-message.success {
-      background-color: #e8f5e8;
-      color: #2e7d32;
-      border: 1px solid #c8e6c9;
-    }
-    
-    .validation-message.error {
-      background-color: #ffebee;
-      color: #c62828;
-      border: 1px solid #ffcdd2;
-    }
-    
-    @media (max-width: 768px) {
-      .quarterly-fields {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .quarterly-fields {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Workflow section styling */
-    .workflow-section {
-      padding: 15px;
-    }
-
-    .workflow-section h3 {
-      margin: 0 0 15px 0;
-      color: #333;
-    }
-
-    .workflow-main-issue {
-      padding: 15px;
-      background-color: #f9f9f9;
-      border-radius: 6px;
-    }
-
-    .workflow-issue-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-
-    .workflow-issue-link {
-      color: #0078d4;
-      font-weight: 500;
-      text-decoration: none;
-    }
-
-    .workflow-issue-link:hover {
-      text-decoration: underline;
-    }
-
-    .issue-status-badge,
-    .subtask-status-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      color: white;
-      font-size: 11px;
-      font-weight: 500;
-      background-color: #6c757d;
-    }
-
-    .workflow-progress-container {
-      margin-bottom: 20px;
-    }
-
-    .workflow-progress-label {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 5px;
-      font-size: 13px;
-      color: #555;
-    }
-
-    .progress-percentage {
-      font-weight: bold;
-      color: #333;
-    }
-
-    .workflow-progress-bar {
-      height: 10px;
-      background-color: #e0e0e0;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .workflow-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4caf50, #8bc34a);
-      border-radius: 5px;
-    }
-
-    .workflow-subtasks {
-      margin-top: 15px;
-    }
-
-    .workflow-subtasks h4 {
-      margin: 0 0 10px 0;
-      font-size: 14px;
-    }
-
-    .workflow-subtasks-table {
-      width: 100%;
-      font-size: 13px;
-    }
-
-    .workflow-subtasks-table th {
-      background-color: #f0f0f0;
-      padding: 8px 10px;
-      text-align: left;
-    }
-
-    .workflow-subtasks-table td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .subtask-completed {
-      background-color: #f8fff8;
-    }
-
-    .workflow-complete-notice {
-      margin-top: 15px;
-      padding: 12px;
-      background-color: #e8f5e9;
-      border: 1px solid #a5d6a7;
-      border-radius: 4px;
-      color: #2e7d32;
-    }
-
-    .workflow-not-started,
-    .workflow-not-enabled {
-      padding: 20px;
-      text-align: center;
-      border-radius: 4px;
-    }
-
-    .workflow-not-started {
-      background-color: #e3f2fd;
-      border: 1px solid #90caf9;
-    }
-
-    .workflow-not-enabled {
-      background-color: #fff3cd;
-      border: 1px solid #ffc107;
-    }
-
-    .workflow-notice {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .workflow-not-enabled .workflow-notice {
-      color: #856404;
-    }
-
-    .workflow-setup-hint {
-      margin-top: 10px;
-    }
-
-    .workflow-create-button {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .workflow-progress-badge {
-      display: inline-block;
-      background-color: #4caf50;
-      color: white;
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 10px;
-      margin-left: 5px;
-    }
-  </style>
 <% end %>
 
-<%= form_for purchase_request, 
+<%= form_for purchase_request,
                url: defined?(form_url) ? form_url : nil,
                html: { multipart: true, id: 'purchase-request-form' } do |form| %>
   <% if purchase_request.errors.any? %>
@@ -385,7 +17,7 @@
       </ul>
     </div>
   <% end %>
-  
+
   <div id="tab-general" class="tab-pane tabbed-form active">
     <div class="box tabular general-fields">
       <div class="form-row">
@@ -395,7 +27,7 @@
           <em class="info"><%= l(:text_purchase_title_info) %></em>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.label :description, l(:field_description) %>
@@ -403,29 +35,29 @@
           <em class="info">Provide a detailed description. For purchases over $1,000, minimum 50 characters required for business justification.</em>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.label :status_id, l(:field_status) %> <span class="required">*</span>
-          <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name, 
+          <%= form.collection_select :status_id, PurchaseRequestStatus.sorted, :id, :name,
                                    { selected: purchase_request.status_id || PurchaseRequestStatus.default&.id || PurchaseRequestStatus.first&.id },
                                    { required: true, class: 'form-control' } %>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.label :priority, l(:field_priority) %>
-          <%= form.select :priority, 
-                       [[l(:label_priority_low), 'low'], 
-                        [l(:label_priority_normal), 'normal'], 
-                        [l(:label_priority_high), 'high'], 
-                        [l(:label_priority_urgent), 'urgent']], 
+          <%= form.select :priority,
+                       [[l(:label_priority_low), 'low'],
+                        [l(:label_priority_normal), 'normal'],
+                        [l(:label_priority_high), 'high'],
+                        [l(:label_priority_urgent), 'urgent']],
                        { selected: purchase_request.priority || 'normal' },
                        { class: 'form-control' } %>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.label :due_date, l(:field_due_date) %>
@@ -433,11 +65,10 @@
           <em class="info"><%= l(:text_due_date_info) %></em>
         </p>
       </div>
-      
 
     </div>
   </div>
-  
+
   <div id="tab-details" class="tab-pane tabbed-form" style="display: none;">
     <div class="box tabular detail-fields">
       <div class="form-row">
@@ -447,13 +78,13 @@
           <em class="info">Product URL must start with http:// or https:// (optional)</em>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.label :estimated_price, l(:field_estimated_price) %>
           <span class="currency-price-wrapper">
             <span class="currency-select-wrapper">
-              <%= form.select :currency, 
+              <%= form.select :currency,
                             currency_options,
                             { selected: purchase_request.currency || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' },
                             { class: 'currency-select' } %>
@@ -463,20 +94,19 @@
           <em class="info"><%= l(:text_estimated_price_info) %></em>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.label :vendor, l(:field_vendor) %>
         </p>
-          <% 
-            vendors = Vendor.sorted 
+          <%
+            vendors = Vendor.sorted
             allow_custom = Setting.plugin_redmine_purchase_requests['allow_custom_vendors'] == '1'
-            
+
             if vendors.any?
-              # Get the current selected vendor if any
               current_vendor = nil
               current_vendor_name = nil
-              
+
               if purchase_request.vendor_id.present?
                 current_vendor = Vendor.find_by(id: purchase_request.vendor_id)
                 current_vendor_name = current_vendor.try(:name)
@@ -487,30 +117,30 @@
             <div class="vendor-selector">
               <p>
               <% if Redmine::VERSION::MAJOR >= 4 %>
-                <%= form.select :vendor_id, 
+                <%= form.select :vendor_id,
                               vendors.collect{|v| [v.name, v.id]},
                               { include_blank: true, selected: purchase_request.vendor_id },
-                              { class: 'vendor-select form-control', 
+                              { class: 'vendor-select form-control',
                                 'data-autocomplete-url': autocomplete_vendors_path } %>
               <% else %>
-                <%= form.select :vendor_id, 
+                <%= form.select :vendor_id,
                               vendors.collect{|v| [v.name, v.id]},
                               { include_blank: true },
-                              { class: 'vendor-select form-control', 
+                              { class: 'vendor-select form-control',
                                 'data-autocomplete-url': autocomplete_vendors_path } %>
               <% end %>
-                          
+
               <% if allow_custom %>
-                <%= form.text_field :vendor, size: 40, class: 'form-control vendor-input', 
+                <%= form.text_field :vendor, size: 40, class: 'form-control vendor-input',
                                   style: 'display: none;',
                                   placeholder: l(:label_enter_custom_vendor) %>
-                <%= check_box_tag 'custom_vendor', '1', purchase_request.vendor_id.blank? && purchase_request.vendor.present?, 
+                <%= check_box_tag 'custom_vendor', '1', purchase_request.vendor_id.blank? && purchase_request.vendor.present?,
                                 class: 'custom-vendor-checkbox' %>
                 <%= label_tag 'custom_vendor', l(:label_use_custom_vendor), class: 'checkbox-label' %>
               <% end %>
               </p>
             </div>
-            
+
             <div class="vendor-details" style="display: none;">
               <table class="vendor-info-table">
                 <tr id="vendor-id-row" style="display: none;">
@@ -539,35 +169,34 @@
             <%= form.text_field :vendor, size: 40, class: 'form-control vendor-input' %>
           <% end %>
           <em class="info"><%= l(:text_vendor_info) %></em>
-        </p>
       </div>
-      
+
       <!-- Budget Section -->
       <div class="form-section">
         <div class="form-section-title">Budget Tracking</div>
-        
+
         <!-- Budget Type Selection -->
         <div class="form-row">
           <div class="budget-type-container">
             <span class="budget-type-label"><%= l(:label_budget_type) %> <span class="required">*</span></span>
             <div class="budget-type-selector">
-              <div class="budget-option">
-                <%= radio_button_tag 'budget_type', 'capex', purchase_request.capex_id.present?, 
+              <label class="budget-option">
+                <%= radio_button_tag 'budget_type', 'capex', purchase_request.capex_id.present?,
                                    class: 'budget-type-radio', id: 'budget_type_capex' %>
                 <span class="budget-type-option">CAPEX (Capital Expenditure)</span>
-              </div>
-              
-              <div class="budget-option">
-                <%= radio_button_tag 'budget_type', 'opex', purchase_request.opex_id.present?, 
+              </label>
+
+              <label class="budget-option">
+                <%= radio_button_tag 'budget_type', 'opex', purchase_request.opex_id.present?,
                                    class: 'budget-type-radio', id: 'budget_type_opex' %>
                 <span class="budget-type-option">OPEX (Operational Expenditure)</span>
-              </div>
-              
-              <div class="budget-option">
+              </label>
+
+              <label class="budget-option">
                 <%= radio_button_tag 'budget_type', 'none', purchase_request.capex_id.blank? && purchase_request.opex_id.blank?,
                                    class: 'budget-type-radio', id: 'budget_type_none' %>
                 <span class="budget-type-option"><%= l(:label_no_budget_tracking) %></span>
-              </div>
+              </label>
             </div>
             <em class="info"><%= l(:text_budget_type_info) %></em>
           </div>
@@ -599,21 +228,21 @@
             <% end %>
           </p>
         </div>
-        
+
         <!-- CAPEX Selection -->
         <div class="form-row budget-section-capex" id="capex-section" style="display: none;">
           <p>
             <%= form.label :capex_id, l(:label_capex_entry) %>
-            <% 
+            <%
               capex_entries = @project.capex.for_year(Date.current.year).ordered if @project
               if capex_entries && capex_entries.any?
             %>
-              <%= form.select :capex_id, 
+              <%= form.select :capex_id,
                             options_from_collection_for_select(capex_entries, :id, :display_name, purchase_request.capex_id),
                             { include_blank: l(:label_select_capex_entry) },
                             { class: 'form-control', id: 'purchase_request_capex_id' } %>
               <em class="info"><%= l(:text_capex_selection_info) %></em>
-              
+
               <div class="budget-details" id="capex-details" style="display: none;">
                 <table class="budget-info-table">
                   <tr>
@@ -639,7 +268,7 @@
                 <span class="no-entries-message"><%= l(:text_no_capex_entries_available) %></span>
                 <% if User.current.allowed_to?(:manage_capex, @project) %>
                   <br><em class="info">
-                    <%= link_to l(:label_create_capex_entry), new_project_capex_path(@project), 
+                    <%= link_to l(:label_create_capex_entry), new_project_capex_path(@project),
                               class: 'budget-create-link', target: '_blank' %>
                   </em>
                 <% end %>
@@ -647,32 +276,32 @@
             <% end %>
           </p>
         </div>
-        
+
         <!-- OPEX Selection -->
         <div class="form-row budget-section-opex" id="opex-section" style="display: none;">
           <p>
             <%= form.label :opex_id, l(:label_opex_entry) %>
-            <% 
+            <%
               opex_entries = @project.opex.for_year(Date.current.year).ordered if @project
               if opex_entries && opex_entries.any?
             %>
-              <%= form.select :opex_id, 
+              <%= form.select :opex_id,
                             options_from_collection_for_select(opex_entries, :id, :display_name, purchase_request.opex_id),
                             { include_blank: l(:label_select_opex_entry) },
                             { class: 'form-control', id: 'purchase_request_opex_id' } %>
               <em class="info"><%= l(:text_opex_selection_info) %></em>
-              
+
               <!-- OPEX Category Selection -->
               <div class="form-row" style="margin-top: 15px;">
                 <p>
                   <%= form.label :category_id, l(:field_opex_category) %> <span class="required">*</span>
-                  <%= form.collection_select :category_id, OpexCategory.all, :id, :name, 
-                                           { prompt: l(:label_select_opex_category) }, 
+                  <%= form.collection_select :category_id, OpexCategory.all, :id, :name,
+                                           { prompt: l(:label_select_opex_category) },
                                            { required: true, class: 'form-control', id: 'purchase_request_category_id' } %>
                   <em class="info"><%= l(:text_opex_category_info) %></em>
                 </p>
               </div>
-              
+
               <div class="budget-details" id="opex-details" style="display: none;">
                 <table class="budget-info-table">
                   <tr>
@@ -698,7 +327,7 @@
                 <span class="no-entries-message"><%= l(:text_no_opex_entries_available) %></span>
                 <% if User.current.allowed_to?(:manage_opex, @project) %>
                   <br><em class="info">
-                    <%= link_to l(:label_create_opex_entry), new_project_opex_path(@project), 
+                    <%= link_to l(:label_create_opex_entry), new_project_opex_path(@project),
                               class: 'budget-create-link', target: '_blank' %>
                   </em>
                 <% end %>
@@ -706,7 +335,7 @@
             <% end %>
           </p>
         </div>
-        
+
         <!-- Quarterly Allocation Section -->
         <div class="form-row quarterly-allocation-section" id="quarterly-allocation-section" style="display: none;">
           <div class="form-section">
@@ -714,37 +343,37 @@
             <p class="quarterly-allocation-info">
               <em class="info"><%= l(:text_quarterly_allocation_info) %></em>
             </p>
-            
+
             <div class="quarterly-allocation-fields">
-              <div class="form-row" style="display: flex; gap: 20px; align-items: flex-end;">
-                <div style="flex: 1;">
+              <div class="form-row pr-field-pair">
+                <div>
                   <p>
                     <%= form.label :allocated_quarter, l(:field_allocated_quarter) %>
-                    <%= form.select :allocated_quarter, 
-                                  [[l(:label_quarter_1), 1], 
-                                   [l(:label_quarter_2), 2], 
-                                   [l(:label_quarter_3), 3], 
-                                   [l(:label_quarter_4), 4]], 
+                    <%= form.select :allocated_quarter,
+                                  [[l(:label_quarter_1), 1],
+                                   [l(:label_quarter_2), 2],
+                                   [l(:label_quarter_3), 3],
+                                   [l(:label_quarter_4), 4]],
                                   { include_blank: l(:label_no_specific_quarter) },
                                   { class: 'form-control', id: 'purchase_request_allocated_quarter' } %>
                     <em class="info"><%= l(:text_allocated_quarter_info) %></em>
                   </p>
                 </div>
-                
-                <div style="flex: 1;">
+
+                <div>
                   <p>
                     <%= form.label :allocated_amount, l(:field_allocated_amount) %>
-                    <%= form.number_field :allocated_amount, 
-                                        step: 0.01, 
+                    <%= form.number_field :allocated_amount,
+                                        step: 0.01,
                                         min: 0,
                                         placeholder: l(:text_allocated_amount_placeholder),
-                                        class: 'form-control', 
+                                        class: 'form-control',
                                         id: 'purchase_request_allocated_amount' %>
                     <em class="info"><%= l(:text_allocated_amount_info) %></em>
                   </p>
                 </div>
               </div>
-              
+
               <div class="quarterly-impact-preview" id="quarterly-impact-preview" style="display: none;">
                 <div class="form-section">
                   <div class="form-section-title"><%= l(:label_allocation_impact) %></div>
@@ -768,7 +397,7 @@
                       </tr>
                     </table>
                     <div class="allocation-warning" id="allocation-warning" style="display: none;">
-                      <span class="icon icon-exclamation"></span>
+                      <span class="icon icon-warning"></span>
                       <strong><%= l(:warning_over_allocation) %></strong>
                       <%= l(:text_over_allocation_warning) %>
                     </div>
@@ -780,9 +409,9 @@
         </div>
       </div>
     </div>
-    
+
   </div>
-  
+
   <div id="tab-attachments" class="tab-pane tabbed-form" style="display: none;">
     <div class="box tabular attachment-fields">
       <div class="form-row">
@@ -792,7 +421,7 @@
           <em class="info">Add any additional information, specifications, or requirements for this purchase request.</em>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.check_box :notify_manager, class: 'form-control-checkbox' %>
@@ -800,7 +429,7 @@
           <em class="info"><%= l(:text_notify_manager_info) %></em>
         </p>
       </div>
-      
+
       <div class="form-row">
         <p>
           <%= form.label :attachment, l(:label_attachment_plural) %>
@@ -808,7 +437,7 @@
           <em class="info"><%= l(:text_attachment_info) %></em>
         </p>
       </div>
-      
+
       <% if purchase_request.attachments.any? %>
         <div class="existing-attachments">
           <h3><%= l(:label_existing_attachments) %></h3>
@@ -823,7 +452,7 @@
           </ul>
         </div>
       <% end %>
-      
+
       <div class="form-instructions">
         <div class="form-section">
           <div class="form-section-title">Final Review</div>
@@ -871,7 +500,7 @@
           <% if purchase_request.subtask_issues.any? %>
             <div class="workflow-subtasks">
               <h4><%= l(:label_workflow_subtasks) %></h4>
-              <table class="workflow-subtasks-table list">
+              <table class="workflow-subtasks-table">
                 <thead>
                   <tr>
                     <th><%= l(:field_subject) %></th>
@@ -949,9 +578,6 @@
   </div>
 <% end %>
 
-
-<%# Assets and styles are loaded via hooks - no need for direct includes %>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Tab functionality
@@ -961,21 +587,21 @@ document.addEventListener('DOMContentLoaded', function() {
     tabPanes.forEach(function(pane) {
       pane.style.display = 'none';
     });
-    
+
     // Remove active class from all tabs
     var tabs = document.querySelectorAll('.pr-tab');
     tabs.forEach(function(tab) {
       tab.classList.remove('active');
     });
-    
+
     // Show target tab and mark as active
     var targetTab = document.getElementById(targetTabId);
     var targetLink = document.querySelector('[href="#' + targetTabId + '"]');
-    
+
     if (targetTab) targetTab.style.display = 'block';
     if (targetLink) targetLink.classList.add('active');
   }
-  
+
   // Tab click handlers
   var tabLinks = document.querySelectorAll('.pr-tabs a');
   tabLinks.forEach(function(link) {
@@ -985,10 +611,10 @@ document.addEventListener('DOMContentLoaded', function() {
       showTab(targetTabId);
     });
   });
-  
+
   // Show first tab by default
   showTab('tab-general');
-  
+
   // Budget type radio button functionality
   var budgetTypeRadios = document.querySelectorAll('.budget-type-radio');
   var capexSection = document.getElementById('capex-section');
@@ -1009,7 +635,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tpcCodeSection.style.display = 'none';
         if (opexSelect) opexSelect.value = '';
         if (tpcCodeSelect) tpcCodeSelect.value = '';
-        // Remove required attribute from category when CAPEX is selected
         if (categorySelect) {
           categorySelect.removeAttribute('required');
           categorySelect.value = '';
@@ -1023,7 +648,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tpcCodeSection.style.display = 'none';
         if (capexSelect) capexSelect.value = '';
         if (tpcCodeSelect) tpcCodeSelect.value = '';
-        // Add required attribute to category when OPEX is selected
         if (categorySelect) {
           categorySelect.setAttribute('required', 'required');
         }
@@ -1036,19 +660,17 @@ document.addEventListener('DOMContentLoaded', function() {
         tpcCodeSection.style.display = 'block';
         if (capexSelect) capexSelect.value = '';
         if (opexSelect) opexSelect.value = '';
-        // Remove required attribute from category when no budget type is selected
         if (categorySelect) {
           categorySelect.removeAttribute('required');
           categorySelect.value = '';
         }
-        // Add required attribute to TPC code when no budget tracking is selected
         if (tpcCodeSelect) {
           tpcCodeSelect.setAttribute('required', 'required');
         }
       }
     }
   }
-  
+
   // Budget type change handlers
   budgetTypeRadios.forEach(function(radio) {
     radio.addEventListener('change', toggleBudgetSections);
@@ -1065,59 +687,54 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
-  
+
   // Initialize budget sections on page load
   initializeBudgetType();
   toggleBudgetSections();
-  
+
   // Function to initialize budget type based on pre-selected values
   function initializeBudgetType() {
     var capexSelected = capexSelect && capexSelect.value;
     var opexSelected = opexSelect && opexSelect.value;
-    
+
     if (capexSelected) {
       document.getElementById('budget_type_capex').checked = true;
     } else if (opexSelected) {
       document.getElementById('budget_type_opex').checked = true;
     } else {
-      // Check if any budget type is already selected, if not default to 'none'
       var anyChecked = document.querySelector('.budget-type-radio:checked');
       if (!anyChecked) {
         document.getElementById('budget_type_none').checked = true;
       }
     }
   }
-  
+
   // Budget tracking functionality
   var capexDetails = document.getElementById('capex-details');
   var opexDetails = document.getElementById('opex-details');
-  
+
   // Handle CAPEX selection changes
   if (capexSelect && capexDetails) {
     capexSelect.addEventListener('change', function() {
       if (this.value) {
-        // In a real implementation, you would fetch data via AJAX
-        // For now, we'll show the details container
         capexDetails.style.display = 'block';
       } else {
         capexDetails.style.display = 'none';
       }
     });
   }
-  
+
   // Handle OPEX selection changes
   if (opexSelect && opexDetails) {
     opexSelect.addEventListener('change', function() {
       if (this.value) {
-        // In a real implementation, you would fetch data via AJAX
-        // For now, we'll show the details container
         opexDetails.style.display = 'block';
       } else {
         opexDetails.style.display = 'none';
       }
     });
   }
-  
+
   // Initialize budget details on page load
   if (capexSelect && capexSelect.value && capexDetails) {
     capexDetails.style.display = 'block';
@@ -1125,51 +742,45 @@ document.addEventListener('DOMContentLoaded', function() {
   if (opexSelect && opexSelect.value && opexDetails) {
     opexDetails.style.display = 'block';
   }
-  
+
   // Load CAPEX data for selected entry
   function loadCapexData(capexId) {
     if (!capexId || !capexDetails) return;
-    
-    // Show the details section
+
     capexDetails.style.display = 'block';
-    
-    // In a real implementation, you would fetch CAPEX data via AJAX
-    // For now, we'll show placeholder data
+
     const yearValue = document.getElementById('capex-year-value');
     const budgetValue = document.getElementById('capex-budget-value');
     const remainingValue = document.getElementById('capex-remaining-value');
     const descriptionValue = document.getElementById('capex-description-value');
-    
+
     if (yearValue) yearValue.textContent = new Date().getFullYear();
     if (budgetValue) budgetValue.textContent = 'Loading budget data...';
     if (remainingValue) remainingValue.textContent = 'Loading remaining budget...';
     if (descriptionValue) descriptionValue.textContent = 'Loading CAPEX description...';
   }
-  
+
   // Load OPEX data for selected entry
   function loadOpexData(opexId) {
     if (!opexId || !opexDetails) return;
-    
-    // Show the details section
+
     opexDetails.style.display = 'block';
-    
-    // In a real implementation, you would fetch OPEX data via AJAX
-    // For now, we'll show placeholder data
+
     const yearValue = document.getElementById('opex-year-value');
     const budgetValue = document.getElementById('opex-budget-value');
     const remainingValue = document.getElementById('opex-remaining-value');
     const descriptionValue = document.getElementById('opex-description-value');
-    
+
     if (yearValue) yearValue.textContent = new Date().getFullYear();
     if (budgetValue) budgetValue.textContent = 'Loading budget data...';
     if (remainingValue) remainingValue.textContent = 'Loading remaining budget...';
     if (descriptionValue) descriptionValue.textContent = 'Loading OPEX description...';
   }
-  
+
   // Initialize budget sections visibility on page load
   initializeBudgetType();
   toggleBudgetSections();
-  
+
   // Load existing budget details if editing
   if (capexSelect && capexSelect.value) {
     loadCapexData(capexSelect.value);
@@ -1177,42 +788,40 @@ document.addEventListener('DOMContentLoaded', function() {
   if (opexSelect && opexSelect.value) {
     loadOpexData(opexSelect.value);
   }
-  
+
   // Quarterly allocation functionality
   var quarterlyAllocationSection = document.getElementById('quarterly-allocation-section');
   var allocatedQuarterSelect = document.getElementById('purchase_request_allocated_quarter');
   var allocatedAmountInput = document.getElementById('purchase_request_allocated_amount');
   var quarterlyImpactPreview = document.getElementById('quarterly-impact-preview');
   var allocationWarning = document.getElementById('allocation-warning');
-  
+
   // Show/hide quarterly allocation section based on budget selection
   function toggleQuarterlyAllocationSection() {
     var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
     var hasBudgetSelected = selectedBudgetType && selectedBudgetType.value !== 'none';
     var hasBudgetEntry = (capexSelect && capexSelect.value) || (opexSelect && opexSelect.value);
-    
+
     if (hasBudgetSelected && hasBudgetEntry) {
       quarterlyAllocationSection.style.display = 'block';
     } else {
       quarterlyAllocationSection.style.display = 'none';
-      // Clear allocation fields when hiding
       if (allocatedQuarterSelect) allocatedQuarterSelect.value = '';
       if (allocatedAmountInput) allocatedAmountInput.value = '';
       if (quarterlyImpactPreview) quarterlyImpactPreview.style.display = 'none';
     }
   }
-  
+
   // Update quarterly impact preview
   function updateQuarterlyImpactPreview() {
     if (!allocatedQuarterSelect || !allocatedAmountInput || !quarterlyImpactPreview) return;
-    
+
     var selectedQuarter = allocatedQuarterSelect.value;
     var allocatedAmount = parseFloat(allocatedAmountInput.value) || 0;
-    
+
     if (selectedQuarter && allocatedAmount > 0) {
-      // Get the currently selected budget entry
       var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
-      
+
       if (selectedBudgetType && selectedBudgetType.value === 'capex' && capexSelect && capexSelect.value) {
         getCapexQuarterlyData(capexSelect.value, selectedQuarter)
           .then(function(budgetData) {
@@ -1240,34 +849,32 @@ document.addEventListener('DOMContentLoaded', function() {
       quarterlyImpactPreview.style.display = 'none';
     }
   }
-  
+
   // Display quarterly impact information
   function displayQuarterlyImpact(quarter, budgetData, allocatedAmount) {
     var quarterValue = document.getElementById('impact-quarter-value');
     var originalValue = document.getElementById('impact-original-value');
     var allocatedValue = document.getElementById('impact-allocated-value');
     var remainingValue = document.getElementById('impact-remaining-value');
-    
-    // Ensure all values are numeric
+
     var originalAmount = parseFloat(budgetData.original) || 0;
     var allocatedAmountNum = parseFloat(allocatedAmount) || 0;
     var remaining = originalAmount - allocatedAmountNum;
-    
+
     if (quarterValue) quarterValue.textContent = 'Q' + quarter;
     if (originalValue) originalValue.textContent = formatCurrency(originalAmount, budgetData.currency);
     if (allocatedValue) allocatedValue.textContent = formatCurrency(allocatedAmountNum, budgetData.currency);
-    
+
     if (remainingValue) {
       remainingValue.textContent = formatCurrency(remaining, budgetData.currency);
       remainingValue.className = 'budget-value ' + (remaining < 0 ? 'over-allocated' : 'within-budget');
     }
-    
-    // Show/hide allocation warning
+
     if (allocationWarning) {
       allocationWarning.style.display = remaining < 0 ? 'block' : 'none';
     }
   }
-  
+
   // Get quarterly data from server via AJAX
   function getCapexQuarterlyData(capexId, quarter) {
     return new Promise(function(resolve, reject) {
@@ -1275,21 +882,20 @@ document.addEventListener('DOMContentLoaded', function() {
         resolve({ original: 0, currency: 'USD' });
         return;
       }
-      
+
       var url = '/projects/<%= @project.id %>/capex/' + capexId + '/quarterly_data?quarter=' + quarter;
       console.log('Fetching CAPEX quarterly data from:', url);
-      
+
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.setRequestHeader('Accept', 'application/json');
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      
-      // Add CSRF token for Rails protection
+
       var token = document.querySelector('meta[name="csrf-token"]');
       if (token) {
         xhr.setRequestHeader('X-CSRF-Token', token.getAttribute('content'));
       }
-      
+
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
@@ -1307,32 +913,31 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
       };
-      
+
       xhr.send();
     });
   }
-  
+
   function getOpexQuarterlyData(opexId, quarter) {
     return new Promise(function(resolve, reject) {
       if (!opexId || !quarter) {
         resolve({ original: 0, currency: 'USD' });
         return;
       }
-      
+
       var url = '/projects/<%= @project.id %>/opex/' + opexId + '/quarterly_data?quarter=' + quarter;
       console.log('Fetching OPEX quarterly data from:', url);
-      
+
       var xhr = new XMLHttpRequest();
       xhr.open('GET', url, true);
       xhr.setRequestHeader('Accept', 'application/json');
       xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-      
-      // Add CSRF token for Rails protection
+
       var token = document.querySelector('meta[name="csrf-token"]');
       if (token) {
         xhr.setRequestHeader('X-CSRF-Token', token.getAttribute('content'));
       }
-      
+
       xhr.onreadystatechange = function() {
         if (xhr.readyState === 4) {
           if (xhr.status === 200) {
@@ -1350,18 +955,18 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
       };
-      
+
       xhr.send();
     });
   }
-  
+
   // Format currency helper
   function formatCurrency(amount, currency) {
     var symbol = getCurrencySymbol(currency || 'USD');
     var numericAmount = parseFloat(amount) || 0;
     return symbol + numericAmount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
   }
-  
+
   // Get currency symbol helper
   function getCurrencySymbol(currency) {
     var symbols = {
@@ -1372,7 +977,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     return symbols[currency] || currency;
   }
-  
+
   // Event listeners for quarterly allocation
   if (allocatedQuarterSelect) {
     allocatedQuarterSelect.addEventListener('change', updateQuarterlyImpactPreview);
@@ -1380,7 +985,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (allocatedAmountInput) {
     allocatedAmountInput.addEventListener('input', updateQuarterlyImpactPreview);
   }
-  
+
   // Update quarterly allocation section when budget changes
   budgetTypeRadios.forEach(function(radio) {
     radio.addEventListener('change', function() {
@@ -1390,30 +995,29 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 100);
     });
   });
-  
+
   if (capexSelect) {
     capexSelect.addEventListener('change', function() {
       toggleQuarterlyAllocationSection();
       updateQuarterlyImpactPreview();
     });
   }
-  
+
   if (opexSelect) {
     opexSelect.addEventListener('change', function() {
       toggleQuarterlyAllocationSection();
       updateQuarterlyImpactPreview();
     });
   }
-  
+
   // Initialize quarterly allocation section
   toggleQuarterlyAllocationSection();
-  
-  
+
   // Form validation
   function validateForm() {
     var selectedBudgetType = document.querySelector('.budget-type-radio:checked');
     var categorySelect = document.getElementById('purchase_request_category_id');
-    
+
     if (selectedBudgetType && selectedBudgetType.value !== 'none') {
       if (selectedBudgetType.value === 'capex' && (!capexSelect || !capexSelect.value)) {
         alert('Please select a CAPEX entry when CAPEX budget type is selected.');
@@ -1430,40 +1034,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     }
-    
+
     // Validate quarterly allocation consistency
     if (allocatedQuarterSelect && allocatedAmountInput) {
       var hasQuarter = allocatedQuarterSelect.value;
       var hasAmount = allocatedAmountInput.value && parseFloat(allocatedAmountInput.value) > 0;
-      
+
       if (hasQuarter && !hasAmount) {
         alert('Please enter an allocated amount when selecting a quarter.');
         return false;
       }
-      
+
       if (hasAmount && !hasQuarter) {
         alert('Please select a quarter when entering an allocated amount.');
         return false;
       }
-      
-      // Validate estimated price vs allocated amount
+
       var estimatedPriceInput = document.getElementById('purchase_request_estimated_price');
       if (hasAmount && estimatedPriceInput && estimatedPriceInput.value) {
         var estimatedPrice = parseFloat(estimatedPriceInput.value);
         var allocatedAmount = parseFloat(allocatedAmountInput.value);
-        
+
         if (allocatedAmount > estimatedPrice) {
           alert('Allocated amount cannot exceed the estimated price.');
           return false;
         }
       }
     }
-    
+
     return true;
   }
-  
+
   // Attach validation to form submit
-  var form = document.querySelector('.pr-form');
+  var form = document.getElementById('purchase-request-form');
   if (form) {
     form.addEventListener('submit', function(e) {
       if (!validateForm()) {
