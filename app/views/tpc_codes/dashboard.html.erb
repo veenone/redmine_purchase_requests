@@ -27,346 +27,141 @@
 
 <h2><%= @project ? "#{@project.name} - TPC Codes Dashboard" : "TPC Codes Dashboard" %></h2>
 
-<!-- Year Filter Section -->
-<div class="dashboard-filter-section" style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
-  <% dashboard_path = @project ? dashboard_project_tpc_codes_path(@project) : tpc_codes_dashboard_path %>
-  <%= form_tag dashboard_path, method: :get, style: 'margin: 0;' do %>
-    <div style="display: flex; align-items: center; gap: 15px;">
-      <label for="year_filter" style="font-weight: bold; margin: 0;">Filter by Year:</label>
+<%# Year filter %>
+<% dashboard_path = @project ? dashboard_project_tpc_codes_path(@project) : tpc_codes_dashboard_path %>
+<fieldset class="pr-filters">
+  <legend>Filter</legend>
+  <%= form_tag dashboard_path, method: :get, style: 'margin:0;' do %>
+    <div class="filter-row">
+      <label for="year_filter">Filter by Year:</label>
       <%= select_tag :year,
                      options_for_select([['All Years', '']] + @available_years.map { |y| [y.to_s, y.to_s] }, @selected_year),
                      id: 'year_filter',
-                     class: 'pr-select',
-                     style: 'width: 150px; height: 38px !important; padding: 6px 12px !important; color: #333 !important; background-color: #fff !important;',
                      onchange: 'this.form.submit();' %>
       <% if @selected_year.present? %>
-        <span style="color: #666; font-size: 13px;">
-          Showing data for <%= @selected_year %>
-          <%= link_to 'Clear Filter', dashboard_path, style: 'margin-left: 10px; color: #2196F3;' %>
-        </span>
+        <span class="no-data">Showing data for <%= @selected_year %></span>
+        <%= link_to 'Clear', dashboard_path, class: 'pr-button pr-button-cancel small' %>
       <% end %>
     </div>
   <% end %>
+</fieldset>
+
+<%# Summary stat tiles %>
+<div class="summary-stats">
+  <div class="stat-box pr-stat--success">
+    <div class="stat-number"><%= @active_tpcs %></div>
+    <div class="stat-label">Active TPC Codes</div>
+  </div>
+
+  <div class="stat-box pr-stat--warning">
+    <div class="stat-number"><%= @inactive_tpcs %></div>
+    <div class="stat-label">Inactive TPC Codes</div>
+  </div>
+
+  <div class="stat-box pr-stat--accent">
+    <div class="stat-number"><%= @tpc_by_purchase_request.count %></div>
+    <div class="stat-label">TPCs with Requests</div>
+  </div>
+
+  <div class="stat-box pr-stat--violet">
+    <div class="stat-number"><%= @tpc_by_department.count %></div>
+    <div class="stat-label">Departments</div>
+  </div>
 </div>
 
+<%# Charts grid %>
 <div class="dashboard-container">
-  <!-- Summary Cards -->
-  <div class="summary-cards-grid">
-    <div class="summary-card">
-      <div class="card-icon active"></div>
-      <div class="card-content">
-        <div class="card-number"><%= @active_tpcs %></div>
-        <div class="card-label">Active TPC Codes</div>
-      </div>
-    </div>
 
-    <div class="summary-card">
-      <div class="card-icon inactive"></div>
-      <div class="card-content">
-        <div class="card-number"><%= @inactive_tpcs %></div>
-        <div class="card-label">Inactive TPC Codes</div>
-      </div>
+  <%# Top TPC Codes by Purchase Requests %>
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3>Top TPC Codes by Purchase Requests<%= @selected_year ? " (#{@selected_year})" : "" %></h3>
     </div>
-
-    <div class="summary-card">
-      <div class="card-icon projects"></div>
-      <div class="card-content">
-        <div class="card-number"><%= @tpc_by_purchase_request.count %></div>
-        <div class="card-label">TPCs with Requests</div>
-      </div>
-    </div>
-
-    <div class="summary-card">
-      <div class="card-icon departments"></div>
-      <div class="card-content">
-        <div class="card-number"><%= @tpc_by_department.count %></div>
-        <div class="card-label">Departments</div>
-      </div>
+    <div class="dashboard-card-body">
+      <% if @tpc_by_purchase_request.any? %>
+        <div class="chart-bar-container" id="tpc-by-pr-chart"></div>
+      <% else %>
+        <p class="no-data">No purchase requests with TPC codes</p>
+      <% end %>
     </div>
   </div>
 
-  <!-- Charts Grid -->
-  <div class="charts-grid">
-    <!-- TPC Codes by Purchase Request -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <h3>Top TPC Codes by Purchase Requests<%= @selected_year ? " (#{@selected_year})" : "" %></h3>
-      </div>
-      <div class="chart-body">
-        <% if @tpc_by_purchase_request.any? %>
-          <div class="bar-chart-container" id="tpc-by-pr-chart"></div>
-        <% else %>
-          <p class="no-data">No purchase requests with TPC codes</p>
-        <% end %>
-      </div>
+  <%# TPC Codes by Department %>
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3>TPC Codes by Department</h3>
     </div>
-
-    <!-- TPC Codes by Department -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <h3>TPC Codes by Department</h3>
-      </div>
-      <div class="chart-body">
-        <% if @tpc_by_department.any? %>
-          <div class="bar-chart-container" id="tpc-by-department-chart"></div>
-        <% else %>
-          <p class="no-data">No departments assigned</p>
-        <% end %>
-      </div>
+    <div class="dashboard-card-body">
+      <% if @tpc_by_department.any? %>
+        <div class="chart-bar-container" id="tpc-by-department-chart"></div>
+      <% else %>
+        <p class="no-data">No departments assigned</p>
+      <% end %>
     </div>
+  </div>
 
-    <!-- Top 10 TPC Codes by Cost -->
-    <div class="chart-card full-width">
-      <div class="chart-header">
-        <h3>Top 10 TPC Codes by Total Cost<%= @selected_year ? " (#{@selected_year})" : "" %></h3>
-      </div>
-      <div class="chart-body">
-        <% if @tpc_utilization.any? %>
-          <table class="dashboard-table">
-            <thead>
+  <%# Top 10 TPC Codes by Cost — full width %>
+  <div class="dashboard-card" style="grid-column: 1 / -1;">
+    <div class="dashboard-card-header">
+      <h3>Top 10 TPC Codes by Total Cost<%= @selected_year ? " (#{@selected_year})" : "" %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @tpc_utilization.any? %>
+        <table class="dashboard-table">
+          <thead>
+            <tr>
+              <th>TPC Code</th>
+              <th>Department</th>
+              <th>Owner</th>
+              <th>Total Cost</th>
+              <th>Requests</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @tpc_utilization.each do |tpc| %>
               <tr>
-                <th>TPC Code</th>
-                <th>Department</th>
-                <th>Owner</th>
-                <th>Total Cost</th>
-                <th>Requests</th>
+                <td><strong class="tpc-number"><%= tpc[:tpc_code] %></strong></td>
+                <td><%= tpc[:department].presence || '-' %></td>
+                <td><%= tpc[:owner] %></td>
+                <td>
+                  <span class="currency-code"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %></span>
+                  <%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %>
+                </td>
+                <td><%= tpc[:request_count] %></td>
               </tr>
-            </thead>
-            <tbody>
-              <% @tpc_utilization.each do |tpc| %>
-                <tr>
-                  <td class="tpc-code-cell"><strong><%= tpc[:tpc_code] %></strong></td>
-                  <td><%= tpc[:department].presence || '-' %></td>
-                  <td><%= tpc[:owner] %></td>
-                  <td class="cost-cell">
-                    <%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %>
-                    <%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %>
-                  </td>
-                  <td><%= tpc[:request_count] %></td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-          <div class="bar-chart-container" id="tpc-cost-chart" style="margin-top: 20px;"></div>
-        <% else %>
-          <p class="no-data">No utilization data available</p>
-        <% end %>
-      </div>
-    </div>
-
-    <!-- Monthly TPC Budget Expense Trend -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <h3>TPC Budget Expense Trend<%= @selected_year ? " (#{@selected_year})" : " (Last 12 Months)" %></h3>
-      </div>
-      <div class="chart-body">
-        <div class="line-chart-container" id="monthly-budget-chart"></div>
-        <div class="chart-legend" id="budget-legend">
-          <!-- Legend will be populated by JavaScript -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Monthly TPC Usage in Purchase Requests Trend -->
-    <div class="chart-card">
-      <div class="chart-header">
-        <h3>TPC Usage in Purchase Requests<%= @selected_year ? " (#{@selected_year})" : " (Last 12 Months)" %></h3>
-      </div>
-      <div class="chart-body">
-        <div class="line-chart-container" id="monthly-usage-chart"></div>
-        <div class="chart-legend" id="usage-legend">
-          <!-- Legend will be populated by JavaScript -->
-        </div>
-      </div>
+            <% end %>
+          </tbody>
+        </table>
+        <div class="chart-bar-container" id="tpc-cost-chart" style="margin-top: 20px;"></div>
+      <% else %>
+        <p class="no-data">No utilization data available</p>
+      <% end %>
     </div>
   </div>
+
+  <%# Monthly TPC Budget Expense Trend %>
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3>TPC Budget Expense Trend<%= @selected_year ? " (#{@selected_year})" : " (Last 12 Months)" %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div class="chart-line-container" id="monthly-budget-chart"></div>
+      <div id="budget-legend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--pr-border);justify-content:center;"></div>
+    </div>
+  </div>
+
+  <%# Monthly TPC Usage in Purchase Requests Trend %>
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h3>TPC Usage in Purchase Requests<%= @selected_year ? " (#{@selected_year})" : " (Last 12 Months)" %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <div class="chart-line-container" id="monthly-usage-chart"></div>
+      <div id="usage-legend" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--pr-border);justify-content:center;"></div>
+    </div>
+  </div>
+
 </div>
-
-<style>
-  .dashboard-container {
-    margin-top: 20px;
-  }
-
-  .summary-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-  }
-
-  .summary-card {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .card-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .card-icon.active {
-    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  }
-
-  .card-icon.inactive {
-    background: linear-gradient(135deg, #9E9E9E 0%, #757575 100%);
-  }
-
-  .card-icon.projects {
-    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-  }
-
-  .card-icon.departments {
-    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
-  }
-
-  .card-content {
-    flex: 1;
-  }
-
-  .card-number {
-    font-size: 32px;
-    font-weight: bold;
-    color: #333;
-    line-height: 1;
-  }
-
-  .card-label {
-    font-size: 14px;
-    color: #666;
-    margin-top: 5px;
-  }
-
-  .charts-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-
-  .chart-card {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .chart-card.full-width {
-    grid-column: 1 / -1;
-  }
-
-  .chart-header {
-    padding: 15px 20px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #ddd;
-  }
-
-  .chart-header h3 {
-    margin: 0;
-    font-size: 16px;
-    color: #333;
-  }
-
-  .chart-body {
-    padding: 20px;
-    min-height: 300px;
-  }
-
-  .pie-chart-container,
-  .bar-chart-container,
-  .line-chart-container {
-    width: 100%;
-    height: 300px;
-  }
-
-  .dashboard-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .dashboard-table th,
-  .dashboard-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-  }
-
-  .dashboard-table th {
-    background: #f5f5f5;
-    font-weight: bold;
-    color: #666;
-  }
-
-  .dashboard-table tbody tr:hover {
-    background: #f9f9f9;
-  }
-
-  .tpc-code-cell {
-    font-family: monospace;
-    color: #6f42c1;
-  }
-
-  .cost-cell {
-    font-weight: bold;
-    color: #2196F3;
-  }
-
-  .no-data {
-    text-align: center;
-    color: #999;
-    font-style: italic;
-    padding: 60px 20px;
-  }
-
-  .chart-legend {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
-    justify-content: center;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #666;
-  }
-
-  .legend-color {
-    width: 16px;
-    height: 3px;
-    border-radius: 2px;
-  }
-
-  .legend-label {
-    font-family: monospace;
-    font-size: 11px;
-  }
-
-  @media (max-width: 768px) {
-    .charts-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .summary-cards-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
 
 <script>
 // TPC Codes by Purchase Request - Bar Chart
@@ -375,7 +170,7 @@ const prData = <%= raw @tpc_by_purchase_request.to_json %>;
 const prContainer = document.getElementById('tpc-by-pr-chart');
 
 if (prContainer) {
-  const colors = ['#6f42c1', '#2196F3', '#4CAF50', '#FF9800', '#F44336', '#00BCD4', '#FFEB3B', '#9C27B0', '#795548', '#607D8B'];
+  const colors = ['#6b4fc7', '#3a5bbf', '#2f9e44', '#df8709', '#dc3a3a', '#2272c4', '#54399e', '#1e7a32', '#a4660a', '#be2f2f'];
   const maxCount = Math.max(...prData.map(p => p.count));
 
   prData.forEach((item, index) => {
@@ -383,12 +178,12 @@ if (prContainer) {
     bar.style.cssText = 'display:flex;align-items:center;margin:10px 0;';
 
     const label = document.createElement('div');
-    label.style.cssText = 'width:120px;font-size:11px;font-family:monospace;color:#6f42c1;font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    label.style.cssText = 'width:120px;font-size:11px;font-family:var(--pr-font-mono,monospace);color:var(--pr-violet);font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     label.textContent = item.name;
     label.title = item.name + (item.department ? ' (' + item.department + ')' : '');
 
     const barContainer = document.createElement('div');
-    barContainer.style.cssText = 'flex:1;background:#f0f0f0;height:30px;border-radius:4px;overflow:hidden;';
+    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:30px;border-radius:4px;overflow:hidden;';
 
     const barFill = document.createElement('div');
     const percentage = (item.count / maxCount) * 100;
@@ -422,11 +217,11 @@ if (departmentContainer) {
     label.title = dept;
 
     const barContainer = document.createElement('div');
-    barContainer.style.cssText = 'flex:1;background:#f0f0f0;height:25px;border-radius:4px;overflow:hidden;';
+    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:25px;border-radius:4px;overflow:hidden;';
 
     const barFill = document.createElement('div');
     const percentage = (count / maxDeptCount) * 100;
-    barFill.style.cssText = `width:${percentage}%;background:#6f42c1;height:100%;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:bold;font-size:11px;`;
+    barFill.style.cssText = `width:${percentage}%;background:var(--pr-violet);height:100%;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:bold;font-size:11px;`;
     barFill.textContent = count;
 
     barContainer.appendChild(barFill);
@@ -450,15 +245,15 @@ if (costChartContainer) {
     bar.style.cssText = 'display:flex;align-items:center;margin:10px 0;';
 
     const label = document.createElement('div');
-    label.style.cssText = 'width:150px;font-size:12px;font-family:monospace;color:#6f42c1;font-weight:bold;';
+    label.style.cssText = 'width:150px;font-size:12px;font-family:var(--pr-font-mono,monospace);color:var(--pr-violet);font-weight:bold;';
     label.textContent = tpc.tpc_code;
 
     const barContainer = document.createElement('div');
-    barContainer.style.cssText = 'flex:1;background:#f0f0f0;height:30px;border-radius:4px;overflow:hidden;';
+    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:30px;border-radius:4px;overflow:hidden;';
 
     const barFill = document.createElement('div');
     const percentage = maxCost > 0 ? (tpc.total_cost / maxCost) * 100 : 0;
-    barFill.style.cssText = `width:${percentage}%;background:linear-gradient(135deg, #2196F3 0%, #1976D2 100%);height:100%;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:bold;font-size:12px;`;
+    barFill.style.cssText = `width:${percentage}%;background:var(--pr-accent);height:100%;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:bold;font-size:12px;`;
     barFill.textContent = tpc.total_cost.toLocaleString();
 
     barContainer.appendChild(barFill);
@@ -469,12 +264,35 @@ if (costChartContainer) {
 }
 <% end %>
 
+// Compute a "nice" axis maximum and step so the peak never touches the top
+// gridline and tick labels are round numbers (e.g. 1900 -> max 2500 step 500).
+function niceScale(dataMax, integerSteps) {
+  if (!dataMax || dataMax <= 0) return { max: 5, step: 1 };
+  const targetTicks = 5;
+  let step = dataMax / targetTicks;
+  const pow = Math.pow(10, Math.floor(Math.log10(step)));
+  const fraction = step / pow;
+  let niceFraction;
+  if (fraction <= 1) niceFraction = 1;
+  else if (fraction <= 2) niceFraction = 2;
+  else if (fraction <= 2.5) niceFraction = 2.5;
+  else if (fraction <= 5) niceFraction = 5;
+  else niceFraction = 10;
+  step = niceFraction * pow;
+  if (integerSteps) step = Math.max(1, Math.ceil(step));
+  let max = step * targetTicks;
+  if (max <= dataMax) max += step; // guarantee headroom above the peak
+  return { max: max, step: step };
+}
+
 // Function to create single line chart with Y-axis labels
 function createLineChart(containerId, data, color, valueKey = 'count', isCurrency = false) {
   const container = document.getElementById(containerId);
   if (!container || !data || data.length === 0) return;
 
   const maxCount = Math.max(...data.map(m => m[valueKey] || 0)) || 1;
+  const scale = niceScale(maxCount, !isCurrency);
+  const chartMax = scale.max;
   const chartHeight = 250;
   const chartWidth = container.clientWidth || 400;
   const leftPadding = 70;
@@ -483,7 +301,6 @@ function createLineChart(containerId, data, color, valueKey = 'count', isCurrenc
   const bottomPadding = 30;
   const currency = '<%= Setting.plugin_redmine_purchase_requests["default_currency"] || "USD" %>';
 
-  // Format number for Y-axis display
   function formatYAxisValue(value, isCurr) {
     if (value >= 1000000) {
       return (isCurr ? currency + ' ' : '') + (value / 1000000).toFixed(1) + 'M';
@@ -501,56 +318,51 @@ function createLineChart(containerId, data, color, valueKey = 'count', isCurrenc
   const chartAreaWidth = chartWidth - leftPadding - rightPadding;
   const chartAreaHeight = chartHeight - topPadding - bottomPadding;
 
-  // Grid lines and Y-axis labels
-  for (let i = 0; i <= 5; i++) {
-    const y = topPadding + chartAreaHeight * i / 5;
-    const yValue = maxCount - (maxCount * i / 5);
+  const tickCount = Math.round(chartMax / scale.step);
+  for (let i = 0; i <= tickCount; i++) {
+    const y = topPadding + chartAreaHeight * i / tickCount;
+    const yValue = scale.step * (tickCount - i);
 
-    // Grid line
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', leftPadding);
     line.setAttribute('y1', y);
     line.setAttribute('x2', chartWidth - rightPadding);
     line.setAttribute('y2', y);
-    line.setAttribute('stroke', '#e0e0e0');
+    line.setAttribute('stroke', '#e5e7eb');
     line.setAttribute('stroke-width', '1');
     svg.appendChild(line);
 
-    // Y-axis label
     const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     yLabel.setAttribute('x', leftPadding - 8);
     yLabel.setAttribute('y', y + 4);
     yLabel.setAttribute('text-anchor', 'end');
     yLabel.setAttribute('font-size', '10');
-    yLabel.setAttribute('fill', '#666');
-    yLabel.textContent = formatYAxisValue(Math.round(yValue), isCurrency);
+    yLabel.setAttribute('fill', '#5c6573');
+    yLabel.textContent = formatYAxisValue(yValue, isCurrency);
     svg.appendChild(yLabel);
   }
 
-  // Y-axis line
   const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   yAxis.setAttribute('x1', leftPadding);
   yAxis.setAttribute('y1', topPadding);
   yAxis.setAttribute('x2', leftPadding);
   yAxis.setAttribute('y2', chartHeight - bottomPadding);
-  yAxis.setAttribute('stroke', '#ccc');
+  yAxis.setAttribute('stroke', '#d3d7df');
   yAxis.setAttribute('stroke-width', '1');
   svg.appendChild(yAxis);
 
-  // X-axis line
   const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   xAxis.setAttribute('x1', leftPadding);
   xAxis.setAttribute('y1', chartHeight - bottomPadding);
   xAxis.setAttribute('x2', chartWidth - rightPadding);
   xAxis.setAttribute('y2', chartHeight - bottomPadding);
-  xAxis.setAttribute('stroke', '#ccc');
+  xAxis.setAttribute('stroke', '#d3d7df');
   xAxis.setAttribute('stroke-width', '1');
   svg.appendChild(xAxis);
 
-  // Plot line
   const points = data.map((item, index) => {
     const x = leftPadding + chartAreaWidth * index / (data.length - 1 || 1);
-    const y = topPadding + chartAreaHeight - (chartAreaHeight * (item[valueKey] || 0) / maxCount);
+    const y = topPadding + chartAreaHeight - (chartAreaHeight * (item[valueKey] || 0) / chartMax);
     return `${x},${y}`;
   }).join(' ');
 
@@ -561,10 +373,9 @@ function createLineChart(containerId, data, color, valueKey = 'count', isCurrenc
   polyline.setAttribute('stroke-width', '3');
   svg.appendChild(polyline);
 
-  // Plot points and labels
   data.forEach((item, index) => {
     const x = leftPadding + chartAreaWidth * index / (data.length - 1 || 1);
-    const y = topPadding + chartAreaHeight - (chartAreaHeight * (item[valueKey] || 0) / maxCount);
+    const y = topPadding + chartAreaHeight - (chartAreaHeight * (item[valueKey] || 0) / chartMax);
 
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', x);
@@ -581,14 +392,13 @@ function createLineChart(containerId, data, color, valueKey = 'count', isCurrenc
 
     svg.appendChild(circle);
 
-    // Month labels (X-axis)
-    if (index % 2 === 0 || data.length <= 12) {
+    if (index % Math.max(1, Math.ceil(data.length / 6)) === 0) {
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       text.setAttribute('x', x);
       text.setAttribute('y', chartHeight - 10);
       text.setAttribute('text-anchor', 'middle');
       text.setAttribute('font-size', '10');
-      text.setAttribute('fill', '#666');
+      text.setAttribute('fill', '#5c6573');
       text.textContent = item.month;
       svg.appendChild(text);
     }
@@ -603,23 +413,23 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
   const legendContainer = document.getElementById(legendContainerId);
   if (!container || !monthLabels || monthLabels.length === 0) return;
 
-  const colors = ['#6f42c1', '#2196F3', '#4CAF50', '#FF9800', '#F44336', '#00BCD4'];
+  const colors = ['#6b4fc7', '#3a5bbf', '#2f9e44', '#df8709', '#dc3a3a', '#2272c4'];
   const chartHeight = 250;
   const chartWidth = container.clientWidth || 400;
-  const leftPadding = 70; // Increased for Y-axis labels
+  const leftPadding = 70;
   const rightPadding = 20;
   const topPadding = 20;
   const bottomPadding = 30;
   const currency = '<%= Setting.plugin_redmine_purchase_requests["default_currency"] || "USD" %>';
 
-  // Find max value across all series
   let maxCount = 1;
   Object.values(dataSeries).forEach(values => {
     const seriesMax = Math.max(...values);
     if (seriesMax > maxCount) maxCount = seriesMax;
   });
+  const scale = niceScale(maxCount, !isCurrency);
+  const chartMax = scale.max;
 
-  // Format number for Y-axis display
   function formatYAxisValue(value, isCurr) {
     if (value >= 1000000) {
       return (isCurr ? currency + ' ' : '') + (value / 1000000).toFixed(1) + 'M';
@@ -637,61 +447,55 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
   const chartAreaWidth = chartWidth - leftPadding - rightPadding;
   const chartAreaHeight = chartHeight - topPadding - bottomPadding;
 
-  // Grid lines and Y-axis labels
-  for (let i = 0; i <= 5; i++) {
-    const y = topPadding + chartAreaHeight * i / 5;
-    const yValue = maxCount - (maxCount * i / 5);
+  const tickCount = Math.round(chartMax / scale.step);
+  for (let i = 0; i <= tickCount; i++) {
+    const y = topPadding + chartAreaHeight * i / tickCount;
+    const yValue = scale.step * (tickCount - i);
 
-    // Grid line
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line.setAttribute('x1', leftPadding);
     line.setAttribute('y1', y);
     line.setAttribute('x2', chartWidth - rightPadding);
     line.setAttribute('y2', y);
-    line.setAttribute('stroke', '#e0e0e0');
+    line.setAttribute('stroke', '#e5e7eb');
     line.setAttribute('stroke-width', '1');
     svg.appendChild(line);
 
-    // Y-axis label
     const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     yLabel.setAttribute('x', leftPadding - 8);
     yLabel.setAttribute('y', y + 4);
     yLabel.setAttribute('text-anchor', 'end');
     yLabel.setAttribute('font-size', '10');
-    yLabel.setAttribute('fill', '#666');
-    yLabel.textContent = formatYAxisValue(Math.round(yValue), isCurrency);
+    yLabel.setAttribute('fill', '#5c6573');
+    yLabel.textContent = formatYAxisValue(yValue, isCurrency);
     svg.appendChild(yLabel);
   }
 
-  // Y-axis line
   const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   yAxis.setAttribute('x1', leftPadding);
   yAxis.setAttribute('y1', topPadding);
   yAxis.setAttribute('x2', leftPadding);
   yAxis.setAttribute('y2', chartHeight - bottomPadding);
-  yAxis.setAttribute('stroke', '#ccc');
+  yAxis.setAttribute('stroke', '#d3d7df');
   yAxis.setAttribute('stroke-width', '1');
   svg.appendChild(yAxis);
 
-  // X-axis line
   const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   xAxis.setAttribute('x1', leftPadding);
   xAxis.setAttribute('y1', chartHeight - bottomPadding);
   xAxis.setAttribute('x2', chartWidth - rightPadding);
   xAxis.setAttribute('y2', chartHeight - bottomPadding);
-  xAxis.setAttribute('stroke', '#ccc');
+  xAxis.setAttribute('stroke', '#d3d7df');
   xAxis.setAttribute('stroke-width', '1');
   svg.appendChild(xAxis);
 
-  // Plot each series
   let colorIndex = 0;
   Object.entries(dataSeries).forEach(([tpcCode, values]) => {
     const color = colors[colorIndex % colors.length];
 
-    // Plot line
     const points = values.map((value, index) => {
       const x = leftPadding + chartAreaWidth * index / (values.length - 1 || 1);
-      const y = topPadding + chartAreaHeight - (chartAreaHeight * value / maxCount);
+      const y = topPadding + chartAreaHeight - (chartAreaHeight * value / chartMax);
       return `${x},${y}`;
     }).join(' ');
 
@@ -702,10 +506,9 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
     polyline.setAttribute('stroke-width', '2');
     svg.appendChild(polyline);
 
-    // Plot points
     values.forEach((value, index) => {
       const x = leftPadding + chartAreaWidth * index / (values.length - 1 || 1);
-      const y = topPadding + chartAreaHeight - (chartAreaHeight * value / maxCount);
+      const y = topPadding + chartAreaHeight - (chartAreaHeight * value / chartMax);
 
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       circle.setAttribute('cx', x);
@@ -723,27 +526,32 @@ function createMultiLineChart(containerId, legendContainerId, monthLabels, dataS
       svg.appendChild(circle);
     });
 
-    // Add legend item
     if (legendContainer) {
       const legendItem = document.createElement('div');
       legendItem.className = 'legend-item';
-      legendItem.innerHTML = `<span class="legend-color" style="background-color: ${color};"></span><span class="legend-label">${tpcCode}</span>`;
+      const colorSpan = document.createElement('span');
+      colorSpan.className = 'legend-color';
+      colorSpan.style.backgroundColor = color;
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'legend-label';
+      labelSpan.textContent = tpcCode;
+      legendItem.appendChild(colorSpan);
+      legendItem.appendChild(labelSpan);
       legendContainer.appendChild(legendItem);
     }
 
     colorIndex++;
   });
 
-  // Month labels (X-axis)
   monthLabels.forEach((month, index) => {
-    if (index % 2 === 0 || monthLabels.length <= 12) {
+    if (index % Math.max(1, Math.ceil(monthLabels.length / 6)) === 0) {
       const x = leftPadding + chartAreaWidth * index / (monthLabels.length - 1 || 1);
       const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
       text.setAttribute('x', x);
       text.setAttribute('y', chartHeight - 10);
       text.setAttribute('text-anchor', 'middle');
       text.setAttribute('font-size', '10');
-      text.setAttribute('fill', '#666');
+      text.setAttribute('fill', '#5c6573');
       text.textContent = month;
       svg.appendChild(text);
     }
@@ -757,15 +565,23 @@ const budgetData = <%= raw @monthly_tpc_budget.to_json %>;
 const budgetByCode = <%= raw @monthly_tpc_budget_by_code.to_json %>;
 const budgetMonthLabels = budgetData.map(m => m.month);
 
-// Check if we have budget data split by TPC codes
 if (Object.keys(budgetByCode).length > 0) {
   createMultiLineChart('monthly-budget-chart', 'budget-legend', budgetMonthLabels, budgetByCode, true);
 } else {
-  // Fallback to total if no split data
-  createLineChart('monthly-budget-chart', budgetData, '#6f42c1', 'total', true);
+  createLineChart('monthly-budget-chart', budgetData, '#6b4fc7', 'total', true);
   const budgetLegendContainer = document.getElementById('budget-legend');
   if (budgetLegendContainer) {
-    budgetLegendContainer.innerHTML = '<div class="legend-item"><span class="legend-color" style="background-color: #6f42c1;"></span><span class="legend-label">Total Budget</span></div>';
+    const li = document.createElement('div');
+    li.className = 'legend-item';
+    const cs = document.createElement('span');
+    cs.className = 'legend-color';
+    cs.style.backgroundColor = '#6b4fc7';
+    const ls = document.createElement('span');
+    ls.className = 'legend-label';
+    ls.textContent = 'Total Budget';
+    li.appendChild(cs);
+    li.appendChild(ls);
+    budgetLegendContainer.appendChild(li);
   }
 }
 
@@ -774,15 +590,23 @@ const usageData = <%= raw @monthly_tpc_usage.to_json %>;
 const usageByCode = <%= raw @monthly_tpc_usage_by_code.to_json %>;
 const usageMonthLabels = usageData.map(m => m.month);
 
-// Check if we have data split by TPC codes
 if (Object.keys(usageByCode).length > 0) {
   createMultiLineChart('monthly-usage-chart', 'usage-legend', usageMonthLabels, usageByCode, false);
 } else {
-  // Fallback to total if no split data
-  createLineChart('monthly-usage-chart', usageData, '#2196F3', 'total');
+  createLineChart('monthly-usage-chart', usageData, '#3a5bbf', 'total');
   const usageLegendContainer = document.getElementById('usage-legend');
   if (usageLegendContainer) {
-    usageLegendContainer.innerHTML = '<div class="legend-item"><span class="legend-color" style="background-color: #2196F3;"></span><span class="legend-label">Total TPC Usage</span></div>';
+    const li = document.createElement('div');
+    li.className = 'legend-item';
+    const cs = document.createElement('span');
+    cs.className = 'legend-color';
+    cs.style.backgroundColor = '#3a5bbf';
+    const ls = document.createElement('span');
+    ls.className = 'legend-label';
+    ls.textContent = 'Total TPC Usage';
+    li.appendChild(cs);
+    li.appendChild(ls);
+    usageLegendContainer.appendChild(li);
   }
 }
 </script>
