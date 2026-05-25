@@ -823,9 +823,22 @@
 #content .filter-options {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
 }
+/* Keep label / select / hint / button on a single horizontal baseline */
+#content .filter-row > *,
+#content .pr-filters__row > *,
+#content .filter-options > * {
+  margin: 0;
+  line-height: 1;
+}
+#content .filter-row label,
+#content .pr-filters__row label,
+#content .filter-options label { display: inline-flex; align-items: center; }
+#content .filter-row em.info,
+#content .pr-filters__row em.info,
+#content .filter-options em.info { font-style: italic; }
 #content .pr-filters__row label,
 #content .filter-row label,
 #content .filter-options label {
