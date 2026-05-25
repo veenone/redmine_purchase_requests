@@ -1,5 +1,14 @@
 # redmine_purchase_requests/init.rb
 
+# Register DOCX MIME type at plugin load time so format.docx is recognized
+# by the time controllers are loaded. Doing this inside to_prepare can be
+# too late under some boot orders, producing
+# "To respond to a custom format, register it as a MIME type first".
+_docx_registered = (Mime::Type.lookup_by_extension(:docx) rescue nil)
+unless _docx_registered
+  Mime::Type.register 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', :docx
+end
+
 Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
@@ -222,11 +231,7 @@ Rails.application.config.to_prepare do
   # Load DOCX report helper (uses Redmine's bundled rubyzip/Nokogiri)
   require File.join(File.dirname(__FILE__), 'lib', 'docx_report_helper')
 
-  # Register DOCX MIME type for the reports' format.docx export
-  unless Mime::Type.lookup_by_extension(:docx)
-    Mime::Type.register 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', :docx
-  end
-  
+
   # Create directory structure if needed
   lib_dir = File.join(File.dirname(__FILE__), 'lib')
   hooks_dir = File.join(lib_dir, 'redmine_purchase_requests')
