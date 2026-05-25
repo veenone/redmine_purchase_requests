@@ -5,6 +5,22 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-05-25
+
+### Added
+- **Year filter on every report**: All 7 reports (Index, Purchase Requests, Vendors, TPC Codes, CAPEX, OPEX, Executive Overview) now have a `.pr-filters` year selector. Defaults to the current year; pick "All Years" to show everything. The filter is preserved across PDF / DOCX / CSV exports and across the report-card links on the index page.
+- **DOCX export** for every report. New `Export DOCX` button alongside `Export PDF` and `Export CSV`. Generated via a minimal Office Open XML builder (`lib/docx_report_helper.rb`) that uses only Redmine's bundled `rubyzip` + `Nokogiri` — no new gem dependency.
+- **`BrandedReportPdf`** (`lib/branded_report_pdf.rb`): RBPDF subclass that gives every report a consistent professional look — per-page header (report title + project + year scope), per-page footer (timestamp + author + "Page X of Y"), branded cover block, KPI tile grid for the summary, accent-line section headings, and zebra-striped data tables.
+- **Shared report partials**: `reports/_year_filter.html.erb` and `reports/_export_actions.html.erb`, plus a `ReportsHelper` with `report_export_params(format)` / `report_year_suffix` / `report_generated_line(generated_at)`.
+
+### Changed
+- **`generate_pdf_report`** now delegates the cover + summary to `BrandedReportPdf` and reads `@selected_year` so the year scope appears on the cover and in the page header. Per-report content sections (`add_*_pdf_content`) are unchanged.
+- **`generate_*_report`** methods filter by the selected year: CAPEX/OPEX via the existing `for_year` scope; Purchase Requests via `created_at`; Vendors and TPC Codes restrict to those with PR activity in the selected year.
+- **Report titles** include the year suffix (e.g. `CAPEX Report (2026)`) when a specific year is selected.
+
+### Fixed
+- Reports controller now uses an adapter-agnostic min/max-year computation (no Postgres-specific SQL) for `@available_years`.
+
 ## [1.7.0] - 2026-05-24
 
 ### Changed
