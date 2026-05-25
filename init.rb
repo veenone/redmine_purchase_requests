@@ -216,7 +216,10 @@ Rails.application.config.to_prepare do
   # Load PDF chart helper
   require File.join(File.dirname(__FILE__), 'lib', 'pdf_chart_helper')
 
-  # Load DOCX report helper (gracefully no-ops if caracal isn't installed)
+  # Load branded report PDF subclass
+  require File.join(File.dirname(__FILE__), 'lib', 'branded_report_pdf')
+
+  # Load DOCX report helper (uses Redmine's bundled rubyzip/Nokogiri)
   require File.join(File.dirname(__FILE__), 'lib', 'docx_report_helper')
 
   # Register DOCX MIME type for the reports' format.docx export
