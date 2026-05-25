@@ -5,6 +5,12 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2026-05-25
+
+### Fixed
+- **DOCX export 500 error** (`NoMethodError: To respond to a custom format, register it as a MIME type first`): the `Mime::Type.register :docx` call was inside `Rails.application.config.to_prepare`, which under Redmine 6's plugin boot order can run after `ReportsController` is already autoloaded. Moved the registration to the top of `init.rb` so it executes at plugin load time before any controller is instantiated, with an idempotency guard for dev-mode reloads.
+- **Year-filter row alignment**: the `.filter-row` flex container used `align-items: flex-end`, which bottom-aligned items of mixed heights — the 32px select stuck up above the label, hint, and "Show All Years" button. Switched to `align-items: center` and pinned `line-height: 1` on every direct child so label / select / hint / button now share one horizontal midline.
+
 ## [1.8.0] - 2026-05-25
 
 ### Added
