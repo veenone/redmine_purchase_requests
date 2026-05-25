@@ -62,11 +62,12 @@ class ReportsController < ApplicationController
                   type: 'application/pdf',
                   disposition: 'inline'
       }
+      format.docx { send_docx_report('Purchase Requests Report', 'purchase_requests_report') }
       format.csv { send_csv_data(@report_data[:csv_data], 'purchase_requests_report') }
       format.json { render json: @report_data }
     end
   end
-  
+
   # Vendors Report
   def vendors
     @report_data = generate_vendors_report
@@ -80,11 +81,12 @@ class ReportsController < ApplicationController
                   type: 'application/pdf',
                   disposition: 'inline'
       }
+      format.docx { send_docx_report('Vendors Report', 'vendors_report') }
       format.csv { send_csv_data(@report_data[:csv_data], 'vendors_report') }
       format.json { render json: @report_data }
     end
   end
-  
+
   # TPC Codes Report
   def tpc_codes
     @report_data = generate_tpc_codes_report
@@ -98,11 +100,12 @@ class ReportsController < ApplicationController
                   type: 'application/pdf',
                   disposition: 'inline'
       }
+      format.docx { send_docx_report('TPC Codes Report', 'tpc_codes_report') }
       format.csv { send_csv_data(@report_data[:csv_data], 'tpc_codes_report') }
       format.json { render json: @report_data }
     end
   end
-  
+
   # CAPEX Report
   def capex
     @report_data = generate_capex_report
@@ -116,11 +119,12 @@ class ReportsController < ApplicationController
                   type: 'application/pdf',
                   disposition: 'inline'
       }
+      format.docx { send_docx_report('CAPEX Report', 'capex_report') }
       format.csv { send_csv_data(@report_data[:csv_data], 'capex_report') }
       format.json { render json: @report_data }
     end
   end
-  
+
   # OPEX Report
   def opex
     @report_data = generate_opex_report
@@ -134,11 +138,12 @@ class ReportsController < ApplicationController
                   type: 'application/pdf',
                   disposition: 'inline'
       }
+      format.docx { send_docx_report('OPEX Report', 'opex_report') }
       format.csv { send_csv_data(@report_data[:csv_data], 'opex_report') }
       format.json { render json: @report_data }
     end
   end
-  
+
   # Executive Overview Report
   def overview
     @report_data = generate_overview_report
@@ -152,12 +157,28 @@ class ReportsController < ApplicationController
                   type: 'application/pdf',
                   disposition: 'inline'
       }
+      format.docx { send_docx_report('Executive Overview Report', 'executive_overview_report') }
       format.csv { send_csv_data(@report_data[:csv_data], 'executive_overview_report') }
       format.json { render json: @report_data }
     end
   end
-  
+
   private
+
+  # Render @report_data to DOCX via DocxReportHelper and stream it as an
+  # attachment. If caracal isn't installed yet, surface a friendly error
+  # instead of crashing.
+  def send_docx_report(title, filename_prefix)
+    docx_blob = DocxReportHelper.generate(title, @report_data, project: @project, selected_year: @selected_year)
+    send_data docx_blob,
+              filename: "#{filename_prefix}_#{@project ? @project.identifier + '_' : ''}#{Date.current.strftime('%Y%m%d')}.docx",
+              type: Mime[:docx].to_s,
+              disposition: 'attachment'
+  rescue LoadError => e
+    Rails.logger.error("DOCX export unavailable: #{e.message}")
+    flash[:error] = "DOCX export is unavailable. Install the caracal gem (`bundle install` from the Redmine root) and restart."
+    redirect_back fallback_location: (@project ? project_reports_path(@project) : reports_path)
+  end
   
   def find_optional_project
     @project = Project.find(params[:project_id]) if params[:project_id].present?

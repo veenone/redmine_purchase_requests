@@ -215,6 +215,14 @@ Rails.application.config.to_prepare do
   
   # Load PDF chart helper
   require File.join(File.dirname(__FILE__), 'lib', 'pdf_chart_helper')
+
+  # Load DOCX report helper (gracefully no-ops if caracal isn't installed)
+  require File.join(File.dirname(__FILE__), 'lib', 'docx_report_helper')
+
+  # Register DOCX MIME type for the reports' format.docx export
+  unless Mime::Type.lookup_by_extension(:docx)
+    Mime::Type.register 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', :docx
+  end
   
   # Create directory structure if needed
   lib_dir = File.join(File.dirname(__FILE__), 'lib')
