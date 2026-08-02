@@ -69,6 +69,7 @@
       <thead>
         <tr>
           <th>TPC Number</th>
+          <th>TPC Name</th>
           <th>Owner Name</th>
           <th>Department</th>
           <th>Email</th>
@@ -91,6 +92,9 @@
                             class: 'tpc-number',
                             title: "View details for #{tpc_code.tpc_number}" %>
               </strong>
+            </td>
+            <td class="tpc-name">
+              <%= tpc_code.tpc_name.present? ? tpc_code.tpc_name : '-' %>
             </td>
             <td class="owner-name">
               <%= tpc_code.tpc_owner_name %>

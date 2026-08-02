@@ -28,18 +28,26 @@
         <em class="info">Unique TPC number (e.g., TPC-2025-001)</em>
       </div>
       <div class="form-row">
-        <%= f.label :tpc_owner_name %> <span class="required">*</span>
-        <%= f.text_field :tpc_owner_name, required: true, maxlength: 100, class: 'form-control' %>
-        <em class="info">Full name of the TPC owner</em>
+        <%= f.label :tpc_name, 'TPC Name' %>
+        <%= f.text_field :tpc_name, maxlength: 150, class: 'form-control' %>
+        <em class="info">Descriptive title for this TPC (optional)</em>
       </div>
     </div>
 
     <div class="pr-field-pair">
       <div class="form-row">
+        <%= f.label :tpc_owner_name %> <span class="required">*</span>
+        <%= f.text_field :tpc_owner_name, required: true, maxlength: 100, class: 'form-control' %>
+        <em class="info">Full name of the TPC owner</em>
+      </div>
+      <div class="form-row">
         <%= f.label :department %>
         <%= f.text_field :department, maxlength: 100, class: 'form-control' %>
         <em class="info">Department name (optional)</em>
       </div>
+    </div>
+
+    <div class="pr-field-pair">
       <div class="form-row">
         <%= f.label :tpc_email %> <span class="required">*</span>
         <%= f.email_field :tpc_email, required: true, maxlength: 255, class: 'form-control' %>

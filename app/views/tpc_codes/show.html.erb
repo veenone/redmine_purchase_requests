@@ -83,6 +83,12 @@
               </div>
 
               <div class="details-grid">
+                <% if @tpc_code.tpc_name.present? %>
+                  <div class="grid-row">
+                    <span class="label">TPC Name:</span>
+                    <span class="value"><%= @tpc_code.tpc_name %></span>
+                  </div>
+                <% end %>
                 <div class="grid-row">
                   <span class="label">Owner Name:</span>
                   <span class="value"><%= @tpc_code.tpc_owner_name %></span>
