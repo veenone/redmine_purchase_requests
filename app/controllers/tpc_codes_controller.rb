@@ -486,14 +486,19 @@ class TpcCodesController < ApplicationController
           tpc_counts[tpc_id] = direct + capex + opex
         end
 
-        # Total count for all TPCs
-        direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
-        capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
-        opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
+        # Total count — narrowed to the selected TPC when one is filtered
+        if @selected_tpc_code_id
+          total_count = tpc_counts.values.sum
+        else
+          direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
+          capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
+          opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
+          total_count = direct_count + capex_count + opex_count
+        end
 
         {
           month: month_start.strftime("%b"),
-          total: direct_count + capex_count + opex_count,
+          total: total_count,
           by_tpc: tpc_counts
         }
       end
@@ -513,14 +518,19 @@ class TpcCodesController < ApplicationController
           tpc_counts[tpc_id] = direct + capex + opex
         end
 
-        # Total count for all TPCs
-        direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
-        capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
-        opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
+        # Total count — narrowed to the selected TPC when one is filtered
+        if @selected_tpc_code_id
+          total_count = tpc_counts.values.sum
+        else
+          direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
+          capex_count = month_pr_scope.joins(:capex).where.not(capex: { tpc_code_id: nil }).count
+          opex_count = month_pr_scope.joins(:opex).where.not(opex: { tpc_code_id: nil }).count
+          total_count = direct_count + capex_count + opex_count
+        end
 
         {
           month: i.months.ago.strftime("%b %Y"),
-          total: direct_count + capex_count + opex_count,
+          total: total_count,
           by_tpc: tpc_counts
         }
       end.reverse
