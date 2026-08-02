@@ -352,6 +352,7 @@ class TpcCodesController < ApplicationController
 
       @tpc_utilization << {
         tpc_code: tpc.tpc_number,
+        tpc_name: tpc.tpc_name.to_s,
         department: tpc.department,
         owner: tpc.tpc_owner_name,
         total_cost: total_cost.round(2),

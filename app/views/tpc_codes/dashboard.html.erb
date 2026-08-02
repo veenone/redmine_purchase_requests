@@ -119,6 +119,7 @@
           <thead>
             <tr>
               <th>TPC Code</th>
+              <th>TPC Name</th>
               <th>Department</th>
               <th>Owner</th>
               <th>Total Cost</th>
@@ -129,6 +130,7 @@
             <% @tpc_utilization.each do |tpc| %>
               <tr>
                 <td><strong class="tpc-number"><%= tpc[:tpc_code] %></strong></td>
+                <td><%= tpc[:tpc_name].presence || '-' %></td>
                 <td><%= tpc[:department].presence || '-' %></td>
                 <td><%= tpc[:owner] %></td>
                 <td>
