@@ -167,6 +167,7 @@
           <tr>
             <th>Rank</th>
             <th>TPC Code</th>
+            <th>TPC Name</th>
             <th>Department</th>
             <th>Owner</th>
             <th>Total Cost</th>
@@ -181,6 +182,7 @@
             <tr>
               <td style="font-weight:700;color:var(--pr-accent);">#<%= index + 1 %></td>
               <td class="tpc-code-cell"><strong><%= tpc[:tpc_code] %></strong></td>
+              <td><%= tpc[:tpc_name].presence || '-' %></td>
               <td><%= tpc[:department].presence || '-' %></td>
               <td><%= tpc[:owner] %></td>
               <td class="stat-currency">
