@@ -143,6 +143,12 @@ class PurchaseRequestsController < ApplicationController
       scope = scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
     end
 
+    # TPC filter
+    tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
+    @available_tpc_codes = tpc_scope.active.ordered
+    @selected_tpc_code_id = params[:tpc_code_id].presence
+    scope = scope.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
+
     @total_requests = scope.count
     @open_requests = scope.open.count
     @closed_requests = scope.closed.count
