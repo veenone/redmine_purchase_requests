@@ -267,13 +267,13 @@ module DocxReportHelper
     add_kv_table(xml, 'TPC Code Status',           data[:status_breakdown])      if data[:status_breakdown]
     add_kv_table(xml, 'Department Distribution',   data[:department_breakdown])  if data[:department_breakdown]
 
-    if data[:utilization].is_a?(Array) && data[:utilization].any?
-      rows = data[:utilization].first(20).map do |tpc|
-        [tpc[:tpc_code].to_s, tpc[:owner].to_s, tpc[:department].to_s,
+    if data[:tpc_utilization].is_a?(Array) && data[:tpc_utilization].any?
+      rows = data[:tpc_utilization].first(20).map do |tpc|
+        [tpc[:tpc_code].to_s, tpc[:tpc_name].to_s, tpc[:owner].to_s, tpc[:department].to_s,
          format_currency(tpc[:total_cost] || 0), tpc[:request_count].to_s]
       end
       add_simple_table(xml, 'Top TPC Codes by Cost',
-                       ['TPC Code', 'Owner', 'Department', 'Total Cost', 'Requests'], rows)
+                       ['TPC Code', 'TPC Name', 'Owner', 'Department', 'Total Cost', 'Requests'], rows)
     end
   end
 
