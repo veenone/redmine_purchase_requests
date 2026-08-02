@@ -7,6 +7,7 @@ class TpcCode < ActiveRecord::Base
   validates :tpc_number, presence: true, length: { minimum: 3, maximum: 50 }
   validates :tpc_owner_name, presence: true, length: { minimum: 2, maximum: 100 }
   validates :department, length: { maximum: 100 }
+  validates :tpc_name, length: { maximum: 150 }
   validates :tpc_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :description, length: { maximum: 1000 }
   validates :notes, length: { maximum: 2000 }
@@ -19,8 +20,8 @@ class TpcCode < ActiveRecord::Base
   scope :global, -> { where('tpc_codes.project_id' => nil) }
   scope :for_project, ->(project) { where(project: project) }
   scope :search, ->(term) {
-    where("LOWER(tpc_number) LIKE ? OR LOWER(tpc_owner_name) LIKE ? OR LOWER(department) LIKE ? OR LOWER(tpc_email) LIKE ? OR LOWER(description) LIKE ?",
-          "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%")
+    where("LOWER(tpc_number) LIKE ? OR LOWER(tpc_name) LIKE ? OR LOWER(tpc_owner_name) LIKE ? OR LOWER(department) LIKE ? OR LOWER(tpc_email) LIKE ? OR LOWER(description) LIKE ?",
+          "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%")
   }
   scope :ordered, -> { order(:tpc_number) }
   
@@ -35,6 +36,7 @@ class TpcCode < ActiveRecord::Base
   
   def display_name
     parts = [tpc_number]
+    parts << tpc_name if tpc_name.present?
     parts << department if department.present?
     parts << tpc_owner_name
     parts.join(' - ')
@@ -42,6 +44,7 @@ class TpcCode < ActiveRecord::Base
 
   def tpc_number_with_description
     parts = [tpc_number]
+    parts << tpc_name if tpc_name.present?
     parts << department if department.present?
     if description.present?
       parts << description.truncate(50)
@@ -90,11 +93,12 @@ class TpcCode < ActiveRecord::Base
     require 'csv'
 
     CSV.generate(headers: true) do |csv|
-      csv << ['TPC Number', 'Owner Name', 'Department', 'Email', 'Description', 'Active', 'Project', 'Notes']
+      csv << ['TPC Number', 'TPC Name', 'Owner Name', 'Department', 'Email', 'Description', 'Active', 'Project', 'Notes']
 
       tpc_codes.includes(:project).each do |tpc|
         csv << [
           tpc.tpc_number,
+          tpc.tpc_name,
           tpc.tpc_owner_name,
           tpc.department,
           tpc.tpc_email,
@@ -112,6 +116,7 @@ class TpcCode < ActiveRecord::Base
     tpc_codes.includes(:project).map do |tpc|
       {
         tpc_number: tpc.tpc_number,
+        tpc_name: tpc.tpc_name,
         tpc_owner_name: tpc.tpc_owner_name,
         department: tpc.department,
         tpc_email: tpc.tpc_email,
@@ -132,6 +137,7 @@ class TpcCode < ActiveRecord::Base
       begin
         tpc_data = {
           tpc_number: row['TPC Number']&.strip,
+          tpc_name: row['TPC Name']&.strip,
           tpc_owner_name: row['Owner Name']&.strip,
           department: row['Department']&.strip,
           tpc_email: row['Email']&.strip,
@@ -177,6 +183,7 @@ class TpcCode < ActiveRecord::Base
         begin
           data = {
             tpc_number: tpc_data['tpc_number']&.strip,
+            tpc_name: tpc_data['tpc_name']&.strip,
             tpc_owner_name: tpc_data['tpc_owner_name']&.strip,
             department: tpc_data['department']&.strip,
             tpc_email: tpc_data['tpc_email']&.strip,
