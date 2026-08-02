@@ -106,7 +106,10 @@ class OpexController < ApplicationController
   def dashboard
     @current_year = (params[:year] || Date.current.year).to_i
     @opex_entries = @project.opex.for_year(@current_year)
-    
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @selected_tpc_code_id = params[:tpc_code_id].presence
+    @opex_entries = @opex_entries.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
+
     # Initialize variables
     @total_budget = 0
     @total_utilized = 0

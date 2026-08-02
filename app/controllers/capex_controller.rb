@@ -95,6 +95,9 @@ class CapexController < ApplicationController
     @current_year = params[:year].present? ? params[:year].to_i : Date.current.year
     # Get capex entries for the year without ordering for aggregations
     capex_for_year = @project.capex.for_year(@current_year)
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @selected_tpc_code_id = params[:tpc_code_id].presence
+    capex_for_year = capex_for_year.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
     @capex_entries = capex_for_year.ordered
     
     # Get default currency for conversions

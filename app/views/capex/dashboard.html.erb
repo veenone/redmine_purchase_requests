@@ -29,10 +29,14 @@
 
 <%= form_tag dashboard_project_capex_index_path(@project), method: :get, local: true do %>
   <fieldset class="pr-filters">
-    <legend>Year Filter</legend>
+    <legend>Filters</legend>
     <div class="filter-row">
       <%= select_tag 'year',
                      options_for_select((2020..2030).map { |y| [y, y] }, @current_year),
+                     onchange: 'this.form.submit()' %>
+      <%= select_tag 'tpc_code_id',
+                     options_for_select([['All TPCs', '']] + @available_tpc_codes.map { |t| [t.display_name, t.id] }, @selected_tpc_code_id),
+                     include_blank: false,
                      onchange: 'this.form.submit()' %>
     </div>
   </fieldset>
