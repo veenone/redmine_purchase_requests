@@ -44,6 +44,9 @@
                      include_blank: false,
                      id: 'tpc_filter',
                      onchange: 'this.form.submit()' %>
+      <% if @selected_year.present? %>
+        <span class="no-data">Showing data for <%= @selected_year %></span>
+      <% end %>
       <% if @selected_year.present? || @selected_tpc_code_id.present? %>
         <%= link_to 'Clear', dashboard_path, class: 'pr-button pr-button-cancel small' %>
       <% end %>
