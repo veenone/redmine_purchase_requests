@@ -88,24 +88,28 @@
 
   <div class="pr-form-box">
     <div class="pr-tabs">
-      <ul class="pr-tab-nav">
+      <ul class="pr-tab-nav" role="tablist" aria-label="Purchase request sections">
         <li class="pr-tab-item active">
-          <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
+          <a href="#tab-general" class="pr-tab-link" data-tab="tab-general"
+             role="tab" id="tab-general-tab" aria-controls="tab-general" aria-selected="true" tabindex="0">
             <span class="icon icon-edit"><%= l(:label_basic_information) %></span>
           </a>
         </li>
         <li class="pr-tab-item">
-          <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
+          <a href="#tab-details" class="pr-tab-link" data-tab="tab-details"
+             role="tab" id="tab-details-tab" aria-controls="tab-details" aria-selected="false" tabindex="-1">
             <span class="icon icon-package"><%= l(:label_product_details) %></span>
           </a>
         </li>
         <li class="pr-tab-item">
-          <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments">
+          <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments"
+             role="tab" id="tab-attachments-tab" aria-controls="tab-attachments" aria-selected="false" tabindex="-1">
             <span class="icon icon-attachment"><%= l(:label_attachments_and_notes) %></span>
           </a>
         </li>
         <li class="pr-tab-item">
-          <a href="#tab-workflow" class="pr-tab-link" data-tab="tab-workflow">
+          <a href="#tab-workflow" class="pr-tab-link" data-tab="tab-workflow"
+             role="tab" id="tab-workflow-tab" aria-controls="tab-workflow" aria-selected="false" tabindex="-1">
             <span class="icon icon-issue"></span>
             <%= l(:label_workflow) %>
             <% if @purchase_request.has_linked_issue? %>
@@ -129,26 +133,61 @@
 
 <%= javascript_tag do %>
 $(document).ready(function() {
-  // Tab switching
-  $('.pr-tab-link').click(function(e) {
-    e.preventDefault();
-    var tabId = $(this).data('tab');
-
+  // ARIA tab activation helper (edit page)
+  function activateEditTab(tabId, moveFocus) {
+    // Update pane visibility
     $('.tabbed-form').hide();
-    $('#' + tabId).show();
+    var targetPane = $('#' + tabId);
+    if (!targetPane.length) { tabId = 'tab-general'; targetPane = $('#tab-general'); }
+    targetPane.show();
 
-    $('.pr-tab-item').removeClass('active');
-    $(this).parent('.pr-tab-item').addClass('active');
+    // Update ARIA state on tab links
+    $('.pr-tab-link').each(function() {
+      var isActive = ($(this).data('tab') === tabId);
+      $(this).attr('aria-selected', isActive ? 'true' : 'false')
+             .attr('tabindex', isActive ? '0' : '-1');
+      $(this).parent('.pr-tab-item').toggleClass('active', isActive);
+    });
 
+    // Hash sync — use replaceState to avoid scroll jump
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', '#' + tabId);
+    } else {
+      window.location.hash = tabId;
+    }
+
+    if (moveFocus) {
+      $('[data-tab="' + tabId + '"]').focus();
+    }
+  }
+
+  // Keyboard navigation on the tablist (ArrowRight/Left/Home/End)
+  $('.pr-tab-nav').on('keydown', '.pr-tab-link', function(e) {
+    var $tabs = $('.pr-tab-nav .pr-tab-link');
+    var idx = $tabs.index(this);
+    var next = idx;
+    if (e.key === 'ArrowRight') { next = (idx + 1) % $tabs.length; }
+    else if (e.key === 'ArrowLeft') { next = (idx - 1 + $tabs.length) % $tabs.length; }
+    else if (e.key === 'Home') { next = 0; }
+    else if (e.key === 'End') { next = $tabs.length - 1; }
+    else { return; }
+    e.preventDefault();
+    activateEditTab($tabs.eq(next).data('tab'), true);
+  });
+
+  // Click handler
+  $('.pr-tab-link').on('click', function(e) {
+    e.preventDefault();
+    activateEditTab($(this).data('tab'), false);
     return false;
   });
 
-  // First tab is shown by default
-  $('.tabbed-form').not('#tab-general').hide();
-
-  // Focus the most important field on load
-  $('#purchase_request_title').focus();
-  $('#purchase_request_description').addClass('wiki-edit');
+  // Hash sync on load — activate tab from URL hash, fall back to general
+  var initialHash = window.location.hash.replace('#', '');
+  var validTabs = [];
+  $('.pr-tab-link').each(function() { validTabs.push($(this).data('tab')); });
+  var startTab = (initialHash && validTabs.indexOf(initialHash) !== -1) ? initialHash : 'tab-general';
+  activateEditTab(startTab, false);
 
   // Warn on unsaved changes
   var formChanged = false;

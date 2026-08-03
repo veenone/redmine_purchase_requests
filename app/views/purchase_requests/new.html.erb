@@ -53,21 +53,24 @@
 
   <div class="pr-form-box">
     <div class="pr-tabs">
-      <ul class="pr-tab-nav">
+      <ul class="pr-tab-nav" role="tablist" aria-label="Purchase request sections">
         <li class="pr-tab-item active">
-          <a href="#tab-general" class="pr-tab-link" data-tab="tab-general">
+          <a href="#tab-general" class="pr-tab-link" data-tab="tab-general"
+             role="tab" id="tab-general-tab" aria-controls="tab-general" aria-selected="true" tabindex="0">
             <span class="icon icon-edit"></span>
             <%= l(:label_basic_information) %>
           </a>
         </li>
         <li class="pr-tab-item">
-          <a href="#tab-details" class="pr-tab-link" data-tab="tab-details">
+          <a href="#tab-details" class="pr-tab-link" data-tab="tab-details"
+             role="tab" id="tab-details-tab" aria-controls="tab-details" aria-selected="false" tabindex="-1">
             <span class="icon icon-package"></span>
             <%= l(:label_product_details) %>
           </a>
         </li>
         <li class="pr-tab-item">
-          <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments">
+          <a href="#tab-attachments" class="pr-tab-link" data-tab="tab-attachments"
+             role="tab" id="tab-attachments-tab" aria-controls="tab-attachments" aria-selected="false" tabindex="-1">
             <span class="icon icon-attachment"></span>
             <%= l(:label_attachments_and_notes) %>
           </a>
@@ -88,30 +91,75 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Tab functionality
-  const tabLinks = document.querySelectorAll('.pr-tab-link');
-  const tabPanes = document.querySelectorAll('.tab-pane');
-  const progressSteps = document.querySelectorAll('.pr-progress-step');
+  // ARIA tab activation helper (new page, vanilla JS)
+  var tabLinks = document.querySelectorAll('.pr-tab-link');
+  var tabPanes = document.querySelectorAll('.tab-pane');
+  var progressSteps = document.querySelectorAll('.pr-progress-step');
 
-  tabLinks.forEach((link, index) => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
+  function activateNewTab(tabId, moveFocus) {
+    // Hide all panes
+    tabPanes.forEach(function(pane) {
+      pane.style.display = 'none';
+    });
+    var targetPane = document.getElementById(tabId);
+    if (!targetPane) { tabId = 'tab-general'; targetPane = document.getElementById('tab-general'); }
+    targetPane.style.display = 'block';
 
-      tabLinks.forEach(l => l.parentElement.classList.remove('active'));
-      tabPanes.forEach(pane => pane.classList.remove('active'));
-      progressSteps.forEach(step => step.classList.remove('active'));
+    // Update ARIA state and active class on tab links
+    tabLinks.forEach(function(link, idx) {
+      var isActive = (link.getAttribute('data-tab') === tabId);
+      link.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      link.setAttribute('tabindex', isActive ? '0' : '-1');
+      link.parentElement.classList.toggle('active', isActive);
 
-      this.parentElement.classList.add('active');
-      const targetId = this.getAttribute('data-tab');
-      const targetPane = document.getElementById(targetId);
-      if (targetPane) {
-        targetPane.classList.add('active');
-      }
-
-      if (progressSteps[index]) {
-        progressSteps[index].classList.add('active');
+      if (progressSteps[idx]) {
+        progressSteps[idx].classList.toggle('active', isActive);
       }
     });
+
+    // Hash sync — use replaceState to avoid scroll jump
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', '#' + tabId);
+    } else {
+      window.location.hash = tabId;
+    }
+
+    if (moveFocus) {
+      var focusTarget = document.querySelector('[data-tab="' + tabId + '"]');
+      if (focusTarget) focusTarget.focus();
+    }
+  }
+
+  // Click handlers
+  tabLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      activateNewTab(this.getAttribute('data-tab'), false);
+    });
   });
+
+  // Keyboard navigation on the tablist (ArrowRight/Left/Home/End)
+  var tabNav = document.querySelector('.pr-tab-nav');
+  if (tabNav) {
+    tabNav.addEventListener('keydown', function(e) {
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('.pr-tab-nav .pr-tab-link'));
+      var idx = tabs.indexOf(document.activeElement);
+      if (idx === -1) return;
+      var next = idx;
+      if (e.key === 'ArrowRight') { next = (idx + 1) % tabs.length; }
+      else if (e.key === 'ArrowLeft') { next = (idx - 1 + tabs.length) % tabs.length; }
+      else if (e.key === 'Home') { next = 0; }
+      else if (e.key === 'End') { next = tabs.length - 1; }
+      else { return; }
+      e.preventDefault();
+      activateNewTab(tabs[next].getAttribute('data-tab'), true);
+    });
+  }
+
+  // Hash sync on load — activate from URL hash, fall back to general
+  var initialHash = window.location.hash.replace('#', '');
+  var validTabs = Array.prototype.slice.call(tabLinks).map(function(l) { return l.getAttribute('data-tab'); });
+  var startTab = (initialHash && validTabs.indexOf(initialHash) !== -1) ? initialHash : 'tab-general';
+  activateNewTab(startTab, false);
 });
 </script>
