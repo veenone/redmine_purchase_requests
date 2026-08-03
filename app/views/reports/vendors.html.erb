@@ -246,6 +246,8 @@
   </div>
 </div>
 
+<%= render 'reports/chart_colors' %>
+
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -263,8 +265,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Purchase Requests',
         data: activityData.map(item => item.count),
-        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: PR_CHART_COLORS[0] + 'b3',
+        borderColor: PR_CHART_COLORS[0],
         borderWidth: 1
       }]
     },
@@ -305,8 +307,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Total Value',
         data: valueData.map(item => item.value),
-        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: PR_CHART_COLORS[1] + 'b3',
+        borderColor: PR_CHART_COLORS[1],
         borderWidth: 1
       }]
     },
@@ -349,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['Active', 'Inactive'],
       datasets: [{
         data: [<%= @report_data[:summary][:active_count] %>, <%= @report_data[:summary][:inactive_count] %>],
-        backgroundColor: ['#4CAF50', '#9E9E9E'],
+        backgroundColor: [PR_CHART_COLORS[1], PR_CHART_NEUTRAL],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -377,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['With Requests', 'Without Requests'],
       datasets: [{
         data: [<%= @report_data[:summary][:vendors_with_requests] %>, <%= @report_data[:summary][:vendors_without_requests] %>],
-        backgroundColor: ['#2196F3', '#FF9800'],
+        backgroundColor: [PR_CHART_COLORS[4], PR_CHART_COLORS[2]],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -407,16 +409,16 @@ document.addEventListener('DOMContentLoaded', function() {
         {
           label: 'New Vendors Added',
           data: <%= raw @report_data[:monthly_vendor_trend].values.to_json %>,
-          borderColor: 'rgba(54, 162, 235, 1)',
-          backgroundColor: 'rgba(54, 162, 235, 0.1)',
+          borderColor: PR_CHART_COLORS[0],
+          backgroundColor: PR_CHART_COLORS[0] + '1a',
           fill: true,
           tension: 0.3
         },
         {
           label: 'Purchase Requests with Vendors',
           data: <%= raw @report_data[:monthly_pr_trend].values.to_json %>,
-          borderColor: 'rgba(255, 99, 132, 1)',
-          backgroundColor: 'rgba(255, 99, 132, 0.1)',
+          borderColor: PR_CHART_COLORS[3],
+          backgroundColor: PR_CHART_COLORS[3] + '1a',
           fill: true,
           tension: 0.3
         }
@@ -456,8 +458,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Project-Specific Vendors',
         data: <%= raw @report_data[:project_distribution].values.to_json %>,
-        backgroundColor: 'rgba(153, 102, 255, 0.7)',
-        borderColor: 'rgba(153, 102, 255, 1)',
+        backgroundColor: PR_CHART_COLORS[5] + 'b3',
+        borderColor: PR_CHART_COLORS[5],
         borderWidth: 1
       }]
     },

@@ -323,6 +323,8 @@
   </div>
 </div>
 
+<%= render 'reports/chart_colors' %>
+
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -337,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:utilization_breakdown].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:utilization_breakdown].values.to_json %>,
-        backgroundColor: ['#4CAF50', '#9E9E9E'],
+        backgroundColor: [PR_CHART_COLORS[1], PR_CHART_NEUTRAL],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -366,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'CAPEX Items',
         data: <%= raw @report_data[:utilization_status_breakdown].values.to_json %>,
-        backgroundColor: ['#F44336', '#FF9800', '#FFC107', '#8BC34A', '#9E9E9E']
+        backgroundColor: PR_CHART_COLORS.slice(0, 5)
       }]
     },
     options: {
@@ -402,9 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:pr_status_breakdown].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:pr_status_breakdown].values.to_json %>,
-        backgroundColor: [
-          '#4CAF50', '#2196F3', '#FF9800', '#F44336', '#9C27B0', '#607D8B', '#795548', '#00BCD4'
-        ],
+        backgroundColor: <%= raw @report_data[:pr_status_breakdown].keys.to_json %>.map(function(_, i) { return PR_CHART_COLORS[i % PR_CHART_COLORS.length]; }),
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -434,8 +434,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'CAPEX Amount',
         data: <%= raw @report_data[:yearly_totals].values.to_json %>,
-        backgroundColor: 'rgba(255, 152, 0, 0.7)',
-        borderColor: 'rgba(255, 152, 0, 1)',
+        backgroundColor: PR_CHART_COLORS[2] + 'b3',
+        borderColor: PR_CHART_COLORS[2],
         borderWidth: 1
       }]
     },
@@ -476,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['Q1', 'Q2', 'Q3', 'Q4'],
       datasets: [{
         data: <%= raw @report_data[:quarterly_breakdown].values.to_json %>,
-        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'],
+        backgroundColor: PR_CHART_COLORS.slice(0, 4),
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -505,9 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:currency_breakdown].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:currency_breakdown].values.to_json %>,
-        backgroundColor: [
-          '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3'
-        ],
+        backgroundColor: PR_CHART_COLORS,
         borderWidth: 2,
         borderColor: '#fff'
       }]

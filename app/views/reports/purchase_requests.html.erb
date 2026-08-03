@@ -330,6 +330,8 @@
   </div>
 </div>
 
+<%= render 'reports/chart_colors' %>
+
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -344,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:budget_source_breakdown].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:budget_source_breakdown].values.to_json %>,
-        backgroundColor: ['#2196F3', '#4CAF50', '#FF9800', '#9E9E9E'],
+        backgroundColor: [PR_CHART_COLORS[0], PR_CHART_COLORS[1], PR_CHART_COLORS[2], PR_CHART_NEUTRAL],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -372,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:budget_source_value].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:budget_source_value].values.to_json %>,
-        backgroundColor: ['#2196F3', '#4CAF50', '#FF9800', '#9E9E9E'],
+        backgroundColor: [PR_CHART_COLORS[0], PR_CHART_COLORS[1], PR_CHART_COLORS[2], PR_CHART_NEUTRAL],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -407,9 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:status_breakdown].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:status_breakdown].values.to_json %>,
-        backgroundColor: [
-          '#4CAF50', '#2196F3', '#FF9800', '#F44336', '#9C27B0', '#607D8B'
-        ],
+        backgroundColor: <%= raw @report_data[:status_breakdown].keys.to_json %>.map(function(_, i) { return PR_CHART_COLORS[i % PR_CHART_COLORS.length]; }),
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Requests',
         data: <%= raw @report_data[:priority_breakdown].values.to_json %>,
-        backgroundColor: ['#4CAF50', '#2196F3', '#FF9800', '#F44336']
+        backgroundColor: PR_CHART_COLORS.slice(0, 4)
       }]
     },
     options: {
@@ -475,8 +475,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Requests',
         data: <%= raw @report_data[:requester_breakdown].map { |r| r[:count] }.to_json %>,
-        backgroundColor: 'rgba(33, 150, 243, 0.7)',
-        borderColor: 'rgba(33, 150, 243, 1)',
+        backgroundColor: PR_CHART_COLORS[0] + 'b3',
+        borderColor: PR_CHART_COLORS[0],
         borderWidth: 1
       }]
     },
@@ -516,8 +516,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Requests',
         data: <%= raw @report_data[:tpc_distribution].values.to_json %>,
-        backgroundColor: 'rgba(156, 39, 176, 0.7)',
-        borderColor: 'rgba(156, 39, 176, 1)',
+        backgroundColor: PR_CHART_COLORS[5] + 'b3',
+        borderColor: PR_CHART_COLORS[5],
         borderWidth: 1
       }]
     },
@@ -555,8 +555,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Value',
         data: <%= raw @report_data[:tpc_value_distribution].values.to_json %>,
-        backgroundColor: 'rgba(76, 175, 80, 0.7)',
-        borderColor: 'rgba(76, 175, 80, 1)',
+        backgroundColor: PR_CHART_COLORS[1] + 'b3',
+        borderColor: PR_CHART_COLORS[1],
         borderWidth: 1
       }]
     },
@@ -607,8 +607,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Total Cost',
         data: <%= raw @report_data[:monthly_cost_trend].values.to_json %>,
-        borderColor: '#4CAF50',
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderColor: PR_CHART_COLORS[1],
+        backgroundColor: PR_CHART_COLORS[1] + '1a',
         tension: 0.4,
         fill: true,
         pointRadius: 5,
@@ -660,8 +660,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Purchase Requests Created',
         data: <%= raw @report_data[:monthly_trend].values.to_json %>,
-        borderColor: '#2196F3',
-        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+        borderColor: PR_CHART_COLORS[0],
+        backgroundColor: PR_CHART_COLORS[0] + '1a',
         tension: 0.4,
         fill: true,
         pointRadius: 5,

@@ -310,6 +310,8 @@
   </div>
 </div>
 
+<%= render 'reports/chart_colors' %>
+
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -327,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['CAPEX Usage', 'OPEX Usage', 'Direct PR', 'Unused'],
       datasets: [{
         data: [capexCount, opexCount, directCount, Math.max(0, unusedCount)],
-        backgroundColor: ['#FF9800', '#4CAF50', '#2196F3', '#9E9E9E'],
+        backgroundColor: [PR_CHART_COLORS[0], PR_CHART_COLORS[1], PR_CHART_COLORS[2], PR_CHART_NEUTRAL],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -353,8 +355,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const deptData = <%= raw @report_data[:department_breakdown].to_json %>;
   const deptLabels = Object.keys(deptData);
   const deptValues = Object.values(deptData);
-  const deptColors = ['#6f42c1', '#2196F3', '#4CAF50', '#FF9800', '#F44336', '#00BCD4', '#FFEB3B', '#9C27B0', '#795548', '#607D8B'];
-
   new Chart(deptCtx, {
     type: 'bar',
     data: {
@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'TPC Codes',
         data: deptValues,
-        backgroundColor: deptColors.slice(0, deptLabels.length),
+        backgroundColor: deptLabels.map(function(_, i) { return PR_CHART_COLORS[i % PR_CHART_COLORS.length]; }),
         borderWidth: 0
       }]
     },
@@ -398,12 +398,12 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'TPC-Linked Purchase Requests',
         data: trendData.map(d => d.count),
-        borderColor: '#6f42c1',
-        backgroundColor: 'rgba(111, 66, 193, 0.1)',
+        borderColor: PR_CHART_COLORS[5],
+        backgroundColor: PR_CHART_COLORS[5] + '1a',
         fill: true,
         tension: 0.3,
         pointRadius: 5,
-        pointBackgroundColor: '#6f42c1'
+        pointBackgroundColor: PR_CHART_COLORS[5]
       }]
     },
     options: {

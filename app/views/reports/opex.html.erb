@@ -215,6 +215,8 @@
   </div>
 </div>
 
+<%= render 'reports/chart_colors' %>
+
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -230,8 +232,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'OPEX Amount',
         data: <%= raw @report_data[:category_breakdown].values.to_json %>,
-        backgroundColor: 'rgba(76, 175, 80, 0.7)',
-        borderColor: 'rgba(76, 175, 80, 1)',
+        backgroundColor: PR_CHART_COLORS[1] + 'b3',
+        borderColor: PR_CHART_COLORS[1],
         borderWidth: 1
       }]
     },
@@ -274,8 +276,8 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'OPEX Amount',
         data: <%= raw @report_data[:yearly_totals].values.to_json %>,
-        borderColor: 'rgba(76, 175, 80, 1)',
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderColor: PR_CHART_COLORS[1],
+        backgroundColor: PR_CHART_COLORS[1] + '1a',
         tension: 0.4,
         fill: true,
         pointRadius: 5,
@@ -319,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['Q1', 'Q2', 'Q3', 'Q4'],
       datasets: [{
         data: <%= raw @report_data[:quarterly_breakdown].values.to_json %>,
-        backgroundColor: ['#4CAF50', '#81C784', '#A5D6A7', '#C8E6C9'],
+        backgroundColor: PR_CHART_COLORS.slice(0, 4),
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -348,9 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:currency_breakdown].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:currency_breakdown].values.to_json %>,
-        backgroundColor: [
-          '#4CAF50', '#81C784', '#A5D6A7', '#C8E6C9', '#E8F5E8', '#F1F8E9'
-        ],
+        backgroundColor: PR_CHART_COLORS,
         borderWidth: 2,
         borderColor: '#fff'
       }]

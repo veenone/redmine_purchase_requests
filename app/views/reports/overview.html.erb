@@ -434,6 +434,8 @@
   </div>
 </div>
 
+<%= render 'reports/chart_colors' %>
+
 <% unless @print_mode %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -448,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: ['CAPEX', 'OPEX'],
       datasets: [{
         data: [capexValue, opexValue],
-        backgroundColor: ['#FF9800', '#4CAF50'],
+        backgroundColor: [PR_CHART_COLORS[2], PR_CHART_COLORS[1]],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -487,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
       labels: <%= raw @report_data[:budget_distribution].keys.to_json %>,
       datasets: [{
         data: <%= raw @report_data[:budget_distribution].values.to_json %>,
-        backgroundColor: ['#FF9800', '#4CAF50', '#2196F3', '#9E9E9E'],
+        backgroundColor: [PR_CHART_COLORS[0], PR_CHART_COLORS[1], PR_CHART_COLORS[2], PR_CHART_NEUTRAL],
         borderWidth: 2,
         borderColor: '#fff'
       }]
@@ -532,7 +534,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Total Value',
         data: <%= raw @report_data[:currency_usage][:by_value].values.to_json %>,
-        backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'],
+        backgroundColor: <%= raw @report_data[:currency_usage][:by_value].keys.to_json %>.map(function(_, i) { return PR_CHART_COLORS[i % PR_CHART_COLORS.length]; }),
         borderWidth: 1
       }]
     },
