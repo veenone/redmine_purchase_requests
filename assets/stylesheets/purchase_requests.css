@@ -862,6 +862,32 @@
   color: var(--pr-ink);
   font-size: 13px;
 }
+/* Filter controls get the same focus ring as .form-control */
+#content .pr-filters select:focus,
+#content .pr-filters input:focus,
+#content .filter-row select:focus,
+#content .filter-row input:focus {
+  outline: none;
+  border-color: var(--pr-accent);
+  box-shadow: 0 0 0 3px var(--pr-accent-soft);
+}
+/* Active-filter chips */
+#content .pr-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+#content .pr-filter-chips .pr-badge { display: inline-flex; align-items: center; gap: 6px; }
+#content .pr-chip-remove {
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  color: inherit;
+  opacity: .7;
+  padding: 0 2px;
+}
+#content .pr-chip-remove:hover { opacity: 1; text-decoration: none; }
 
 /* Search box (vendors, TPC codes) */
 #content .vendor-search-form { margin: 0 0 20px; }

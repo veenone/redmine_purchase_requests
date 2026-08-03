@@ -1,0 +1,61 @@
+<%#
+  Shared dashboard filter bar for CAPEX / OPEX / Purchase Requests / TPC dashboards.
+  Path-agnostic: submits to request.path via GET and builds facet-removal links
+  from request.query_parameters, so it works on every dashboard route.
+
+  Locals:
+    year_mode            - :fixed (fixed 2020..2030 range, year always set) or :list (nullable + "All Years")
+    selected_year        - currently selected year value
+    available_years      - array of years to offer
+    available_tpc_codes  - relation/array of TpcCode for the dropdown (responds to display_name/tpc_number/id)
+    selected_tpc_code_id - currently selected TPC id (string or nil)
+%>
+<%
+  qp = request.query_parameters
+  strip = ->(key) {
+    remaining = qp.except(key.to_s)
+    remaining.empty? ? request.path : "#{request.path}?#{remaining.to_query}"
+  }
+  year_active = (year_mode == :list && selected_year.present?)
+  tpc_active  = selected_tpc_code_id.present?
+  selected_tpc = tpc_active ? available_tpc_codes.detect { |t| t.id.to_s == selected_tpc_code_id.to_s } : nil
+  any_active  = year_active || tpc_active
+%>
+<%= form_tag request.path, method: :get, class: 'pr-filters-form' do %>
+  <fieldset class="pr-filters">
+    <legend>Filters</legend>
+    <div class="filter-row">
+      <label for="df_year">Year</label>
+      <% if year_mode == :list %>
+        <%= select_tag 'year',
+                       options_for_select([['All Years', '']] + available_years.map { |y| [y.to_s, y.to_s] }, selected_year),
+                       id: 'df_year' %>
+      <% else %>
+        <%= select_tag 'year',
+                       options_for_select(available_years.map { |y| [y, y] }, selected_year),
+                       id: 'df_year' %>
+      <% end %>
+
+      <label for="df_tpc">TPC</label>
+      <%= select_tag 'tpc_code_id',
+                     options_for_select([['All TPCs', '']] + available_tpc_codes.map { |t| [truncate(t.display_name, length: 60), t.id] }, selected_tpc_code_id),
+                     id: 'df_tpc' %>
+
+      <%= submit_tag 'Apply', class: 'pr-button pr-button-primary', name: nil %>
+      <% if any_active %>
+        <%= link_to 'Clear', request.path, class: 'pr-button pr-button-secondary' %>
+      <% end %>
+    </div>
+
+    <% if any_active %>
+      <div class="pr-filter-chips">
+        <% if year_active %>
+          <span class="pr-badge pr-badge--accent">Year: <%= selected_year %><%= link_to '×', strip.call('year'), class: 'pr-chip-remove', title: 'Remove year filter' %></span>
+        <% end %>
+        <% if tpc_active %>
+          <span class="pr-badge pr-badge--accent" title="<%= selected_tpc&.display_name %>">TPC: <%= selected_tpc&.tpc_number || selected_tpc_code_id %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: 'Remove TPC filter' %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </fieldset>
+<% end %>

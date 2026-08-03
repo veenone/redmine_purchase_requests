@@ -27,32 +27,13 @@
 
 <h2><%= @project ? "#{@project.name} - TPC Codes Dashboard" : "TPC Codes Dashboard" %></h2>
 
-<%# Year filter %>
-<% dashboard_path = @project ? dashboard_project_tpc_codes_path(@project) : tpc_codes_dashboard_path %>
-<fieldset class="pr-filters">
-  <legend>Filter</legend>
-  <%= form_tag dashboard_path, method: :get, style: 'margin:0;' do %>
-    <div class="filter-row">
-      <label for="year_filter">Filter by Year:</label>
-      <%= select_tag :year,
-                     options_for_select([['All Years', '']] + @available_years.map { |y| [y.to_s, y.to_s] }, @selected_year),
-                     id: 'year_filter',
-                     onchange: 'this.form.submit();' %>
-      <label for="tpc_filter">Filter by TPC:</label>
-      <%= select_tag 'tpc_code_id',
-                     options_for_select([['All TPCs', '']] + @available_tpc_codes.map { |t| [t.display_name, t.id] }, @selected_tpc_code_id),
-                     include_blank: false,
-                     id: 'tpc_filter',
-                     onchange: 'this.form.submit()' %>
-      <% if @selected_year.present? %>
-        <span class="no-data">Showing data for <%= @selected_year %></span>
-      <% end %>
-      <% if @selected_year.present? || @selected_tpc_code_id.present? %>
-        <%= link_to 'Clear', dashboard_path, class: 'pr-button pr-button-cancel small' %>
-      <% end %>
-    </div>
-  <% end %>
-</fieldset>
+<%# Dashboard filters (shared partial) %>
+<%= render 'shared/dashboard_filters',
+      year_mode: :list,
+      selected_year: @selected_year,
+      available_years: @available_years,
+      available_tpc_codes: @available_tpc_codes,
+      selected_tpc_code_id: @selected_tpc_code_id %>
 
 <%# Summary stat tiles %>
 <div class="summary-stats">
