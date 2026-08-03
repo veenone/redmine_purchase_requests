@@ -50,6 +50,45 @@
           <%= l(:label_last_updated) %>: <%= format_time(@purchase_request.updated_at) %>
         </span>
       </div>
+      <%# C2 summary strip — always visible, outside tabs %>
+      <div class="pr-meta pr-header-summary">
+        <span class="meta-item">
+          <span class="label"><%= l(:field_estimated_price) %>:</span>
+          <span class="value">
+            <% if @purchase_request.estimated_price.present? %>
+              <%= @purchase_request.formatted_price %>
+              <% if @purchase_request.currency != Setting.plugin_redmine_purchase_requests['default_currency'] %>
+                <span class="pr-badge pr-badge--neutral"><%= @purchase_request.currency %></span>
+              <% end %>
+            <% else %>
+              &mdash;
+            <% end %>
+          </span>
+        </span>
+        <span class="meta-item">
+          <span class="label"><%= l(:label_budget_type) %>:</span>
+          <span class="value">
+            <% if @purchase_request.capex.present? %>
+              CAPEX: <%= link_to @purchase_request.capex.display_name,
+                                 project_capex_path(@project, @purchase_request.capex),
+                                 class: 'capex-link' %>
+            <% elsif @purchase_request.opex.present? %>
+              OPEX: <%= link_to @purchase_request.opex.display_name,
+                                project_opex_path(@project, @purchase_request.opex),
+                                class: 'opex-link' %>
+            <% else %>
+              No budget
+            <% end %>
+          </span>
+        </span>
+        <% tpc_summary = @purchase_request.tpc_code_display %>
+        <% if tpc_summary.present? %>
+          <span class="meta-item">
+            <span class="label"><%= l(:label_tpc_code) %>:</span>
+            <span class="value pr-badge pr-badge--violet"><%= tpc_summary %></span>
+          </span>
+        <% end %>
+      </div>
     </div>
   </div>
 
