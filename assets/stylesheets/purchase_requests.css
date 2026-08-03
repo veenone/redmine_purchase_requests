@@ -1891,7 +1891,42 @@
 }
 
 /* ---------------------------------------------------------------------------
-   21. Responsive
+   21. Settings partials — shared selectors (consolidated from inline <style>)
+   ------------------------------------------------------------------------- */
+#content .pr-settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--pr-border);
+}
+#content .pr-settings-header h3 {
+  margin: 0;
+  color: var(--pr-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+#content .pr-settings-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--pr-ink-muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+#content .pr-capex-example {
+  display: inline-block;
+  padding: 5px 10px;
+  background: var(--pr-success-soft);
+  border-left: 2px solid var(--pr-success);
+  border-radius: var(--pr-radius-sm);
+  color: var(--pr-success-ink);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------------
+   22. Responsive
    ------------------------------------------------------------------------- */
 @media (max-width: 900px) {
   #content .pr-grid,
