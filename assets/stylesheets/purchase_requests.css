@@ -867,7 +867,10 @@
 #content .pr-filters input:focus,
 #content .filter-row select:focus,
 #content .filter-row input:focus {
-  outline: none;
+  /* Transparent outline stays invisible normally but is forced visible in
+     Windows High Contrast / forced-colors mode, where box-shadow is stripped. */
+  outline: 2px solid transparent;
+  outline-offset: 1px;
   border-color: var(--pr-accent);
   box-shadow: 0 0 0 3px var(--pr-accent-soft);
 }
