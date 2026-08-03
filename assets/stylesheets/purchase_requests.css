@@ -1926,7 +1926,16 @@
 }
 
 /* ---------------------------------------------------------------------------
-   22. Responsive
+   22. Accessibility utilities
+   ------------------------------------------------------------------------- */
+/* Screen-reader-only: visually hidden but announced by assistive technology */
+#content .sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   23. Responsive
    ------------------------------------------------------------------------- */
 @media (max-width: 900px) {
   #content .pr-grid,

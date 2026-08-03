@@ -71,7 +71,7 @@
               <span class="icon icon-magnifier">View Report</span>
             <% end %>
 
-            <%= link_to "#{report_url}?#{report_export_params(:pdf)}", class: 'pr-button pr-button-secondary small', target: '_blank' do %>
+            <%= link_to "#{report_url}?#{report_export_params(:pdf)}", class: 'pr-button pr-button-secondary small', target: '_blank', rel: 'noopener noreferrer' do %>
               <span class="icon icon-pdf">PDF</span>
             <% end %>
 

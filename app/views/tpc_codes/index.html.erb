@@ -66,20 +66,21 @@
 <% if @tpc_codes.any? %>
   <div class="autoscroll">
     <table class="pr-table">
+      <caption class="sr-only">TPC codes</caption>
       <thead>
         <tr>
-          <th>TPC Number</th>
-          <th>TPC Name</th>
-          <th>Owner Name</th>
-          <th>Department</th>
-          <th>Email</th>
-          <th>Description</th>
+          <th scope="col">TPC Number</th>
+          <th scope="col">TPC Name</th>
+          <th scope="col">Owner Name</th>
+          <th scope="col">Department</th>
+          <th scope="col">Email</th>
+          <th scope="col">Description</th>
           <% if @project %>
-            <th>Scope</th>
+            <th scope="col">Scope</th>
           <% end %>
-          <th>Status</th>
-          <th>Linked CAPEX</th>
-          <th class="buttons">Actions</th>
+          <th scope="col">Status</th>
+          <th scope="col">Linked CAPEX</th>
+          <th scope="col" class="buttons">Actions</th>
         </tr>
       </thead>
       <tbody>

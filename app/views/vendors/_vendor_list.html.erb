@@ -33,7 +33,7 @@
           <td><%= vendor.contact_person %></td>
           <td>
             <% if vendor.website.present? %>
-              <%= link_to vendor.website, vendor.website, target: '_blank' %>
+              <%= link_to vendor.website, vendor.website, target: '_blank', rel: 'noopener noreferrer' %>
             <% end %>
           </td>
           <td>

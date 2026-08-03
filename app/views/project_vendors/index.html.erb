@@ -97,7 +97,7 @@
             </td>
             <td class="website">
               <% if vendor.website.present? %>
-                <%= link_to vendor.website, vendor.website, target: '_blank', class: 'external' %>
+                <%= link_to vendor.website, vendor.website, target: '_blank', rel: 'noopener noreferrer', class: 'external' %>
               <% end %>
             </td>
             <td class="scope">

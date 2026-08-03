@@ -5,7 +5,7 @@
     <div class="contextual">
       <%= link_to '/opex_categories',
           class: 'pr-button pr-button-secondary pr-button-icon',
-          target: '_blank',
+          target: '_blank', rel: 'noopener noreferrer',
           title: 'Manage OPEX Categories' do %>
         <span class="icon icon-edit"><%= l(:label_manage_opex_categories, default: 'Manage OPEX Categories') %></span>
       <% end %>
@@ -60,7 +60,7 @@
                   <p><%= l(:text_no_opex_categories, default: 'No OPEX categories have been created yet.') %></p>
                   <%= link_to '/opex_categories',
                       class: 'pr-button pr-button-primary pr-button-icon',
-                      target: '_blank' do %>
+                      target: '_blank', rel: 'noopener noreferrer' do %>
                     <span class="icon icon-add"></span> Create First Category
                   <% end %>
                 </div>
@@ -144,13 +144,13 @@
       <div class="pr-form-actions left-aligned" style="border-top: none; padding-top: 0; margin-top: 0;">
         <%= link_to '/opex_categories',
             class: 'pr-button pr-button-primary pr-button-icon',
-            target: '_blank' do %>
+            target: '_blank', rel: 'noopener noreferrer' do %>
           <span class="icon icon-edit">Manage All Categories</span>
         <% end %>
 
         <%= link_to '/opex_categories/new',
             class: 'pr-button pr-button-secondary pr-button-icon',
-            target: '_blank' do %>
+            target: '_blank', rel: 'noopener noreferrer' do %>
           <span class="icon icon-add">Add New Category</span>
         <% end %>
       </div>

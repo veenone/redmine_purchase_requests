@@ -137,7 +137,7 @@
               <% if @purchase_request.product_url.present? %>
                 <div class="grid-row">
                   <span class="label"><%= l(:field_product_url) %>:</span>
-                  <span class="value"><%= link_to @purchase_request.product_url, @purchase_request.product_url, target: "_blank", class: "external" %></span>
+                  <span class="value"><%= link_to @purchase_request.product_url, @purchase_request.product_url, target: "_blank", rel: "noopener noreferrer", class: "external" %></span>
                 </div>
               <% end %>
 

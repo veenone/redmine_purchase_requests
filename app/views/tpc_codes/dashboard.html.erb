@@ -97,14 +97,15 @@
     <div class="dashboard-card-body">
       <% if @tpc_utilization.any? %>
         <table class="dashboard-table">
+          <caption class="sr-only">Top TPC codes by total cost</caption>
           <thead>
             <tr>
-              <th>TPC Code</th>
-              <th>TPC Name</th>
-              <th>Department</th>
-              <th>Owner</th>
-              <th>Total Cost</th>
-              <th>Requests</th>
+              <th scope="col">TPC Code</th>
+              <th scope="col">TPC Name</th>
+              <th scope="col">Department</th>
+              <th scope="col">Owner</th>
+              <th scope="col">Total Cost</th>
+              <th scope="col">Requests</th>
             </tr>
           </thead>
           <tbody>

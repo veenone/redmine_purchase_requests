@@ -77,11 +77,15 @@
         </div>
 
         <table class="dashboard-table">
-          <tr>
-            <th><%= l(:field_status) %></th>
-            <th><%= l(:label_count) %></th>
-            <th><%= l(:label_percentage) %></th>
-          </tr>
+          <caption class="sr-only">Purchase requests by status</caption>
+          <thead>
+            <tr>
+              <th scope="col"><%= l(:field_status) %></th>
+              <th scope="col"><%= l(:label_count) %></th>
+              <th scope="col"><%= l(:label_percentage) %></th>
+            </tr>
+          </thead>
+          <tbody>
           <% @status_distribution.each do |status| %>
             <tr>
               <td>
@@ -92,6 +96,7 @@
               <td><%= status[:percentage] %>%</td>
             </tr>
           <% end %>
+          </tbody>
         </table>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -129,11 +134,15 @@
         </div>
 
         <table class="dashboard-table">
-          <tr>
-            <th><%= l(:field_priority) %></th>
-            <th><%= l(:label_count) %></th>
-            <th><%= l(:label_percentage) %></th>
-          </tr>
+          <caption class="sr-only">Purchase requests by priority</caption>
+          <thead>
+            <tr>
+              <th scope="col"><%= l(:field_priority) %></th>
+              <th scope="col"><%= l(:label_count) %></th>
+              <th scope="col"><%= l(:label_percentage) %></th>
+            </tr>
+          </thead>
+          <tbody>
           <tr>
             <td><span class="pr-swatch" style="background-color: #dc3a3a;"></span><%= l(:label_priority_urgent) %></td>
             <td><%= @priority_distribution[:urgent] %></td>
@@ -154,6 +163,7 @@
             <td><%= @priority_distribution[:low] %></td>
             <td><%= @priority_percentages[:low] %>%</td>
           </tr>
+          </tbody>
         </table>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -168,33 +178,35 @@
     </div>
     <div class="dashboard-card-body">
       <table class="dashboard-table">
+        <caption class="sr-only">Financial overview</caption>
         <%
           default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
           default_symbol = currency_symbol(default_currency)
         %>
+        <tbody>
         <tr>
-          <th><%= l(:label_total_estimated_cost) %></th>
+          <th scope="row"><%= l(:label_total_estimated_cost) %></th>
           <td class="stat-currency">
             <%= default_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
             <span class="currency-code"><%= default_currency %></span>
           </td>
         </tr>
         <tr>
-          <th><%= l(:label_pending_cost) %></th>
+          <th scope="row"><%= l(:label_pending_cost) %></th>
           <td class="stat-currency">
             <%= default_symbol %><%= number_with_precision(@pending_cost, precision: 2, delimiter: ',') %>
             <span class="currency-code"><%= default_currency %></span>
           </td>
         </tr>
         <tr>
-          <th><%= l(:label_approved_cost) %></th>
+          <th scope="row"><%= l(:label_approved_cost) %></th>
           <td class="stat-currency">
             <%= default_symbol %><%= number_with_precision(@approved_cost, precision: 2, delimiter: ',') %>
             <span class="currency-code"><%= default_currency %></span>
           </td>
         </tr>
         <tr>
-          <th><%= l(:label_average_request_amount) %></th>
+          <th scope="row"><%= l(:label_average_request_amount) %></th>
           <td class="stat-currency">
             <% avg = @total_requests > 0 ? @total_estimated_cost / @total_requests : 0 %>
             <%= default_symbol %><%= number_with_precision(avg, precision: 2, delimiter: ',') %>
@@ -208,13 +220,14 @@
           </tr>
           <% @currency_distribution.each do |currency, amount| %>
             <tr>
-              <th><%= currency %></th>
+              <th scope="row"><%= currency %></th>
               <td class="stat-currency">
                 <%= currency_symbol(currency) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
               </td>
             </tr>
           <% end %>
         <% end %>
+        </tbody>
       </table>
     </div>
   </div>
@@ -227,11 +240,15 @@
     <div class="dashboard-card-body">
       <% if @top_requesters.present? && @top_requesters.any? %>
         <table class="dashboard-table">
-          <tr>
-            <th><%= l(:field_user) %></th>
-            <th><%= l(:label_requests) %></th>
-            <th><%= l(:label_total_cost) %></th>
-          </tr>
+          <caption class="sr-only">Top requesters</caption>
+          <thead>
+            <tr>
+              <th scope="col"><%= l(:field_user) %></th>
+              <th scope="col"><%= l(:label_requests) %></th>
+              <th scope="col"><%= l(:label_total_cost) %></th>
+            </tr>
+          </thead>
+          <tbody>
           <%
             requester_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
             requester_symbol = currency_symbol(requester_currency)
@@ -243,6 +260,7 @@
               <td class="stat-currency"><%= requester_symbol %><%= number_with_precision(user.total_cost, precision: 2, delimiter: ',') %></td>
             </tr>
           <% end %>
+          </tbody>
         </table>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -260,11 +278,15 @@
         <div class="chart-bar-container" id="monthly-trends-chart"></div>
 
         <table class="dashboard-table">
-          <tr>
-            <th><%= l(:label_month) %></th>
-            <th><%= l(:label_requests) %></th>
-            <th><%= l(:label_amount) %></th>
-          </tr>
+          <caption class="sr-only">Monthly purchase request trends</caption>
+          <thead>
+            <tr>
+              <th scope="col"><%= l(:label_month) %></th>
+              <th scope="col"><%= l(:label_requests) %></th>
+              <th scope="col"><%= l(:label_amount) %></th>
+            </tr>
+          </thead>
+          <tbody>
           <% @monthly_trends.each do |trend| %>
             <tr>
               <td><%= trend[:month] %></td>
@@ -274,6 +296,7 @@
               </td>
             </tr>
           <% end %>
+          </tbody>
         </table>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -289,12 +312,16 @@
     <div class="dashboard-card-body">
       <% if @recent_requests.present? && @recent_requests.any? %>
         <table class="dashboard-table">
-          <tr>
-            <th>#</th>
-            <th><%= l(:field_title) %></th>
-            <th><%= l(:field_status) %></th>
-            <th><%= l(:field_created_on) %></th>
-          </tr>
+          <caption class="sr-only">Recent purchase requests</caption>
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col"><%= l(:field_title) %></th>
+              <th scope="col"><%= l(:field_status) %></th>
+              <th scope="col"><%= l(:field_created_on) %></th>
+            </tr>
+          </thead>
+          <tbody>
           <% @recent_requests.each do |request| %>
             <tr>
               <td><%= link_to "##{request.id}", project_purchase_request_path(@project, request), class: 'pr-id-link' %></td>
@@ -307,6 +334,7 @@
               <td><%= format_time(request.created_at) %></td>
             </tr>
           <% end %>
+          </tbody>
         </table>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -322,11 +350,15 @@
     <div class="dashboard-card-body">
       <% if @top_vendors.present? && @top_vendors.any? %>
         <table class="dashboard-table">
-          <tr>
-            <th><%= l(:field_vendor) %></th>
-            <th><%= l(:label_requests) %></th>
-            <th><%= l(:label_total_cost) %></th>
-          </tr>
+          <caption class="sr-only">Top vendors by purchase requests</caption>
+          <thead>
+            <tr>
+              <th scope="col"><%= l(:field_vendor) %></th>
+              <th scope="col"><%= l(:label_requests) %></th>
+              <th scope="col"><%= l(:label_total_cost) %></th>
+            </tr>
+          </thead>
+          <tbody>
           <%
             vendor_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
             vendor_symbol = currency_symbol(vendor_currency)
@@ -338,6 +370,7 @@
               <td class="stat-currency"><%= vendor_symbol %><%= number_with_precision(vendor[:total_cost], precision: 2, delimiter: ',') %></td>
             </tr>
           <% end %>
+          </tbody>
         </table>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -353,11 +386,15 @@
     <div class="dashboard-card-body">
       <% if @tpc_distribution.present? && @tpc_distribution.any? %>
         <table class="dashboard-table">
-          <tr>
-            <th>TPC Code</th>
-            <th>Requests</th>
-            <th>Total Cost</th>
-          </tr>
+          <caption class="sr-only">Budget distribution by TPC code</caption>
+          <thead>
+            <tr>
+              <th scope="col">TPC Code</th>
+              <th scope="col">Requests</th>
+              <th scope="col">Total Cost</th>
+            </tr>
+          </thead>
+          <tbody>
           <%
             tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
             tpc_symbol = currency_symbol(tpc_currency)
@@ -369,6 +406,7 @@
               <td class="stat-currency"><%= tpc_symbol %><%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %></td>
             </tr>
           <% end %>
+          </tbody>
         </table>
 
         <div class="chart-bar-container" id="tpc-distribution-chart"></div>
@@ -399,17 +437,21 @@
     <div class="dashboard-card-body">
       <% if @converted_currency_distribution && @converted_currency_distribution.any? %>
         <table class="dashboard-table">
-          <tr>
-            <th><%= l(:field_currency) %></th>
-            <th><%= l(:label_original_amount) %></th>
-            <th><%= l(:label_equivalent_in_default) %></th>
-          </tr>
+          <caption class="sr-only">Currency breakdown with conversion</caption>
+          <thead>
+            <tr>
+              <th scope="col"><%= l(:field_currency) %></th>
+              <th scope="col"><%= l(:label_original_amount) %></th>
+              <th scope="col"><%= l(:label_equivalent_in_default) %></th>
+            </tr>
+          </thead>
+          <tbody>
           <%
             default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
           %>
           <% @converted_currency_distribution.each do |currency, data| %>
             <tr>
-              <th><%= currency %></th>
+              <th scope="row"><%= currency %></th>
               <td class="stat-currency">
                 <%= currency_symbol(currency) %><%= number_with_precision(data[:original], precision: 2, delimiter: ',') %>
               </td>
@@ -419,12 +461,13 @@
             </tr>
           <% end %>
           <tr class="total-row">
-            <th><%= l(:label_total_in) %> <%= default_currency %></th>
+            <th scope="row"><%= l(:label_total_in) %> <%= default_currency %></th>
             <td></td>
             <td class="stat-currency total-value">
               <%= currency_symbol(default_currency) %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
             </td>
           </tr>
+          </tbody>
         </table>
 
         <%
@@ -436,16 +479,21 @@
           </div>
           <p class="info"><%= l(:text_exchange_rates_info) %></p>
           <table class="dashboard-table">
-            <tr>
-              <th><%= l(:field_currency) %></th>
-              <th><%= l(:label_rate_to) %> <%= default_currency %></th>
-            </tr>
+            <caption class="sr-only">Exchange rates</caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= l(:field_currency) %></th>
+                <th scope="col"><%= l(:label_rate_to) %> <%= default_currency %></th>
+              </tr>
+            </thead>
+            <tbody>
             <% exchange_rates.each do |currency, rate| %>
               <tr>
                 <td><%= currency %></td>
                 <td><%= number_with_precision(rate.to_f, precision: 6) %></td>
               </tr>
             <% end %>
+            </tbody>
           </table>
         <% end %>
       <% else %>

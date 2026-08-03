@@ -92,7 +92,7 @@
             <% if @vendor.website.present? %>
             <tr>
               <td class="vendor-label"><%= l(:field_website) %></td>
-              <td class="vendor-value"><%= link_to @vendor.website, @vendor.website, target: '_blank' %></td>
+              <td class="vendor-value"><%= link_to @vendor.website, @vendor.website, target: '_blank', rel: 'noopener noreferrer' %></td>
             </tr>
             <% end %>
             <% if @vendor.contact_person.present? %>
