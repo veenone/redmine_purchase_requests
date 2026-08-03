@@ -89,6 +89,24 @@
   /* Typography */
   --pr-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --pr-font-mono: "SFMono-Regular", "JetBrains Mono", "Cascadia Mono", Consolas, "Liberation Mono", Menlo, monospace;
+
+  /* Type scale */
+  --pr-text-xs: 11px;
+  --pr-text-sm: 12px;
+  --pr-text-base: 13px;
+  --pr-text-md: 14px;
+  --pr-text-lg: 16px;
+  --pr-text-xl: 21px;
+  --pr-text-2xl: 23px;
+  --pr-lh-tight: 1.2;
+  --pr-lh-normal: 1.5;
+  /* Spacing scale */
+  --pr-space-1: 4px;
+  --pr-space-2: 8px;
+  --pr-space-3: 12px;
+  --pr-space-4: 16px;
+  --pr-space-5: 22px;
+  --pr-space-6: 32px;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1845,7 +1863,32 @@
   font-size: 15px;
   font-weight: 700;
 }
-#content .autoscroll { border-radius: var(--pr-radius); }
+#content .autoscroll {
+  border-radius: var(--pr-radius);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#content .autoscroll > table,
+#content .autoscroll > .pr-table { min-width: 640px; }
+
+/* B9 — Table polish */
+#content .pr-table tbody tr:nth-child(even) { background: var(--pr-surface-subtle); }
+
+#content .autoscroll table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--pr-surface-subtle);
+}
+
+#content .pr-card--interactive,
+#content .dashboard-card--interactive {
+  transition: box-shadow .15s ease;
+}
+#content .pr-card--interactive:hover,
+#content .dashboard-card--interactive:hover {
+  box-shadow: var(--pr-shadow-sm);
+}
 
 /* ---------------------------------------------------------------------------
    21. Responsive
