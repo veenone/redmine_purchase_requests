@@ -32,7 +32,7 @@
 
     <div class="form-row">
       <%= f.label :color, l(:label_color) %>
-      <%= f.color_field :color, value: @status.color || '#777777', class: 'form-control' %>
+      <%= f.color_field :color, value: @status.display_color, class: 'form-control' %>
       <em class="info">Choose a color to visually identify this status in lists and badges.</em>
     </div>
   </div>

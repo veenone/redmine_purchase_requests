@@ -43,8 +43,8 @@
               </td>
               <td>
                 <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="display: inline-block; width: 28px; height: 28px; border-radius: var(--pr-radius-sm); border: 2px solid var(--pr-surface); box-shadow: 0 0 0 1px var(--pr-border), var(--pr-shadow-xs); background-color: <%= status.color.presence || '#777777' %>;"></span>
-                  <span class="pr-mono" style="background: var(--pr-surface-subtle); padding: 3px 7px; border-radius: var(--pr-radius-sm); font-size: 11px; color: var(--pr-ink-muted); border: 1px solid var(--pr-border);"><%= status.color.presence || '#777777' %></span>
+                  <span style="display: inline-block; width: 28px; height: 28px; border-radius: var(--pr-radius-sm); border: 2px solid var(--pr-surface); box-shadow: 0 0 0 1px var(--pr-border), var(--pr-shadow-xs); background-color: <%= status.display_color %>;"></span>
+                  <span class="pr-mono" style="background: var(--pr-surface-subtle); padding: 3px 7px; border-radius: var(--pr-radius-sm); font-size: 11px; color: var(--pr-ink-muted); border: 1px solid var(--pr-border);"><%= status.display_color %></span>
                 </div>
               </td>
               <td>

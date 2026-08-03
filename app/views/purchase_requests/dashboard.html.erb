@@ -69,7 +69,7 @@
           <div class="chart-pie-legend">
             <% @status_distribution.each do |status| %>
               <div class="legend-item">
-                <div class="legend-color" style="background-color: <%= status[:color] || '#777777' %>;"></div>
+                <div class="legend-color" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></div>
                 <span><%= status[:name] %> (<%= status[:count] %> - <%= status[:percentage] %>%)</span>
               </div>
             <% end %>
@@ -89,7 +89,7 @@
           <% @status_distribution.each do |status| %>
             <tr>
               <td>
-                <span class="pr-swatch" style="background-color: <%= status[:color] || '#777777' %>;"></span>
+                <span class="pr-swatch" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></span>
                 <%= status[:name] %>
               </td>
               <td><%= status[:count] %></td>
@@ -327,7 +327,7 @@
               <td><%= link_to "##{request.id}", project_purchase_request_path(@project, request), class: 'pr-id-link' %></td>
               <td><%= link_to truncate(request.title, length: 30), project_purchase_request_path(@project, request), class: 'pr-title-link' %></td>
               <td>
-                <span class="status-badge" style="background-color: <%= request.status.color.presence || '#777777' %>">
+                <span class="status-badge" style="background-color: <%= request.status.display_color %>; color: <%= readable_text_color(request.status.display_color) %>">
                   <%= request.status.name %>
                 </span>
               </td>
@@ -521,7 +521,7 @@ document.addEventListener('DOMContentLoaded', function() {
       {
         label: '<%= j(status[:name]) %>',
         value: <%= status[:count] %>,
-        color: '<%= status[:color] || '#777777' %>'
+        color: '<%= status[:color].presence || '#6b7280' %>'
       },
     <% end %>
   ]);

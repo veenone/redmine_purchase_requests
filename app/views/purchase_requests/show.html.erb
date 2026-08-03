@@ -40,7 +40,7 @@
     </div>
     <div class="pr-form-status">
       <div class="pr-status-info">
-        <span class="status-badge" style="background-color: <%= @purchase_request.status.color.presence || '#777777' %>">
+        <span class="status-badge" style="background-color: <%= @purchase_request.status.display_color %>; color: <%= readable_text_color(@purchase_request.status.display_color) %>">
           <%= @purchase_request.status.name %>
         </span>
         <span class="priority-badge <%= @purchase_request.priority %>">

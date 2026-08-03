@@ -90,7 +90,7 @@
             </td>
             <td class="status">
               <span class="status-badge"
-                    style="background-color: <%= purchase_request.status.color.presence || '#777777' %>">
+                    style="background-color: <%= purchase_request.status.display_color %>; color: <%= readable_text_color(purchase_request.status.display_color) %>">
                 <%= purchase_request.status.name %>
               </span>
             </td>
@@ -121,8 +121,10 @@
                             project_capex_path(@project, purchase_request.capex),
                             class: 'budget-link capex-link',
                             title: "CAPEX - #{purchase_request.capex.tpc_code} - #{purchase_request.capex.year}" %>
-                  <div class="budget-utilization-badge <%= 'over-budget' if purchase_request.capex.utilization_percentage > 100 %>">
-                    <%= purchase_request.capex.utilization_percentage.round(1) %>%
+                  <% capex_over = purchase_request.capex.utilization_percentage > 100 %>
+                  <div class="budget-utilization-badge <%= 'over-budget' if capex_over %>"
+                       <%= capex_over ? 'title="Over budget" aria-label="Over budget: #{purchase_request.capex.utilization_percentage.round(1)}%"'.html_safe : '' %>>
+                    <% if capex_over %><span aria-hidden="true">&#9888; </span><% end %><%= purchase_request.capex.utilization_percentage.round(1) %>%
                   </div>
                 </div>
               <% elsif purchase_request.opex.present? %>
@@ -131,8 +133,10 @@
                             project_opex_path(@project, purchase_request.opex),
                             class: 'budget-link opex-link',
                             title: "OPEX - #{purchase_request.opex.opex_code} - #{purchase_request.opex.year}" %>
-                  <div class="budget-utilization-badge <%= 'over-budget' if purchase_request.opex.utilization_percentage > 100 %>">
-                    <%= purchase_request.opex.utilization_percentage.round(1) %>%
+                  <% opex_over = purchase_request.opex.utilization_percentage > 100 %>
+                  <div class="budget-utilization-badge <%= 'over-budget' if opex_over %>"
+                       <%= opex_over ? 'title="Over budget" aria-label="Over budget: #{purchase_request.opex.utilization_percentage.round(1)}%"'.html_safe : '' %>>
+                    <% if opex_over %><span aria-hidden="true">&#9888; </span><% end %><%= purchase_request.opex.utilization_percentage.round(1) %>%
                   </div>
                 </div>
               <% else %>

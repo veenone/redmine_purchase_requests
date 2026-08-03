@@ -640,7 +640,8 @@
 #content .pr-badge--info    { background: var(--pr-info-soft);    color: var(--pr-info-ink); }
 #content .pr-badge--violet  { background: var(--pr-violet-soft);  color: var(--pr-violet-ink); }
 
-/* Status badge — carries its own colour via inline style="background-color:…" */
+/* Status badge — carries its own colour via inline style="background-color:…; color:…"
+   Foreground color is set per-badge via readable_text_color() for WCAG contrast. */
 #content .status-badge,
 #content .issue-status-badge,
 #content .subtask-status-badge {
@@ -648,13 +649,11 @@
   padding: 3px 10px;
   border-radius: var(--pr-radius-pill);
   background: var(--pr-ink-faint);
-  color: var(--pr-ink-invert);
   font-size: 11px;
   font-weight: 600;
   line-height: 1.5;
   text-align: center;
   white-space: nowrap;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, .18);
 }
 
 /* Priority badge */

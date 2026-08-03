@@ -213,7 +213,7 @@
                   <%= link_to truncate(pr.title, length: 50), project_purchase_request_path(@project, pr), class: 'pr-title-link' %>
                 </td>
                 <td>
-                  <span class="status-badge" style="background-color: <%= pr.status.color.presence || '#777777' %>">
+                  <span class="status-badge" style="background-color: <%= pr.status.display_color %>; color: <%= readable_text_color(pr.status.display_color) %>">
                     <%= pr.status.name %>
                   </span>
                 </td>

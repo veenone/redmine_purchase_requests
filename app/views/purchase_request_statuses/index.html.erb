@@ -43,15 +43,15 @@
         <% @statuses.each do |status| %>
           <tr>
             <td>
-              <span class="status-badge" style="background-color: <%= status.color.presence || '#777777' %>">
+              <span class="status-badge" style="background-color: <%= status.display_color %>; color: <%= readable_text_color(status.display_color) %>">
                 <%= status.name %>
               </span>
             </td>
             <td><%= status.position %></td>
             <td><%= checked_image status.is_closed? if status.respond_to?(:is_closed?) %></td>
             <td>
-              <span style="display: inline-block; background-color: <%= status.color.presence || '#777777' %>; width: 22px; height: 22px; vertical-align: middle; border-radius: var(--pr-radius-sm); border: 1px solid var(--pr-border-strong);"></span>
-              <code style="font-family: var(--pr-font-mono); font-size: 12px; color: var(--pr-ink-muted);"><%= status.color.presence || '#777777' %></code>
+              <span style="display: inline-block; background-color: <%= status.display_color %>; width: 22px; height: 22px; vertical-align: middle; border-radius: var(--pr-radius-sm); border: 1px solid var(--pr-border-strong);"></span>
+              <code style="font-family: var(--pr-font-mono); font-size: 12px; color: var(--pr-ink-muted);"><%= status.display_color %></code>
             </td>
             <td><%= checked_image status.is_default? if status.respond_to?(:is_default?) %></td>
             <td class="buttons">

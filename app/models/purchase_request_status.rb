@@ -12,6 +12,12 @@ class PurchaseRequestStatus < ActiveRecord::Base
   def self.sorted
     order(:position)
   end
+
+  # Returns the display color, falling back to a neutral slate default.
+  # Use this instead of scattering `color.presence || '#777777'` in views.
+  def display_color
+    color.presence || '#6b7280'
+  end
   
   # Returns the default status for new purchase requests
   def self.default

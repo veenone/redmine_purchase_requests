@@ -189,4 +189,37 @@ module PurchaseRequestsHelper
   def get_currency_symbol(currency_code)
     currency_symbol(currency_code)
   end
+
+  # Returns a legible foreground color ('#111827' or '#ffffff') for any hex
+  # background using the WCAG relative-luminance formula.
+  # Handles 3-digit hex (#rgb → #rrggbb), 6-digit hex, nil/blank input.
+  # Returns dark text when luminance > 0.5 (light background), white otherwise.
+  def readable_text_color(hex)
+    return '#111827' if hex.blank?
+
+    hex = hex.to_s.strip.delete_prefix('#')
+
+    # Expand 3-digit shorthand to 6 digits
+    hex = hex.chars.map { |c| c * 2 }.join if hex.length == 3
+
+    return '#111827' unless hex.length == 6
+
+    r_int = hex[0, 2].to_i(16)
+    g_int = hex[2, 2].to_i(16)
+    b_int = hex[4, 2].to_i(16)
+
+    # sRGB linearisation per WCAG 2.1 §1.4.3
+    linearize = lambda do |c|
+      s = c / 255.0
+      s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055)**2.4
+    end
+
+    r = linearize.call(r_int)
+    g = linearize.call(g_int)
+    b = linearize.call(b_int)
+
+    luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    luminance > 0.5 ? '#111827' : '#ffffff'
+  end
 end
