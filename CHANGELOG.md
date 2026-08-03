@@ -5,6 +5,23 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-08-03
+
+### Added
+- **TPC Name field**: TPC codes now carry an optional descriptive title (`tpc_name`, max 150, nullable) distinct from the TPC number and the owner name. Surfaced across the TPC form, index, and show views; included in CSV/JSON import & export; added to the DOCX and HTML "Top TPC Codes" report tables; and woven into the dropdown labels (`display_name` / `tpc_number_with_description`) and the search scope. Migration `036_add_name_to_tpc_codes` (additive, no backfill).
+- **Filter by TPC number on every dashboard**: CAPEX, OPEX, Purchase Requests, and the TPC dashboard gained a TPC filter that combines with the existing year filter. On the budget dashboards it scopes all stats/charts; on the Purchase Requests dashboard it filters the request's direct `tpc_code_id`; on the TPC dashboard it narrows the entire dashboard to a single selected TPC.
+- **Shared dashboard filter bar** (`app/views/shared/_dashboard_filters.html.erb`): one path-agnostic partial used by all four dashboards, with removable active-filter chips for the year and TPC facets (each clearable independently).
+- **UI/UX review** (`docs/superpowers/specs/2026-08-02-uiux-review-findings.md`): a prioritized visual + UX/accessibility assessment of the `pr-` design system.
+
+### Changed
+- **Dashboard filters use an explicit Apply button** (plus Clear) instead of auto-submit-on-change, removing a keyboard trap and the scroll-jump on long dashboards. Consistent labels, legend, and focus styling across all four dashboards.
+- Filter `<select>`/`<input>` controls now receive the same focus ring as `.form-control`.
+
+### Fixed
+- **DOCX "Top TPC Codes by Cost" table was silently empty**: the DOCX helper read `data[:utilization]` while the controller stores `data[:tpc_utilization]`; corrected so the table renders.
+- **TPC dashboard usage-trend total** counted all TPC-linked requests even when a single TPC was selected; it now narrows to the selected TPC.
+- Filter focus ring stays visible under Windows High Contrast / forced-colors mode (transparent-outline fallback where box-shadow is stripped).
+
 ## [1.8.1] - 2026-05-25
 
 ### Fixed
