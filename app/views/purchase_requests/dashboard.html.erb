@@ -5,19 +5,6 @@
 
 <% html_title l(:label_purchase_request_dashboard) %>
 
-<%
-  # Currency symbols, available everywhere in this template
-  symbol_map = {
-    'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥', 'CAD' => 'C$',
-    'AUD' => 'A$', 'CHF' => 'CHF', 'CNY' => '¥', 'SEK' => 'kr', 'NZD' => 'NZ$',
-    'MXN' => 'Mex$', 'SGD' => 'S$', 'HKD' => 'HK$', 'IDR' => 'Rp', 'NOK' => 'kr',
-    'KRW' => '₩', 'TRY' => '₺', 'RUB' => '₽', 'INR' => '₹', 'BRL' => 'R$', 'ZAR' => 'R'
-  }
-
-  def local_currency_symbol(currency_code, symbol_map)
-    symbol_map[currency_code] || currency_code
-  end
-%>
 
 <h2><%= l(:label_purchase_request_dashboard) %></h2>
 
@@ -61,7 +48,7 @@
 
   <%
     summary_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    summary_symbol = local_currency_symbol(summary_currency, symbol_map)
+    summary_symbol = currency_symbol(summary_currency)
   %>
   <div class="stat-box pr-stat--violet">
     <div class="stat-number stat-currency"><%= summary_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
@@ -183,7 +170,7 @@
       <table class="dashboard-table">
         <%
           default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-          default_symbol = local_currency_symbol(default_currency, symbol_map)
+          default_symbol = currency_symbol(default_currency)
         %>
         <tr>
           <th><%= l(:label_total_estimated_cost) %></th>
@@ -223,7 +210,7 @@
             <tr>
               <th><%= currency %></th>
               <td class="stat-currency">
-                <%= local_currency_symbol(currency, symbol_map) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+                <%= currency_symbol(currency) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
               </td>
             </tr>
           <% end %>
@@ -247,7 +234,7 @@
           </tr>
           <%
             requester_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            requester_symbol = local_currency_symbol(requester_currency, symbol_map)
+            requester_symbol = currency_symbol(requester_currency)
           %>
           <% @top_requesters.each do |user| %>
             <tr>
@@ -283,7 +270,7 @@
               <td><%= trend[:month] %></td>
               <td><%= trend[:count] %></td>
               <td class="stat-currency">
-                <%= local_currency_symbol(default_currency, symbol_map) %><%= number_with_precision(trend[:amount], precision: 2, delimiter: ',') %>
+                <%= currency_symbol(default_currency) %><%= number_with_precision(trend[:amount], precision: 2, delimiter: ',') %>
               </td>
             </tr>
           <% end %>
@@ -342,7 +329,7 @@
           </tr>
           <%
             vendor_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            vendor_symbol = local_currency_symbol(vendor_currency, symbol_map)
+            vendor_symbol = currency_symbol(vendor_currency)
           %>
           <% @top_vendors.each do |vendor| %>
             <tr>
@@ -373,7 +360,7 @@
           </tr>
           <%
             tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            tpc_symbol = local_currency_symbol(tpc_currency, symbol_map)
+            tpc_symbol = currency_symbol(tpc_currency)
           %>
           <% @tpc_distribution.each do |tpc| %>
             <tr>
@@ -424,10 +411,10 @@
             <tr>
               <th><%= currency %></th>
               <td class="stat-currency">
-                <%= local_currency_symbol(currency, symbol_map) %><%= number_with_precision(data[:original], precision: 2, delimiter: ',') %>
+                <%= currency_symbol(currency) %><%= number_with_precision(data[:original], precision: 2, delimiter: ',') %>
               </td>
               <td class="stat-currency">
-                <%= local_currency_symbol(default_currency, symbol_map) %><%= number_with_precision(data[:converted], precision: 2, delimiter: ',') %>
+                <%= currency_symbol(default_currency) %><%= number_with_precision(data[:converted], precision: 2, delimiter: ',') %>
               </td>
             </tr>
           <% end %>
@@ -435,7 +422,7 @@
             <th><%= l(:label_total_in) %> <%= default_currency %></th>
             <td></td>
             <td class="stat-currency total-value">
-              <%= local_currency_symbol(default_currency, symbol_map) %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
+              <%= currency_symbol(default_currency) %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
             </td>
           </tr>
         </table>

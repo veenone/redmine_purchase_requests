@@ -967,15 +967,10 @@ document.addEventListener('DOMContentLoaded', function() {
     return symbol + numericAmount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
   }
 
-  // Get currency symbol helper
+  // Get currency symbol helper — map is rendered server-side from CURRENCY_SYMBOLS constant
+  var _currencySymbols = <%= PurchaseRequestsHelper::CURRENCY_SYMBOLS.to_json.html_safe %>;
   function getCurrencySymbol(currency) {
-    var symbols = {
-      'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$',
-      'AUD': 'A$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr', 'NZD': 'NZ$',
-      'MXN': 'Mex$', 'SGD': 'S$', 'HKD': 'HK$', 'IDR': 'Rp', 'NOK': 'kr',
-      'KRW': '₩', 'TRY': '₺', 'RUB': '₽', 'INR': '₹', 'BRL': 'R$', 'ZAR': 'R'
-    };
-    return symbols[currency] || currency;
+    return _currencySymbols[currency] || currency;
   }
 
   // Event listeners for quarterly allocation

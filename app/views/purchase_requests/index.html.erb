@@ -101,15 +101,8 @@
               <% if purchase_request.estimated_price.present? %>
                 <div class="price-display">
                   <%
-                    symbol_map = {
-                      'USD' => '$', 'EUR' => '€', 'GBP' => '£', 'JPY' => '¥',
-                      'CAD' => 'C$', 'AUD' => 'A$', 'CHF' => 'CHF', 'CNY' => '¥',
-                      'SEK' => 'kr', 'NZD' => 'NZ$', 'MXN' => 'Mex$', 'SGD' => 'S$',
-                      'HKD' => 'HK$', 'IDR' => 'Rp', 'NOK' => 'kr', 'KRW' => '₩',
-                      'TRY' => '₺', 'RUB' => '₽', 'INR' => '₹', 'BRL' => 'R$', 'ZAR' => 'R'
-                    }
                     currency_code = purchase_request.currency
-                    symbol = symbol_map[currency_code] || currency_code
+                    symbol = currency_symbol(currency_code)
                   %>
                   <span class="price-amount">
                     <%= symbol %><%= number_with_precision(purchase_request.estimated_price, precision: 2, delimiter: ',') %>
