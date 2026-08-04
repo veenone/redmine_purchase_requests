@@ -5,6 +5,32 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-08-04
+
+A UI/UX quality release (design-system consistency + accessibility) plus a modern icon set. No schema changes.
+
+> **Deploy note:** this Redmine serves plugin CSS via the Sprockets asset pipeline (fingerprinted `/assets/...`), so run `RAILS_ENV=production bundle exec rake assets:precompile` after deploying for the new styles/icons to take effect.
+
+### Added
+- **Modern icon set**: the legacy Redmine PNG icons used throughout the plugin are replaced with a modern monochrome (Lucide-style) set rendered via CSS `mask` + `currentColor`, so icons are crisp and inherit their context's text color (white on primary buttons, ink in tables, muted on disabled/delete). No markup changes.
+- **Accessibility**: proper ARIA tab roles + keyboard navigation + `location.hash` sync on the show/new/edit tab widgets; table `scope`/`<thead>`/visually-hidden `<caption>`; `rel="noopener"` on new-tab links; inline field-level validation errors (replacing blocking `alert()` popups) with `aria-invalid`; status-badge foreground colour computed from background luminance for WCAG contrast.
+- **Show page** surfaces estimated price, budget source, and TPC in an always-visible header summary (previously only inside a hidden tab).
+- **Dashboards**: chart-duplicating data tables collapse into "View data table" disclosures to cut scroll length.
+- **Design tokens**: added a type scale (`--pr-text-*`) and spacing scale (`--pr-space-*`); wide tables now scroll horizontally within their container with sticky headers and zebra striping.
+- **Responsive**: intermediate breakpoints and a lower dashboard-card grid floor so cards reflow sensibly on tablets (desktop layout unchanged).
+
+### Changed
+- **Unified report chart palette**: all report charts now use the plugin's `--pr-*` token colours via a shared `PR_CHART_COLORS` constant, replacing a clashing Material-Design palette.
+- Consolidated the duplicated per-tab settings CSS into the stylesheet (fixing em/px drift); centralised the currency-symbol map into one `PurchaseRequestsHelper::CURRENCY_SYMBOLS` constant used by views and JS.
+- Promoted repeated report inline styles to reusable `pr-` component classes.
+- Tokenised the status-colour fallback into `PurchaseRequestStatus#display_color`.
+
+### Removed
+- Dead/backup view variants (`*_backup`, `*_clean`, `*_old`) — ~3,100 lines of unused code.
+
+### Fixed
+- Status badges are now legible on light user-configured colours (dropped the white-on-pale text-shadow crutch) and stay readable when un-coloured.
+
 ## [1.9.0] - 2026-08-03
 
 ### Added

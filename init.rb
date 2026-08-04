@@ -13,7 +13,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
   description 'A comprehensive plugin for managing purchase requests, CAPEX budgets, OPEX management, and vendor operations in Redmine'
-  version '1.9.0'
+  version '1.10.0'
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
