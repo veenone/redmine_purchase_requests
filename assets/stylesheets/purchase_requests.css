@@ -402,7 +402,7 @@
 #content .dashboard-container,
 #content .capex-charts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 18px;
   margin-bottom: 22px;
 }
@@ -2007,6 +2007,10 @@
 /* ---------------------------------------------------------------------------
    24. Responsive
    ------------------------------------------------------------------------- */
+
+/* --- 900px: tablet landscape — narrow sidebar context ---
+   Card grids still allow 2-up above this (minmax 320px lets 2 fit ~700px+);
+   below 900px collapse to 1-up and fix form layout. */
 @media (max-width: 900px) {
   #content .pr-grid,
   #content .dashboard-container,
@@ -2014,6 +2018,25 @@
   #content .quarterly-fields { grid-template-columns: 1fr 1fr; }
   #content .pr-form-header { flex-direction: column; }
 }
+
+/* --- 720px: tablet portrait — tighten up charts and KPI rows ---
+   At this width inline SVG charts can overflow; cap their height so
+   they don't dominate the viewport. KPI stats go 2-up so they stay
+   readable without shrinking too much. */
+@media (max-width: 720px) {
+  #content .pr-stats,
+  #content .summary-stats,
+  #content .capex-stats-grid { grid-template-columns: 1fr 1fr; }
+  #content .chart-hbar-container,
+  #content .chart-line-container { max-height: 320px; overflow-y: auto; }
+  #content .dashboard-card,
+  #content .pr-card { min-width: 0; }
+}
+
+/* --- 560px: phones — single-column everything ---
+   Note: summary-stats/capex-stats-grid remain 2-up from the 720px rule
+   above; override to 1fr 1fr is intentional and kept here for phones
+   (already 2-up from 720 breakpoint, so no regression). */
 @media (max-width: 560px) {
   #content .pr-stats,
   #content .summary-stats,
@@ -2022,6 +2045,8 @@
   #content .capex-quarterly-grid { grid-template-columns: 1fr; }
   #content .pr-tab-link { padding: 10px 12px; }
   #content .form-control { max-width: 100%; }
+  #content .chart-hbar-container,
+  #content .chart-line-container { max-height: 260px; overflow-y: auto; }
 }
 
 /* ---------------------------------------------------------------------------
