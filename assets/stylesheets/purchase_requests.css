@@ -1934,7 +1934,78 @@
 }
 
 /* ---------------------------------------------------------------------------
-   23. Responsive
+   23. Report components  (B4 — promoted from inline styles)
+   ------------------------------------------------------------------------- */
+
+/* Ranked list row — base layout (border-left color kept inline per instance) */
+#content .pr-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 14px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+}
+
+/* Rank badge circle — background/color kept inline per instance */
+#content .pr-rank-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Usage/allocation stat card — border-left color kept inline per instance */
+#content .pr-usage-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+}
+
+/* Circular icon inside usage cards — background/color kept inline per instance */
+#content .pr-usage-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+/* Text body inside usage cards */
+#content .pr-usage-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Accent block — padded card with accent left-border; border-left color kept inline */
+#content .pr-accentblock {
+  padding: 14px 16px;
+  background: var(--pr-surface-subtle);
+  border: 1px solid var(--pr-border);
+  border-radius: var(--pr-radius-sm);
+}
+
+/* Spacing utility: bottom gap on individual dashboard-card elements */
+#content .pr-card--gap {
+  margin-bottom: 22px;
+}
+
+/* ---------------------------------------------------------------------------
+   24. Responsive
    ------------------------------------------------------------------------- */
 @media (max-width: 900px) {
   #content .pr-grid,

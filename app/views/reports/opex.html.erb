@@ -44,7 +44,7 @@
 </div>
 
 <!-- Executive Summary -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>OPEX Overview</h3></div>
   <div class="dashboard-card-body">
     <div class="summary-stats">
@@ -69,15 +69,15 @@
 </div>
 
 <!-- Category Analysis -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>OPEX by Category</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
       <div style="height:360px;"><canvas id="categoryChart"></canvas></div>
       <div style="display:grid;gap:8px;align-content:start;">
         <% @report_data[:category_breakdown].each_with_index do |(category, amount), index| %>
-          <div style="display:flex;align-items:center;gap:12px;padding:11px 13px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
-            <span style="background:var(--pr-success);color:var(--pr-ink-invert);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0;">#<%= index + 1 %></span>
+          <div class="pr-rank-row">
+            <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);width:26px;height:26px;font-size:11px;">#<%= index + 1 %></span>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:600;color:var(--pr-ink);font-size:13px;margin-bottom:2px;"><%= category %></div>
               <div style="font-size:12px;color:var(--pr-ink-faint);">OPEX Category</div>
@@ -91,7 +91,7 @@
 </div>
 
 <!-- Yearly Trend -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>OPEX by Year</h3></div>
   <div class="dashboard-card-body">
     <div style="height:280px;max-width:700px;margin:0 auto 18px;"><canvas id="yearlyChart"></canvas></div>
@@ -107,7 +107,7 @@
 </div>
 
 <!-- Quarterly Analysis -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3><%= Date.current.year %> Quarterly Breakdown</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
@@ -131,13 +131,13 @@
 
 <!-- TPC Distribution -->
 <% if @report_data[:tpc_distribution].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top TPC Code Allocations</h3></div>
   <div class="dashboard-card-body">
     <div style="display:grid;gap:10px;">
       <% @report_data[:tpc_distribution].each_with_index do |(tpc_info, amount), index| %>
-        <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
-          <span style="background:var(--pr-success);color:var(--pr-ink-invert);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">#<%= index + 1 %></span>
+        <div class="pr-rank-row">
+          <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
             <div style="font-size:12px;color:var(--pr-ink-faint);">OPEX Allocation</div>
@@ -152,7 +152,7 @@
 
 <!-- Currency Distribution -->
 <% if @report_data[:currency_breakdown].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Currency Distribution</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
@@ -171,7 +171,7 @@
 <% end %>
 
 <!-- Recent OPEX Items -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Recent OPEX Items</h3></div>
   <div class="dashboard-card-body">
     <div class="autoscroll">

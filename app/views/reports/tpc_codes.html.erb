@@ -44,7 +44,7 @@
 </div>
 
 <!-- Executive Summary -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>TPC Code Overview</h3></div>
   <div class="dashboard-card-body">
     <div class="summary-stats">
@@ -78,33 +78,33 @@
 </div>
 
 <!-- Usage Analysis -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>TPC Code Usage Analysis</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
       <div style="height:280px;"><canvas id="usageChart"></canvas></div>
       <div style="display:grid;gap:12px;align-content:start;">
-        <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-warning);border-radius:var(--pr-radius-sm);">
-          <span style="width:36px;height:36px;border-radius:50%;background:var(--pr-warning);color:var(--pr-ink-invert);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">C</span>
-          <div style="flex:1;min-width:0;">
+        <div class="pr-usage-card" style="border-left:3px solid var(--pr-warning);">
+          <span class="pr-usage-card__icon" style="background:var(--pr-warning);color:var(--pr-ink-invert);">C</span>
+          <div class="pr-usage-card__body">
             <div style="font-size:14px;font-weight:600;color:var(--pr-ink);margin-bottom:3px;">CAPEX Allocations</div>
             <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_capex] %> TPC codes</div>
             <div style="font-size:15px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:capex_totals].values.sum.round(2)) %></div>
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-success);border-radius:var(--pr-radius-sm);">
-          <span style="width:36px;height:36px;border-radius:50%;background:var(--pr-success);color:var(--pr-ink-invert);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">O</span>
-          <div style="flex:1;min-width:0;">
+        <div class="pr-usage-card" style="border-left:3px solid var(--pr-success);">
+          <span class="pr-usage-card__icon" style="background:var(--pr-success);color:var(--pr-ink-invert);">O</span>
+          <div class="pr-usage-card__body">
             <div style="font-size:14px;font-weight:600;color:var(--pr-ink);margin-bottom:3px;">OPEX Allocations</div>
             <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_opex] %> TPC codes</div>
             <div style="font-size:15px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:opex_totals].values.sum.round(2)) %></div>
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:16px;padding:16px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-violet);border-radius:var(--pr-radius-sm);">
-          <span style="width:36px;height:36px;border-radius:50%;background:var(--pr-violet);color:var(--pr-ink-invert);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;">D</span>
-          <div style="flex:1;min-width:0;">
+        <div class="pr-usage-card" style="border-left:3px solid var(--pr-violet);">
+          <span class="pr-usage-card__icon" style="background:var(--pr-violet);color:var(--pr-ink-invert);">D</span>
+          <div class="pr-usage-card__body">
             <div style="font-size:14px;font-weight:600;color:var(--pr-ink);margin-bottom:3px;">Direct TPC Assignments</div>
             <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_direct_pr] %> TPC codes</div>
             <div style="font-size:12px;color:var(--pr-ink-faint);">Purchase requests directly linked to TPC codes</div>
@@ -117,14 +117,14 @@
 
 <!-- Department Breakdown -->
 <% if @report_data[:department_breakdown].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>TPC Codes by Department</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
       <div style="height:280px;"><canvas id="departmentChart"></canvas></div>
       <div style="display:flex;flex-direction:column;gap:8px;align-content:start;">
         <% @report_data[:department_breakdown].sort_by { |_, count| -count }.each do |dept, count| %>
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-violet);border-radius:var(--pr-radius-sm);">
+          <div class="pr-accentblock" style="display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--pr-violet);">
             <span style="font-weight:500;color:var(--pr-ink);font-size:13px;"><%= dept %></span>
             <span style="color:var(--pr-ink-muted);font-size:13px;font-variant-numeric:tabular-nums;"><%= count %> codes</span>
           </div>
@@ -137,13 +137,13 @@
 
 <!-- Top TPC Codes by Purchase Requests -->
 <% if @report_data[:tpc_by_purchase_request].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top TPC Codes by Purchase Requests</h3></div>
   <div class="dashboard-card-body">
     <div style="display:grid;gap:10px;">
       <% @report_data[:tpc_by_purchase_request].each_with_index do |tpc, index| %>
-        <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
-          <span style="background:var(--pr-accent);color:var(--pr-ink-invert);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">#<%= index + 1 %></span>
+        <div class="pr-rank-row">
+          <span class="pr-rank-badge" style="background:var(--pr-accent);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-violet-ink);margin-bottom:2px;"><%= tpc[:tpc_number] %></div>
             <div style="font-size:12px;color:var(--pr-ink-faint);"><%= tpc[:department].present? ? tpc[:department] : 'No Department' %> — <%= tpc[:owner] %></div>
@@ -158,7 +158,7 @@
 
 <!-- Top TPC Codes by Total Cost -->
 <% if @report_data[:tpc_utilization].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top TPC Codes by Total Cost</h3></div>
   <div class="dashboard-card-body">
     <div class="autoscroll">
@@ -205,7 +205,7 @@
 
 <!-- Monthly TPC Usage Trend -->
 <% if @report_data[:monthly_trend].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>TPC Usage Trend (Last 12 Months)</h3></div>
   <div class="dashboard-card-body">
     <p class="pr-subhead">Purchase requests linked to TPC codes (via direct, CAPEX, or OPEX)</p>
@@ -216,13 +216,13 @@
 
 <!-- Top CAPEX Allocations -->
 <% if @report_data[:capex_totals].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top CAPEX Allocations by TPC Code</h3></div>
   <div class="dashboard-card-body">
     <div style="display:grid;gap:10px;">
       <% @report_data[:capex_totals].sort_by { |_, amount| -amount }.first(10).each_with_index do |(tpc_code, amount), index| %>
-        <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-warning);border-radius:var(--pr-radius-sm);">
-          <span style="background:var(--pr-warning);color:var(--pr-ink-invert);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">#<%= index + 1 %></span>
+        <div class="pr-rank-row" style="border-left:3px solid var(--pr-warning);">
+          <span class="pr-rank-badge" style="background:var(--pr-warning);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-violet-ink);margin-bottom:2px;"><%= tpc_code %></div>
             <div style="font-size:12px;color:var(--pr-ink-faint);">CAPEX Budget Allocation</div>
@@ -237,13 +237,13 @@
 
 <!-- Top OPEX Allocations -->
 <% if @report_data[:opex_totals].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top OPEX Allocations by TPC Code</h3></div>
   <div class="dashboard-card-body">
     <div style="display:grid;gap:10px;">
       <% @report_data[:opex_totals].sort_by { |_, amount| -amount }.first(10).each_with_index do |(tpc_code, amount), index| %>
-        <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-success);border-radius:var(--pr-radius-sm);">
-          <span style="background:var(--pr-success);color:var(--pr-ink-invert);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">#<%= index + 1 %></span>
+        <div class="pr-rank-row" style="border-left:3px solid var(--pr-success);">
+          <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-violet-ink);margin-bottom:2px;"><%= tpc_code %></div>
             <div style="font-size:12px;color:var(--pr-ink-faint);">OPEX Budget Allocation</div>
@@ -257,7 +257,7 @@
 <% end %>
 
 <!-- Recent TPC Codes -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Recently Added TPC Codes</h3></div>
   <div class="dashboard-card-body">
     <div class="autoscroll">

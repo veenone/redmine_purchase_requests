@@ -44,7 +44,7 @@
 </div>
 
 <!-- Executive Summary -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>CAPEX Overview</h3></div>
   <div class="dashboard-card-body">
     <div class="summary-stats">
@@ -77,7 +77,7 @@
 </div>
 
 <!-- Utilization Status Breakdown -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>CAPEX Utilization Analysis</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
@@ -113,7 +113,7 @@
 
 <!-- Top Utilized CAPEX Items -->
 <% if @report_data[:top_utilized].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top CAPEX Items by Utilization</h3></div>
   <div class="dashboard-card-body">
     <div class="autoscroll">
@@ -178,7 +178,7 @@
 
 <!-- Purchase Request Status Breakdown -->
 <% if @report_data[:pr_status_breakdown].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Purchase Requests by Status</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
@@ -199,7 +199,7 @@
 <% end %>
 
 <!-- Yearly Trend -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>CAPEX by Year</h3></div>
   <div class="dashboard-card-body">
     <div style="height:280px;max-width:700px;margin:0 auto 18px;"><canvas id="yearlyChart"></canvas></div>
@@ -215,7 +215,7 @@
 </div>
 
 <!-- Quarterly Analysis -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3><%= Date.current.year %> Quarterly Breakdown</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
@@ -239,13 +239,13 @@
 
 <!-- TPC Distribution -->
 <% if @report_data[:tpc_distribution].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top TPC Code Allocations</h3></div>
   <div class="dashboard-card-body">
     <div style="display:grid;gap:10px;">
       <% @report_data[:tpc_distribution].each_with_index do |(tpc_info, amount), index| %>
-        <div style="display:flex;align-items:center;gap:14px;padding:13px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
-          <span style="background:var(--pr-warning);color:var(--pr-ink-invert);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">#<%= index + 1 %></span>
+        <div class="pr-rank-row">
+          <span class="pr-rank-badge" style="background:var(--pr-warning);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
             <div style="font-size:12px;color:var(--pr-ink-faint);">CAPEX Allocation</div>
@@ -260,7 +260,7 @@
 
 <!-- Currency Distribution -->
 <% if @report_data[:currency_breakdown].any? %>
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Currency Distribution</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
@@ -279,7 +279,7 @@
 <% end %>
 
 <!-- Recent CAPEX Items -->
-<div class="dashboard-card" style="margin-bottom:22px;">
+<div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Recent CAPEX Items</h3></div>
   <div class="dashboard-card-body">
     <div class="autoscroll">
