@@ -402,7 +402,7 @@
 #content .dashboard-container,
 #content .capex-charts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: 18px;
   margin-bottom: 22px;
 }
@@ -648,7 +648,8 @@
   display: inline-block;
   padding: 3px 10px;
   border-radius: var(--pr-radius-pill);
-  background: var(--pr-ink-faint);
+  background: var(--pr-surface-sunken);
+  color: var(--pr-ink);
   font-size: 11px;
   font-weight: 600;
   line-height: 1.5;
@@ -2012,9 +2013,11 @@
    Card grids still allow 2-up above this (minmax 320px lets 2 fit ~700px+);
    below 900px collapse to 1-up and fix form layout. */
 @media (max-width: 900px) {
+  /* Tablet band: lower the floor to 320px so two cards still fit ~640–900px
+     (desktop >900px keeps the original 420px floor / same layout as before). */
   #content .pr-grid,
   #content .dashboard-container,
-  #content .capex-charts { grid-template-columns: 1fr; }
+  #content .capex-charts { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
   #content .quarterly-fields { grid-template-columns: 1fr 1fr; }
   #content .pr-form-header { flex-direction: column; }
 }
