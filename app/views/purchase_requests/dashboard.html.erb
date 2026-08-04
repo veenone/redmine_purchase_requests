@@ -76,28 +76,31 @@
           </div>
         </div>
 
-        <table class="dashboard-table">
-          <caption class="sr-only">Purchase requests by status</caption>
-          <thead>
-            <tr>
-              <th scope="col"><%= l(:field_status) %></th>
-              <th scope="col"><%= l(:label_count) %></th>
-              <th scope="col"><%= l(:label_percentage) %></th>
-            </tr>
-          </thead>
-          <tbody>
-          <% @status_distribution.each do |status| %>
-            <tr>
-              <td>
-                <span class="pr-swatch" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></span>
-                <%= status[:name] %>
-              </td>
-              <td><%= status[:count] %></td>
-              <td><%= status[:percentage] %>%</td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
+        <details class="pr-data-toggle">
+          <summary>View data table</summary>
+          <table class="dashboard-table">
+            <caption class="sr-only">Purchase requests by status</caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= l(:field_status) %></th>
+                <th scope="col"><%= l(:label_count) %></th>
+                <th scope="col"><%= l(:label_percentage) %></th>
+              </tr>
+            </thead>
+            <tbody>
+            <% @status_distribution.each do |status| %>
+              <tr>
+                <td>
+                  <span class="pr-swatch" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></span>
+                  <%= status[:name] %>
+                </td>
+                <td><%= status[:count] %></td>
+                <td><%= status[:percentage] %>%</td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </details>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
       <% end %>
@@ -133,38 +136,41 @@
           </div>
         </div>
 
-        <table class="dashboard-table">
-          <caption class="sr-only">Purchase requests by priority</caption>
-          <thead>
+        <details class="pr-data-toggle">
+          <summary>View data table</summary>
+          <table class="dashboard-table">
+            <caption class="sr-only">Purchase requests by priority</caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= l(:field_priority) %></th>
+                <th scope="col"><%= l(:label_count) %></th>
+                <th scope="col"><%= l(:label_percentage) %></th>
+              </tr>
+            </thead>
+            <tbody>
             <tr>
-              <th scope="col"><%= l(:field_priority) %></th>
-              <th scope="col"><%= l(:label_count) %></th>
-              <th scope="col"><%= l(:label_percentage) %></th>
+              <td><span class="pr-swatch" style="background-color: #dc3a3a;"></span><%= l(:label_priority_urgent) %></td>
+              <td><%= @priority_distribution[:urgent] %></td>
+              <td><%= @priority_percentages[:urgent] %>%</td>
             </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td><span class="pr-swatch" style="background-color: #dc3a3a;"></span><%= l(:label_priority_urgent) %></td>
-            <td><%= @priority_distribution[:urgent] %></td>
-            <td><%= @priority_percentages[:urgent] %>%</td>
-          </tr>
-          <tr>
-            <td><span class="pr-swatch" style="background-color: #df8709;"></span><%= l(:label_priority_high) %></td>
-            <td><%= @priority_distribution[:high] %></td>
-            <td><%= @priority_percentages[:high] %>%</td>
-          </tr>
-          <tr>
-            <td><span class="pr-swatch" style="background-color: #2f9e44;"></span><%= l(:label_priority_normal) %></td>
-            <td><%= @priority_distribution[:normal] %></td>
-            <td><%= @priority_percentages[:normal] %>%</td>
-          </tr>
-          <tr>
-            <td><span class="pr-swatch" style="background-color: #2272c4;"></span><%= l(:label_priority_low) %></td>
-            <td><%= @priority_distribution[:low] %></td>
-            <td><%= @priority_percentages[:low] %>%</td>
-          </tr>
-          </tbody>
-        </table>
+            <tr>
+              <td><span class="pr-swatch" style="background-color: #df8709;"></span><%= l(:label_priority_high) %></td>
+              <td><%= @priority_distribution[:high] %></td>
+              <td><%= @priority_percentages[:high] %>%</td>
+            </tr>
+            <tr>
+              <td><span class="pr-swatch" style="background-color: #2f9e44;"></span><%= l(:label_priority_normal) %></td>
+              <td><%= @priority_distribution[:normal] %></td>
+              <td><%= @priority_percentages[:normal] %>%</td>
+            </tr>
+            <tr>
+              <td><span class="pr-swatch" style="background-color: #2272c4;"></span><%= l(:label_priority_low) %></td>
+              <td><%= @priority_distribution[:low] %></td>
+              <td><%= @priority_percentages[:low] %>%</td>
+            </tr>
+            </tbody>
+          </table>
+        </details>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
       <% end %>
@@ -277,27 +283,30 @@
       <% if @monthly_trends.present? && @monthly_trends.any? %>
         <div class="chart-bar-container" id="monthly-trends-chart"></div>
 
-        <table class="dashboard-table">
-          <caption class="sr-only">Monthly purchase request trends</caption>
-          <thead>
-            <tr>
-              <th scope="col"><%= l(:label_month) %></th>
-              <th scope="col"><%= l(:label_requests) %></th>
-              <th scope="col"><%= l(:label_amount) %></th>
-            </tr>
-          </thead>
-          <tbody>
-          <% @monthly_trends.each do |trend| %>
-            <tr>
-              <td><%= trend[:month] %></td>
-              <td><%= trend[:count] %></td>
-              <td class="stat-currency">
-                <%= currency_symbol(default_currency) %><%= number_with_precision(trend[:amount], precision: 2, delimiter: ',') %>
-              </td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
+        <details class="pr-data-toggle">
+          <summary>View data table</summary>
+          <table class="dashboard-table">
+            <caption class="sr-only">Monthly purchase request trends</caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= l(:label_month) %></th>
+                <th scope="col"><%= l(:label_requests) %></th>
+                <th scope="col"><%= l(:label_amount) %></th>
+              </tr>
+            </thead>
+            <tbody>
+            <% @monthly_trends.each do |trend| %>
+              <tr>
+                <td><%= trend[:month] %></td>
+                <td><%= trend[:count] %></td>
+                <td class="stat-currency">
+                  <%= currency_symbol(default_currency) %><%= number_with_precision(trend[:amount], precision: 2, delimiter: ',') %>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </details>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
       <% end %>
@@ -385,31 +394,34 @@
     </div>
     <div class="dashboard-card-body">
       <% if @tpc_distribution.present? && @tpc_distribution.any? %>
-        <table class="dashboard-table">
-          <caption class="sr-only">Budget distribution by TPC code</caption>
-          <thead>
-            <tr>
-              <th scope="col">TPC Code</th>
-              <th scope="col">Requests</th>
-              <th scope="col">Total Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-          <%
-            tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            tpc_symbol = currency_symbol(tpc_currency)
-          %>
-          <% @tpc_distribution.each do |tpc| %>
-            <tr>
-              <td class="tpc-code-cell"><strong><%= tpc[:tpc_code] %></strong></td>
-              <td><%= tpc[:count] %></td>
-              <td class="stat-currency"><%= tpc_symbol %><%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %></td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
-
         <div class="chart-bar-container" id="tpc-distribution-chart"></div>
+
+        <details class="pr-data-toggle">
+          <summary>View data table</summary>
+          <table class="dashboard-table">
+            <caption class="sr-only">Budget distribution by TPC code</caption>
+            <thead>
+              <tr>
+                <th scope="col">TPC Code</th>
+                <th scope="col">Requests</th>
+                <th scope="col">Total Cost</th>
+              </tr>
+            </thead>
+            <tbody>
+            <%
+              tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+              tpc_symbol = currency_symbol(tpc_currency)
+            %>
+            <% @tpc_distribution.each do |tpc| %>
+              <tr>
+                <td class="tpc-code-cell"><strong><%= tpc[:tpc_code] %></strong></td>
+                <td><%= tpc[:count] %></td>
+                <td class="stat-currency"><%= tpc_symbol %><%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %></td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </details>
       <% else %>
         <p class="nodata">No TPC code data available</p>
       <% end %>

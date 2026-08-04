@@ -2023,3 +2023,15 @@
   #content .pr-tab-link { padding: 10px 12px; }
   #content .form-control { max-width: 100%; }
 }
+
+/* ---------------------------------------------------------------------------
+   25. Collapsible chart-data tables (C1 — disclosure toggle)
+   ------------------------------------------------------------------------- */
+#content .pr-data-toggle { margin-top: 10px; }
+#content .pr-data-toggle > summary {
+  cursor: pointer; color: var(--pr-accent); font-size: 12px; font-weight: 600;
+  list-style: none; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0;
+}
+#content .pr-data-toggle > summary::-webkit-details-marker { display: none; }
+#content .pr-data-toggle > summary::before { content: "▸"; font-size: 10px; }
+#content .pr-data-toggle[open] > summary::before { content: "▾"; }

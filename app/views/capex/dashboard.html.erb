@@ -169,60 +169,63 @@
           <!-- bars injected by JS -->
         </div>
 
-        <table class="dashboard-table">
-          <tr>
-            <th>Quarter</th>
-            <th>Budget</th>
-          </tr>
-          <tr>
-            <td>Q1</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <td>Q2</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <td>Q3</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
-          <tr>
-            <td>Q4</td>
-            <td class="stat-currency">
-              <% if @use_exchange_rates %>
-                <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
-              <% elsif @currency_breakdown.keys.length == 1 %>
-                <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
-              <% else %>
-                <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
-              <% end %>
-            </td>
-          </tr>
-        </table>
+        <details class="pr-data-toggle">
+          <summary>View data table</summary>
+          <table class="dashboard-table">
+            <tr>
+              <th>Quarter</th>
+              <th>Budget</th>
+            </tr>
+            <tr>
+              <td>Q1</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td>Q2</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td>Q3</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td>Q4</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= capex_currency_symbol(@default_currency) %><%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %><%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+          </table>
+        </details>
       </div>
     </div>
   </div>
