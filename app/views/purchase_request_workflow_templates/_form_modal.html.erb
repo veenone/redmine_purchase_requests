@@ -1,0 +1,240 @@
+<div class="workflow-modal-content" role="dialog" aria-modal="true" aria-labelledby="workflow-modal-title">
+  <div class="workflow-modal-header">
+    <h3 id="workflow-modal-title"><%= title %></h3>
+    <a href="#" class="workflow-modal-close"
+       aria-label="<%= l(:button_close, default: 'Close') %>"
+       onclick="document.getElementById('workflow-template-modal').remove(); return false;">&times;</a>
+  </div>
+
+  <div class="workflow-modal-body">
+    <%= form_with model: @template, url: @template.new_record? ? purchase_request_workflow_templates_path : purchase_request_workflow_template_path(@template), local: false, html: { id: 'workflow-template-form' } do |f| %>
+      <% if @template.errors.any? %>
+        <div id="errorExplanation" class="errorExplanation">
+          <h2><%= pluralize(@template.errors.count, "error") %> prohibited this template from being saved:</h2>
+          <ul>
+            <% @template.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <p>
+        <%= f.label :name, l(:field_name, default: 'Name') %><span class="required">*</span>
+        <%= f.text_field :name, size: 40, required: true %>
+      </p>
+
+      <p>
+        <%= f.label :description, l(:field_description, default: 'Description') %>
+        <%= f.text_area :description, rows: 3, cols: 50 %>
+      </p>
+
+      <p>
+        <%= f.label :position, l(:field_position, default: 'Position') %>
+        <%= f.number_field :position, min: 1, step: 1 %>
+      </p>
+
+      <p>
+        <%= f.label :tracker_id, l(:field_tracker, default: 'Tracker') %>
+        <%= f.collection_select :tracker_id, Tracker.sorted, :id, :name,
+            { include_blank: l(:label_use_default_tracker, default: '-- Use default tracker --') } %>
+      </p>
+
+      <p>
+        <%= f.label :default_assigned_to_id, l(:field_assigned_to, default: 'Default Assignee') %>
+        <%= f.collection_select :default_assigned_to_id, User.active.sorted, :id, :name,
+            { include_blank: l(:label_no_default_assignee, default: '-- No default assignee --') } %>
+      </p>
+
+      <p>
+        <%= f.label :estimated_hours, l(:field_estimated_hours, default: 'Estimated Hours') %>
+        <%= f.number_field :estimated_hours, min: 0, step: 0.5 %>
+      </p>
+
+      <p>
+        <%= f.check_box :is_active %>
+        <%= f.label :is_active, l(:field_active, default: 'Active') %>
+      </p>
+
+      <p>
+        <%= f.check_box :auto_create %>
+        <%= f.label :auto_create, l(:label_auto_create, default: 'Auto Create') %>
+        <span class="hint"><%= l(:hint_auto_create, default: 'Automatically create this subtask when a workflow issue is created') %></span>
+      </p>
+
+      <div class="workflow-modal-actions">
+        <%= f.submit l(:button_save, default: 'Save'), class: 'pr-button pr-button-primary' %>
+        <a href="#" class="pr-button pr-button-secondary" onclick="document.getElementById('workflow-template-modal').remove(); return false;"><%= l(:button_cancel, default: 'Cancel') %></a>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+/* Modal chrome, styled against the plugin's :root design tokens so it
+   tracks the v1.10.0 look automatically. */
+.workflow-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.workflow-modal-content {
+  background: var(--pr-surface, #fff);
+  border-radius: var(--pr-radius, 6px);
+  box-shadow: var(--pr-shadow-md, 0 4px 20px rgba(0, 0, 0, 0.3));
+  font-family: var(--pr-font, inherit);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.workflow-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--pr-space-3, 15px) var(--pr-space-4, 20px);
+  border-bottom: 1px solid var(--pr-border, #ddd);
+  background: var(--pr-surface-subtle, #f5f5f5);
+  border-radius: var(--pr-radius, 6px) var(--pr-radius, 6px) 0 0;
+}
+
+.workflow-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--pr-ink, #333);
+}
+
+.workflow-modal-close {
+  font-size: 24px;
+  color: var(--pr-ink-muted, #666);
+  text-decoration: none;
+  line-height: 1;
+}
+
+.workflow-modal-close:hover {
+  color: var(--pr-ink, #333);
+}
+
+.workflow-modal-body {
+  padding: var(--pr-space-4, 20px);
+}
+
+.workflow-modal-body p {
+  margin-bottom: 12px;
+}
+
+.workflow-modal-body label {
+  display: inline-block;
+  width: 140px;
+  font-weight: bold;
+}
+
+.workflow-modal-body .hint {
+  display: block;
+  font-size: 11px;
+  color: var(--pr-ink-muted, #666);
+  margin-left: 145px;
+  margin-top: 3px;
+}
+
+.workflow-modal-body .required {
+  color: var(--pr-danger, #c00);
+}
+
+.workflow-modal-actions {
+  margin-top: var(--pr-space-4, 20px);
+  padding-top: var(--pr-space-3, 15px);
+  border-top: 1px solid var(--pr-border, #ddd);
+  text-align: right;
+}
+
+.workflow-modal-actions .pr-button {
+  margin-left: 10px;
+}
+
+.workflow-modal-body .errorExplanation {
+  background: var(--pr-danger-soft, #ffe6e6);
+  border: 1px solid var(--pr-danger, #c00);
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: var(--pr-radius-sm, 4px);
+}
+
+.workflow-modal-body .errorExplanation h2 {
+  font-size: 13px;
+  margin: 0 0 5px 0;
+  color: var(--pr-danger, #c00);
+}
+
+.workflow-modal-body .errorExplanation ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* The modal mounts on <body>, outside #content, so the plugin's
+   #content-scoped .pr-button rules never reach it. Mirror them here
+   against the same tokens to keep the buttons identical to the rest
+   of v1.10.0. Keep in sync with .pr-button in purchase_requests.css. */
+.workflow-modal-overlay .pr-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 32px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--pr-radius-sm, 4px);
+  background: var(--pr-surface, #fff);
+  color: var(--pr-ink, #333);
+  font-family: var(--pr-font, inherit);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+.workflow-modal-overlay .pr-button:hover { text-decoration: none; }
+
+.workflow-modal-overlay .pr-button:focus-visible {
+  outline: 2px solid var(--pr-accent, #628db6);
+  outline-offset: 1px;
+}
+
+.workflow-modal-overlay .pr-button-primary {
+  background: var(--pr-accent, #628db6);
+  border-color: var(--pr-accent, #628db6);
+  color: var(--pr-ink-invert, #fff);
+  box-shadow: var(--pr-shadow-xs, none);
+}
+
+.workflow-modal-overlay .pr-button-primary:hover {
+  background: var(--pr-accent-hover, #5b82a8);
+  border-color: var(--pr-accent-hover, #5b82a8);
+  color: var(--pr-ink-invert, #fff);
+}
+
+.workflow-modal-overlay .pr-button-secondary {
+  background: var(--pr-surface, #fff);
+  border-color: var(--pr-border-strong, #bbb);
+  color: var(--pr-ink, #333);
+}
+
+.workflow-modal-overlay .pr-button-secondary:hover {
+  background: var(--pr-surface-subtle, #f5f5f5);
+  border-color: var(--pr-ink-faint, #999);
+  color: var(--pr-ink, #333);
+}
+</style>
