@@ -183,6 +183,8 @@ Redmine::Plugin.register :redmine_purchase_requests do
     'default_assigned_to_id' => '',
     'default_currency' => 'USD',
     'enabled_currencies' => ['USD', 'EUR', 'GBP', 'IDR'],
+    # Matches the precision 15 estimated_price column (migration 037)
+    'max_purchase_amount' => '9999999999999.99',
     'show_exchange_rates' => '0',
     'exchange_rates' => {},  # Initialize exchange_rates as an empty hash
     'allow_custom_vendors' => '1',

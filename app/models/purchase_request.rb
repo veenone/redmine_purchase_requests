@@ -1,4 +1,9 @@
 class PurchaseRequest < ActiveRecord::Base
+  # Ceiling used when no max_purchase_amount is configured. Matches the
+  # precision 15, scale 2 estimated_price column, so the fallback never
+  # permits a value the database cannot store.
+  DEFAULT_MAX_PURCHASE_AMOUNT = BigDecimal('9999999999999.99')
+
   belongs_to :user
   belongs_to :project
   belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
@@ -46,6 +51,7 @@ class PurchaseRequest < ActiveRecord::Base
   validate :business_justification_for_high_value
   validate :capex_or_opex_consistency
   validate :quarterly_allocation_consistency
+  validate :estimated_price_within_limit
   
   # Add any additional scopes or validations as needed
   scope :open, -> { joins(:status).where(purchase_request_statuses: { is_closed: false }) }
@@ -321,7 +327,21 @@ class PurchaseRequest < ActiveRecord::Base
       errors.add(:description, I18n.t('error_business_justification_required', default: 'Business justification is required for high-value purchases. Please provide a detailed description (minimum 50 characters).'))
     end
   end
-  
+
+  # Caps estimated_price at the configured max_purchase_amount. Compared as
+  # BigDecimal rather than Float so amounts near the column ceiling are not
+  # thrown off by floating point rounding.
+  def estimated_price_within_limit
+    return if estimated_price.blank?
+
+    configured = Setting.plugin_redmine_purchase_requests['max_purchase_amount'].to_s.to_d
+    max = configured > 0 ? configured : DEFAULT_MAX_PURCHASE_AMOUNT
+
+    if estimated_price > max
+      errors.add(:estimated_price, :less_than, count: ActiveSupport::NumberHelper.number_to_delimited(max.to_s('F')))
+    end
+  end
+
   def capex_or_opex_consistency
     if capex_id.present? && opex_id.present?
       errors.add(:base, I18n.t('error_cannot_link_both_capex_opex', default: 'Cannot link to both CAPEX and OPEX entries. Please select only one.'))
