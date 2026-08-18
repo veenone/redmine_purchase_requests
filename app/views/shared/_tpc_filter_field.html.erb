@@ -1,0 +1,27 @@
+<%#
+  TPC multi-select field, for dropping inside an existing filter form.
+
+  Index views already own a filter form (status, search, category, active), so
+  they render this field rather than shared/_dashboard_filters -- a second form
+  would give the page two Apply buttons, and submitting either would drop the
+  other's parameters.
+
+  Locals:
+    available_tpc_codes   - relation/array of TpcCode (responds to display_name/id)
+    selected_tpc_code_ids - array of selected ids (strings); [] when unfiltered
+    field_id              - optional DOM id, when a page renders more than one
+%>
+<%
+  field_id = local_assigns.fetch(:field_id, 'df_tpc')
+  hint_id  = "#{field_id}_hint"
+  selected = Array(local_assigns[:selected_tpc_code_ids]).map(&:to_s)
+  choices  = Array(local_assigns[:available_tpc_codes])
+%>
+<label for="<%= field_id %>"><%= l(:label_tpc_code, default: 'TPC') %></label>
+<%= select_tag 'tpc_code_id[]',
+               options_for_select(choices.map { |t| [truncate(t.display_name, length: 60), t.id.to_s] }, selected),
+               multiple: true,
+               size: 4,
+               id: field_id,
+               'aria-describedby' => hint_id %>
+<em class="info" id="<%= hint_id %>"><%= l(:text_tpc_filter_hint, default: 'Select none for all TPCs; Ctrl/Cmd-click to pick several.') %></em>

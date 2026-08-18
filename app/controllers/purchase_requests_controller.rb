@@ -22,6 +22,11 @@ class PurchaseRequestsController < ApplicationController
       scope = scope.where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", search_terms, search_terms)
     end
     
+    # TPC filter
+    tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
+    @available_tpc_codes = tpc_scope.active.ordered
+    scope = apply_tpc_filter(scope)
+
     @purchase_request_count = scope.count
     @pages = Paginator.new @purchase_request_count, @limit, params[:page]
     @offset ||= @pages.offset

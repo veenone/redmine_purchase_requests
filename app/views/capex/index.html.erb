@@ -38,6 +38,7 @@
       <label for="search">Search:</label>
       <%= text_field_tag 'search', params[:search], size: 30, placeholder: 'Search by description or TPC code' %>
 
+      <%= render 'shared/tpc_filter_field', available_tpc_codes: @available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
       <%= submit_tag 'Search', name: nil, class: 'pr-button pr-button-secondary small' %>
       <% if params[:year].present? || params[:search].present? %>
         <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel small' do %>

@@ -16,6 +16,10 @@ class CapexController < ApplicationController
     
     @capex_entries = @capex_entries.for_year(@selected_year) if @selected_year.present?
     
+    # TPC filter
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @capex_entries = apply_tpc_filter(@capex_entries)
+
     respond_to do |format|
       format.html
       format.json { render json: @capex_entries.map(&:as_json) }

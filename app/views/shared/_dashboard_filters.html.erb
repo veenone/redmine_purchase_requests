@@ -6,15 +6,20 @@
   from request.query_parameters, so it works on every route that renders it.
 
   Locals:
-    year_mode             - :fixed (fixed range, year always set) or :list (nullable + "All Years")
-    selected_year         - currently selected year value
-    available_years       - array of years to offer
+    year_mode             - :fixed (fixed range, year always set), :list (nullable + "All Years"),
+                            or :none (omit the year facet entirely, for views without a year concept)
+    selected_year         - currently selected year value        (omit when year_mode is :none)
+    available_years       - array of years to offer              (omit when year_mode is :none)
     available_tpc_codes   - relation/array of TpcCode for the dropdown (responds to display_name/tpc_number/id)
     selected_tpc_code_ids - array of currently selected TPC ids (strings); [] when unfiltered
 %>
 <%
   qp = request.query_parameters
-  selected_tpc_code_ids = Array(selected_tpc_code_ids).map(&:to_s)
+  year_mode             = local_assigns.fetch(:year_mode, :none)
+  selected_year         = local_assigns[:selected_year]
+  available_years       = local_assigns[:available_years] || []
+  show_year             = year_mode != :none
+  selected_tpc_code_ids = Array(local_assigns[:selected_tpc_code_ids]).map(&:to_s)
 
   strip = ->(key) {
     remaining = qp.except(key.to_s)
@@ -29,7 +34,7 @@
     rest.empty? ? request.path : "#{request.path}?#{rest.to_query}"
   }
 
-  year_active   = (year_mode == :list && selected_year.present?)
+  year_active   = (show_year && year_mode == :list && selected_year.present?)
   tpc_active    = selected_tpc_code_ids.any?
   selected_tpcs = tpc_active ? available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } : []
   any_active    = year_active || tpc_active
@@ -38,25 +43,20 @@
   <fieldset class="pr-filters">
     <legend>Filters</legend>
     <div class="filter-row">
-      <label for="df_year">Year</label>
-      <% if year_mode == :list %>
-        <%= select_tag 'year',
-                       options_for_select([['All Years', '']] + available_years.map { |y| [y.to_s, y.to_s] }, selected_year),
-                       id: 'df_year' %>
-      <% else %>
-        <%= select_tag 'year',
-                       options_for_select(available_years.map { |y| [y, y] }, selected_year),
-                       id: 'df_year' %>
+      <% if show_year %>
+        <label for="df_year">Year</label>
+        <% if year_mode == :list %>
+          <%= select_tag 'year',
+                         options_for_select([['All Years', '']] + available_years.map { |y| [y.to_s, y.to_s] }, selected_year),
+                         id: 'df_year' %>
+        <% else %>
+          <%= select_tag 'year',
+                         options_for_select(available_years.map { |y| [y, y] }, selected_year),
+                         id: 'df_year' %>
+        <% end %>
       <% end %>
 
-      <label for="df_tpc">TPC</label>
-      <%= select_tag 'tpc_code_id[]',
-                     options_for_select(available_tpc_codes.map { |t| [truncate(t.display_name, length: 60), t.id.to_s] }, selected_tpc_code_ids),
-                     multiple: true,
-                     size: 4,
-                     id: 'df_tpc',
-                     'aria-describedby' => 'df_tpc_hint' %>
-      <em class="info" id="df_tpc_hint"><%= l(:text_tpc_filter_hint, default: 'Select none for all TPCs; Ctrl/Cmd-click to pick several.') %></em>
+      <%= render 'shared/tpc_filter_field', available_tpc_codes: available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
 
       <%= submit_tag 'Apply', class: 'pr-button pr-button-primary', name: nil %>
       <% if any_active %>

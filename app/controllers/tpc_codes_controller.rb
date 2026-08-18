@@ -16,6 +16,10 @@ class TpcCodesController < ApplicationController
     @tpc_codes = @tpc_codes.inactive if params[:active] == 'false'
     @tpc_codes = @tpc_codes.ordered
     
+    # TPC filter (selects rows of this list, so it targets :id)
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
+
     @tpc_codes_count = @tpc_codes.count
     @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']
     @tpc_codes = @tpc_codes.limit(@tpc_codes_pages.per_page).offset(@tpc_codes_pages.offset)

@@ -22,6 +22,10 @@ class OpexController < ApplicationController
     @opex_entries = @opex_entries.for_category(@category) if @category.present?
     @opex_entries = @opex_entries.search(@search) if @search.present?
     
+    # TPC filter
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @opex_entries = apply_tpc_filter(@opex_entries)
+
     @years = @project.opex.distinct.pluck(:year).sort.reverse
     @categories = OpexCategory.all.pluck(:name, :id)
     
