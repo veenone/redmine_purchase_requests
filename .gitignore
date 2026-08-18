@@ -40,3 +40,6 @@ MIGRATION_FIXES_APPLIED.md
 !README.md
 !CHANGELOG.md
 !docs/**/*.md
+
+# Keep the real test suite; the patterns above target root-level scratch scripts
+!test/**/*_test.rb
