@@ -250,6 +250,7 @@ Rails.application.config.to_prepare do
   # Load other dependencies
   require_dependency 'redmine_purchase_requests/hooks'
   require_dependency 'redmine_purchase_requests/issue_hooks'
+  require_dependency 'redmine_purchase_requests/tpc_filterable'
   require_dependency 'redmine_purchase_requests/patches/project_patch'
   require_dependency 'redmine_purchase_requests/patches/user_patch'
 end

@@ -1,25 +1,38 @@
 <%#
-  Shared dashboard filter bar for CAPEX / OPEX / Purchase Requests / TPC dashboards.
+  Shared dashboard filter bar for CAPEX / OPEX / Purchase Requests / TPC
+  dashboards, index views and reports.
+
   Path-agnostic: submits to request.path via GET and builds facet-removal links
-  from request.query_parameters, so it works on every dashboard route.
+  from request.query_parameters, so it works on every route that renders it.
 
   Locals:
-    year_mode            - :fixed (fixed 2020..2030 range, year always set) or :list (nullable + "All Years")
-    selected_year        - currently selected year value
-    available_years      - array of years to offer
-    available_tpc_codes  - relation/array of TpcCode for the dropdown (responds to display_name/tpc_number/id)
-    selected_tpc_code_id - currently selected TPC id (string or nil)
+    year_mode             - :fixed (fixed range, year always set) or :list (nullable + "All Years")
+    selected_year         - currently selected year value
+    available_years       - array of years to offer
+    available_tpc_codes   - relation/array of TpcCode for the dropdown (responds to display_name/tpc_number/id)
+    selected_tpc_code_ids - array of currently selected TPC ids (strings); [] when unfiltered
 %>
 <%
   qp = request.query_parameters
+  selected_tpc_code_ids = Array(selected_tpc_code_ids).map(&:to_s)
+
   strip = ->(key) {
     remaining = qp.except(key.to_s)
     remaining.empty? ? request.path : "#{request.path}?#{remaining.to_query}"
   }
-  year_active = (year_mode == :list && selected_year.present?)
-  tpc_active  = selected_tpc_code_id.present?
-  selected_tpc = tpc_active ? available_tpc_codes.detect { |t| t.id.to_s == selected_tpc_code_id.to_s } : nil
-  any_active  = year_active || tpc_active
+
+  # Removes a single TPC from the selection, keeping the others applied.
+  strip_tpc = ->(id) {
+    remaining_ids = selected_tpc_code_ids - [id.to_s]
+    rest = qp.except('tpc_code_id')
+    rest = rest.merge('tpc_code_id' => remaining_ids) if remaining_ids.any?
+    rest.empty? ? request.path : "#{request.path}?#{rest.to_query}"
+  }
+
+  year_active   = (year_mode == :list && selected_year.present?)
+  tpc_active    = selected_tpc_code_ids.any?
+  selected_tpcs = tpc_active ? available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } : []
+  any_active    = year_active || tpc_active
 %>
 <%= form_tag request.path, method: :get, class: 'pr-filters-form' do %>
   <fieldset class="pr-filters">
@@ -37,9 +50,13 @@
       <% end %>
 
       <label for="df_tpc">TPC</label>
-      <%= select_tag 'tpc_code_id',
-                     options_for_select([['All TPCs', '']] + available_tpc_codes.map { |t| [truncate(t.display_name, length: 60), t.id] }, selected_tpc_code_id),
-                     id: 'df_tpc' %>
+      <%= select_tag 'tpc_code_id[]',
+                     options_for_select(available_tpc_codes.map { |t| [truncate(t.display_name, length: 60), t.id.to_s] }, selected_tpc_code_ids),
+                     multiple: true,
+                     size: 4,
+                     id: 'df_tpc',
+                     'aria-describedby' => 'df_tpc_hint' %>
+      <em class="info" id="df_tpc_hint"><%= l(:text_tpc_filter_hint, default: 'Select none for all TPCs; Ctrl/Cmd-click to pick several.') %></em>
 
       <%= submit_tag 'Apply', class: 'pr-button pr-button-primary', name: nil %>
       <% if any_active %>
@@ -52,8 +69,12 @@
         <% if year_active %>
           <span class="pr-badge pr-badge--accent">Year: <%= selected_year %><%= link_to '×', strip.call('year'), class: 'pr-chip-remove', title: 'Remove year filter' %></span>
         <% end %>
-        <% if tpc_active %>
-          <span class="pr-badge pr-badge--accent" title="<%= selected_tpc&.display_name %>">TPC: <%= selected_tpc&.tpc_number || selected_tpc_code_id %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: 'Remove TPC filter' %></span>
+        <% selected_tpcs.each do |tpc| %>
+          <span class="pr-badge pr-badge--accent" title="<%= tpc.display_name %>">TPC: <%= tpc.tpc_number %><%= link_to '×', strip_tpc.call(tpc.id), class: 'pr-chip-remove', title: "Remove #{tpc.tpc_number} filter" %></span>
+        <% end %>
+        <% if tpc_active && selected_tpcs.size < selected_tpc_code_ids.size %>
+          <%# ids that are filtered but not in available_tpc_codes (inactive or out of project scope) %>
+          <span class="pr-badge pr-badge--neutral" title="<%= l(:text_tpc_filter_unavailable, default: 'Some selected TPC codes are not in the current list') %>">TPC: +<%= selected_tpc_code_ids.size - selected_tpcs.size %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: 'Remove TPC filter' %></span>
         <% end %>
       </div>
     <% end %>

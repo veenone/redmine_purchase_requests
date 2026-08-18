@@ -1,4 +1,5 @@
 class CapexController < ApplicationController
+  include RedminePurchaseRequests::TpcFilterable
   before_action :find_project
   before_action :authorize, except: [:quarterly_data, :dashboard_data]
   before_action :find_capex, only: [:show, :edit, :update, :destroy]
@@ -96,8 +97,7 @@ class CapexController < ApplicationController
     # Get capex entries for the year without ordering for aggregations
     capex_for_year = @project.capex.for_year(@current_year)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    capex_for_year = capex_for_year.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
+    capex_for_year = apply_tpc_filter(capex_for_year)
     @capex_entries = capex_for_year.ordered
     
     # Get default currency for conversions

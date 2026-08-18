@@ -1,4 +1,5 @@
 class TpcCodesController < ApplicationController
+  include RedminePurchaseRequests::TpcFilterable
   include PurchaseRequestsHelper
 
   before_action :find_project_for_dashboard, only: [:dashboard]
@@ -257,11 +258,8 @@ class TpcCodesController < ApplicationController
 
     # TPC filter dropdown data and narrowing
     @available_tpc_codes = (@project ? TpcCode.available_for_project(@project) : TpcCode).active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    if @selected_tpc_code_id
-      @all_tpc_codes = @all_tpc_codes.where(id: @selected_tpc_code_id)
-      base_scope = base_scope.where(id: @selected_tpc_code_id)
-    end
+    @all_tpc_codes = apply_tpc_filter(@all_tpc_codes, column: :id)
+    base_scope = apply_tpc_filter(base_scope, column: :id)
 
     # Year filter
     @selected_year = params[:year].present? ? params[:year].to_i : nil
@@ -294,7 +292,7 @@ class TpcCodesController < ApplicationController
     opex_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
 
     # Narrow PR count chart to the selected TPC if one is chosen
-    tpc_pr_counts.select! { |tpc_id, _| tpc_id.to_s == @selected_tpc_code_id } if @selected_tpc_code_id
+    tpc_pr_counts.select! { |tpc_id, _| tpc_selected?(tpc_id) } if tpc_filter_active?
 
     # Build the chart data
     tpc_pr_counts.each do |tpc_id, count|
@@ -488,7 +486,7 @@ class TpcCodesController < ApplicationController
         end
 
         # Total count — narrowed to the selected TPC when one is filtered
-        if @selected_tpc_code_id
+        if tpc_filter_active?
           total_count = tpc_counts.values.sum
         else
           direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
@@ -520,7 +518,7 @@ class TpcCodesController < ApplicationController
         end
 
         # Total count — narrowed to the selected TPC when one is filtered
-        if @selected_tpc_code_id
+        if tpc_filter_active?
           total_count = tpc_counts.values.sum
         else
           direct_count = month_pr_scope.where.not(tpc_code_id: nil).count

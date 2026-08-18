@@ -32,7 +32,7 @@
       selected_year: @current_year,
       available_years: (2020..2030).to_a,
       available_tpc_codes: @available_tpc_codes,
-      selected_tpc_code_id: @selected_tpc_code_id %>
+      selected_tpc_code_ids: selected_tpc_code_ids %>
 
 <% if @capex_entries.any? %>
   <!-- Summary Stats -->

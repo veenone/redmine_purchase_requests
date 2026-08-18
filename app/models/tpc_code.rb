@@ -37,7 +37,6 @@ class TpcCode < ActiveRecord::Base
   def display_name
     parts = [tpc_number]
     parts << tpc_name if tpc_name.present?
-    parts << department if department.present?
     parts << tpc_owner_name
     parts.join(' - ')
   end

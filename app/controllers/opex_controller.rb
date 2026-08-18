@@ -1,4 +1,5 @@
 class OpexController < ApplicationController
+  include RedminePurchaseRequests::TpcFilterable
   layout 'base'
   before_action :find_project
   before_action :find_opex, only: [:show, :edit, :update, :destroy]
@@ -107,8 +108,7 @@ class OpexController < ApplicationController
     @current_year = (params[:year] || Date.current.year).to_i
     @opex_entries = @project.opex.for_year(@current_year)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    @opex_entries = @opex_entries.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
+    @opex_entries = apply_tpc_filter(@opex_entries)
 
     # Initialize variables
     @total_budget = 0

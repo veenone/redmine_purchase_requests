@@ -1,4 +1,5 @@
 class PurchaseRequestsController < ApplicationController
+  include RedminePurchaseRequests::TpcFilterable
   before_action :find_project, only: [:index, :new, :create, :dashboard]
   before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue]
   before_action :authorize, except: [:show]
@@ -146,8 +147,7 @@ class PurchaseRequestsController < ApplicationController
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
     @available_tpc_codes = tpc_scope.active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    scope = scope.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
+    scope = apply_tpc_filter(scope)
 
     @total_requests = scope.count
     @open_requests = scope.open.count
