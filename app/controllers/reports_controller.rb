@@ -543,7 +543,7 @@ class ReportsController < ApplicationController
     global_count = tpc_codes.global.count
 
     # Department breakdown
-    department_breakdown = tpc_codes.where.not(department: [nil, '']).group(:department).count
+    department_breakdown = tpc_codes.joins(:department).group('departments.name').count
 
     # Usage analysis
     capex_usage = tpc_codes.joins(:capex).group('tpc_codes.tpc_number').count
@@ -582,7 +582,7 @@ class ReportsController < ApplicationController
       next unless tpc
       tpc_by_purchase_request << {
         tpc_number: tpc.tpc_number,
-        department: tpc.department,
+        department: tpc.department&.name,
         owner: tpc.tpc_owner_name,
         count: count
       }
@@ -634,7 +634,7 @@ class ReportsController < ApplicationController
       tpc_utilization << {
         tpc_code: tpc.tpc_number,
         tpc_name: tpc.tpc_name.to_s,
-        department: tpc.department,
+        department: tpc.department&.name,
         owner: tpc.tpc_owner_name,
         total_cost: total_cost.round(2),
         request_count: request_count,

@@ -102,7 +102,7 @@
               <%= tpc_code.tpc_owner_name %>
             </td>
             <td class="department">
-              <%= tpc_code.department.present? ? tpc_code.department : '-' %>
+              <%= tpc_code.department.present? ? tpc_code.department.display_name : '-' %>
             </td>
             <td class="email">
               <%= mail_to tpc_code.tpc_email, tpc_code.tpc_email, encode: 'hex' %>

@@ -13,7 +13,14 @@ class TpcCodesController < ApplicationController
   
   def index
     sort_init 'tpc_number', 'asc'
-    sort_update %w[tpc_number tpc_name tpc_owner_name department tpc_email description project_id is_active]
+    sort_update({ 'tpc_number' => 'tpc_codes.tpc_number',
+                  'tpc_name' => 'tpc_codes.tpc_name',
+                  'tpc_owner_name' => 'tpc_codes.tpc_owner_name',
+                  'department' => 'departments.name',
+                  'tpc_email' => 'tpc_codes.tpc_email',
+                  'description' => 'tpc_codes.description',
+                  'project_id' => 'tpc_codes.project_id',
+                  'is_active' => 'tpc_codes.is_active' })
 
     @tpc_codes = TpcCode.available_for_project(@project)
     @tpc_codes = @tpc_codes.search(params[:search]) if params[:search].present?
@@ -23,7 +30,9 @@ class TpcCodesController < ApplicationController
     
     # TPC filter (selects rows of this list, so it targets :id)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id).reorder(sort_clause)
+    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
+                 .left_joins(:department)
+                 .reorder(sort_clause)
 
     @tpc_codes_count = @tpc_codes.count
     @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']
@@ -310,13 +319,13 @@ class TpcCodesController < ApplicationController
       @tpc_by_purchase_request << {
         name: tpc.tpc_number,
         count: count,
-        department: tpc.department
+        department: tpc.department&.name
       }
     end
     @tpc_by_purchase_request = @tpc_by_purchase_request.sort_by { |t| -t[:count] }.take(10)
 
     # TPC codes by department
-    @tpc_by_department = @all_tpc_codes.where.not(department: [nil, '']).group(:department).count
+    @tpc_by_department = @all_tpc_codes.joins(:department).group('departments.name').count
 
     # Calculate total costs and utilization for each TPC code
     default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
@@ -360,7 +369,7 @@ class TpcCodesController < ApplicationController
       @tpc_utilization << {
         tpc_code: tpc.tpc_number,
         tpc_name: tpc.tpc_name.to_s,
-        department: tpc.department,
+        department: tpc.department&.name,
         owner: tpc.tpc_owner_name,
         total_cost: total_cost.round(2),
         request_count: request_count
@@ -604,6 +613,6 @@ class TpcCodesController < ApplicationController
   end
   
   def tpc_code_params
-    params.require(:tpc_code).permit(:tpc_number, :tpc_name, :tpc_owner_name, :department, :tpc_email, :description, :is_active, :notes)
+    params.require(:tpc_code).permit(:tpc_number, :tpc_name, :tpc_owner_name, :department_id, :tpc_email, :description, :is_active, :notes)
   end
 end
