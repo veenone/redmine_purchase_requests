@@ -18,8 +18,19 @@ class TpcCodeDepartmentTest < ActiveSupport::TestCase
     }.merge(attrs))
   end
 
-  test 'the string column is gone' do
-    assert_not_includes TpcCode.column_names, 'department'
+  test 'the foreign key column exists' do
+    assert_includes TpcCode.column_names, 'department_id'
+  end
+
+  # tpc_codes.department is deliberately still present at this point: migration
+  # 039 is additive, and 040 drops it immediately before the restart that
+  # activates the new code. Dropping it earlier would break the running app,
+  # which keeps naming the column in its writes. The assertion that it is gone
+  # belongs with 040, not here.
+  test 'every TPC code carrying a department string has been linked' do
+    unlinked = TpcCode.where.not(department: [nil, '']).where(department_id: nil).count
+    assert_equal 0, unlinked,
+                 'the backfill must leave no departmented TPC code without a department_id'
   end
 
   test 'a TPC code links to a department' do
