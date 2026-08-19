@@ -1,12 +1,12 @@
 class TpcCode < ActiveRecord::Base
   belongs_to :project, optional: true
+  belongs_to :department, optional: true
   has_many :capex, foreign_key: 'tpc_code_id', dependent: :restrict_with_error
   has_many :opex, foreign_key: 'tpc_code_id', dependent: :restrict_with_error
   has_many :purchase_requests, foreign_key: 'tpc_code_id', dependent: :restrict_with_error
   
   validates :tpc_number, presence: true, length: { minimum: 3, maximum: 50 }
   validates :tpc_owner_name, presence: true, length: { minimum: 2, maximum: 100 }
-  validates :department, length: { maximum: 100 }
   validates :tpc_name, length: { maximum: 150 }
   validates :tpc_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :description, length: { maximum: 1000 }
@@ -20,8 +20,14 @@ class TpcCode < ActiveRecord::Base
   scope :global, -> { where('tpc_codes.project_id' => nil) }
   scope :for_project, ->(project) { where(project: project) }
   scope :search, ->(term) {
-    where("LOWER(tpc_number) LIKE ? OR LOWER(tpc_name) LIKE ? OR LOWER(tpc_owner_name) LIKE ? OR LOWER(department) LIKE ? OR LOWER(tpc_email) LIKE ? OR LOWER(description) LIKE ?",
-          "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%", "%#{term.to_s.downcase}%")
+    pattern = "%#{term.to_s.downcase}%"
+    left_joins(:department).where(
+      "LOWER(tpc_codes.tpc_number) LIKE :q OR LOWER(tpc_codes.tpc_name) LIKE :q OR " \
+      "LOWER(tpc_codes.tpc_owner_name) LIKE :q OR LOWER(departments.name) LIKE :q OR " \
+      "LOWER(departments.code) LIKE :q OR LOWER(tpc_codes.tpc_email) LIKE :q OR " \
+      "LOWER(tpc_codes.description) LIKE :q",
+      q: pattern
+    )
   }
   scope :ordered, -> { order(:tpc_number) }
   
@@ -44,7 +50,7 @@ class TpcCode < ActiveRecord::Base
   def tpc_number_with_description
     parts = [tpc_number]
     parts << tpc_name if tpc_name.present?
-    parts << department if department.present?
+    parts << department.name if department.present?
     if description.present?
       parts << description.truncate(50)
     else

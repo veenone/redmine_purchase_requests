@@ -1,14 +1,27 @@
 require File.expand_path('../../../../../test/test_helper', __FILE__)
 
 # Covers what migration 039 owns: the foreign key exists and every TPC code
-# carrying a department string has been linked to a Department.
-#
-# Association behaviour is deliberately NOT tested here. TpcCode has no
-# belongs_to :department yet, so a test assigning a Department to it would
-# write the object's to_s into the surviving string column: one such test
-# fails outright, and a dependent: :nullify test passes vacuously because
-# department_id was never set. Those tests ship with the association itself.
+# carrying a department string has been linked to a Department. Also covers
+# the belongs_to :department association added alongside it (Task 3) and the
+# search scope that joins through it.
 class TpcCodeDepartmentTest < ActiveSupport::TestCase
+  def setup
+    @dept = Department.create!(name: 'Research')
+  end
+
+  def teardown
+    TpcCode.where(tpc_number: 'TPCTEST1').delete_all
+    Department.where(name: 'Research').delete_all
+  end
+
+  def build_tpc(attrs = {})
+    TpcCode.new({
+      tpc_number: 'TPCTEST1',
+      tpc_owner_name: 'Test Owner',
+      tpc_email: 'owner@example.com'
+    }.merge(attrs))
+  end
+
   test 'the foreign key column exists' do
     assert_includes TpcCode.column_names, 'department_id'
   end
@@ -31,5 +44,42 @@ class TpcCodeDepartmentTest < ActiveSupport::TestCase
     names = Department.pluck(:name).map { |n| n.to_s.strip.downcase }
     assert_equal names.uniq.size, names.size,
                  'case and whitespace variants must not have produced duplicate departments'
+  end
+
+  test 'a TPC code links to a department' do
+    tpc = build_tpc(department: @dept)
+    assert tpc.valid?
+    assert_equal 'Research', tpc.department.name
+  end
+
+  test 'a TPC code may have no department' do
+    assert build_tpc.valid?
+  end
+
+  test 'deleting a department nullifies the link rather than the TPC code' do
+    tpc = build_tpc(department: @dept)
+    tpc.save!
+    @dept.destroy
+    assert TpcCode.exists?(tpc.id), 'the TPC code must survive'
+    assert_nil tpc.reload.department_id
+  end
+
+  test 'search matches on department name' do
+    tpc = build_tpc(department: @dept)
+    tpc.save!
+    assert_includes TpcCode.search('research').pluck(:id), tpc.id
+  end
+
+  test 'search matches on department code' do
+    @dept.update!(code: 'RND')
+    tpc = build_tpc(department: @dept)
+    tpc.save!
+    assert_includes TpcCode.search('rnd').pluck(:id), tpc.id
+  end
+
+  test 'search still returns TPC codes that have no department' do
+    tpc = build_tpc(tpc_owner_name: 'Findable Person')
+    tpc.save!
+    assert_includes TpcCode.search('findable').pluck(:id), tpc.id
   end
 end
