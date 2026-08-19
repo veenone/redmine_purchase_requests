@@ -217,6 +217,11 @@ class TpcCodesController < ApplicationController
       
       if results[:errors].any?
         flash[:error] = l(:error_tpc_code_import_failed, error: results[:errors].join(', '))
+      elsif results[:unmatched_departments].present?
+        flash[:warning] = l(:warning_tpc_codes_imported_unmatched_departments,
+                             count: results[:created],
+                             updated: results[:updated],
+                             departments: results[:unmatched_departments].uniq.join(', '))
       else
         flash[:notice] = l(:notice_tpc_codes_imported, count: results[:created], updated: results[:updated])
       end
@@ -251,6 +256,11 @@ class TpcCodesController < ApplicationController
       
       if results[:errors].any?
         flash[:error] = l(:error_tpc_code_import_failed, error: results[:errors].join(', '))
+      elsif results[:unmatched_departments].present?
+        flash[:warning] = l(:warning_tpc_codes_imported_unmatched_departments,
+                             count: results[:created],
+                             updated: results[:updated],
+                             departments: results[:unmatched_departments].uniq.join(', '))
       else
         flash[:notice] = l(:notice_tpc_codes_imported, count: results[:created], updated: results[:updated])
       end

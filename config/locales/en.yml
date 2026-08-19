@@ -639,6 +639,7 @@ en:
   error_tpc_code_import_failed: "Import failed: %{error}"
   notice_tpc_codes_imported_successfully: "TPC codes imported successfully"
   notice_tpc_codes_imported: "Import completed: %{count} new TPC codes created, %{updated} codes updated"
+  warning_tpc_codes_imported_unmatched_departments: "Import completed: %{count} new TPC codes created, %{updated} codes updated. These departments were not recognised and were left unset: %{departments}"
   
   # TPC Settings
   label_tpc_settings: "TPC Code Settings"
