@@ -96,6 +96,16 @@
       </div>
     </div>
   </div>
+  <div class="dashboard-card" style="margin-bottom: 18px;">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_departments, default: 'Departments') %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead"><%= l(:text_departments_description, default: 'Maintain the department list that TPC codes are assigned to.') %></p>
+      <%= link_to l(:label_manage_departments, default: 'Manage Departments'), departments_path,
+                  class: 'pr-button pr-button-primary pr-button-icon' %>
+    </div>
+  </div>
 
 </div>
 

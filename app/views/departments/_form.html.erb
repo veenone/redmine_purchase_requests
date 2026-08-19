@@ -1,0 +1,8 @@
+<%= error_messages_for 'department' %>
+<div class="box tabular">
+  <p>
+    <%= f.text_field :code, size: 20, maxlength: 20 %>
+    <em class="info"><%= l(:text_department_code_hint, default: 'Optional. Leave blank until a code is agreed.') %></em>
+  </p>
+  <p><%= f.text_field :name, size: 60, maxlength: 100, required: true %></p>
+</div>

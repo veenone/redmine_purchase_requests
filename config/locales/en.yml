@@ -659,6 +659,18 @@ en:
   text_tpc_require_for_opex_help: "When enabled, users must select a TPC code when creating new OPEX entries."
   text_tpc_management_description: "TPC (Total Project Cost) codes help track and organize project expenses across CAPEX and OPEX entries. Use them to consolidate costs, generate reports, and maintain better financial oversight."
   
+  # Department Management
+  label_departments: "Departments"
+  label_department_new: "New Department"
+  label_department_edit: "Edit Department"
+  label_manage_departments: "Manage Departments"
+  label_no_department: "-- No department --"
+  field_department: "Department"
+  field_department_code: "Code"
+  field_department_name: "Name"
+  text_department_code_hint: "Optional. Leave blank until a code is agreed."
+  text_departments_description: "Maintain the department list that TPC codes are assigned to."
+  
   # Additional vendor localization keys
   label_active: "Active"
   label_inactive: "Inactive"

@@ -101,6 +101,7 @@ RedmineApp::Application.routes.draw do
   patch 'tpc_codes/:id', to: 'tpc_codes#global_update'
   put 'tpc_codes/:id', to: 'tpc_codes#global_update'
   delete 'tpc_codes/:id', to: 'tpc_codes#global_destroy'
+  resources :departments, except: [:show]
   
   # Global reports
   resources :reports, only: [:index] do

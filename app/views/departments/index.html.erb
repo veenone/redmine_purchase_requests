@@ -1,0 +1,37 @@
+<div class="contextual">
+  <%= link_to l(:label_department_new, default: 'New Department'), new_department_path,
+              class: 'pr-button pr-button-primary pr-button-icon' %>
+</div>
+
+<h2><%= l(:label_departments, default: 'Departments') %></h2>
+
+<% if @departments.any? %>
+  <table class="pr-table">
+    <thead>
+      <tr>
+        <th scope="col"><%= l(:field_department_code, default: 'Code') %></th>
+        <th scope="col"><%= l(:field_department_name, default: 'Name') %></th>
+        <th scope="col"><%= l(:label_tpc_codes, default: 'TPC Codes') %></th>
+        <th scope="col" class="buttons"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @departments.each do |department| %>
+        <tr>
+          <td><%= department.code.presence || '-' %></td>
+          <td><%= department.name %></td>
+          <td><%= department.tpc_codes.count %></td>
+          <td class="buttons">
+            <%= link_to l(:button_edit), edit_department_path(department),
+                        class: 'pr-button pr-button-secondary pr-button-icon small' %>
+            <%= link_to l(:button_delete), department_path(department), method: :delete,
+                        data: { confirm: l(:text_are_you_sure) },
+                        class: 'pr-button pr-button-danger pr-button-icon small' %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>
