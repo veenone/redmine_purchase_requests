@@ -1,6 +1,25 @@
-<h2><%= l(:label_department_new, default: 'New Department') %></h2>
-<%= labelled_form_for @department, url: departments_path, method: :post do |f| %>
-  <%= render partial: 'form', locals: { f: f } %>
-  <%= submit_tag l(:button_create) %>
-  <%= link_to l(:button_cancel), departments_path, class: 'pr-button pr-button-secondary' %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
 <% end %>
+
+<% html_title l(:label_department_new, default: 'New Department') %>
+
+<div class="contextual">
+  <%= link_to departments_path, class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel"><%= l(:label_departments, default: 'Back to Departments') %></span>
+  <% end %>
+</div>
+
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2><%= l(:label_department_new, default: 'New Department') %></h2>
+    </div>
+  </div>
+
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= render 'form' %>
+    </div>
+  </div>
+</div>

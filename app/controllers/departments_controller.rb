@@ -4,6 +4,8 @@ class DepartmentsController < ApplicationController
 
   def index
     @departments = Department.ordered
+    # One grouped count instead of a COUNT per row in the view.
+    @tpc_counts = TpcCode.where.not(department_id: nil).group(:department_id).count
   end
 
   def new

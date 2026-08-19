@@ -1,8 +1,38 @@
-<%= error_messages_for 'department' %>
-<div class="box tabular">
-  <p>
-    <%= f.text_field :code, size: 20, maxlength: 20 %>
-    <em class="info"><%= l(:text_department_code_hint, default: 'Optional. Leave blank until a code is agreed.') %></em>
-  </p>
-  <p><%= f.text_field :name, size: 60, maxlength: 100, required: true %></p>
-</div>
+<%= form_with model: @department,
+              url: (@department.new_record? ? departments_path : department_path(@department)),
+              method: (@department.new_record? ? :post : :patch),
+              local: true, html: { class: 'department-form' } do |f| %>
+  <% if @department.errors.any? %>
+    <div class="pr-alert pr-alert-danger">
+      <span class="icon icon-warning"></span>
+      <div class="pr-alert-content">
+        <h4><%= pluralize(@department.errors.count, 'error') %> prohibited this department from being saved:</h4>
+        <ul>
+          <% @department.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-section">
+    <div class="form-section-title"><%= l(:field_department, default: 'Department') %></div>
+
+    <div class="form-row">
+      <%= f.label :code, l(:field_department_code, default: 'Code') %>
+      <%= f.text_field :code, size: 20, maxlength: 20, class: 'form-control' %>
+      <em class="info"><%= l(:text_department_code_hint, default: 'Optional. Leave blank until a code is agreed.') %></em>
+    </div>
+
+    <div class="form-row">
+      <%= f.label :name, l(:field_department_name, default: 'Name') %> <span class="required">*</span>
+      <%= f.text_field :name, size: 60, maxlength: 100, required: true, class: 'form-control' %>
+    </div>
+  </div>
+
+  <div class="pr-form-actions">
+    <%= f.submit (@department.new_record? ? l(:button_create) : l(:button_save)), class: 'pr-button pr-button-primary' %>
+    <%= link_to l(:button_cancel), departments_path, class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>
