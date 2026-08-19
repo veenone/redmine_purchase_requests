@@ -88,4 +88,25 @@ class TpcCodeDepartmentTest < ActiveSupport::TestCase
     tpc.save!
     assert_includes TpcCode.search('findable').pluck(:id), tpc.id
   end
+
+  test 'CSV export keeps the Department header and adds a code column' do
+    csv = TpcCode.to_csv(TpcCode.where(id: nil))
+    header = csv.lines.first
+    assert_includes header, 'Department'
+    assert_includes header, 'Department Code'
+  end
+
+  test 'import matches a department by name regardless of case' do
+    assert_equal @dept.id, TpcCode.resolve_department('  research  ')&.id
+  end
+
+  test 'import does not invent a department for an unknown name' do
+    before = Department.count
+    assert_nil TpcCode.resolve_department('Nonexistent Dept')
+    assert_equal before, Department.count
+  end
+
+  test 'a blank department name resolves to nothing' do
+    assert_nil TpcCode.resolve_department('')
+  end
 end

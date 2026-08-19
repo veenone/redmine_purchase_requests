@@ -86,7 +86,21 @@ class TpcCode < ActiveRecord::Base
   def can_be_deleted?
     total_linked_count == 0
   end
-  
+
+  # Resolves an imported department by code first, then name, both matched
+  # case-insensitively after stripping. Returns nil when nothing matches --
+  # deliberately never creates, so a typo in a spreadsheet cannot quietly add
+  # a department. Callers report the unmatched name instead.
+  def self.resolve_department(name, code = nil)
+    if code.to_s.strip.present?
+      found = Department.where('LOWER(code) = ?', code.to_s.strip.downcase).first
+      return found if found
+    end
+    return nil if name.to_s.strip.blank?
+
+    Department.where('LOWER(name) = ?', name.to_s.strip.downcase).first
+  end
+
   def as_json(options = {})
     super(options.merge(
       methods: [:display_name, :scope_display, :status_display, :linked_capex_count, :linked_opex_count, :total_linked_count]
@@ -98,19 +112,20 @@ class TpcCode < ActiveRecord::Base
     require 'csv'
 
     CSV.generate(headers: true) do |csv|
-      csv << ['TPC Number', 'TPC Name', 'Owner Name', 'Department', 'Email', 'Description', 'Active', 'Project', 'Notes']
+      csv << ['TPC Number', 'TPC Name', 'Owner Name', 'Department', 'Email', 'Description', 'Active', 'Project', 'Notes', 'Department Code']
 
-      tpc_codes.includes(:project).each do |tpc|
+      tpc_codes.includes(:project, :department).each do |tpc|
         csv << [
           tpc.tpc_number,
           tpc.tpc_name,
           tpc.tpc_owner_name,
-          tpc.department,
+          tpc.department&.name,
           tpc.tpc_email,
           tpc.description,
           tpc.is_active,
           tpc.project&.name,
-          tpc.notes
+          tpc.notes,
+          tpc.department&.code
         ]
       end
     end
@@ -118,12 +133,13 @@ class TpcCode < ActiveRecord::Base
   
   # JSON export methods
   def self.to_json_export(tpc_codes = all)
-    tpc_codes.includes(:project).map do |tpc|
+    tpc_codes.includes(:project, :department).map do |tpc|
       {
         tpc_number: tpc.tpc_number,
         tpc_name: tpc.tpc_name,
         tpc_owner_name: tpc.tpc_owner_name,
-        department: tpc.department,
+        department: tpc.department&.name,
+        department_code: tpc.department&.code,
         tpc_email: tpc.tpc_email,
         description: tpc.description,
         is_active: tpc.is_active,
@@ -136,21 +152,25 @@ class TpcCode < ActiveRecord::Base
   # Import methods
   def self.import_from_csv(file_path, project = nil)
     require 'csv'
-    results = { created: 0, updated: 0, errors: [] }
-    
+    results = { created: 0, updated: 0, errors: [], unmatched_departments: [] }
+
     CSV.foreach(file_path, headers: true) do |row|
       begin
         tpc_data = {
           tpc_number: row['TPC Number']&.strip,
           tpc_name: row['TPC Name']&.strip,
           tpc_owner_name: row['Owner Name']&.strip,
-          department: row['Department']&.strip,
+          department: resolve_department(row['Department'], row['Department Code']),
           tpc_email: row['Email']&.strip,
           description: row['Description']&.strip,
           is_active: row['Active'].to_s.downcase.in?(['true', '1', 'yes', 'active']),
           notes: row['Notes']&.strip
         }
-        
+
+        if tpc_data[:department].nil? && row['Department'].to_s.strip.present?
+          results[:unmatched_departments] << row['Department'].strip
+        end
+
         # Handle project assignment
         if project
           tpc_data[:project_id] = project.id
@@ -179,24 +199,28 @@ class TpcCode < ActiveRecord::Base
   end
   
   def self.import_from_json(file_path, project = nil)
-    results = { created: 0, updated: 0, errors: [] }
-    
+    results = { created: 0, updated: 0, errors: [], unmatched_departments: [] }
+
     begin
       json_data = JSON.parse(File.read(file_path))
-      
+
       json_data.each_with_index do |tpc_data, index|
         begin
           data = {
             tpc_number: tpc_data['tpc_number']&.strip,
             tpc_name: tpc_data['tpc_name']&.strip,
             tpc_owner_name: tpc_data['tpc_owner_name']&.strip,
-            department: tpc_data['department']&.strip,
+            department: resolve_department(tpc_data['department'], tpc_data['department_code']),
             tpc_email: tpc_data['tpc_email']&.strip,
             description: tpc_data['description']&.strip,
             is_active: tpc_data['is_active'],
             notes: tpc_data['notes']&.strip
           }
-          
+
+          if data[:department].nil? && tpc_data['department'].to_s.strip.present?
+            results[:unmatched_departments] << tpc_data['department'].strip
+          end
+
           # Handle project assignment
           if project
             data[:project_id] = project.id

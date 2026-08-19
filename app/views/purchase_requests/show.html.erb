@@ -325,7 +325,7 @@
                         <div class="tpc-owner-info">
                           <div><strong>Owner:</strong> <%= tpc_record.tpc_owner_name %></div>
                           <% if tpc_record.department.present? %>
-                            <div><strong>Department:</strong> <%= tpc_record.department %></div>
+                            <div><strong>Department:</strong> <%= tpc_record.department.name %></div>
                           <% end %>
                           <div><strong>Email:</strong> <%= mail_to tpc_record.tpc_email, tpc_record.tpc_email %></div>
                           <% if tpc_record.description.present? %>
