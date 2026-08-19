@@ -1,4 +1,5 @@
 class PurchaseRequestsController < ApplicationController
+  include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   before_action :find_project, only: [:index, :new, :create, :dashboard]
   before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue]
@@ -10,6 +11,9 @@ class PurchaseRequestsController < ApplicationController
   
   def index
     @limit = per_page_option
+
+    sort_init 'created_at', 'desc'
+    sort_update %w[id title status_id user_id estimated_price tpc_code_id created_at updated_at]
     
     scope = @project ? @project.purchase_requests : PurchaseRequest
     
@@ -30,7 +34,7 @@ class PurchaseRequestsController < ApplicationController
     @purchase_request_count = scope.count
     @pages = Paginator.new @purchase_request_count, @limit, params[:page]
     @offset ||= @pages.offset
-    @purchase_requests = scope.order(created_at: :desc).limit(@limit).offset(@offset)
+    @purchase_requests = scope.reorder(sort_clause).limit(@limit).offset(@offset)
   end
   
   def show

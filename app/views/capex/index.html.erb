@@ -54,10 +54,10 @@
     <table class="pr-table">
       <thead>
         <tr>
-          <th>Year</th>
-          <th>TPC Code</th>
-          <th>Description</th>
-          <th>Total Amount</th>
+          <%= sort_header_tag('year', caption: 'Year') %>
+          <%= sort_header_tag('tpc_code_id', caption: 'TPC Code') %>
+          <%= sort_header_tag('description', caption: 'Description') %>
+          <%= sort_header_tag('total_amount', caption: 'Total Amount') %>
           <th>Quarterly Distribution</th>
           <th>Utilized</th>
           <th>Remaining</th>

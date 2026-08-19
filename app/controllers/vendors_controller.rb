@@ -1,11 +1,15 @@
 class VendorsController < ApplicationController
+  include SortHelper
   layout 'admin'
   
   before_action :require_admin_or_vendor_permission
   before_action :find_vendor, only: [:show, :edit, :update, :destroy]
   
   def index
-    @vendors = find_vendors
+    sort_init 'name', 'asc'
+    sort_update %w[name vendor_id country email phone contact_person project_id is_active]
+
+    @vendors = find_vendors.reorder(sort_clause)
   end
   
   def new

@@ -52,13 +52,13 @@
     <table class="pr-table">
       <thead>
         <tr>
-          <th>Year</th>
-          <th>OPEX Code</th>
-          <th>Description</th>
-          <th>Total Amount</th>
+          <%= sort_header_tag('year', caption: 'Year') %>
+          <%= sort_header_tag('opex_code', caption: 'OPEX Code') %>
+          <%= sort_header_tag('description', caption: 'Description') %>
+          <%= sort_header_tag('total_amount', caption: 'Total Amount') %>
           <th>Quarterly Distribution</th>
-          <th>Category</th>
-          <th>TPC Code</th>
+          <%= sort_header_tag('category_id', caption: 'Category') %>
+          <%= sort_header_tag('tpc_code_id', caption: 'TPC Code') %>
           <th>Utilized</th>
           <th>Remaining</th>
           <th>Utilization %</th>

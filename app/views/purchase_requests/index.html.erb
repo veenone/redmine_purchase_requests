@@ -63,15 +63,15 @@
       <caption class="sr-only">Purchase requests</caption>
       <thead>
         <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Title</th>
-          <th scope="col">Status</th>
-          <th scope="col">Author</th>
-          <th scope="col">Estimated Price</th>
+          <%= sort_header_tag('id', caption: 'ID', scope: 'col') %>
+          <%= sort_header_tag('title', caption: 'Title', scope: 'col') %>
+          <%= sort_header_tag('status_id', caption: 'Status', scope: 'col') %>
+          <%= sort_header_tag('user_id', caption: 'Author', scope: 'col') %>
+          <%= sort_header_tag('estimated_price', caption: 'Estimated Price', scope: 'col') %>
           <th scope="col">Budget Entry</th>
-          <th scope="col">TPC Code</th>
-          <th scope="col">Created</th>
-          <th scope="col">Updated</th>
+          <%= sort_header_tag('tpc_code_id', caption: 'TPC Code', scope: 'col') %>
+          <%= sort_header_tag('created_at', caption: 'Created', scope: 'col') %>
+          <%= sort_header_tag('updated_at', caption: 'Updated', scope: 'col') %>
           <th scope="col">Actions</th>
         </tr>
       </thead>

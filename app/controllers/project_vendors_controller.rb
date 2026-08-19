@@ -1,4 +1,5 @@
 class ProjectVendorsController < ApplicationController
+  include SortHelper
   before_action :find_project
   before_action :authorize_view, only: [:index]
   before_action :authorize_manage, only: [:manage, :new, :create, :edit, :update, :destroy]
@@ -8,7 +9,10 @@ class ProjectVendorsController < ApplicationController
 
   def index
     Rails.logger.info "ProjectVendorsController#index called for project: #{@project.try(:identifier)}"
-    @vendors = find_vendors
+    sort_init 'name', 'asc'
+    sort_update %w[name vendor_id email phone contact_person website project_id is_active]
+
+    @vendors = find_vendors.reorder(sort_clause)
     
     # Use explicit render with rescue for better error handling
     render :index

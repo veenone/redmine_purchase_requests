@@ -55,14 +55,14 @@
     <table class="pr-table">
       <thead>
         <tr>
-          <th>Vendor Name</th>
-          <th>Vendor ID</th>
-          <th>Country</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Contact Person</th>
-          <th>Scope</th>
-          <th>Status</th>
+          <%= sort_header_tag('name', caption: 'Vendor Name') %>
+          <%= sort_header_tag('vendor_id', caption: 'Vendor ID') %>
+          <%= sort_header_tag('country', caption: 'Country') %>
+          <%= sort_header_tag('email', caption: 'Email') %>
+          <%= sort_header_tag('phone', caption: 'Phone') %>
+          <%= sort_header_tag('contact_person', caption: 'Contact Person') %>
+          <%= sort_header_tag('project_id', caption: 'Scope') %>
+          <%= sort_header_tag('is_active', caption: 'Status') %>
           <th>Purchase Requests</th>
           <th class="buttons">Actions</th>
         </tr>

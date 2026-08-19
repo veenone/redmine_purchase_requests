@@ -1,4 +1,5 @@
 class OpexController < ApplicationController
+  include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   layout 'base'
   before_action :find_project
@@ -13,6 +14,9 @@ class OpexController < ApplicationController
   helper_method :opex_currency_symbol
   
   def index
+    sort_init 'year', 'desc'
+    sort_update %w[year opex_code description total_amount category_id tpc_code_id]
+
     @year = params[:year] || Date.current.year
     @category = params[:category]
     @search = params[:search]
@@ -24,7 +28,7 @@ class OpexController < ApplicationController
     
     # TPC filter
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @opex_entries = apply_tpc_filter(@opex_entries)
+    @opex_entries = apply_tpc_filter(@opex_entries).reorder(sort_clause)
 
     @years = @project.opex.distinct.pluck(:year).sort.reverse
     @categories = OpexCategory.all.pluck(:name, :id)

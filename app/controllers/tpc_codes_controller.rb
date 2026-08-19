@@ -1,4 +1,5 @@
 class TpcCodesController < ApplicationController
+  include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   include PurchaseRequestsHelper
 
@@ -10,6 +11,9 @@ class TpcCodesController < ApplicationController
   before_action :find_global_tpc_code, only: [:global_show, :global_edit, :global_update, :global_destroy]
   
   def index
+    sort_init 'tpc_number', 'asc'
+    sort_update %w[tpc_number tpc_name tpc_owner_name department tpc_email description project_id is_active]
+
     @tpc_codes = TpcCode.available_for_project(@project)
     @tpc_codes = @tpc_codes.search(params[:search]) if params[:search].present?
     @tpc_codes = @tpc_codes.active if params[:active] == 'true'
@@ -18,7 +22,7 @@ class TpcCodesController < ApplicationController
     
     # TPC filter (selects rows of this list, so it targets :id)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
+    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id).reorder(sort_clause)
 
     @tpc_codes_count = @tpc_codes.count
     @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']

@@ -70,16 +70,16 @@
       <caption class="sr-only">TPC codes</caption>
       <thead>
         <tr>
-          <th scope="col">TPC Number</th>
-          <th scope="col">TPC Name</th>
-          <th scope="col">Owner Name</th>
-          <th scope="col">Department</th>
-          <th scope="col">Email</th>
-          <th scope="col">Description</th>
+          <%= sort_header_tag('tpc_number', caption: 'TPC Number', scope: 'col') %>
+          <%= sort_header_tag('tpc_name', caption: 'TPC Name', scope: 'col') %>
+          <%= sort_header_tag('tpc_owner_name', caption: 'Owner Name', scope: 'col') %>
+          <%= sort_header_tag('department', caption: 'Department', scope: 'col') %>
+          <%= sort_header_tag('tpc_email', caption: 'Email', scope: 'col') %>
+          <%= sort_header_tag('description', caption: 'Description', scope: 'col') %>
           <% if @project %>
-            <th scope="col">Scope</th>
+            <%= sort_header_tag('project_id', caption: 'Scope', scope: 'col') %>
           <% end %>
-          <th scope="col">Status</th>
+          <%= sort_header_tag('is_active', caption: 'Status', scope: 'col') %>
           <th scope="col">Linked CAPEX</th>
           <th scope="col" class="buttons">Actions</th>
         </tr>

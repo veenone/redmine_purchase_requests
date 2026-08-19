@@ -1,4 +1,5 @@
 class CapexController < ApplicationController
+  include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   before_action :find_project
   before_action :authorize, except: [:quarterly_data, :dashboard_data]
@@ -9,6 +10,9 @@ class CapexController < ApplicationController
   menu_item :purchase_requests
 
   def index
+    sort_init 'year', 'desc'
+    sort_update %w[year tpc_code_id description total_amount]
+
     @capex_entries = find_capex_entries
     # Get years without ordering to avoid DISTINCT conflict
     @years = @project.capex.distinct.pluck(:year).sort.reverse
@@ -18,7 +22,7 @@ class CapexController < ApplicationController
     
     # TPC filter
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @capex_entries = apply_tpc_filter(@capex_entries)
+    @capex_entries = apply_tpc_filter(@capex_entries).reorder(sort_clause)
 
     respond_to do |format|
       format.html
