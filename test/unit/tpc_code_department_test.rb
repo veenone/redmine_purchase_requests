@@ -35,7 +35,12 @@ class TpcCodeDepartmentTest < ActiveSupport::TestCase
   end
 
   test 'every TPC code carrying a department string has been linked' do
-    unlinked = TpcCode.where.not(department: [nil, '']).where(department_id: nil).count
+    # Raw SQL on purpose. With belongs_to :department in place, the hash form
+    # where(department: ...) is rewritten against department_id, which makes
+    # this assertion a tautology that can never fail.
+    unlinked = TpcCode.where(
+      "tpc_codes.department IS NOT NULL AND tpc_codes.department != '' AND tpc_codes.department_id IS NULL"
+    ).count
     assert_equal 0, unlinked,
                  'the backfill must leave no departmented TPC code without a department_id'
   end
@@ -59,6 +64,7 @@ class TpcCodeDepartmentTest < ActiveSupport::TestCase
   test 'deleting a department nullifies the link rather than the TPC code' do
     tpc = build_tpc(department: @dept)
     tpc.save!
+    assert_not_nil tpc.department_id, 'the association must have set the foreign key'
     @dept.destroy
     assert TpcCode.exists?(tpc.id), 'the TPC code must survive'
     assert_nil tpc.reload.department_id
