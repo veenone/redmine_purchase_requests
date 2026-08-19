@@ -1,4 +1,5 @@
 class PurchaseRequestsController < ApplicationController
+  helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   before_action :find_project, only: [:index, :new, :create, :dashboard]

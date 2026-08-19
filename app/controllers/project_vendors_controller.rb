@@ -1,4 +1,5 @@
 class ProjectVendorsController < ApplicationController
+  helper :sort
   include SortHelper
   before_action :find_project
   before_action :authorize_view, only: [:index]

@@ -1,4 +1,5 @@
 class VendorsController < ApplicationController
+  helper :sort
   include SortHelper
   layout 'admin'
   

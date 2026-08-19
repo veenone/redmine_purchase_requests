@@ -1,4 +1,5 @@
 class CapexController < ApplicationController
+  helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   before_action :find_project

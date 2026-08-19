@@ -1,4 +1,5 @@
 class OpexController < ApplicationController
+  helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   layout 'base'

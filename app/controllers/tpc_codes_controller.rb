@@ -1,4 +1,5 @@
 class TpcCodesController < ApplicationController
+  helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   include PurchaseRequestsHelper
