@@ -1,5 +1,11 @@
 <%#
-  TPC multi-select field, for dropping inside an existing filter form.
+  TPC filter field: a dropdown that supports selecting several TPC codes.
+
+  A native <select multiple> renders as a scrolling list box in every browser
+  and cannot be made to drop down, so this is a disclosure button over a panel
+  of checkboxes. The checkboxes are plain form controls named tpc_code_id[],
+  so the surrounding form submits them exactly as the old select did and the
+  controller side is unchanged.
 
   Index views already own a filter form (status, search, category, active), so
   they render this field rather than shared/_dashboard_filters -- a second form
@@ -14,14 +20,258 @@
 <%
   field_id = local_assigns.fetch(:field_id, 'df_tpc')
   hint_id  = "#{field_id}_hint"
+  panel_id = "#{field_id}_panel"
   selected = Array(local_assigns[:selected_tpc_code_ids]).map(&:to_s)
   choices  = Array(local_assigns[:available_tpc_codes])
+
+  summary =
+    if selected.empty?
+      l(:label_all_tpcs, default: 'All TPCs')
+    elsif selected.size == 1
+      chosen = choices.detect { |t| t.id.to_s == selected.first }
+      chosen ? truncate(chosen.display_name, length: 34) : "#{selected.size} selected"
+    else
+      l(:label_tpcs_selected, count: selected.size, default: "#{selected.size} TPCs selected")
+    end
 %>
 <label for="<%= field_id %>"><%= l(:label_tpc_code, default: 'TPC') %></label>
-<%= select_tag 'tpc_code_id[]',
-               options_for_select(choices.map { |t| [truncate(t.display_name, length: 60), t.id.to_s] }, selected),
-               multiple: true,
-               size: 4,
-               id: field_id,
-               'aria-describedby' => hint_id %>
-<em class="info" id="<%= hint_id %>"><%= l(:text_tpc_filter_hint, default: 'Select none for all TPCs; Ctrl/Cmd-click to pick several.') %></em>
+
+<div class="pr-multiselect" data-pr-multiselect>
+  <button type="button"
+          id="<%= field_id %>"
+          class="pr-multiselect__toggle"
+          aria-haspopup="true"
+          aria-expanded="false"
+          aria-controls="<%= panel_id %>"
+          aria-describedby="<%= hint_id %>"
+          data-pr-multiselect-toggle
+          data-label-all="<%= l(:label_all_tpcs, default: 'All TPCs') %>"
+          data-label-many="<%= l(:label_tpcs_selected_suffix, default: 'TPCs selected') %>">
+    <span class="pr-multiselect__summary" data-pr-multiselect-summary><%= summary %></span>
+    <span class="pr-multiselect__caret" aria-hidden="true">&#9662;</span>
+  </button>
+
+  <div class="pr-multiselect__panel" id="<%= panel_id %>" role="group"
+       aria-labelledby="<%= field_id %>" hidden>
+    <% if choices.size > 8 %>
+      <input type="text" class="pr-multiselect__search" data-pr-multiselect-search
+             placeholder="<%= l(:label_filter_list, default: 'Filter…') %>"
+             aria-label="<%= l(:label_filter_list, default: 'Filter…') %>">
+    <% end %>
+
+    <ul class="pr-multiselect__options">
+      <% choices.each do |tpc| %>
+        <li class="pr-multiselect__option">
+          <label title="<%= tpc.display_name %>">
+            <%= check_box_tag 'tpc_code_id[]', tpc.id.to_s,
+                              selected.include?(tpc.id.to_s),
+                              id: "#{field_id}_opt_#{tpc.id}" %>
+            <span><%= truncate(tpc.display_name, length: 60) %></span>
+          </label>
+        </li>
+      <% end %>
+    </ul>
+
+    <% if choices.empty? %>
+      <p class="pr-multiselect__empty"><%= l(:label_no_data, default: 'No data to display') %></p>
+    <% end %>
+  </div>
+</div>
+
+<em class="info" id="<%= hint_id %>"><%= l(:text_tpc_filter_hint, default: 'Select none for all TPCs.') %></em>
+
+<%# CSS and JS are emitted once per page, however many filter fields render. %>
+<% unless @pr_multiselect_assets_rendered %>
+  <% @pr_multiselect_assets_rendered = true %>
+  <style>
+  .pr-multiselect { position: relative; display: inline-block; vertical-align: middle; }
+
+  .pr-multiselect__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 220px;
+    max-width: 320px;
+    min-height: 32px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    border: 1px solid var(--pr-border-strong, #bbb);
+    border-radius: var(--pr-radius-sm, 4px);
+    background: var(--pr-surface, #fff);
+    color: var(--pr-ink, #333);
+    font-family: var(--pr-font, inherit);
+    font-size: 13px;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .pr-multiselect__toggle:hover { background: var(--pr-surface-subtle, #f5f5f5); }
+
+  .pr-multiselect__toggle:focus-visible {
+    outline: 2px solid var(--pr-accent, #628db6);
+    outline-offset: 1px;
+  }
+
+  .pr-multiselect__summary {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pr-multiselect__caret { flex: none; font-size: 10px; color: var(--pr-ink-muted, #666); }
+
+  .pr-multiselect__panel {
+    position: absolute;
+    z-index: 900;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
+    max-width: 380px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 6px;
+    box-sizing: border-box;
+    border: 1px solid var(--pr-border, #ddd);
+    border-radius: var(--pr-radius-sm, 4px);
+    background: var(--pr-surface, #fff);
+    box-shadow: var(--pr-shadow-md, 0 4px 20px rgba(0, 0, 0, .18));
+  }
+
+  .pr-multiselect__panel[hidden] { display: none; }
+
+  .pr-multiselect__search {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 6px;
+    padding: 4px 6px;
+    border: 1px solid var(--pr-border, #ddd);
+    border-radius: var(--pr-radius-sm, 4px);
+    font-size: 12px;
+  }
+
+  .pr-multiselect__options { margin: 0; padding: 0; list-style: none; }
+
+  .pr-multiselect__option label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 4px 6px;
+    border-radius: var(--pr-radius-sm, 4px);
+    font-size: 13px;
+    font-weight: normal;
+    cursor: pointer;
+  }
+
+  .pr-multiselect__option label:hover { background: var(--pr-surface-subtle, #f5f5f5); }
+
+  .pr-multiselect__option input { flex: none; margin: 0; }
+
+  .pr-multiselect__option span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pr-multiselect__empty {
+    margin: 0;
+    padding: 6px;
+    color: var(--pr-ink-faint, #999);
+    font-style: italic;
+    font-size: 12px;
+  }
+  </style>
+
+  <script>
+  // Progressive enhancement over plain checkboxes: with JS disabled the panel
+  // stays hidden but the checked boxes still submit, so an existing filter in
+  // the URL keeps working.
+  (function () {
+    if (window.prMultiselectReady) { return; }
+    window.prMultiselectReady = true;
+
+    function summarise(root) {
+      var toggle  = root.querySelector('[data-pr-multiselect-toggle]');
+      var summary = root.querySelector('[data-pr-multiselect-summary]');
+      var checked = root.querySelectorAll('input[type="checkbox"]:checked');
+      if (!toggle || !summary) { return; }
+
+      if (checked.length === 0) {
+        summary.textContent = toggle.getAttribute('data-label-all');
+      } else if (checked.length === 1) {
+        var label = checked[0].closest('label');
+        summary.textContent = label ? label.textContent.trim() : '1';
+      } else {
+        summary.textContent = checked.length + ' ' + toggle.getAttribute('data-label-many');
+      }
+    }
+
+    function close(root) {
+      var toggle = root.querySelector('[data-pr-multiselect-toggle]');
+      var panel  = root.querySelector('.pr-multiselect__panel');
+      if (!panel || panel.hidden) { return; }
+      panel.hidden = true;
+      if (toggle) { toggle.setAttribute('aria-expanded', 'false'); }
+    }
+
+    function closeAll(except) {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-pr-multiselect]'), function (root) {
+        if (root !== except) { close(root); }
+      });
+    }
+
+    document.addEventListener('click', function (event) {
+      var toggle = event.target.closest('[data-pr-multiselect-toggle]');
+
+      if (toggle) {
+        var root  = toggle.closest('[data-pr-multiselect]');
+        var panel = root.querySelector('.pr-multiselect__panel');
+        var open  = panel.hidden;
+        closeAll(root);
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) {
+          var search = panel.querySelector('[data-pr-multiselect-search]');
+          if (search) { search.focus(); }
+        }
+        return;
+      }
+
+      // A click inside a panel is a checkbox interaction; anything else closes.
+      if (!event.target.closest('.pr-multiselect__panel')) { closeAll(null); }
+    });
+
+    document.addEventListener('change', function (event) {
+      var root = event.target.closest('[data-pr-multiselect]');
+      if (root) { summarise(root); }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') {
+        closeAll(null);
+        return;
+      }
+      // The panel's filter box lives inside the surrounding GET form, so Enter
+      // would submit the form mid-typing.
+      if (event.key === 'Enter' && event.target.matches('[data-pr-multiselect-search]')) {
+        event.preventDefault();
+      }
+    });
+
+    document.addEventListener('input', function (event) {
+      if (!event.target.matches('[data-pr-multiselect-search]')) { return; }
+      var needle = event.target.value.toLowerCase();
+      var panel  = event.target.closest('.pr-multiselect__panel');
+      Array.prototype.forEach.call(panel.querySelectorAll('.pr-multiselect__option'), function (option) {
+        option.style.display = option.textContent.toLowerCase().indexOf(needle) === -1 ? 'none' : '';
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-pr-multiselect]'), summarise);
+    });
+  })();
+  </script>
+<% end %>
