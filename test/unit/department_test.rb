@@ -22,7 +22,13 @@ class DepartmentTest < ActiveSupport::TestCase
 
   test 'allows several departments to have blank codes at once' do
     Department.create!(name: 'Finance')
-    assert Department.new(name: 'Legal').valid?
+    assert Department.create(name: 'Legal').persisted?
+  end
+
+  test 'stores an empty-string code as null so blank codes never collide' do
+    Department.create!(name: 'Finance', code: '')
+    assert Department.create(name: 'Legal', code: '').persisted?
+    assert_nil Department.find_by(name: 'Finance').code
   end
 
   test 'rejects a duplicate code when one is present' do

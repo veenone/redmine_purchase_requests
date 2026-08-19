@@ -1,6 +1,8 @@
 class Department < ActiveRecord::Base
   has_many :tpc_codes, dependent: :nullify
 
+  before_validation { self.code = code.presence }
+
   validates :name, presence: true,
                    length: { maximum: 100 },
                    uniqueness: { case_sensitive: false }
