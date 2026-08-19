@@ -105,7 +105,6 @@ en:
   label_general_settings: "General Settings"
   text_default_status_description: "Select the default status for new purchase requests"
   text_tpc_filter_unavailable: "Some selected TPC codes are not in the current list"
-  text_tpc_filter_hint: "Select none for all TPCs; Ctrl/Cmd-click to pick several."
   label_max_purchase_amount: "Maximum Purchase Amount"
   text_max_purchase_amount_description: "Set the maximum allowed amount for a single purchase request. Useful for currencies with large denominations (e.g., IDR)."
   text_max_purchase_amount_help: "Enter the maximum allowed purchase amount (e.g., 99999999.99 for USD, 9999999999999.99 for IDR). The column supports up to 13 digits before the decimal."

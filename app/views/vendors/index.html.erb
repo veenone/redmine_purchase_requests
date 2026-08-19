@@ -42,9 +42,9 @@
             ['Inactive Only', 'false']
           ], params[:active]), { include_blank: false } %>
 
-      <%= f.submit 'Filter', class: 'pr-button pr-button-secondary small' %>
+      <%= f.submit 'Filter', class: 'pr-button pr-button-secondary' %>
       <% if params[:search].present? || params[:active].present? %>
-        <%= link_to 'Clear', vendors_path, class: 'pr-button pr-button-cancel small' %>
+        <%= ' %>
       <% end %>
     </div>
   <% end %>

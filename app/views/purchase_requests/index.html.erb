@@ -50,9 +50,9 @@
                      { include_blank: 'All Statuses' } %>
 
         <%= render 'shared/tpc_filter_field', available_tpc_codes: @available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
-        <%= f.submit 'Filter', class: 'pr-button pr-button-secondary small' %>
+        <%= f.submit 'Filter', class: 'pr-button pr-button-secondary' %>
         <% if params[:status_id].present? || params[:search].present? %>
-          <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel small' %>
+          <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel' %>
         <% end %>
       </div>
     </fieldset>

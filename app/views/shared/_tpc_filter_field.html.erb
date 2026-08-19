@@ -19,7 +19,6 @@
 %>
 <%
   field_id = local_assigns.fetch(:field_id, 'df_tpc')
-  hint_id  = "#{field_id}_hint"
   panel_id = "#{field_id}_panel"
   selected = Array(local_assigns[:selected_tpc_code_ids]).map(&:to_s)
   choices  = Array(local_assigns[:available_tpc_codes])
@@ -43,7 +42,6 @@
           aria-haspopup="true"
           aria-expanded="false"
           aria-controls="<%= panel_id %>"
-          aria-describedby="<%= hint_id %>"
           data-pr-multiselect-toggle
           data-label-all="<%= l(:label_all_tpcs, default: 'All TPCs') %>"
           data-label-many="<%= l(:label_tpcs_selected_suffix, default: 'TPCs selected') %>">
@@ -78,14 +76,23 @@
   </div>
 </div>
 
-<em class="info" id="<%= hint_id %>"><%= l(:text_tpc_filter_hint, default: 'Select none for all TPCs.') %></em>
-
+<%#
+  No hint text. The old one told the user to Ctrl/Cmd-click, which was advice
+  for the list box this replaced, and a sentence of italic prose in the filter
+  row made the control heights read as uneven. The button's own summary --
+  "All TPCs" or a count -- now says what the hint used to.
+%>
 <%# CSS and JS are emitted once per page, however many filter fields render. %>
 <% unless @pr_multiselect_assets_rendered %>
   <% @pr_multiselect_assets_rendered = true %>
   <style>
   .pr-multiselect { position: relative; display: inline-block; vertical-align: middle; }
 
+  /* Height, padding, border, radius, background and font-size come from the
+     shared filter-control rule in assets/stylesheets/purchase_requests.css,
+     which now lists .pr-multiselect__toggle alongside the selects and inputs
+     it sits beside. Only layout lives here, so the button cannot drift out of
+     step with the other controls in the row. */
   .pr-multiselect__toggle {
     display: inline-flex;
     align-items: center;
@@ -93,15 +100,7 @@
     gap: 8px;
     min-width: 220px;
     max-width: 320px;
-    min-height: 32px;
-    padding: 6px 10px;
     box-sizing: border-box;
-    border: 1px solid var(--pr-border-strong, #bbb);
-    border-radius: var(--pr-radius-sm, 4px);
-    background: var(--pr-surface, #fff);
-    color: var(--pr-ink, #333);
-    font-family: var(--pr-font, inherit);
-    font-size: 13px;
     line-height: 1.2;
     text-align: left;
     cursor: pointer;
