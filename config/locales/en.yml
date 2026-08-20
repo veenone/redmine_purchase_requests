@@ -17,6 +17,8 @@ en:
   label_status_color: "Color"
   label_new_purchase_request: "New Purchase Request"
   label_no_data: "No purchase requests have been created yet."
+  label_no_tpc_codes_available: "No TPC codes available"
+  label_no_departments: "No departments have been created yet."
   label_create_first_purchase_request: "Click %{link} to create your first purchase request."
   label_filter_plural: "Filters"
   field_title: "Title"
