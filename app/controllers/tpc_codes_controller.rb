@@ -32,6 +32,7 @@ class TpcCodesController < ApplicationController
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
                  .left_joins(:department)
+                 .preload(:department)
                  .reorder(sort_clause)
 
     @tpc_codes_count = @tpc_codes.count
@@ -40,16 +41,33 @@ class TpcCodesController < ApplicationController
   end
   
   def global_index
+    sort_init 'tpc_number', 'asc'
+    sort_update({ 'tpc_number' => 'tpc_codes.tpc_number',
+                  'tpc_name' => 'tpc_codes.tpc_name',
+                  'tpc_owner_name' => 'tpc_codes.tpc_owner_name',
+                  'department' => 'departments.name',
+                  'tpc_email' => 'tpc_codes.tpc_email',
+                  'description' => 'tpc_codes.description',
+                  'project_id' => 'tpc_codes.project_id',
+                  'is_active' => 'tpc_codes.is_active' })
+
     @tpc_codes = TpcCode.global
     @tpc_codes = @tpc_codes.search(params[:search]) if params[:search].present?
     @tpc_codes = @tpc_codes.active if params[:active] == 'true'
     @tpc_codes = @tpc_codes.inactive if params[:active] == 'false'
     @tpc_codes = @tpc_codes.ordered
-    
+
+    # TPC filter (selects rows of this list, so it targets :id)
+    @available_tpc_codes = TpcCode.global.active.ordered
+    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
+                 .left_joins(:department)
+                 .preload(:department)
+                 .reorder(sort_clause)
+
     @tpc_codes_count = @tpc_codes.count
     @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']
     @tpc_codes = @tpc_codes.limit(@tpc_codes_pages.per_page).offset(@tpc_codes_pages.offset)
-    
+
     render 'index'
   end
   
