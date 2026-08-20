@@ -2316,3 +2316,56 @@
 #content .icon.icon-bullet::before {
   --pr-ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.5 12a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z'/%3E%3C/svg%3E");
 }
+
+/* Settings toggle rows -------------------------------------------------
+   One row per boolean setting: name and explanation on the left, the
+   control on the right. Replaces a card-per-toggle layout that stacked a
+   header, a label and an info alert into a narrow grid column. */
+#content .pr-setting-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--pr-space-4);
+  padding: var(--pr-space-3) 0;
+  border-top: 1px solid var(--pr-border);
+  cursor: pointer;
+  margin: 0;
+}
+#content .pr-setting-row:first-child { border-top: 0; padding-top: 0; }
+#content .pr-setting-row:last-child { padding-bottom: 0; }
+#content .pr-setting-row:hover .pr-setting-row__name { color: var(--pr-accent); }
+
+/* min-width: 0 lets the text column shrink inside the flex row. Without it
+   a flex item refuses to go below its content width, which is what forces
+   long words to break one character per line in a narrow container. */
+#content .pr-setting-row__text {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+#content .pr-setting-row__name {
+  display: block;
+  color: var(--pr-ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+#content .pr-setting-row__help {
+  display: block;
+  margin-top: 3px;
+  color: var(--pr-ink-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+#content .pr-setting-row__note {
+  display: block;
+  margin-top: 3px;
+  color: var(--pr-ink-faint);
+  font-size: 11px;
+  line-height: 1.5;
+}
+#content .pr-setting-row__control {
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+#content .pr-setting-row__control input[type="checkbox"] { margin: 0; }

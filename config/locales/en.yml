@@ -649,7 +649,8 @@ en:
   warning_tpc_codes_imported_unmatched_departments: "Import completed: %{count} new TPC codes created, %{updated} codes updated. These departments were not recognised and were left unset: %{departments}"
   
   # TPC Settings
-  label_tpc_settings: "TPC Code Settings"
+  label_tpc_settings: "TPC Code Settings"
+  label_tpc_options: "Options"
   label_tpc_global_enabled: "Enable Global TPC Codes"
   label_tpc_auto_link: "Auto-link TPC Codes"
   label_tpc_require_for_capex: "Require TPC Code for CAPEX"
