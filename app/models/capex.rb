@@ -135,6 +135,36 @@ class Capex < ActiveRecord::Base
                     .sum(:allocated_amount) || 0
   end
 
+  # CSV export for the list view. `scope` is a Capex relation already
+  # filtered by the caller (index filters -- year, search, TPC) so the
+  # export matches what's on screen. Defaults to `all` for ad-hoc use.
+  def self.to_csv(scope = all)
+    require 'csv'
+
+    CSV.generate(headers: true) do |csv|
+      csv << ['Year', 'TPC Code', 'Description', 'Total Amount', 'Currency',
+              'Q1 Amount', 'Q2 Amount', 'Q3 Amount', 'Q4 Amount',
+              'Utilized', 'Remaining', 'Utilization %']
+
+      scope.includes(:tpc_code_record).each do |capex|
+        csv << [
+          capex.capex_year,
+          capex.tpc_code_display,
+          capex.description,
+          capex.total_amount,
+          capex.currency,
+          capex.q1_amount,
+          capex.q2_amount,
+          capex.q3_amount,
+          capex.q4_amount,
+          capex.utilized_amount,
+          capex.remaining_amount,
+          capex.utilization_percentage
+        ]
+      end
+    end
+  end
+
   private
   
   def quarterly_amounts_sum_equals_total

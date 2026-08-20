@@ -47,6 +47,19 @@
   </fieldset>
 <% end %>
 
+<%
+  opex_export_query = {
+    year: @year,
+    search: params[:search].presence,
+    category: @category.presence,
+    tpc_code_id: selected_tpc_code_ids.presence
+  }.compact
+%>
+<%= render 'shared/export_actions',
+           csv_path:  export_csv_project_opex_index_path(@project, opex_export_query),
+           xlsx_path: export_xlsx_project_opex_index_path(@project, opex_export_query),
+           pdf_path:  export_pdf_project_opex_index_path(@project, opex_export_query) %>
+
 <% if @opex_entries.any? %>
   <div class="autoscroll">
     <table class="pr-table">

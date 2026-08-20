@@ -1,0 +1,21 @@
+<%#
+  Export buttons for the CAPEX and OPEX list views, mirroring the reports
+  export bar (app/views/reports/_export_actions.html.erb) -- same pr-button
+  classes and icon spans, so the two feel like one system.
+
+  Locals:
+    csv_path, xlsx_path, pdf_path - full URLs (String) to the export
+      actions, including any current filter params (year/search/category/
+      tpc_code_id) the caller wants preserved.
+%>
+<div class="pr-export-actions">
+  <%= link_to csv_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-csv-file"><%= l(:label_budget_export_csv, default: 'Export CSV') %></span>
+  <% end %>
+  <%= link_to xlsx_path, class: 'pr-button pr-button-secondary pr-button-icon' do %>
+    <span class="icon icon-xls"><%= l(:label_budget_export_xlsx, default: 'Export XLSX') %></span>
+  <% end %>
+  <%= link_to pdf_path, class: 'pr-button pr-button-primary pr-button-icon', target: '_blank', rel: 'noopener noreferrer' do %>
+    <span class="icon icon-pdf"><%= l(:label_budget_export_pdf, default: 'Export PDF') %></span>
+  <% end %>
+</div>

@@ -249,6 +249,11 @@ en:
   notice_capex_updated: "CAPEX entry was successfully updated"
   notice_capex_deleted: "CAPEX entry was successfully deleted"
   error_capex_not_deleted: "CAPEX entry could not be deleted"
+
+  # CAPEX/OPEX List Export
+  label_budget_export_csv: "Export CSV"
+  label_budget_export_xlsx: "Export XLSX"
+  label_budget_export_pdf: "Export PDF"
   error_tpc_code_blank_when_no_selection: "Legacy TPC code can't be blank when no TPC code is selected"
   error_opex_code_blank_when_no_selection: "Legacy OPEX code can't be blank when no TPC code is selected"
   text_tpc_code_field_info: "Select a TPC code from the dropdown OR enter a legacy TPC code, but not both"

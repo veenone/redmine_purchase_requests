@@ -27,10 +27,10 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
     permission :view_project_vendors, { project_vendors: [:index, :show] }
     permission :manage_project_vendors, { project_vendors: [:manage, :new, :create, :edit, :update, :destroy] }
-    permission :view_capex, { capex: [:index, :show] }
+    permission :view_capex, { capex: [:index, :show, :export_csv, :export_xlsx, :export_pdf] }
     permission :manage_capex, { capex: [:new, :create, :edit, :update, :destroy] }
     permission :view_capex_dashboard, { capex: [:dashboard] }
-    permission :view_opex, { opex: [:index, :show] }
+    permission :view_opex, { opex: [:index, :show, :export_csv, :export_xlsx, :export_pdf] }
     permission :manage_opex, { opex: [:new, :create, :edit, :update, :destroy] }
     permission :view_opex_dashboard, { opex: [:dashboard] }
     permission :view_tpc_codes, { tpc_codes: [:index, :show] }

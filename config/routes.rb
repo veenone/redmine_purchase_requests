@@ -23,6 +23,9 @@ RedmineApp::Application.routes.draw do
       collection do
         get 'dashboard'
         get 'dashboard_data'
+        get 'export_csv'
+        get 'export_xlsx'
+        get 'export_pdf'
       end
       member do
         get 'quarterly_data'
@@ -34,6 +37,9 @@ RedmineApp::Application.routes.draw do
       collection do
         get 'dashboard'
         get 'dashboard_data'
+        get 'export_csv'
+        get 'export_xlsx'
+        get 'export_pdf'
       end
       member do
         get 'quarterly_data'

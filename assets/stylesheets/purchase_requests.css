@@ -893,6 +893,15 @@
   border-color: var(--pr-accent);
   box-shadow: 0 0 0 3px var(--pr-accent-soft);
 }
+/* Export bar (CAPEX/OPEX list views) -- sits under the filter fieldset,
+   above the table. See app/views/shared/_export_actions.html.erb. */
+#content .pr-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
 /* Active-filter chips */
 #content .pr-filter-chips {
   display: flex;
@@ -2105,6 +2114,7 @@
 #content .icon.icon-upload,
 #content .icon.icon-document,
 #content .icon.icon-csv-file,
+#content .icon.icon-xls,
 #content .icon.icon-checked,
 #content .icon.icon-zoom-in,
 #content .icon.icon-money,
@@ -2139,6 +2149,7 @@
 #content .icon.icon-upload::before,
 #content .icon.icon-document::before,
 #content .icon.icon-csv-file::before,
+#content .icon.icon-xls::before,
 #content .icon.icon-checked::before,
 #content .icon.icon-zoom-in::before,
 #content .icon.icon-money::before,
@@ -2259,6 +2270,11 @@
 /* icon-csv-file: File with spreadsheet lines */
 #content .icon.icon-csv-file::before {
   --pr-ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M8 13h2'/%3E%3Cpath d='M14 13h2'/%3E%3Cpath d='M8 17h2'/%3E%3Cpath d='M14 17h2'/%3E%3C/svg%3E");
+}
+
+/* icon-xls: Table / grid (Lucide "table") */
+#content .icon.icon-xls::before {
+  --pr-ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3h18v18H3z'/%3E%3Cpath d='M3 9h18'/%3E%3Cpath d='M3 15h18'/%3E%3Cpath d='M9 3v18'/%3E%3Cpath d='M15 3v18'/%3E%3C/svg%3E");
 }
 
 /* icon-checked: Check mark */

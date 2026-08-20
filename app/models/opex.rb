@@ -211,6 +211,38 @@ class Opex < ActiveRecord::Base
                     .where.not(allocated_amount: nil)
                     .sum(:allocated_amount) || 0
   end
+
+  # CSV export for the list view. `scope` is an Opex relation already
+  # filtered by the caller (index filters -- year, category, search, TPC)
+  # so the export matches what's on screen. Defaults to `all` for ad-hoc use.
+  def self.to_csv(scope = all)
+    require 'csv'
+
+    CSV.generate(headers: true) do |csv|
+      csv << ['Year', 'OPEX Code', 'Description', 'Total Amount', 'Currency',
+              'Q1 Amount', 'Q2 Amount', 'Q3 Amount', 'Q4 Amount',
+              'Category', 'TPC Code', 'Utilized', 'Remaining', 'Utilization %']
+
+      scope.includes(:opex_category, :tpc_code).each do |opex|
+        csv << [
+          opex.year,
+          opex.opex_code,
+          opex.description,
+          opex.total_amount,
+          opex.currency,
+          opex.q1_amount,
+          opex.q2_amount,
+          opex.q3_amount,
+          opex.q4_amount,
+          opex.category_display,
+          opex.tpc_code&.tpc_number,
+          opex.utilized_amount,
+          opex.remaining_amount,
+          opex.utilization_percentage
+        ]
+      end
+    end
+  end
   
   private
   

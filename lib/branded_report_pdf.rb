@@ -23,8 +23,11 @@ class BrandedReportPdf < RBPDF
   HEADER_BG  = [244, 243, 249].freeze  # very light violet (#F4F3F9)
   ZEBRA_BG   = [250, 250, 251].freeze  # near-white (#FAFAFB)
 
-  def initialize(report_title:, project: nil, selected_year: nil, **rbpdf_opts)
-    super(**rbpdf_opts)
+  # `orientation` is forwarded positionally to RBPDF (it takes positional
+  # args only, e.g. 'P' or 'L') -- flat table exports (CAPEX/OPEX) pass 'L'
+  # for more column room; reports keep the default portrait.
+  def initialize(report_title:, project: nil, selected_year: nil, orientation: 'P', **rbpdf_opts)
+    super(orientation, **rbpdf_opts)
     @report_title  = report_title
     @project       = project
     @selected_year = selected_year
