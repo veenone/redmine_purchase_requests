@@ -7,29 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.11.0] - 2026-08-20
 
-Departments become real records, TPC filtering becomes multi-select, list views gain sorting and exports.
+Departments become real records, TPC filtering becomes multi-select, and list views gain sorting and exports.
 
-> **Deploy note:** run plugin migrations before restarting. Migration 039 adds  and backfills it; 040 drops the free-text  column and must run immediately before the restart, never after. Also run  for the new styles.
+> **Deploy note:** run plugin migrations before restarting. Migration 039 adds `tpc_codes.department_id` and backfills it; 040 drops the free-text `tpc_codes.department` column and must run immediately before the restart, never after — the running worker keeps naming that column until it reloads. Also run `RAILS_ENV=production bundle exec rake assets:precompile` for the new styles.
 
 ### Added
-- Departments are a first-class table with a code and a name, replacing the free-text  column, with admin CRUD reachable from the TPC settings tab and from the project menu.
--  and  permissions, so departments can be delegated to a role rather than requiring an administrator.
+
+- Departments are a first-class table with a code and a name, replacing the free-text `tpc_codes.department` column. CRUD is reachable from the TPC settings tab and from the project menu.
+- `view_departments` and `manage_departments` permissions, so departments can be delegated to a role rather than requiring an administrator.
 - Sortable column headers across the purchase request, CAPEX, OPEX, TPC code, vendor and project vendor lists.
 - CSV, XLSX and PDF export for the CAPEX and OPEX lists, honouring the filters currently applied.
-- A configurable maximum purchase amount, with  widened to  so currencies with large denominations fit.
-- , which compiles every plugin template and fails on a syntax error.
+- A configurable maximum purchase amount, with `estimated_price` widened to `decimal(15,2)` so currencies with large denominations fit.
+- `rake redmine_purchase_requests:check_templates`, which compiles every plugin template and fails on a syntax error.
 
 ### Changed
-- The TPC filter selects several codes at once and is a dropdown rather than a scrolling list box. Options read , falling back to the owner while names are unset.
+
+- The TPC filter selects several codes at once and is a dropdown rather than a scrolling list box. Options read `number - name`, falling back to the owner while names are unset.
 - TPC settings are one card of toggle rows instead of a card per setting.
-- Every filter control shares one set of metrics; the dashboard grids no longer reserve empty columns.
+- Every filter control shares one set of metrics, and the dashboard grids no longer reserve empty columns.
 
 ### Fixed
-- Sortable headers raised ; Redmine does not inject helpers into views, so the controllers needed  alongside .
+
+- Sortable headers raised `undefined method sort_header_tag`. Redmine sets `include_all_helpers = false`, so a controller including `SortHelper` does not give its views the helper; the controllers needed `helper :sort` alongside it.
 - The vendor and project vendor lists raised a template error from a truncated tag.
--  raised because the global list rendered the sortable template without initialising sort criteria.
+- `/tpc_codes` raised because the global list rendered the sortable template without initialising sort criteria.
 - The purchase request mailer raised on every path: wrong arity, a timestamp Redmine's mailer could not read, and a template variable the mailer never assigned.
-- Workflow template CRUD raised , the controller having offered JS responses with no matching templates.## [1.10.0] - 2026-08-04
+- Workflow template CRUD raised `ActionView::MissingTemplate`, the controller having offered JS responses with no matching templates.
+
+## [1.10.0] - 2026-08-04
 
 A UI/UX quality release (design-system consistency + accessibility) plus a modern icon set. No schema changes.
 
