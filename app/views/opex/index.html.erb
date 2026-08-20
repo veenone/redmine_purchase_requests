@@ -38,7 +38,7 @@
 
       <%= render 'shared/tpc_filter_field', available_tpc_codes: @available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
       <%= submit_tag 'Search', name: nil, class: 'pr-button pr-button-secondary' %>
-      <% if params[:year].present? || params[:search].present? %>
+      <% if params[:year].present? || params[:search].present? || params[:tpc_code_id].present? %>
         <%= link_to project_opex_index_path(@project), class: 'pr-button pr-button-cancel' do %>
           Clear
         <% end %>

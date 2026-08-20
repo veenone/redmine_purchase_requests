@@ -57,7 +57,7 @@
 
       <%= render 'shared/tpc_filter_field', available_tpc_codes: @available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
       <%= f.submit 'Filter', class: 'pr-button pr-button-secondary' %>
-      <% if params[:search].present? || params[:active].present? %>
+      <% if params[:search].present? || params[:active].present? || params[:tpc_code_id].present? %>
         <%= link_to 'Clear', (@project ? project_tpc_codes_path(@project) : global_tpc_codes_path), class: 'pr-button pr-button-cancel' %>
       <% end %>
     </div>
