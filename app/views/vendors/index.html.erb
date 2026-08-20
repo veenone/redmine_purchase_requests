@@ -44,7 +44,7 @@
 
       <%= f.submit 'Filter', class: 'pr-button pr-button-secondary' %>
       <% if params[:search].present? || params[:active].present? %>
-        <%= ' %>
+        <%= link_to 'Clear', vendors_path, class: 'pr-button pr-button-cancel' %>
       <% end %>
     </div>
   <% end %>
