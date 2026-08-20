@@ -41,10 +41,10 @@ class TpcCode < ActiveRecord::Base
   end
   
   def display_name
-    parts = [tpc_number]
-    parts << tpc_name if tpc_name.present?
-    parts << tpc_owner_name
-    parts.join(' - ')
+    # The name identifies the code; the owner stands in until names are
+    # filled in, so an option never renders as a bare number.
+    label = tpc_name.presence&.strip || tpc_owner_name.presence&.strip
+    [tpc_number, label].compact.join(' - ')
   end
 
   def tpc_number_with_description

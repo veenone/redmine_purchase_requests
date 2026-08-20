@@ -399,12 +399,12 @@
 #content .dashboard-container,
 #content .capex-charts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 18px;
   margin-bottom: 22px;
 }
-#content .pr-grid--wide { grid-template-columns: repeat(auto-fill, minmax(540px, 1fr)); }
-#content .pr-grid--narrow { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+#content .pr-grid--wide { grid-template-columns: repeat(auto-fit, minmax(540px, 1fr)); }
+#content .pr-grid--narrow { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 
 /* ---------------------------------------------------------------------------
    7. Stat cards (KPIs)
@@ -873,6 +873,7 @@
 #content .filter-options input[type="text"],
 #content .filter-options select {
   height: 32px;
+  box-sizing: border-box;
   padding: 5px 10px;
   border: 1px solid var(--pr-border-strong);
   border-radius: var(--pr-radius-sm);
@@ -2017,7 +2018,7 @@
      (desktop >900px keeps the original 420px floor / same layout as before). */
   #content .pr-grid,
   #content .dashboard-container,
-  #content .capex-charts { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  #content .capex-charts { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
   #content .quarterly-fields { grid-template-columns: 1fr 1fr; }
   #content .pr-form-header { flex-direction: column; }
 }
