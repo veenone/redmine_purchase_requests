@@ -13,7 +13,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
   description 'A comprehensive plugin for managing purchase requests, CAPEX budgets, OPEX management, and vendor operations in Redmine'
-  version '1.10.0'
+  version '1.11.0'
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -44,6 +44,8 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_global_tpc_codes, { tpc_codes: [:global_index, :show] }, global: true
     permission :manage_global_tpc_codes, { tpc_codes: [:global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import, :global_export, :global_import_export] }, global: true
     permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
+    permission :view_departments, { departments: [:index] }, global: true
+    permission :manage_departments, { departments: [:new, :create, :edit, :update, :destroy] }, global: true
   end
   
   # Procurement menu (virtual parent) - only visible when purchase_requests module is enabled
@@ -136,6 +138,12 @@ Redmine::Plugin.register :redmine_purchase_requests do
        parent: :budget_management,
        if: Proc.new { |project| project.module_enabled?(:purchase_requests) && User.current.allowed_to?(:view_tpc_dashboard, project) }
   
+  menu :project_menu, :departments,
+       { controller: 'departments', action: 'index' },
+       caption: :label_departments,
+       parent: :budget_management,
+       if: Proc.new { |project| project.module_enabled?(:purchase_requests) && (User.current.admin? || User.current.allowed_to?(:view_departments, nil, global: true)) }
+
   # Add global TPC codes menu to top navigation (configurable via plugin settings)
   menu :top_menu, :global_tpc_codes,
        { controller: 'tpc_codes', action: 'global_index' },

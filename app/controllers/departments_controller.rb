@@ -1,5 +1,5 @@
 class DepartmentsController < ApplicationController
-  before_action :require_admin
+  before_action :authorize_departments
   before_action :find_department, only: [:edit, :update, :destroy]
 
   def index
@@ -41,6 +41,19 @@ class DepartmentsController < ApplicationController
   end
 
   private
+
+  # Departments are global data, so the permissions are declared global in
+  # init.rb and checked without a project. Viewing is separated from
+  # managing so a role can be granted the list without the ability to edit
+  # it. Admins keep access regardless, as elsewhere in this plugin.
+  def authorize_departments
+    return true if User.current.admin?
+
+    required = action_name == 'index' ? :view_departments : :manage_departments
+    return true if User.current.allowed_to?(required, nil, global: true)
+
+    deny_access
+  end
 
   def find_department
     @department = Department.find(params[:id])
