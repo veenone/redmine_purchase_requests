@@ -1,0 +1,8 @@
+New Purchase Request
+
+Title: <%= @purchase_request.title %>
+Requested by: <%= @requester.name %>
+Priority: <%= @purchase_request.priority %>
+Estimated Price: <%= @purchase_request.formatted_price %>
+
+View Purchase Request: <%= project_purchase_request_url(@project, @purchase_request) %>

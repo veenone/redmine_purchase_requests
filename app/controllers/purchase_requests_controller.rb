@@ -74,7 +74,7 @@ class PurchaseRequestsController < ApplicationController
 
       # Handle notifications
       if @purchase_request.notify_manager? && Setting.plugin_redmine_purchase_requests['enable_notifications']
-        PurchaseRequestMailer.new_request_notification(@purchase_request).deliver_now
+        PurchaseRequestMailer.new_request_notification(@purchase_request.user, @purchase_request).deliver_now
       end
 
       # Auto-create workflow issue if enabled
