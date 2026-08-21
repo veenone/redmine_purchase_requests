@@ -69,7 +69,7 @@
           <div class="chart-pie-legend">
             <% @status_distribution.each do |status| %>
               <div class="legend-item">
-                <div class="legend-color" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></div>
+                <div class="legend-color" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></div>
                 <span><%= status[:name] %> (<%= status[:count] %> - <%= status[:percentage] %>%)</span>
               </div>
             <% end %>
@@ -91,7 +91,7 @@
             <% @status_distribution.each do |status| %>
               <tr>
                 <td>
-                  <span class="pr-swatch" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></span>
+                  <span class="pr-swatch" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></span>
                   <%= status[:name] %>
                 </td>
                 <td><%= status[:count] %></td>

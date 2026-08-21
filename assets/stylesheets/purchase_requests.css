@@ -75,6 +75,15 @@
   --pr-violet-soft: #efebfa;
   --pr-violet-ink:  #54399e;
 
+  /* Border companions to the -soft surfaces, plus the one gradient. */
+  --pr-accent-border:        #d8def4;  /* border for --pr-accent-soft */
+  --pr-success-border:       #b5dec0;  /* border for --pr-success-soft */
+  --pr-warning-border:       #efd9ad;  /* border for --pr-warning-soft */
+  --pr-danger-border:        #eecaca;  /* border for --pr-danger-soft */
+  --pr-danger-border-strong: #ecbcbc;  /* outlined danger button */
+  --pr-info-border:          #c3d9f0;  /* border for --pr-info-soft */
+  --pr-gradient-from:        #667eea;  /* the plugin has exactly one gradient */
+  --pr-gradient-to:          #764ba2;  /* the plugin has exactly one gradient */
   /* Radii */
   --pr-radius-sm: 5px;
   --pr-radius:    8px;
@@ -215,7 +224,7 @@
 /* Danger — outlined, escalates on hover */
 #content .pr-button-danger {
   background: var(--pr-surface);
-  border-color: #ecbcbc;
+  border-color: var(--pr-danger-border-strong);
   color: var(--pr-danger-ink);
 }
 #content .pr-button-danger:hover {
@@ -314,7 +323,7 @@
   margin: 0 0 var(--pr-space-8);
   padding: var(--pr-space-6) var(--pr-space-7);
   background: var(--pr-accent-soft);
-  border: 1px solid #d8def4;
+  border: 1px solid var(--pr-accent-border);
   border-radius: var(--pr-radius);
   color: var(--pr-ink);
   font-size: var(--pr-text-base);
@@ -328,7 +337,7 @@
   margin: 0 0 var(--pr-space-8);
   padding: var(--pr-space-5) var(--pr-space-7);
   background: var(--pr-warning-soft);
-  border: 1px solid #efd9ad;
+  border: 1px solid var(--pr-warning-border);
   border-left: 3px solid var(--pr-warning);
   border-radius: var(--pr-radius);
   color: var(--pr-warning-ink);
@@ -343,7 +352,7 @@
   margin: 0 0 var(--pr-space-8);
   padding: var(--pr-space-6) var(--pr-space-7);
   background: var(--pr-accent-soft);
-  border: 1px solid #d8def4;
+  border: 1px solid var(--pr-accent-border);
   border-radius: var(--pr-radius);
   color: var(--pr-ink);
   font-size: var(--pr-text-base);
@@ -1149,13 +1158,13 @@
 #content .capex-total-validation.valid,
 #content .validation-message.success {
   background: var(--pr-success-soft);
-  border-color: #b5dec0;
+  border-color: var(--pr-success-border);
   color: var(--pr-success-ink);
 }
 #content .capex-total-validation.invalid,
 #content .validation-message.error {
   background: var(--pr-danger-soft);
-  border-color: #eecaca;
+  border-color: var(--pr-danger-border);
   color: var(--pr-danger-ink);
 }
 
@@ -1198,7 +1207,7 @@
   margin-top: var(--pr-space-4);
   padding: var(--pr-space-5) var(--pr-space-6);
   background: var(--pr-warning-soft);
-  border: 1px solid #efd9ad;
+  border: 1px solid var(--pr-warning-border);
   border-radius: var(--pr-radius-sm);
 }
 #content .no-entries-message { color: var(--pr-warning-ink); font-style: italic; }
@@ -1213,7 +1222,7 @@
   margin-top: var(--pr-space-4);
   padding: var(--pr-space-4) 13px;
   background: var(--pr-danger-soft);
-  border: 1px solid #eecaca;
+  border: 1px solid var(--pr-danger-border);
   border-left: 3px solid var(--pr-danger);
   border-radius: var(--pr-radius-sm);
   color: var(--pr-danger-ink);
@@ -1405,25 +1414,25 @@
 
 #content .pr-alert-info {
   background: var(--pr-info-soft);
-  border-color: #c3d9f0;
+  border-color: var(--pr-info-border);
   border-left-color: var(--pr-info);
   color: var(--pr-info-ink);
 }
 #content .pr-alert-success {
   background: var(--pr-success-soft);
-  border-color: #b5dec0;
+  border-color: var(--pr-success-border);
   border-left-color: var(--pr-success);
   color: var(--pr-success-ink);
 }
 #content .pr-alert-warning {
   background: var(--pr-warning-soft);
-  border-color: #efd9ad;
+  border-color: var(--pr-warning-border);
   border-left-color: var(--pr-warning);
   color: var(--pr-warning-ink);
 }
 #content .pr-alert-danger {
   background: var(--pr-danger-soft);
-  border-color: #eecaca;
+  border-color: var(--pr-danger-border);
   border-left-color: var(--pr-danger);
   color: var(--pr-danger-ink);
 }
@@ -1698,12 +1707,12 @@
 }
 #content .workflow-complete-notice {
   background: var(--pr-success-soft);
-  border: 1px solid #b5dec0;
+  border: 1px solid var(--pr-success-border);
   color: var(--pr-success-ink);
 }
 #content .workflow-next-task {
   background: var(--pr-warning-soft);
-  border: 1px solid #efd9ad;
+  border: 1px solid var(--pr-warning-border);
   color: var(--pr-warning-ink);
 }
 #content .workflow-not-started,
@@ -1712,8 +1721,8 @@
   text-align: center;
   border-radius: var(--pr-radius);
 }
-#content .workflow-not-started { background: var(--pr-info-soft); border: 1px solid #c3d9f0; }
-#content .workflow-not-enabled { background: var(--pr-warning-soft); border: 1px solid #efd9ad; }
+#content .workflow-not-started { background: var(--pr-info-soft); border: 1px solid var(--pr-info-border); }
+#content .workflow-not-enabled { background: var(--pr-warning-soft); border: 1px solid var(--pr-warning-border); }
 #content .workflow-notice { justify-content: center; margin: 0 0 var(--pr-space-5); color: var(--pr-ink-muted); }
 #content .workflow-create-button { display: inline-flex; }
 
