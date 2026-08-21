@@ -48,7 +48,7 @@ namespace :redmine_purchase_requests do
   # Lower a ceiling whenever a mitigation lands. Never raise one to make a
   # build pass: that is the failure mode this exists to prevent.
   RATCHET_CEILINGS = {
-    'inline style= attributes'    => 439,
+    'inline style= attributes'    => 363,
     'raw font-size in ERB'        => 44,
     'raw font-size in CSS'        => 15,
     'raw hex outside <script>'    => 0,

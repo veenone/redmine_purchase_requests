@@ -24,7 +24,7 @@
 <h2>
   OPEX Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--success" style="font-size: var(--pr-text-base);vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--success pr-badge--heading"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -78,9 +78,9 @@
         <% @report_data[:category_breakdown].each_with_index do |(category, amount), index| %>
           <div class="pr-rank-row">
             <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);width:26px;height:26px;font-size: var(--pr-text-xs);">#<%= index + 1 %></span>
-            <div style="flex:1;min-width:0;">
+            <div class="pr-fill">
               <div style="font-weight:600;color:var(--pr-ink);font-size: var(--pr-text-base);margin-bottom:2px;"><%= category %></div>
-              <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);">OPEX Category</div>
+              <div class="pr-hint">OPEX Category</div>
             </div>
             <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
           </div>
@@ -111,7 +111,7 @@
   <div class="dashboard-card-header"><h3><%= Date.current.year %> Quarterly Breakdown</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
-      <div style="height:280px;"><canvas id="quarterlyChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="quarterlyChart"></canvas></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start;">
         <% [:q1, :q2, :q3, :q4].each_with_index do |quarter, index| %>
           <%
@@ -134,13 +134,13 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top TPC Code Allocations</h3></div>
   <div class="dashboard-card-body">
-    <div style="display:grid;gap:10px;">
+    <div class="pr-card-stack">
       <% @report_data[:tpc_distribution].each_with_index do |(tpc_info, amount), index| %>
         <div class="pr-rank-row">
           <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
-          <div style="flex:1;min-width:0;">
+          <div class="pr-fill">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
-            <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);">OPEX Allocation</div>
+            <div class="pr-hint">OPEX Allocation</div>
           </div>
           <div style="font-size:17px;font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
         </div>
@@ -156,7 +156,7 @@
   <div class="dashboard-card-header"><h3>Currency Distribution</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
-      <div style="height:280px;"><canvas id="currencyChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="currencyChart"></canvas></div>
       <div style="display:grid;gap:8px;align-content:start;">
         <% @report_data[:currency_breakdown].each do |currency, amount| %>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">

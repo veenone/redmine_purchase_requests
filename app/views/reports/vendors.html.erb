@@ -24,7 +24,7 @@
 <h2>
   Vendors Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--info" style="font-size: var(--pr-text-base);vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--info pr-badge--heading"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -80,14 +80,14 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top Active Vendors</h3></div>
   <div class="dashboard-card-body">
-    <div class="pr-grid" style="margin-bottom:18px;">
+    <div class="pr-grid pr-block-gap">
       <div>
         <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Purchase Request Count</p>
-        <div style="height:280px;"><canvas id="vendorActivityChart"></canvas></div>
+        <div class="pr-chart-box"><canvas id="vendorActivityChart"></canvas></div>
       </div>
       <div>
         <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Total Value</p>
-        <div style="height:280px;"><canvas id="vendorValueChart"></canvas></div>
+        <div class="pr-chart-box"><canvas id="vendorValueChart"></canvas></div>
       </div>
     </div>
 
@@ -95,7 +95,7 @@
       <% @report_data[:vendor_activity].first(10).each_with_index do |(vendor_info, count), index| %>
         <div class="pr-rank-row" style="gap:13px;padding:11px 13px;">
           <span class="pr-rank-badge" style="background:var(--pr-accent);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
-          <div style="flex:1;min-width:0;">
+          <div class="pr-fill">
             <div style="font-weight:600;color:var(--pr-ink);font-size: var(--pr-text-base);margin-bottom:2px;"><%= vendor_info[1] %></div>
             <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-muted);"><%= count %> purchase requests</div>
           </div>
@@ -113,9 +113,9 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Vendor Status &amp; Engagement Analysis</h3></div>
   <div class="dashboard-card-body">
-    <div class="pr-grid" style="margin-bottom:18px;">
-      <div style="height:280px;"><canvas id="statusChart"></canvas></div>
-      <div style="height:280px;"><canvas id="engagementChart"></canvas></div>
+    <div class="pr-grid pr-block-gap">
+      <div class="pr-chart-box"><canvas id="statusChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="engagementChart"></canvas></div>
     </div>
 
     <div class="summary-stats" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
@@ -166,7 +166,7 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Monthly Trends</h3></div>
   <div class="dashboard-card-body">
-    <div style="height:280px;"><canvas id="monthlyTrendChart"></canvas></div>
+    <div class="pr-chart-box"><canvas id="monthlyTrendChart"></canvas></div>
   </div>
 </div>
 

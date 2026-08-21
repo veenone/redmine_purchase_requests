@@ -20,7 +20,7 @@
 
 <h2>
   <%= @project ? "#{@project.name} - " : "" %>Purchase Request Reports
-  <span class="pr-badge pr-badge--accent" style="font-size: var(--pr-text-base);margin-left:10px;vertical-align:middle;"><%= @project ? "Project Scope" : "Global Scope" %></span>
+  <span class="pr-badge pr-badge--accent pr-badge--heading"><%= @project ? "Project Scope" : "Global Scope" %></span>
 </h2>
 
 <%= render 'year_filter', filter_path: (@project ? project_reports_path(@project) : reports_path) %>

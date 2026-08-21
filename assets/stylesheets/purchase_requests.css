@@ -2053,6 +2053,45 @@
   outline-offset: 1px;
 }
 
+/* ---------------------------------------------------------------------------
+   11. Extracted from inline styles
+   ---------------------------------------------------------------------------
+   Each of these was repeated across templates as a style attribute. Only
+   patterns with a role worth naming were lifted; one-off values stayed put
+   rather than becoming single-use classes.
+--------------------------------------------------------------------------- */
+
+/* Separation between stacked blocks -- 26 of the 30 uses were on a
+   .dashboard-card. Not folded into .dashboard-card itself, since the ~300
+   cards without it would all gain the margin. */
+#content .pr-block-gap { margin-bottom: 18px; }
+
+/* Fixed-height wrapper around a chart canvas. A canvas needs a sized parent
+   or it collapses. */
+#content .pr-chart-box { height: 280px; }
+
+/* Secondary caption under a figure or beside a label. */
+#content .pr-hint {
+  color: var(--pr-ink-faint);
+  font-size: var(--pr-text-sm);
+}
+
+/* Flex child allowed to shrink. min-width:0 defeats the min-content floor
+   that otherwise stops long text truncating inside a flex row. */
+#content .pr-fill { flex: 1; min-width: 0; }
+
+/* A badge sitting beside a page heading rather than inside a table cell. */
+#content .pr-badge--heading {
+  font-size: var(--pr-text-base);
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+/* Evenly spaced vertical stack of cards or rows. Named -card-stack
+     because .pr-stack is already taken by an owl-selector stack at the
+     top of section 8, and the two would combine rather than override. */
+#content .pr-card-stack { display: grid; gap: 10px; }
+
 /* --- 900px: tablet landscape — narrow sidebar context ---
    Card grids still allow 2-up above this (minmax 320px lets 2 fit ~700px+);
    below 900px collapse to 1-up and fix form layout. */

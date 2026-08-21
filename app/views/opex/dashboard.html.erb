@@ -211,19 +211,19 @@
             </div>
             <div class="dashboard-card-body">
               <div class="summary-stats" style="margin-bottom:12px;">
-                <div class="stat-box pr-stat--accent" style="min-width:0; flex:1;">
+                <div class="stat-box pr-stat--accent pr-fill">
                   <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
                   </div>
                   <div class="stat-label">Total Budget</div>
                 </div>
-                <div class="stat-box pr-stat--warning" style="min-width:0; flex:1;">
+                <div class="stat-box pr-stat--warning pr-fill">
                   <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
                   </div>
                   <div class="stat-label">Utilized</div>
                 </div>
-                <div class="stat-box pr-stat--info" style="min-width:0; flex:1;">
+                <div class="stat-box pr-stat--info pr-fill">
                   <div class="stat-number" style="font-size: var(--pr-text-lg);"><%= data[:entries_count] %></div>
                   <div class="stat-label">Entries</div>
                 </div>
