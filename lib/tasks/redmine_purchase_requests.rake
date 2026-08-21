@@ -35,4 +35,96 @@ namespace :redmine_purchase_requests do
       puts 'All templates compiled cleanly.'
     end
   end
+
+  # ------------------------------------------------------------------
+  # Frontend debt ratchet
+  # ------------------------------------------------------------------
+  #
+  # Every number the 1.11.0 frontend audit reported got there one commit at
+  # a time. Nothing stopped it, so nothing stops it coming back. This task
+  # fails only when a count goes UP -- a ratchet, not a cliff. Existing debt
+  # does not have to be paid off for it to start earning its keep.
+  #
+  # Lower a ceiling whenever a mitigation lands. Never raise one to make a
+  # build pass: that is the failure mode this exists to prevent.
+  RATCHET_CEILINGS = {
+    'inline style= attributes'    => 439,
+    'raw font-size in ERB'        => 44,
+    'raw font-size in CSS'        => 15,
+    'raw hex outside <script>'    => 37,
+    'raw hex inside <script>'     => 45,
+    'th without scope='           => 154,
+    'templates with <style>'      => 14
+  }.freeze
+
+  def self.ratchet_measure(plugin_root)
+    erbs = Dir.glob(File.join(plugin_root, 'app', 'views', '**', '*.erb')).sort
+              .map { |p| File.read(p) }
+    css_path = File.join(plugin_root, 'assets', 'stylesheets', 'purchase_requests.css')
+    css = File.exist?(css_path) ? File.read(css_path) : ''
+    # :root holds the token definitions -- literal values there are the point.
+    css_body = css.sub(/:root\s*\{.*?\}/m, '')
+
+    scripts = erbs.map { |s| s.scan(/<script[^>]*>.*?<\/script>/m).join }
+    outside = erbs.map { |s| s.gsub(/<script[^>]*>.*?<\/script>/m, '') }
+    size_re = /font-size:\s*[0-9.]+(?:px|em|rem)/
+    hex_re  = /#[0-9a-fA-F]{6}\b/
+
+    {
+      'inline style= attributes' => erbs.sum { |s| s.scan(/style\s*=\s*["']/).size },
+      'raw font-size in ERB'     => erbs.sum { |s| s.scan(size_re).size },
+      'raw font-size in CSS'     => css_body.scan(size_re).size,
+      'raw hex outside <script>' => outside.sum { |s| s.scan(hex_re).size },
+      'raw hex inside <script>'  => scripts.sum { |s| s.scan(hex_re).size },
+      'th without scope='        => outside.sum { |s| s.scan(/<th\b(?![^>]*scope=)/).size },
+      'templates with <style>'   => erbs.count { |s| s.include?('<style') }
+    }
+  end
+
+  desc 'Fail if any frontend debt metric has grown past its ceiling. A ' \
+       'ratchet, not a cliff: it only complains when a count goes up, so ' \
+       'existing debt does not block a build. Lower a ceiling in this file ' \
+       'whenever a mitigation lands; never raise one to go green.'
+  task ratchet: :environment do
+    plugin_root = File.expand_path('../..', __dir__)
+    counts = ratchet_measure(plugin_root)
+
+    grown = {}
+    slack = {}
+
+    counts.each do |name, n|
+      ceiling = RATCHET_CEILINGS.fetch(name)
+      if n > ceiling
+        grown[name] = [n, ceiling]
+      elsif n < ceiling
+        slack[name] = [n, ceiling]
+      end
+      status = if n > ceiling then "GREW +#{n - ceiling}"
+               elsif n < ceiling then "ok  (-#{ceiling - n})"
+               else 'ok'
+               end
+      puts format('  %-28s %4d / %-4d %s', name, n, ceiling, status)
+    end
+
+    puts
+
+    if grown.any?
+      puts "#{grown.size} metric(s) grew:"
+      grown.each do |name, (n, ceiling)|
+        puts "  #{name}: #{n}, ceiling is #{ceiling}"
+      end
+      puts
+      puts 'Use a token or a class instead of a literal. If you genuinely'
+      puts 'removed some and the count still grew elsewhere, fix that first.'
+      abort('redmine_purchase_requests:ratchet FAILED')
+    end
+
+    if slack.any?
+      puts "nothing grew. #{slack.size} ceiling(s) can be lowered:"
+      slack.each { |name, (n, ceiling)| puts "  #{name}: #{ceiling} -> #{n}" }
+    else
+      puts 'nothing grew, and every ceiling is tight.'
+    end
+  end
+
 end
