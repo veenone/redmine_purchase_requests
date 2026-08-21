@@ -78,28 +78,30 @@
 
         <details class="pr-data-toggle">
           <summary>View data table</summary>
-          <table class="dashboard-table">
-            <caption class="sr-only">Purchase requests by status</caption>
-            <thead>
-              <tr>
-                <th scope="col"><%= l(:field_status) %></th>
-                <th scope="col"><%= l(:label_count) %></th>
-                <th scope="col"><%= l(:label_percentage) %></th>
-              </tr>
-            </thead>
-            <tbody>
-            <% @status_distribution.each do |status| %>
-              <tr>
-                <td>
-                  <span class="pr-swatch" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></span>
-                  <%= status[:name] %>
-                </td>
-                <td><%= status[:count] %></td>
-                <td><%= status[:percentage] %>%</td>
-              </tr>
-            <% end %>
-            </tbody>
-          </table>
+          <div class="autoscroll">
+            <table class="dashboard-table">
+              <caption class="sr-only">Purchase requests by status</caption>
+              <thead>
+                <tr>
+                  <th scope="col"><%= l(:field_status) %></th>
+                  <th scope="col"><%= l(:label_count) %></th>
+                  <th scope="col"><%= l(:label_percentage) %></th>
+                </tr>
+              </thead>
+              <tbody>
+              <% @status_distribution.each do |status| %>
+                <tr>
+                  <td>
+                    <span class="pr-swatch" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></span>
+                    <%= status[:name] %>
+                  </td>
+                  <td><%= status[:count] %></td>
+                  <td><%= status[:percentage] %>%</td>
+                </tr>
+              <% end %>
+              </tbody>
+            </table>
+          </div>
         </details>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>

@@ -96,34 +96,36 @@
     </div>
     <div class="dashboard-card-body">
       <% if @tpc_utilization.any? %>
-        <table class="dashboard-table">
-          <caption class="sr-only">Top TPC codes by total cost</caption>
-          <thead>
-            <tr>
-              <th scope="col">TPC Code</th>
-              <th scope="col">TPC Name</th>
-              <th scope="col">Department</th>
-              <th scope="col">Owner</th>
-              <th scope="col">Total Cost</th>
-              <th scope="col">Requests</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @tpc_utilization.each do |tpc| %>
+        <div class="autoscroll">
+          <table class="dashboard-table">
+            <caption class="sr-only">Top TPC codes by total cost</caption>
+            <thead>
               <tr>
-                <td><strong class="tpc-number"><%= tpc[:tpc_code] %></strong></td>
-                <td><%= tpc[:tpc_name].presence || '-' %></td>
-                <td><%= tpc[:department].presence || '-' %></td>
-                <td><%= tpc[:owner] %></td>
-                <td>
-                  <span class="currency-code"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %></span>
-                  <%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %>
-                </td>
-                <td><%= tpc[:request_count] %></td>
+                <th scope="col">TPC Code</th>
+                <th scope="col">TPC Name</th>
+                <th scope="col">Department</th>
+                <th scope="col">Owner</th>
+                <th scope="col">Total Cost</th>
+                <th scope="col">Requests</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <% @tpc_utilization.each do |tpc| %>
+                <tr>
+                  <td><strong class="tpc-number"><%= tpc[:tpc_code] %></strong></td>
+                  <td><%= tpc[:tpc_name].presence || '-' %></td>
+                  <td><%= tpc[:department].presence || '-' %></td>
+                  <td><%= tpc[:owner] %></td>
+                  <td>
+                    <span class="currency-code"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %></span>
+                    <%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %>
+                  </td>
+                  <td><%= tpc[:request_count] %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
         <div class="chart-hbar-container" id="tpc-cost-chart" style="margin-top: 20px;"></div>
       <% else %>
         <p class="no-data">No utilization data available</p>

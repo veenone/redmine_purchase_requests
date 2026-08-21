@@ -103,67 +103,69 @@
     </div>
 
     <div id="workflow-templates-container">
-      <table class="pr-table">
-        <thead>
-          <tr>
-            <th scope="col"><%= l(:field_position, default: 'Order') %></th>
-            <th scope="col"><%= l(:field_name, default: 'Name') %></th>
-            <th scope="col"><%= l(:field_description, default: 'Description') %></th>
-            <th scope="col"><%= l(:field_tracker, default: 'Tracker') %></th>
-            <th scope="col"><%= l(:field_active, default: 'Active') %></th>
-            <th scope="col"><%= l(:label_auto_create, default: 'Auto Create') %></th>
-            <th scope="col"><%= l(:label_actions, default: 'Actions') %></th>
-          </tr>
-        </thead>
-        <tbody id="workflow-templates-list">
-          <% templates = PurchaseRequestWorkflowTemplate.sorted rescue [] %>
-          <% if templates.any? %>
-            <% templates.each do |template| %>
-              <tr class="workflow-template-row" data-id="<%= template.id %>">
-                <td>
-                  <span class="pr-badge pr-badge--neutral"><%= template.position %></span>
-                </td>
-                <td style="font-weight: 500; color: var(--pr-ink);"><%= template.name %></td>
-                <td style="color: var(--pr-ink-muted); font-size: var(--pr-text-sm);"><%= truncate(template.description, length: 50) %></td>
-                <td style="color: var(--pr-ink-muted);"><%= template.tracker&.name || l(:label_default, default: 'Default') %></td>
-                <td>
-                  <% if template.is_active? %>
-                    <span class="pr-badge pr-badge--success"><%= l(:general_text_Yes, default: 'Yes') %></span>
-                  <% else %>
-                    <span class="pr-badge pr-badge--neutral"><%= l(:general_text_No, default: 'No') %></span>
-                  <% end %>
-                </td>
-                <td>
-                  <% if template.auto_create? %>
-                    <span class="pr-badge pr-badge--info"><%= l(:general_text_Yes, default: 'Yes') %></span>
-                  <% else %>
-                    <span class="pr-badge pr-badge--neutral"><%= l(:general_text_No, default: 'No') %></span>
-                  <% end %>
-                </td>
-                <td>
-                  <div class="pr-table-actions">
-                    <%= link_to l(:button_edit, default: 'Edit'),
-                        edit_purchase_request_workflow_template_path(template),
-                        class: 'pr-button pr-button-secondary pr-button-icon small',
-                        remote: true %>
-                    <%= link_to l(:button_delete, default: 'Delete'),
-                        purchase_request_workflow_template_path(template),
-                        method: :delete,
-                        data: { confirm: l(:text_are_you_sure, default: 'Are you sure?') },
-                        class: 'pr-button pr-button-danger pr-button-icon small' %>
-                  </div>
+      <div class="autoscroll">
+        <table class="pr-table">
+          <thead>
+            <tr>
+              <th scope="col"><%= l(:field_position, default: 'Order') %></th>
+              <th scope="col"><%= l(:field_name, default: 'Name') %></th>
+              <th scope="col"><%= l(:field_description, default: 'Description') %></th>
+              <th scope="col"><%= l(:field_tracker, default: 'Tracker') %></th>
+              <th scope="col"><%= l(:field_active, default: 'Active') %></th>
+              <th scope="col"><%= l(:label_auto_create, default: 'Auto Create') %></th>
+              <th scope="col"><%= l(:label_actions, default: 'Actions') %></th>
+            </tr>
+          </thead>
+          <tbody id="workflow-templates-list">
+            <% templates = PurchaseRequestWorkflowTemplate.sorted rescue [] %>
+            <% if templates.any? %>
+              <% templates.each do |template| %>
+                <tr class="workflow-template-row" data-id="<%= template.id %>">
+                  <td>
+                    <span class="pr-badge pr-badge--neutral"><%= template.position %></span>
+                  </td>
+                  <td style="font-weight: 500; color: var(--pr-ink);"><%= template.name %></td>
+                  <td style="color: var(--pr-ink-muted); font-size: var(--pr-text-sm);"><%= truncate(template.description, length: 50) %></td>
+                  <td style="color: var(--pr-ink-muted);"><%= template.tracker&.name || l(:label_default, default: 'Default') %></td>
+                  <td>
+                    <% if template.is_active? %>
+                      <span class="pr-badge pr-badge--success"><%= l(:general_text_Yes, default: 'Yes') %></span>
+                    <% else %>
+                      <span class="pr-badge pr-badge--neutral"><%= l(:general_text_No, default: 'No') %></span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if template.auto_create? %>
+                      <span class="pr-badge pr-badge--info"><%= l(:general_text_Yes, default: 'Yes') %></span>
+                    <% else %>
+                      <span class="pr-badge pr-badge--neutral"><%= l(:general_text_No, default: 'No') %></span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <div class="pr-table-actions">
+                      <%= link_to l(:button_edit, default: 'Edit'),
+                          edit_purchase_request_workflow_template_path(template),
+                          class: 'pr-button pr-button-secondary pr-button-icon small',
+                          remote: true %>
+                      <%= link_to l(:button_delete, default: 'Delete'),
+                          purchase_request_workflow_template_path(template),
+                          method: :delete,
+                          data: { confirm: l(:text_are_you_sure, default: 'Are you sure?') },
+                          class: 'pr-button pr-button-danger pr-button-icon small' %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            <% else %>
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 30px 20px; color: var(--pr-ink-faint); font-style: italic;">
+                  <%= l(:label_no_workflow_templates, default: 'No workflow templates defined. Click "Add Template" to create one or "Create Defaults" to add standard templates.') %>
                 </td>
               </tr>
             <% end %>
-          <% else %>
-            <tr>
-              <td colspan="7" style="text-align: center; padding: 30px 20px; color: var(--pr-ink-faint); font-style: italic;">
-                <%= l(:label_no_workflow_templates, default: 'No workflow templates defined. Click "Add Template" to create one or "Create Defaults" to add standard templates.') %>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="pr-form-actions left-aligned" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--pr-border);">
