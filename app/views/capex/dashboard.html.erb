@@ -390,6 +390,7 @@
   </div>
 <% end %>
 
+<%= render 'reports/chart_colors' %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   <% if @capex_entries.any? %>
@@ -436,7 +437,7 @@ function generateCapexDonutChart(containerId, data) {
     var path1 = createDonutPath(centerX, centerY, outerRadius, innerRadius, 0, utilizedAngle);
     var utilizedPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     utilizedPath.setAttribute('d', path1);
-    utilizedPath.setAttribute('fill', '#df8709');
+    utilizedPath.setAttribute('fill', PR_TOKEN('--pr-warning'));
     utilizedPath.setAttribute('stroke', '#fff');
     utilizedPath.setAttribute('stroke-width', '2');
     svg.appendChild(utilizedPath);
@@ -447,7 +448,7 @@ function generateCapexDonutChart(containerId, data) {
     var path2 = createDonutPath(centerX, centerY, outerRadius, innerRadius, utilizedAngle, 2 * Math.PI);
     var remainingPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     remainingPath.setAttribute('d', path2);
-    remainingPath.setAttribute('fill', '#2272c4');
+    remainingPath.setAttribute('fill', PR_TOKEN('--pr-info'));
     remainingPath.setAttribute('stroke', '#fff');
     remainingPath.setAttribute('stroke-width', '2');
     svg.appendChild(remainingPath);

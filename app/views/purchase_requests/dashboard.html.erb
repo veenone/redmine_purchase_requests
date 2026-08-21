@@ -526,6 +526,7 @@
   <% end %>
 </div>
 
+<%= render 'reports/chart_colors' %>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Generate Status Distribution Pie Chart
@@ -545,16 +546,16 @@ document.addEventListener('DOMContentLoaded', function() {
   <% if @priority_distribution.present? && @priority_distribution.values.sum > 0 %>
   generatePieChart('priority-pie-chart', [
     <% if @priority_distribution[:urgent] > 0 %>
-      { label: '<%= j(l(:label_priority_urgent)) %>', value: <%= @priority_distribution[:urgent] %>, color: '#dc3a3a' },
+      { label: '<%= j(l(:label_priority_urgent)) %>', value: <%= @priority_distribution[:urgent] %>, color: PR_TOKEN('--pr-danger') },
     <% end %>
     <% if @priority_distribution[:high] > 0 %>
-      { label: '<%= j(l(:label_priority_high)) %>', value: <%= @priority_distribution[:high] %>, color: '#df8709' },
+      { label: '<%= j(l(:label_priority_high)) %>', value: <%= @priority_distribution[:high] %>, color: PR_TOKEN('--pr-warning') },
     <% end %>
     <% if @priority_distribution[:normal] > 0 %>
-      { label: '<%= j(l(:label_priority_normal)) %>', value: <%= @priority_distribution[:normal] %>, color: '#2f9e44' },
+      { label: '<%= j(l(:label_priority_normal)) %>', value: <%= @priority_distribution[:normal] %>, color: PR_TOKEN('--pr-success') },
     <% end %>
     <% if @priority_distribution[:low] > 0 %>
-      { label: '<%= j(l(:label_priority_low)) %>', value: <%= @priority_distribution[:low] %>, color: '#2272c4' },
+      { label: '<%= j(l(:label_priority_low)) %>', value: <%= @priority_distribution[:low] %>, color: PR_TOKEN('--pr-info') },
     <% end %>
   ]);
   <% end %>

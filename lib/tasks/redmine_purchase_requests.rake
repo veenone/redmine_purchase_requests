@@ -52,20 +52,25 @@ namespace :redmine_purchase_requests do
     'raw font-size in ERB'        => 44,
     'raw font-size in CSS'        => 15,
     'raw hex outside <script>'    => 0,
-    'raw hex inside <script>'     => 45,
+    'raw hex inside <script>'     => 1,
     'th without scope='           => 0,
     'templates with <style>'      => 14
   }.freeze
 
   def self.ratchet_measure(plugin_root)
-    erbs = Dir.glob(File.join(plugin_root, 'app', 'views', '**', '*.erb')).sort
-              .map { |p| File.read(p) }
+    erb_paths = Dir.glob(File.join(plugin_root, 'app', 'views', '**', '*.erb')).sort
+    erbs = erb_paths.map { |p| File.read(p) }
     css_path = File.join(plugin_root, 'assets', 'stylesheets', 'purchase_requests.css')
     css = File.exist?(css_path) ? File.read(css_path) : ''
     # :root holds the token definitions -- literal values there are the point.
     css_body = css.sub(/:root\s*\{.*?\}/m, '')
 
-    scripts = erbs.map { |s| s.scan(/<script[^>]*>.*?<\/script>/m).join }
+# reports/_chart_colors.html.erb is the definition site for chart colour,
+# the way :root is for everything else. Its literals are fallbacks for the
+# case where the stylesheet has not applied, so they are not debt.
+chart_partial = /_chart_colors\.html\.erb\z/
+scripts = erb_paths.zip(erbs).reject { |p, _| p =~ chart_partial }
+                   .map { |_, s| s.scan(/<script[^>]*>.*?<\/script>/m).join }
 # A var() fallback is a defensive default, not debt: it never paints
 # while its token is defined. Blank the hex inside one before counting.
 fallback = /var\(\s*--pr-[a-z0-9-]+\s*,\s*#[0-9a-fA-F]{3,6}\s*\)/

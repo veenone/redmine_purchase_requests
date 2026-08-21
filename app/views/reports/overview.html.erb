@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Vendors',
         data: <%= raw @report_data[:vendor_countries][:distribution].values.first(8).to_json %>,
-        backgroundColor: '#3a5bbf',
+        backgroundColor: PR_TOKEN('--pr-accent'),
         borderWidth: 0
       }]
     },
