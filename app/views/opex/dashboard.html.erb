@@ -174,8 +174,8 @@
           <summary>View data table</summary>
           <table class="dashboard-table">
             <tr>
-              <th>Quarter</th>
-              <th>Budget</th>
+              <th scope="col">Quarter</th>
+              <th scope="col">Budget</th>
             </tr>
             <% [:q1, :q2, :q3, :q4].each_with_index do |q, i| %>
               <tr>
@@ -265,15 +265,15 @@
       <table class="pr-table">
         <thead>
           <tr>
-            <th>OPEX Code</th>
-            <th>Category</th>
-            <th>Description</th>
-            <th>Budget</th>
-            <th>Utilized</th>
-            <th>Remaining</th>
-            <th>Utilization</th>
-            <th>Linked PRs</th>
-            <th class="buttons">Actions</th>
+            <th scope="col">OPEX Code</th>
+            <th scope="col">Category</th>
+            <th scope="col">Description</th>
+            <th scope="col">Budget</th>
+            <th scope="col">Utilized</th>
+            <th scope="col">Remaining</th>
+            <th scope="col">Utilization</th>
+            <th scope="col">Linked PRs</th>
+            <th scope="col" class="buttons">Actions</th>
           </tr>
         </thead>
         <tbody>

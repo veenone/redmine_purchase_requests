@@ -2031,6 +2031,28 @@
    24. Responsive
    ------------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   10. Focus visibility
+   ---------------------------------------------------------------------------
+   Keyed on the interactive classes rather than written once per hover rule.
+   :focus-visible rather than :focus, so pointer users never see the ring --
+   the browser only matches it for keyboard and equivalent input.
+--------------------------------------------------------------------------- */
+#content .pr-button:focus-visible,
+#content .pr-tab-link:focus-visible,
+#content .pr-id-link:focus-visible,
+#content .pr-title-link:focus-visible,
+#content .pr-cell-id a:focus-visible,
+#content .pr-multiselect__toggle:focus-visible,
+#content table.pr-table a:focus-visible,
+#content .pr-filters input:focus-visible,
+#content .pr-filters select:focus-visible,
+#content .filter-row input:focus-visible,
+#content .filter-row select:focus-visible {
+  outline: 2px solid var(--pr-accent);
+  outline-offset: 1px;
+}
+
 /* --- 900px: tablet landscape — narrow sidebar context ---
    Card grids still allow 2-up above this (minmax 320px lets 2 fit ~700px+);
    below 900px collapse to 1-up and fix form layout. */

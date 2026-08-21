@@ -88,9 +88,9 @@
         <table class="pr-table" style="margin: 0;">
           <thead>
             <tr>
-              <th style="width: 55%;"><%= l(:field_currency) %></th>
-              <th style="width: 25%;">Code</th>
-              <th style="width: 20%; text-align: center;">
+              <th scope="col" style="width: 55%;"><%= l(:field_currency) %></th>
+              <th scope="col" style="width: 25%;">Code</th>
+              <th scope="col" style="width: 20%; text-align: center;">
                 <span class="select-all-toggle" title="Toggle All" style="cursor: pointer; color: var(--pr-accent);">Enabled</span>
               </th>
             </tr>
@@ -158,9 +158,9 @@
         <table class="pr-table">
           <thead>
             <tr>
-              <th style="width: 20%;"><%= l(:field_currency) %></th>
-              <th style="width: 40%;"><%= l(:label_rate_to) %> <span class="pr-badge pr-badge--accent pr-mono"><%= default_currency %></span></th>
-              <th style="width: 40%;"><%= l(:field_description) %></th>
+              <th scope="col" style="width: 20%;"><%= l(:field_currency) %></th>
+              <th scope="col" style="width: 40%;"><%= l(:label_rate_to) %> <span class="pr-badge pr-badge--accent pr-mono"><%= default_currency %></span></th>
+              <th scope="col" style="width: 40%;"><%= l(:field_description) %></th>
             </tr>
           </thead>
           <tbody>

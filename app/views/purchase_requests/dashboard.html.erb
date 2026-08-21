@@ -222,7 +222,7 @@
 
         <% if @currency_distribution && @currency_distribution.size > 1 %>
           <tr>
-            <th colspan="2" class="section-header"><%= l(:label_currency_breakdown) %></th>
+            <th scope="col" colspan="2" class="section-header"><%= l(:label_currency_breakdown) %></th>
           </tr>
           <% @currency_distribution.each do |currency, amount| %>
             <tr>

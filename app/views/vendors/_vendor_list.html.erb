@@ -9,15 +9,15 @@
   <table class="list vendors">
     <thead>
       <tr>
-        <th><%= l(:field_vendor_name) %></th>
-        <th><%= l(:field_vendor_id) %></th>
-        <th><%= l(:field_email) %></th>
-        <th><%= l(:field_phone) %></th>
-        <th><%= l(:field_contact_person) %></th>
-        <th><%= l(:field_website) %></th>
-        <th><%= l(:field_is_active) %></th>
+        <th scope="col"><%= l(:field_vendor_name) %></th>
+        <th scope="col"><%= l(:field_vendor_id) %></th>
+        <th scope="col"><%= l(:field_email) %></th>
+        <th scope="col"><%= l(:field_phone) %></th>
+        <th scope="col"><%= l(:field_contact_person) %></th>
+        <th scope="col"><%= l(:field_website) %></th>
+        <th scope="col"><%= l(:field_is_active) %></th>
         <% if admin_actions %>
-          <th class="buttons"><%= l(:label_action) %></th>
+          <th scope="col" class="buttons"><%= l(:label_action) %></th>
         <% end %>
       </tr>
     </thead>

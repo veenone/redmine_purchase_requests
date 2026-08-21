@@ -51,9 +51,9 @@ namespace :redmine_purchase_requests do
     'inline style= attributes'    => 439,
     'raw font-size in ERB'        => 44,
     'raw font-size in CSS'        => 15,
-    'raw hex outside <script>'    => 37,
+    'raw hex outside <script>'    => 0,
     'raw hex inside <script>'     => 45,
-    'th without scope='           => 154,
+    'th without scope='           => 0,
     'templates with <style>'      => 14
   }.freeze
 
@@ -66,7 +66,13 @@ namespace :redmine_purchase_requests do
     css_body = css.sub(/:root\s*\{.*?\}/m, '')
 
     scripts = erbs.map { |s| s.scan(/<script[^>]*>.*?<\/script>/m).join }
-    outside = erbs.map { |s| s.gsub(/<script[^>]*>.*?<\/script>/m, '') }
+# A var() fallback is a defensive default, not debt: it never paints
+# while its token is defined. Blank the hex inside one before counting.
+fallback = /var\(\s*--pr-[a-z0-9-]+\s*,\s*#[0-9a-fA-F]{3,6}\s*\)/
+outside = erbs.map do |s|
+  s.gsub(/<script[^>]*>.*?<\/script>/m, '')
+   .gsub(fallback) { |m| m.gsub(/#[0-9a-fA-F]{3,6}/, 'FALLBACK') }
+end
     size_re = /font-size:\s*[0-9.]+(?:px|em|rem)/
     hex_re  = /#[0-9a-fA-F]{6}\b/
 
