@@ -124,7 +124,7 @@
                   <span class="pr-badge pr-badge--neutral"><%= template.position %></span>
                 </td>
                 <td style="font-weight: 500; color: var(--pr-ink);"><%= template.name %></td>
-                <td style="color: var(--pr-ink-muted); font-size: 12px;"><%= truncate(template.description, length: 50) %></td>
+                <td style="color: var(--pr-ink-muted); font-size: var(--pr-text-sm);"><%= truncate(template.description, length: 50) %></td>
                 <td style="color: var(--pr-ink-muted);"><%= template.tracker&.name || l(:label_default, default: 'Default') %></td>
                 <td>
                   <% if template.is_active? %>

@@ -24,7 +24,7 @@
 <h2>
   Vendors Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--info" style="font-size:13px;vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--info" style="font-size: var(--pr-text-base);vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -82,11 +82,11 @@
   <div class="dashboard-card-body">
     <div class="pr-grid" style="margin-bottom:18px;">
       <div>
-        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Purchase Request Count</p>
+        <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Purchase Request Count</p>
         <div style="height:280px;"><canvas id="vendorActivityChart"></canvas></div>
       </div>
       <div>
-        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Total Value</p>
+        <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">By Total Value</p>
         <div style="height:280px;"><canvas id="vendorValueChart"></canvas></div>
       </div>
     </div>
@@ -96,8 +96,8 @@
         <div class="pr-rank-row" style="gap:13px;padding:11px 13px;">
           <span class="pr-rank-badge" style="background:var(--pr-accent);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;color:var(--pr-ink);font-size:13px;margin-bottom:2px;"><%= vendor_info[1] %></div>
-            <div style="font-size:12px;color:var(--pr-ink-muted);"><%= count %> purchase requests</div>
+            <div style="font-weight:600;color:var(--pr-ink);font-size: var(--pr-text-base);margin-bottom:2px;"><%= vendor_info[1] %></div>
+            <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-muted);"><%= count %> purchase requests</div>
           </div>
           <div style="width:90px;height:8px;background:var(--pr-surface-sunken);border-radius:var(--pr-radius-pill);overflow:hidden;flex-shrink:0;">
             <% max_count = @report_data[:vendor_activity].first&.last || 1 %>
@@ -120,9 +120,9 @@
 
     <div class="summary-stats" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-success);">
-        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">Active Vendors</div>
+        <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">Active Vendors</div>
         <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:active_count] %></div>
-        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+        <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:active_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
                 "0%" %>
@@ -130,9 +130,9 @@
       </div>
 
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-ink-faint);">
-        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">Inactive Vendors</div>
+        <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">Inactive Vendors</div>
         <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:inactive_count] %></div>
-        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+        <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:inactive_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
                 "0%" %>
@@ -140,9 +140,9 @@
       </div>
 
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-accent);">
-        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">With Purchase Requests</div>
+        <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">With Purchase Requests</div>
         <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_with_requests] %></div>
-        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+        <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:vendors_with_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
                 "0%" %>
@@ -150,9 +150,9 @@
       </div>
 
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-warning);">
-        <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:5px;">Without Requests</div>
+        <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">Without Requests</div>
         <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_without_requests] %></div>
-        <div style="font-size:12px;color:var(--pr-accent);font-weight:500;">
+        <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:vendors_without_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
                 "0%" %>
@@ -179,8 +179,8 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:8px;">
       <% @report_data[:project_distribution].each do |project, count| %>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
-          <span style="font-weight:500;color:var(--pr-ink);font-size:13px;"><%= project %></span>
-          <span style="color:var(--pr-ink-muted);font-size:13px;font-variant-numeric:tabular-nums;"><%= count %> vendors</span>
+          <span style="font-weight:500;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= project %></span>
+          <span style="color:var(--pr-ink-muted);font-size: var(--pr-text-base);font-variant-numeric:tabular-nums;"><%= count %> vendors</span>
         </div>
       <% end %>
     </div>

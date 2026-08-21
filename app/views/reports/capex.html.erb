@@ -24,7 +24,7 @@
 <h2>
   CAPEX Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--accent" style="font-size:13px;vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--accent" style="font-size: var(--pr-text-base);vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -82,11 +82,11 @@
   <div class="dashboard-card-body">
     <div class="pr-grid">
       <div>
-        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">CAPEX Usage Status</p>
+        <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">CAPEX Usage Status</p>
         <div style="height:260px;"><canvas id="utilizationChart"></canvas></div>
       </div>
       <div>
-        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">Utilization Level Distribution</p>
+        <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">Utilization Level Distribution</p>
         <div style="height:260px;"><canvas id="utilizationStatusChart"></canvas></div>
       </div>
     </div>
@@ -187,9 +187,9 @@
         <% total_prs = @report_data[:pr_status_breakdown].values.sum %>
         <% @report_data[:pr_status_breakdown].each do |status, count| %>
           <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);margin-bottom:8px;">
-            <span style="flex:1;font-weight:500;color:var(--pr-ink);font-size:13px;"><%= status %></span>
+            <span style="flex:1;font-weight:500;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= status %></span>
             <span style="font-size:17px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= count %></span>
-            <span style="font-size:12px;color:var(--pr-ink-faint);min-width:44px;text-align:right;"><%= total_prs > 0 ? "#{((count.to_f / total_prs) * 100).round(1)}%" : "0%" %></span>
+            <span style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);min-width:44px;text-align:right;"><%= total_prs > 0 ? "#{((count.to_f / total_prs) * 100).round(1)}%" : "0%" %></span>
           </div>
         <% end %>
       </div>
@@ -206,8 +206,8 @@
     <div class="pr-grid--narrow" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
       <% @report_data[:yearly_totals].each do |year, total| %>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-warning);border-radius:var(--pr-radius-sm);">
-          <span style="font-weight:600;color:var(--pr-ink);font-size:13px;"><%= year %></span>
-          <span style="color:var(--pr-warning-ink);font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(total.round(2)) %></span>
+          <span style="font-weight:600;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= year %></span>
+          <span style="color:var(--pr-warning-ink);font-weight:700;font-size: var(--pr-text-base);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(total.round(2)) %></span>
         </div>
       <% end %>
     </div>
@@ -227,9 +227,9 @@
             qpct = total_quarterly > 0 ? ((@report_data[:quarterly_breakdown][quarter] / total_quarterly) * 100).round(1) : 0
           %>
           <div style="text-align:center;padding:18px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-top:3px solid var(--pr-accent);border-radius:var(--pr-radius);">
-            <div style="font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
+            <div style="font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
             <div style="font-size:19px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
-            <div style="font-size:12px;color:var(--pr-accent-ink);font-weight:500;"><%= qpct %>%</div>
+            <div style="font-size: var(--pr-text-sm);color:var(--pr-accent-ink);font-weight:500;"><%= qpct %>%</div>
           </div>
         <% end %>
       </div>
@@ -248,7 +248,7 @@
           <span class="pr-rank-badge" style="background:var(--pr-warning);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
-            <div style="font-size:12px;color:var(--pr-ink-faint);">CAPEX Allocation</div>
+            <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);">CAPEX Allocation</div>
           </div>
           <div style="font-size:17px;font-weight:700;color:var(--pr-warning-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
         </div>

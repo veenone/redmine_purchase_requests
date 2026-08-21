@@ -24,7 +24,7 @@
 <h2>
   OPEX Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--success" style="font-size:13px;vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--success" style="font-size: var(--pr-text-base);vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -77,12 +77,12 @@
       <div style="display:grid;gap:8px;align-content:start;">
         <% @report_data[:category_breakdown].each_with_index do |(category, amount), index| %>
           <div class="pr-rank-row">
-            <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);width:26px;height:26px;font-size:11px;">#<%= index + 1 %></span>
+            <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);width:26px;height:26px;font-size: var(--pr-text-xs);">#<%= index + 1 %></span>
             <div style="flex:1;min-width:0;">
-              <div style="font-weight:600;color:var(--pr-ink);font-size:13px;margin-bottom:2px;"><%= category %></div>
-              <div style="font-size:12px;color:var(--pr-ink-faint);">OPEX Category</div>
+              <div style="font-weight:600;color:var(--pr-ink);font-size: var(--pr-text-base);margin-bottom:2px;"><%= category %></div>
+              <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);">OPEX Category</div>
             </div>
-            <div style="font-size:16px;font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
+            <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
           </div>
         <% end %>
       </div>
@@ -98,8 +98,8 @@
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
       <% @report_data[:yearly_totals].each do |year, total| %>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-success);border-radius:var(--pr-radius-sm);">
-          <span style="font-weight:600;color:var(--pr-ink);font-size:13px;"><%= year %></span>
-          <span style="color:var(--pr-success-ink);font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(total.round(2)) %></span>
+          <span style="font-weight:600;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= year %></span>
+          <span style="color:var(--pr-success-ink);font-weight:700;font-size: var(--pr-text-base);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(total.round(2)) %></span>
         </div>
       <% end %>
     </div>
@@ -119,9 +119,9 @@
             qpct = total_quarterly > 0 ? ((@report_data[:quarterly_breakdown][quarter] / total_quarterly) * 100).round(1) : 0
           %>
           <div style="text-align:center;padding:18px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-top:3px solid var(--pr-success);border-radius:var(--pr-radius);">
-            <div style="font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
+            <div style="font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
             <div style="font-size:19px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
-            <div style="font-size:12px;color:var(--pr-success-ink);font-weight:500;"><%= qpct %>%</div>
+            <div style="font-size: var(--pr-text-sm);color:var(--pr-success-ink);font-weight:500;"><%= qpct %>%</div>
           </div>
         <% end %>
       </div>
@@ -140,7 +140,7 @@
           <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
           <div style="flex:1;min-width:0;">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
-            <div style="font-size:12px;color:var(--pr-ink-faint);">OPEX Allocation</div>
+            <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);">OPEX Allocation</div>
           </div>
           <div style="font-size:17px;font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
         </div>

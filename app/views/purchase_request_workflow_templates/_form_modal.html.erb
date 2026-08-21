@@ -87,7 +87,7 @@
 }
 
 .workflow-modal-content {
-  background: var(--pr-surface, #fff);
+  background: var(--pr-surface, var(--pr-surface));
   border-radius: var(--pr-radius, 6px);
   box-shadow: var(--pr-shadow-md, 0 4px 20px rgba(0, 0, 0, 0.3));
   font-family: var(--pr-font, inherit);
@@ -109,7 +109,7 @@
 
 .workflow-modal-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: var(--pr-text-lg);
   color: var(--pr-ink, #333);
 }
 
@@ -140,7 +140,7 @@
 
 .workflow-modal-body .hint {
   display: block;
-  font-size: 11px;
+  font-size: var(--pr-text-xs);
   color: var(--pr-ink-muted, #666);
   margin-left: 145px;
   margin-top: 3px;
@@ -170,7 +170,7 @@
 }
 
 .workflow-modal-body .errorExplanation h2 {
-  font-size: 13px;
+  font-size: var(--pr-text-base);
   margin: 0 0 5px 0;
   color: var(--pr-danger, #c00);
 }
@@ -194,10 +194,10 @@
   padding: 6px 14px;
   border: 1px solid transparent;
   border-radius: var(--pr-radius-sm, 4px);
-  background: var(--pr-surface, #fff);
+  background: var(--pr-surface, var(--pr-surface));
   color: var(--pr-ink, #333);
   font-family: var(--pr-font, inherit);
-  font-size: 13px;
+  font-size: var(--pr-text-base);
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
@@ -216,18 +216,18 @@
 .workflow-modal-overlay .pr-button-primary {
   background: var(--pr-accent, #628db6);
   border-color: var(--pr-accent, #628db6);
-  color: var(--pr-ink-invert, #fff);
+  color: var(--pr-ink-invert, var(--pr-ink-invert));
   box-shadow: var(--pr-shadow-xs, none);
 }
 
 .workflow-modal-overlay .pr-button-primary:hover {
   background: var(--pr-accent-hover, #5b82a8);
   border-color: var(--pr-accent-hover, #5b82a8);
-  color: var(--pr-ink-invert, #fff);
+  color: var(--pr-ink-invert, var(--pr-ink-invert));
 }
 
 .workflow-modal-overlay .pr-button-secondary {
-  background: var(--pr-surface, #fff);
+  background: var(--pr-surface, var(--pr-surface));
   border-color: var(--pr-border-strong, #bbb);
   color: var(--pr-ink, #333);
 }

@@ -155,7 +155,7 @@
                   <span class="capex-amount"><%= @capex.currency_symbol %><%= number_with_precision(quarterly_consumption, precision: 2, delimiter: ',') %></span>
                   consumed
                 </div>
-                <div style="color:var(--pr-ink-muted);font-size:11px;">
+                <div style="color:var(--pr-ink-muted);font-size: var(--pr-text-xs);">
                   <%= quarterly_consumption > 0 ? ((quarterly_consumption / @capex.send("q#{quarter}_amount").to_f) * 100).round(2) : 0 %>% of Q<%= quarter %> budget
                 </div>
               </div>
@@ -173,7 +173,7 @@
                 <div>
                   <span class="capex-amount"><%= @capex.currency_symbol %><%= number_with_precision(@capex.send("q#{quarter}_amount"), precision: 2, delimiter: ',') %></span>
                 </div>
-                <div style="color:var(--pr-ink-muted);font-size:11px;"><%= @capex.quarterly_percentage(quarter) %>% of total</div>
+                <div style="color:var(--pr-ink-muted);font-size: var(--pr-text-xs);"><%= @capex.quarterly_percentage(quarter) %>% of total</div>
                 <div class="capex-progress" style="margin-top:6px;">
                   <div class="capex-progress-bar low" style="width: <%= @capex.quarterly_percentage(quarter) %>%"></div>
                 </div>
@@ -232,7 +232,7 @@
                 <td>
                   <% if pr.has_quarterly_allocation? %>
                     <span class="pr-badge pr-badge--accent">Q<%= pr.allocated_quarter %></span>
-                    <div style="font-size:12px;color:var(--pr-ink-muted);margin-top:2px;">
+                    <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-muted);margin-top:2px;">
                       <%= pr.currency == @capex.currency ? @capex.currency_symbol : pr.currency %>
                       <%= number_with_precision(pr.allocated_amount, precision: 2, delimiter: ',') %>
                     </div>

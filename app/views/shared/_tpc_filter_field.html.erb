@@ -134,7 +134,7 @@
     box-sizing: border-box;
     border: 1px solid var(--pr-border, #ddd);
     border-radius: var(--pr-radius-sm, 4px);
-    background: var(--pr-surface, #fff);
+    background: var(--pr-surface, var(--pr-surface));
     box-shadow: var(--pr-shadow-md, 0 4px 20px rgba(0, 0, 0, .18));
   }
 
@@ -147,7 +147,7 @@
     padding: 4px 6px;
     border: 1px solid var(--pr-border, #ddd);
     border-radius: var(--pr-radius-sm, 4px);
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
   }
 
   .pr-multiselect__options { margin: 0; padding: 0; list-style: none; }
@@ -159,7 +159,7 @@
     width: 100%;
     padding: 4px 6px;
     border-radius: var(--pr-radius-sm, 4px);
-    font-size: 13px;
+    font-size: var(--pr-text-base);
     font-weight: normal;
     cursor: pointer;
   }
@@ -179,7 +179,7 @@
     padding: 6px;
     color: var(--pr-ink-faint, #999);
     font-style: italic;
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
   }
   </style>
 

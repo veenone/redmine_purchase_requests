@@ -160,7 +160,7 @@
           </select>
         </div>
         <div>
-          <span style="color: var(--pr-ink-faint); font-size: 12px;">Base Currency:</span>
+          <span style="color: var(--pr-ink-faint); font-size: var(--pr-text-sm);">Base Currency:</span>
           <span class="pr-badge pr-badge--accent currency-badge" style="margin-left: 4px;"><%= default_currency %></span>
         </div>
       </div>
@@ -189,7 +189,7 @@
                 </td>
                 <td>
                   <span class="pr-capex-rate-wrap">
-                    <span style="color: var(--pr-ink-faint); font-size: 12px;">1 <%= currency %> =</span>
+                    <span style="color: var(--pr-ink-faint); font-size: var(--pr-text-sm);">1 <%= currency %> =</span>
                     <%= text_field_tag "settings[capex_exchange_rate_#{year}_#{currency}]",
                                    year_exchange_rates[currency].to_s,
                                    class: 'form-control exchange-rate-input',
@@ -197,7 +197,7 @@
                                    step: '0.0001',
                                    style: 'width: 100px; display: inline-block; margin: 0 6px;',
                                    data: { currency: currency, year: year } %>
-                    <span style="color: var(--pr-ink-faint); font-size: 12px;"><%= default_currency %></span>
+                    <span style="color: var(--pr-ink-faint); font-size: var(--pr-text-sm);"><%= default_currency %></span>
                   </span>
                 </td>
                 <td>
@@ -272,7 +272,7 @@
     border: 1px solid var(--pr-border);
     border-radius: var(--pr-radius-sm);
     color: var(--pr-ink-muted);
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     font-weight: 600;
     white-space: nowrap;
   }

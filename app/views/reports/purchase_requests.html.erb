@@ -25,7 +25,7 @@
 <h2>
   Purchase Requests Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--accent" style="font-size:13px;margin-left:10px;vertical-align:middle;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--accent" style="font-size: var(--pr-text-base);margin-left:10px;vertical-align:middle;"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -81,14 +81,14 @@
   <div class="dashboard-card-body">
     <div class="charts-row">
       <div class="chart-half">
-        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Count</h4>
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size: var(--pr-text-sm);font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Count</h4>
         <div class="chart-container-sm">
           <canvas id="budgetSourceChart" height="250"></canvas>
         </div>
       </div>
 
       <div class="chart-half">
-        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Value</h4>
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size: var(--pr-text-sm);font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Value</h4>
         <div class="chart-container-sm">
           <canvas id="budgetValueChart" height="250"></canvas>
         </div>
@@ -128,14 +128,14 @@
   <div class="dashboard-card-body">
     <div class="charts-row">
       <div class="chart-half">
-        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">Status Distribution</h4>
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size: var(--pr-text-sm);font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">Status Distribution</h4>
         <div class="chart-container-sm">
           <canvas id="statusChart" height="250"></canvas>
         </div>
       </div>
 
       <div class="chart-half">
-        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">Priority Distribution</h4>
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size: var(--pr-text-sm);font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">Priority Distribution</h4>
         <div class="chart-container-sm">
           <canvas id="priorityChart" height="250"></canvas>
         </div>
@@ -192,14 +192,14 @@
   <div class="dashboard-card-body">
     <div class="charts-row">
       <div class="chart-half">
-        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Request Count</h4>
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size: var(--pr-text-sm);font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Request Count</h4>
         <div class="chart-container-sm">
           <canvas id="tpcCountChart" height="300"></canvas>
         </div>
       </div>
 
       <div class="chart-half">
-        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Total Value</h4>
+        <h4 style="margin:0 0 12px;color:var(--pr-ink-muted);font-size: var(--pr-text-sm);font-weight:700;text-transform:uppercase;letter-spacing:.04em;text-align:center;">By Total Value</h4>
         <div class="chart-container-sm">
           <canvas id="tpcValueChart" height="300"></canvas>
         </div>
@@ -211,11 +211,11 @@
         <div class="ranked-list-item">
           <span class="ranked-list-rank"><%="##{index + 1}" %></span>
           <div style="flex:1;">
-            <div class="tpc-number" style="font-size:13px;"><%= tpc_number %></div>
-            <div style="font-size:12px;color:var(--pr-ink-muted);"><%= count %> requests</div>
+            <div class="tpc-number" style="font-size: var(--pr-text-base);"><%= tpc_number %></div>
+            <div style="font-size: var(--pr-text-sm);color:var(--pr-ink-muted);"><%= count %> requests</div>
           </div>
           <% value = @report_data[:tpc_value_distribution][tpc_number] || 0 %>
-          <span style="font-size:14px;font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(value.round(0)) %></span>
+          <span style="font-size: var(--pr-text-md);font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(value.round(0)) %></span>
         </div>
       <% end %>
     </div>
@@ -752,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .budget-breakdown-item--non-budgeted{ border-left-color: var(--pr-ink-faint); }
 
   .budget-breakdown-label {
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     font-weight: 700;
     color: var(--pr-ink-muted);
     text-transform: uppercase;
@@ -761,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .budget-breakdown-count {
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     color: var(--pr-ink-faint);
     margin-bottom: 4px;
   }
@@ -799,7 +799,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .priority-chip--urgent  { border-top-color: var(--pr-danger); }
 
   .priority-chip-label {
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     font-weight: 700;
     color: var(--pr-ink-muted);
     text-transform: uppercase;
@@ -825,7 +825,7 @@ document.addEventListener('DOMContentLoaded', function() {
     background: var(--pr-surface-subtle);
     border: 1px solid var(--pr-border);
     border-radius: var(--pr-radius-sm);
-    font-size: 13px;
+    font-size: var(--pr-text-base);
   }
 
   .ranked-list-rank {
@@ -838,13 +838,13 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 11px;
+    font-size: var(--pr-text-xs);
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
   }
 
   .ranked-list-name { flex: 1; font-weight: 600; color: var(--pr-ink); }
-  .ranked-list-count { color: var(--pr-ink-muted); font-size: 12px; }
+  .ranked-list-count { color: var(--pr-ink-muted); font-size: var(--pr-text-sm); }
 
   /* ---- responsive ---- */
   @media (max-width: 992px) {
@@ -860,10 +860,10 @@ document.addEventListener('DOMContentLoaded', function() {
   @media all {
     body {
       font-family: Arial, sans-serif;
-      font-size: 12px;
+      font-size: var(--pr-text-sm);
       line-height: 1.4;
       color: #000;
-      background: #fff;
+      background: var(--pr-surface);
     }
 
     .chart-container-sm, .trend-chart-container {

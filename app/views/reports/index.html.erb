@@ -20,7 +20,7 @@
 
 <h2>
   <%= @project ? "#{@project.name} - " : "" %>Purchase Request Reports
-  <span class="pr-badge pr-badge--accent" style="font-size:13px;margin-left:10px;vertical-align:middle;"><%= @project ? "Project Scope" : "Global Scope" %></span>
+  <span class="pr-badge pr-badge--accent" style="font-size: var(--pr-text-base);margin-left:10px;vertical-align:middle;"><%= @project ? "Project Scope" : "Global Scope" %></span>
 </h2>
 
 <%= render 'year_filter', filter_path: (@project ? project_reports_path(@project) : reports_path) %>
@@ -43,7 +43,7 @@
           <h3><span class="<%= report[:icon] %>" style="margin-right:8px;"></span><%= report[:name] %></h3>
         </div>
         <div class="dashboard-card-body">
-          <p style="color:var(--pr-ink-muted);font-size:13px;margin:0 0 16px;"><%= report[:description] %></p>
+          <p style="color:var(--pr-ink-muted);font-size: var(--pr-text-base);margin:0 0 16px;"><%= report[:description] %></p>
 
           <div class="pr-form-actions left-aligned" style="margin-top:0;padding-top:0;border-top:none;">
             <%
@@ -93,18 +93,18 @@
       <h3>Report Information</h3>
     </div>
     <div class="dashboard-card-body">
-      <ul style="margin:0 0 16px;padding-left:20px;font-size:13px;color:var(--pr-ink);">
+      <ul style="margin:0 0 16px;padding-left:20px;font-size: var(--pr-text-base);color:var(--pr-ink);">
         <li style="margin-bottom:6px;"><strong>View Report:</strong> Interactive HTML report with charts and detailed analysis</li>
         <li style="margin-bottom:6px;"><strong>PDF Export:</strong> Professional document suitable for printing and sharing</li>
         <li style="margin-bottom:6px;"><strong>CSV Export:</strong> Raw data for import into spreadsheet applications or custom analysis</li>
       </ul>
 
-      <h4 style="margin:0 0 8px;color:var(--pr-ink);font-size:13px;font-weight:700;">Report Scope</h4>
+      <h4 style="margin:0 0 8px;color:var(--pr-ink);font-size: var(--pr-text-base);font-weight:700;">Report Scope</h4>
       <% if @project %>
-        <p style="margin:0;font-size:13px;color:var(--pr-ink-muted);">These reports are filtered to show data specific to the <strong><%= @project.name %></strong> project.
+        <p style="margin:0;font-size: var(--pr-text-base);color:var(--pr-ink-muted);">These reports are filtered to show data specific to the <strong><%= @project.name %></strong> project.
            Global vendors and TPC codes available to this project are included where relevant.</p>
       <% else %>
-        <p style="margin:0;font-size:13px;color:var(--pr-ink-muted);">These reports show data from across all projects in the system.
+        <p style="margin:0;font-size: var(--pr-text-base);color:var(--pr-ink-muted);">These reports show data from across all projects in the system.
            Use project-specific reports for focused analysis of individual projects.</p>
       <% end %>
     </div>

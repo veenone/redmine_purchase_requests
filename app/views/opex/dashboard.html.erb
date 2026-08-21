@@ -112,7 +112,7 @@
         <div class="capex-donut-container">
           <div class="capex-donut" id="utilization-donut-chart">
             <div class="capex-donut-center">
-              <div style="font-weight:bold; font-size:14px;"><%= @utilization_percentage %>%</div>
+              <div style="font-weight:bold; font-size: var(--pr-text-md);"><%= @utilization_percentage %>%</div>
               <div style="font-size:10px; color:var(--pr-ink-muted);">Utilized</div>
             </div>
           </div>
@@ -212,26 +212,26 @@
             <div class="dashboard-card-body">
               <div class="summary-stats" style="margin-bottom:12px;">
                 <div class="stat-box pr-stat--accent" style="min-width:0; flex:1;">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
+                  <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
                   </div>
                   <div class="stat-label">Total Budget</div>
                 </div>
                 <div class="stat-box pr-stat--warning" style="min-width:0; flex:1;">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
+                  <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
                   </div>
                   <div class="stat-label">Utilized</div>
                 </div>
                 <div class="stat-box pr-stat--info" style="min-width:0; flex:1;">
-                  <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
+                  <div class="stat-number" style="font-size: var(--pr-text-lg);"><%= data[:entries_count] %></div>
                   <div class="stat-label">Entries</div>
                 </div>
               </div>
               <div class="utilization-bar">
                 <div class="utilization-fill" style="width: <%= data[:utilization_percentage] %>%"></div>
               </div>
-              <div style="text-align:center; margin-top:6px; font-size:13px; color:var(--pr-ink-muted);">
+              <div style="text-align:center; margin-top:6px; font-size: var(--pr-text-base); color:var(--pr-ink-muted);">
                 <%= data[:utilization_percentage] %>% Utilized
               </div>
             </div>
@@ -304,7 +304,7 @@
                 <div class="utilization-bar" style="width:80px; height:12px; display:inline-block; vertical-align:middle;">
                   <div class="utilization-fill" style="width: <%= [opex.utilization_percentage, 100].min %>%"></div>
                 </div>
-                <span style="font-size:12px; margin-left:4px;"><%= opex.utilization_percentage %>%</span>
+                <span style="font-size: var(--pr-text-sm); margin-left:4px;"><%= opex.utilization_percentage %>%</span>
               </td>
               <td>
                 <% linked_prs = opex.purchase_requests %>

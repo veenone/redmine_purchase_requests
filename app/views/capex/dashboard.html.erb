@@ -115,7 +115,7 @@
         <div class="capex-donut-container">
           <div class="capex-donut" id="utilization-donut-chart">
             <div class="capex-donut-center">
-              <div style="font-weight:700;font-size:14px;"><%= @utilization_percentage %>%</div>
+              <div style="font-weight:700;font-size: var(--pr-text-md);"><%= @utilization_percentage %>%</div>
               <div style="font-size:10px;color:var(--pr-ink-muted);">Utilized</div>
             </div>
           </div>
@@ -243,26 +243,26 @@
             <div class="dashboard-card-body">
               <div class="summary-stats" style="margin-bottom:12px;">
                 <div class="stat-box pr-stat--accent">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
+                  <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
                   </div>
                   <div class="stat-label">Total Budget</div>
                 </div>
                 <div class="stat-box pr-stat--success">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
+                  <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
                   </div>
                   <div class="stat-label">Utilized</div>
                 </div>
                 <div class="stat-box">
-                  <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
+                  <div class="stat-number" style="font-size: var(--pr-text-lg);"><%= data[:entries_count] %></div>
                   <div class="stat-label">Entries</div>
                 </div>
               </div>
               <div class="utilization-bar">
                 <div class="utilization-fill" style="width: <%= data[:utilization_percentage] %>%"></div>
               </div>
-              <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
+              <div style="text-align:center;margin-top:8px;font-size: var(--pr-text-base);color:var(--pr-ink-muted);">
                 <%= data[:utilization_percentage] %>% Utilized
               </div>
             </div>

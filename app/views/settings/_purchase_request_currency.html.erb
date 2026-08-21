@@ -172,14 +172,14 @@
                 </td>
                 <td>
                   <span style="display: inline-flex; align-items: center; gap: 6px;">
-                    <span style="color: var(--pr-ink-faint); font-size: 12px;">1 <%= currency %> =</span>
+                    <span style="color: var(--pr-ink-faint); font-size: var(--pr-text-sm);">1 <%= currency %> =</span>
                     <%= text_field_tag "settings[exchange_rate_#{currency}]",
                                    exchange_rates[currency].to_s,
                                    class: 'form-control exchange-rate-input',
                                    placeholder: '1.0',
                                    step: '0.0001',
                                    style: 'width: 100px; display: inline-block; margin: 0 4px;' %>
-                    <span style="color: var(--pr-ink-faint); font-size: 12px;"><%= default_currency %></span>
+                    <span style="color: var(--pr-ink-faint); font-size: var(--pr-text-sm);"><%= default_currency %></span>
                   </span>
                 </td>
                 <td>

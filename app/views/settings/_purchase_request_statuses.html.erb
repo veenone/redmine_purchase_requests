@@ -38,20 +38,20 @@
               <td>
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <%= checked_image status.is_closed? %>
-                  <span style="font-size: 12px; color: var(--pr-ink-muted);"><%= status.is_closed? ? 'Closed' : 'Open' %></span>
+                  <span style="font-size: var(--pr-text-sm); color: var(--pr-ink-muted);"><%= status.is_closed? ? 'Closed' : 'Open' %></span>
                 </div>
               </td>
               <td>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span style="display: inline-block; width: 28px; height: 28px; border-radius: var(--pr-radius-sm); border: 2px solid var(--pr-surface); box-shadow: 0 0 0 1px var(--pr-border), var(--pr-shadow-xs); background-color: <%= status.display_color %>;"></span>
-                  <span class="pr-mono" style="background: var(--pr-surface-subtle); padding: 3px 7px; border-radius: var(--pr-radius-sm); font-size: 11px; color: var(--pr-ink-muted); border: 1px solid var(--pr-border);"><%= status.display_color %></span>
+                  <span class="pr-mono" style="background: var(--pr-surface-subtle); padding: 3px 7px; border-radius: var(--pr-radius-sm); font-size: var(--pr-text-xs); color: var(--pr-ink-muted); border: 1px solid var(--pr-border);"><%= status.display_color %></span>
                 </div>
               </td>
               <td>
                 <div style="display: flex; align-items: center; gap: 6px;">
                   <%= checked_image status.is_default? %>
                   <% if status.is_default? %>
-                    <span class="pr-badge pr-badge--accent" style="font-size: 11px;"><%= l(:label_default) %></span>
+                    <span class="pr-badge pr-badge--accent" style="font-size: var(--pr-text-xs);"><%= l(:label_default) %></span>
                   <% end %>
                 </div>
               </td>
