@@ -59,7 +59,7 @@
 <!-- TPC Management Overview -->
 <div class="dashboard-card" style="background: var(--pr-accent); border-color: var(--pr-accent-hover);">
   <div class="dashboard-card-body" style="background: var(--pr-accent);">
-    <h3 style="margin: 0 0 10px; color: var(--pr-ink-invert); font-size: 15px; font-weight: 700;">
+    <h3 style="margin: 0 0 10px; color: var(--pr-ink-invert); font-size: var(--pr-text-lg); font-weight: 700;">
       <span class="icon icon-projects" style="margin-right: 6px;"></span>
       <%= l(:label_tpc_management_overview) %>
     </h3>
@@ -69,7 +69,7 @@
     <div>
       <% if User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true) %>
         <%= link_to global_tpc_codes_path, target: '_blank', rel: 'noopener noreferrer',
-            style: 'display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; background: rgba(255,255,255,0.18); color: #fff; text-decoration: none; border-radius: var(--pr-radius-sm); font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.30); transition: background .15s;',
+            style: 'display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; background: rgba(255,255,255,0.18); color: #fff; text-decoration: none; border-radius: var(--pr-radius-sm); font-size: var(--pr-text-base); font-weight: 600; border: 1px solid rgba(255,255,255,0.30); transition: background .15s;',
             onmouseover: "this.style.background='rgba(255,255,255,0.28)'",
             onmouseout: "this.style.background='rgba(255,255,255,0.18)'" do %>
           <span class="icon icon-projects"></span>

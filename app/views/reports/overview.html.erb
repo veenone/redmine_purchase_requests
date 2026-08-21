@@ -343,7 +343,7 @@
         { name: 'OPEX', action: 'opex', icon: 'icon-stats', color: 'danger' }
       ].each do |report| %>
         <div class="detailed-report-card detailed-report-card--<%= report[:color] %>">
-          <span class="<%= report[:icon] %>" style="font-size:28px;display:block;margin-bottom:12px;"></span>
+          <span class="<%= report[:icon] %>" style="font-size: var(--pr-text-3xl);display:block;margin-bottom:12px;"></span>
           <h4><%= report[:name] %></h4>
           <%
             case report[:action]
@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .executive-kpi-value {
-    font-size: 26px;
+    font-size: var(--pr-text-3xl);
     font-weight: 700;
     color: var(--pr-ink);
     line-height: 1.1;
@@ -732,10 +732,10 @@ document.addEventListener('DOMContentLoaded', function() {
   .indicator-card.priority    { border-top-color: var(--pr-danger); }
   .indicator-card.engagement  { border-top-color: var(--pr-info); }
 
-  .indicator-icon { font-size: 26px; margin-bottom: 8px; }
+  .indicator-icon { font-size: var(--pr-text-3xl); margin-bottom: 8px; }
 
   .indicator-value {
-    font-size: 26px;
+    font-size: var(--pr-text-3xl);
     font-weight: 700;
     color: var(--pr-ink);
     line-height: 1.1;
@@ -788,7 +788,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   .source-name { font-weight: 600; color: var(--pr-ink); font-size: var(--pr-text-base); }
   .source-percentage { font-size: var(--pr-text-base); font-weight: 700; color: var(--pr-ink-muted); font-variant-numeric: tabular-nums; }
-  .source-value { font-size: 18px; font-weight: 700; color: var(--pr-ink); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .source-value { font-size: var(--pr-text-lg); font-weight: 700; color: var(--pr-ink); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
 
   /* ---- CAPEX/OPEX comparison ---- */
   .budget-analysis {
@@ -815,10 +815,10 @@ document.addEventListener('DOMContentLoaded', function() {
   .budget-item.capex { border-left-color: var(--pr-warning); }
   .budget-item.opex  { border-left-color: var(--pr-success); }
 
-  .budget-icon { font-size: 28px; flex-shrink: 0; }
+  .budget-icon { font-size: var(--pr-text-3xl); flex-shrink: 0; }
 
   .budget-title { font-size: var(--pr-text-md); font-weight: 700; color: var(--pr-ink); margin-bottom: 4px; }
-  .budget-amount { font-size: 22px; font-weight: 700; color: var(--pr-ink); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+  .budget-amount { font-size: var(--pr-text-xl); font-weight: 700; color: var(--pr-ink); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
   .budget-items { font-size: var(--pr-text-base); color: var(--pr-ink-muted); margin-bottom: 2px; }
   .budget-percentage { font-size: var(--pr-text-sm); color: var(--pr-accent); font-weight: 600; }
 
@@ -848,7 +848,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .currency-count { font-size: var(--pr-text-sm); color: var(--pr-ink-muted); }
-  .currency-value { font-size: 17px; font-weight: 700; color: var(--pr-accent-ink); font-variant-numeric: tabular-nums; }
+  .currency-value { font-size: var(--pr-text-lg); font-weight: 700; color: var(--pr-accent-ink); font-variant-numeric: tabular-nums; }
 
   /* ---- Geo distribution ---- */
   .geo-distribution-grid {

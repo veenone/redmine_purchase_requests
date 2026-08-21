@@ -120,7 +120,7 @@
           %>
           <div style="text-align:center;padding:18px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-top:3px solid var(--pr-success);border-radius:var(--pr-radius);">
             <div style="font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
-            <div style="font-size:19px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
+            <div style="font-size: var(--pr-text-xl);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
             <div style="font-size: var(--pr-text-sm);color:var(--pr-success-ink);font-weight:500;"><%= qpct %>%</div>
           </div>
         <% end %>
@@ -142,7 +142,7 @@
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
             <div class="pr-hint">OPEX Allocation</div>
           </div>
-          <div style="font-size:17px;font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
+          <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
         </div>
       <% end %>
     </div>

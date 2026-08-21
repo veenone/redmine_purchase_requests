@@ -107,6 +107,9 @@
   --pr-text-lg: 16px;
   --pr-text-xl: 21px;
   --pr-text-2xl: 23px;
+  --pr-text-2xs:     10px;  /* 17 uses; too common to snap away */
+  --pr-text-3xl:     28px;  /* section figures on the dashboards */
+  --pr-text-display: 42px;  /* the single hero figure */
   --pr-lh-tight: 1.2;
   --pr-lh-normal: 1.5;
   /* Spacing scale */
@@ -486,7 +489,7 @@
   display: block;
   margin-top: 3px;
   color: var(--pr-ink-faint);
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   font-weight: 400;
   font-style: italic;
   text-transform: none;
@@ -701,7 +704,7 @@
   display: inline-block;
   padding: 2px 7px;
   border-radius: var(--pr-radius-pill);
-  font-size: 9px;
+  font-size: var(--pr-text-2xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .04em;
@@ -720,7 +723,7 @@
   border-radius: var(--pr-radius-pill);
   background: var(--pr-success-soft);
   color: var(--pr-success-ink);
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   font-weight: 700;
 }
 #content .budget-utilization-badge.over-budget { background: var(--pr-danger-soft); color: var(--pr-danger-ink); }
@@ -733,7 +736,7 @@
   border-radius: var(--pr-radius-pill);
   background: var(--pr-success);
   color: var(--pr-ink-invert);
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   font-weight: 700;
 }
 
@@ -745,7 +748,7 @@
   border-radius: var(--pr-radius-sm);
   background: var(--pr-surface-sunken);
   color: var(--pr-ink-muted);
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   font-weight: 600;
   letter-spacing: .03em;
   vertical-align: middle;
@@ -805,7 +808,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   font-weight: 700;
   color: var(--pr-ink);
 }
@@ -818,7 +821,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   font-weight: 700;
   color: var(--pr-ink);
 }
@@ -1464,7 +1467,7 @@
 #content .empty-state .empty-icon,
 #content .pr-empty__icon {
   margin-bottom: var(--pr-space-6);
-  font-size: 42px;
+  font-size: var(--pr-text-display);
   line-height: 1;
   opacity: .5;
 }
@@ -1592,7 +1595,7 @@
   padding-bottom: var(--pr-space-3);
   border-bottom: 1px solid var(--pr-border);
 }
-#content .tpc-code-details-display .tpc-number { font-size: 15px; color: var(--pr-violet-ink); }
+#content .tpc-code-details-display .tpc-number { font-size: var(--pr-text-lg); color: var(--pr-violet-ink); }
 
 /* Notes block */
 #content .notes,
@@ -1837,7 +1840,7 @@
   top: -22px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   font-weight: 700;
   color: var(--pr-ink);
   white-space: nowrap;
@@ -1848,7 +1851,7 @@
   bottom: -20px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 10px;
+  font-size: var(--pr-text-2xs);
   color: var(--pr-ink-muted);
   white-space: nowrap;
 }
@@ -1882,7 +1885,7 @@
 #content .pr-section-title {
   margin: 26px 0 var(--pr-space-5);
   color: var(--pr-ink);
-  font-size: 15px;
+  font-size: var(--pr-text-lg);
   font-weight: 700;
 }
 #content .autoscroll {
@@ -2004,7 +2007,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--pr-text-lg);
   flex-shrink: 0;
 }
 
@@ -2144,7 +2147,7 @@
   list-style: none; display: inline-flex; align-items: center; gap: var(--pr-space-2); padding: var(--pr-space-1) 0;
 }
 #content .pr-data-toggle > summary::-webkit-details-marker { display: none; }
-#content .pr-data-toggle > summary::before { content: "▸"; font-size: 10px; }
+#content .pr-data-toggle > summary::before { content: "▸"; font-size: var(--pr-text-2xs); }
 #content .pr-data-toggle[open] > summary::before { content: "▾"; }
 
 /* ---------------------------------------------------------------------------

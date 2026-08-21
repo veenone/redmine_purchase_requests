@@ -89,7 +89,7 @@
           <div class="pr-usage-card__body">
             <div style="font-size: var(--pr-text-md);font-weight:600;color:var(--pr-ink);margin-bottom:3px;">CAPEX Allocations</div>
             <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_capex] %> TPC codes</div>
-            <div style="font-size:15px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:capex_totals].values.sum.round(2)) %></div>
+            <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:capex_totals].values.sum.round(2)) %></div>
           </div>
         </div>
 
@@ -98,7 +98,7 @@
           <div class="pr-usage-card__body">
             <div style="font-size: var(--pr-text-md);font-weight:600;color:var(--pr-ink);margin-bottom:3px;">OPEX Allocations</div>
             <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_opex] %> TPC codes</div>
-            <div style="font-size:15px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:opex_totals].values.sum.round(2)) %></div>
+            <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:opex_totals].values.sum.round(2)) %></div>
           </div>
         </div>
 

@@ -53,7 +53,7 @@
       <div class="stat-label">
         Total OPEX Budget
         <% if @use_exchange_rates %>
-          <span style="display:block; font-size:10px; color:var(--pr-ink-faint); font-style:italic;">(Converted to <%= @default_currency %>)</span>
+          <span style="display:block; font-size: var(--pr-text-2xs); color:var(--pr-ink-faint); font-style:italic;">(Converted to <%= @default_currency %>)</span>
         <% end %>
       </div>
     </div>
@@ -113,7 +113,7 @@
           <div class="capex-donut" id="utilization-donut-chart">
             <div class="capex-donut-center">
               <div style="font-weight:bold; font-size: var(--pr-text-md);"><%= @utilization_percentage %>%</div>
-              <div style="font-size:10px; color:var(--pr-ink-muted);">Utilized</div>
+              <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink-muted);">Utilized</div>
             </div>
           </div>
           <div style="flex:1;">

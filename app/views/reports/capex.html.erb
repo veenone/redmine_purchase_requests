@@ -188,7 +188,7 @@
         <% @report_data[:pr_status_breakdown].each do |status, count| %>
           <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);margin-bottom:8px;">
             <span style="flex:1;font-weight:500;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= status %></span>
-            <span style="font-size:17px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= count %></span>
+            <span style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= count %></span>
             <span style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);min-width:44px;text-align:right;"><%= total_prs > 0 ? "#{((count.to_f / total_prs) * 100).round(1)}%" : "0%" %></span>
           </div>
         <% end %>
@@ -228,7 +228,7 @@
           %>
           <div style="text-align:center;padding:18px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-top:3px solid var(--pr-accent);border-radius:var(--pr-radius);">
             <div style="font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
-            <div style="font-size:19px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
+            <div style="font-size: var(--pr-text-xl);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
             <div style="font-size: var(--pr-text-sm);color:var(--pr-accent-ink);font-weight:500;"><%= qpct %>%</div>
           </div>
         <% end %>
@@ -250,7 +250,7 @@
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
             <div class="pr-hint">CAPEX Allocation</div>
           </div>
-          <div style="font-size:17px;font-weight:700;color:var(--pr-warning-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
+          <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-warning-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
         </div>
       <% end %>
     </div>

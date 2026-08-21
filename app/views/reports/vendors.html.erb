@@ -121,7 +121,7 @@
     <div class="summary-stats" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));">
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-success);">
         <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">Active Vendors</div>
-        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:active_count] %></div>
+        <div style="font-size: var(--pr-text-xl);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:active_count] %></div>
         <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:active_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
@@ -131,7 +131,7 @@
 
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-ink-faint);">
         <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">Inactive Vendors</div>
-        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:inactive_count] %></div>
+        <div style="font-size: var(--pr-text-xl);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:inactive_count] %></div>
         <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:inactive_count].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
@@ -141,7 +141,7 @@
 
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-accent);">
         <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">With Purchase Requests</div>
-        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_with_requests] %></div>
+        <div style="font-size: var(--pr-text-xl);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_with_requests] %></div>
         <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:vendors_with_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :
@@ -151,7 +151,7 @@
 
       <div class="pr-accentblock" style="border-left:3px solid var(--pr-warning);">
         <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:5px;">Without Requests</div>
-        <div style="font-size:22px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_without_requests] %></div>
+        <div style="font-size: var(--pr-text-xl);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:3px;"><%= @report_data[:summary][:vendors_without_requests] %></div>
         <div style="font-size: var(--pr-text-sm);color:var(--pr-accent);font-weight:500;">
           <%= @report_data[:summary][:total_count] > 0 ?
                 "#{((@report_data[:summary][:vendors_without_requests].to_f / @report_data[:summary][:total_count]) * 100).round(1)}%" :

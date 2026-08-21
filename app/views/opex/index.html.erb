@@ -99,10 +99,10 @@
                 <% [1, 2, 3, 4].each do |q| %>
                   <div class="capex-quarterly-field" style="text-align:center; min-width:38px;">
                     <div style="font-weight:600; color:var(--pr-ink-muted);">Q<%= q %></div>
-                    <div style="font-size:10px; color:var(--pr-ink);">
+                    <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink);">
                       <%= opex.currency_symbol %><%= number_with_precision(opex.send("q#{q}_amount"), precision: 0, delimiter: ',') %>
                     </div>
-                    <div style="font-size:9px; color:var(--pr-ink-faint);"><%= opex.quarterly_percentage(q) %>%</div>
+                    <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink-faint);"><%= opex.quarterly_percentage(q) %>%</div>
                   </div>
                 <% end %>
               </div>
@@ -115,7 +115,7 @@
                 <div>
                   <span class="tpc-number"><%= opex.tpc_code.tpc_number %></span>
                   <% if opex.tpc_code.department.present? %>
-                    <div style="font-size:10px; color:var(--pr-ink-faint); font-style:italic;"><%= opex.tpc_code.department.name %></div>
+                    <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink-faint); font-style:italic;"><%= opex.tpc_code.department.name %></div>
                   <% end %>
                 </div>
               <% else %>

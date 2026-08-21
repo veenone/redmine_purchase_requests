@@ -173,7 +173,7 @@ if (prContainer) {
     bar.style.cssText = 'display:flex;align-items:center;margin:10px 0;';
 
     const label = document.createElement('div');
-    label.style.cssText = 'width:120px;font-size:11px;font-family:var(--pr-font-mono,monospace);color:var(--pr-violet);font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    label.style.cssText = 'width:120px;font-size: var(--pr-text-xs);font-family:var(--pr-font-mono,monospace);color:var(--pr-violet);font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     label.textContent = item.name;
     label.title = item.name + (item.department ? ' (' + item.department + ')' : '');
 
@@ -182,7 +182,7 @@ if (prContainer) {
 
     const barFill = document.createElement('div');
     const percentage = (item.count / maxCount) * 100;
-    barFill.style.cssText = `width:${percentage}%;background:${colors[index % colors.length]};height:100%;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:bold;font-size:12px;`;
+    barFill.style.cssText = `width:${percentage}%;background:${colors[index % colors.length]};height:100%;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:bold;font-size: var(--pr-text-sm);`;
     barFill.textContent = item.count + ' requests';
 
     barContainer.appendChild(barFill);
@@ -207,7 +207,7 @@ if (departmentContainer) {
     bar.style.cssText = 'display:flex;align-items:center;margin:10px 0;';
 
     const label = document.createElement('div');
-    label.style.cssText = 'width:120px;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    label.style.cssText = 'width:120px;font-size: var(--pr-text-xs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
     label.textContent = dept;
     label.title = dept;
 
@@ -216,7 +216,7 @@ if (departmentContainer) {
 
     const barFill = document.createElement('div');
     const percentage = (count / maxDeptCount) * 100;
-    barFill.style.cssText = `width:${percentage}%;background:var(--pr-violet);height:100%;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:bold;font-size:11px;`;
+    barFill.style.cssText = `width:${percentage}%;background:var(--pr-violet);height:100%;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:bold;font-size: var(--pr-text-xs);`;
     barFill.textContent = count;
 
     barContainer.appendChild(barFill);
@@ -240,7 +240,7 @@ if (costChartContainer) {
     bar.style.cssText = 'display:flex;align-items:center;margin:10px 0;';
 
     const label = document.createElement('div');
-    label.style.cssText = 'width:150px;font-size:12px;font-family:var(--pr-font-mono,monospace);color:var(--pr-violet);font-weight:bold;';
+    label.style.cssText = 'width:150px;font-size: var(--pr-text-sm);font-family:var(--pr-font-mono,monospace);color:var(--pr-violet);font-weight:bold;';
     label.textContent = tpc.tpc_code;
 
     const barContainer = document.createElement('div');
@@ -248,7 +248,7 @@ if (costChartContainer) {
 
     const barFill = document.createElement('div');
     const percentage = maxCost > 0 ? (tpc.total_cost / maxCost) * 100 : 0;
-    barFill.style.cssText = `width:${percentage}%;background:var(--pr-accent);height:100%;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:bold;font-size:12px;`;
+    barFill.style.cssText = `width:${percentage}%;background:var(--pr-accent);height:100%;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:bold;font-size: var(--pr-text-sm);`;
     barFill.textContent = tpc.total_cost.toLocaleString();
 
     barContainer.appendChild(barFill);

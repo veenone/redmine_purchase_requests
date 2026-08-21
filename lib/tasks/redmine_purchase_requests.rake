@@ -49,8 +49,8 @@ namespace :redmine_purchase_requests do
   # build pass: that is the failure mode this exists to prevent.
   RATCHET_CEILINGS = {
     'inline style= attributes'    => 363,
-    'raw font-size in ERB'        => 44,
-    'raw font-size in CSS'        => 15,
+    'raw font-size in ERB'        => 4,
+    'raw font-size in CSS'        => 1,
     'raw hex outside <script>'    => 0,
     'raw hex inside <script>'     => 1,
     'th without scope='           => 0,
