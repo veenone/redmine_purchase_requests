@@ -118,19 +118,19 @@
           <div class="chart-pie" id="priority-pie-chart"></div>
           <div class="chart-pie-legend">
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #dc3a3a;"></div>
+              <div class="legend-color" style="background-color: var(--pr-danger);"></div>
               <span><%= l(:label_priority_urgent) %> (<%= @priority_distribution[:urgent] %> - <%= @priority_percentages[:urgent] %>%)</span>
             </div>
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #df8709;"></div>
+              <div class="legend-color" style="background-color: var(--pr-warning);"></div>
               <span><%= l(:label_priority_high) %> (<%= @priority_distribution[:high] %> - <%= @priority_percentages[:high] %>%)</span>
             </div>
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #2f9e44;"></div>
+              <div class="legend-color" style="background-color: var(--pr-success);"></div>
               <span><%= l(:label_priority_normal) %> (<%= @priority_distribution[:normal] %> - <%= @priority_percentages[:normal] %>%)</span>
             </div>
             <div class="legend-item">
-              <div class="legend-color" style="background-color: #2272c4;"></div>
+              <div class="legend-color" style="background-color: var(--pr-info);"></div>
               <span><%= l(:label_priority_low) %> (<%= @priority_distribution[:low] %> - <%= @priority_percentages[:low] %>%)</span>
             </div>
           </div>
@@ -149,22 +149,22 @@
             </thead>
             <tbody>
             <tr>
-              <td><span class="pr-swatch" style="background-color: #dc3a3a;"></span><%= l(:label_priority_urgent) %></td>
+              <td><span class="pr-swatch" style="background-color: var(--pr-danger);"></span><%= l(:label_priority_urgent) %></td>
               <td><%= @priority_distribution[:urgent] %></td>
               <td><%= @priority_percentages[:urgent] %>%</td>
             </tr>
             <tr>
-              <td><span class="pr-swatch" style="background-color: #df8709;"></span><%= l(:label_priority_high) %></td>
+              <td><span class="pr-swatch" style="background-color: var(--pr-warning);"></span><%= l(:label_priority_high) %></td>
               <td><%= @priority_distribution[:high] %></td>
               <td><%= @priority_percentages[:high] %>%</td>
             </tr>
             <tr>
-              <td><span class="pr-swatch" style="background-color: #2f9e44;"></span><%= l(:label_priority_normal) %></td>
+              <td><span class="pr-swatch" style="background-color: var(--pr-success);"></span><%= l(:label_priority_normal) %></td>
               <td><%= @priority_distribution[:normal] %></td>
               <td><%= @priority_percentages[:normal] %>%</td>
             </tr>
             <tr>
-              <td><span class="pr-swatch" style="background-color: #2272c4;"></span><%= l(:label_priority_low) %></td>
+              <td><span class="pr-swatch" style="background-color: var(--pr-info);"></span><%= l(:label_priority_low) %></td>
               <td><%= @priority_distribution[:low] %></td>
               <td><%= @priority_percentages[:low] %>%</td>
             </tr>
