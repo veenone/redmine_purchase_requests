@@ -102,7 +102,7 @@
     summary_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
     summary_symbol = currency_symbol(summary_currency)
   %>
-  <div class="stat-box pr-stat--violet">
+  <div class="stat-box pr-stat--accent">
     <div class="stat-number stat-currency stat-currency--neutral"><%= summary_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
     <div class="stat-label"><%= l(:label_total_estimated_cost) %></div>
   </div>
@@ -118,7 +118,7 @@
     </div>
     <div class="dashboard-card-body">
       <table class="dashboard-table">
-        <caption class="sr-only">Financial overview</caption>
+        <caption class="sr-only"><%= l(:label_caption_financial_overview) %></caption>
         <%
           default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
           default_symbol = currency_symbol(default_currency)
@@ -180,7 +180,7 @@
     <div class="dashboard-card-body">
       <% if @converted_currency_distribution && @converted_currency_distribution.any? %>
         <table class="dashboard-table">
-          <caption class="sr-only">Currency breakdown with conversion</caption>
+          <caption class="sr-only"><%= l(:label_caption_currency_conversion) %></caption>
           <thead>
             <tr>
               <th scope="col"><%= l(:field_currency) %></th>
@@ -222,7 +222,7 @@
           </div>
           <p class="info"><%= l(:text_exchange_rates_info) %></p>
           <table class="dashboard-table">
-            <caption class="sr-only">Exchange rates</caption>
+            <caption class="sr-only"><%= l(:label_caption_exchange_rates) %></caption>
             <thead>
               <tr>
                 <th scope="col"><%= l(:field_currency) %></th>
@@ -256,7 +256,7 @@
         <details class="pr-data-toggle">
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_monthly_trends) %></summary>
           <table class="dashboard-table">
-            <caption class="sr-only">Monthly purchase request trends</caption>
+            <caption class="sr-only"><%= l(:label_caption_monthly_trends) %></caption>
             <thead>
               <tr>
                 <th scope="col"><%= l(:label_month) %></th>
@@ -292,7 +292,7 @@
   <!-- TPC Code Distribution Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3>Budget Distribution by TPC Code</h3>
+      <h3><%= l(:label_tpc_code_distribution) %></h3>
     </div>
     <div class="dashboard-card-body">
       <% if @tpc_distribution.present? && @tpc_distribution.any? %>
@@ -301,12 +301,12 @@
         <details class="pr-data-toggle">
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_tpc_code_distribution, default: "Budget Distribution by TPC Code") %></summary>
           <table class="dashboard-table">
-            <caption class="sr-only">Budget distribution by TPC code</caption>
+            <caption class="sr-only"><%= l(:label_caption_tpc_distribution) %></caption>
             <thead>
               <tr>
                 <th scope="col">TPC Code</th>
-                <th scope="col">Requests</th>
-                <th scope="col">Total Cost</th>
+                <th scope="col"><%= l(:label_requests) %></th>
+                <th scope="col"><%= l(:label_total_cost) %></th>
               </tr>
             </thead>
             <tbody>
@@ -325,7 +325,7 @@
           </table>
         </details>
       <% else %>
-        <p class="nodata">No TPC code data available</p>
+        <p class="nodata"><%= l(:label_no_tpc_data) %></p>
       <% end %>
     </div>
   </div>
@@ -338,7 +338,7 @@
     <div class="dashboard-card-body">
       <% if @top_vendors.present? && @top_vendors.any? %>
         <table class="dashboard-table">
-          <caption class="sr-only">Top vendors by purchase requests</caption>
+          <caption class="sr-only"><%= l(:label_caption_top_vendors) %></caption>
           <thead>
             <tr>
               <th scope="col"><%= l(:field_vendor) %></th>
@@ -394,7 +394,7 @@
         <details class="pr-data-toggle">
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_status_distribution) %></summary>
           <table class="dashboard-table">
-            <caption class="sr-only">Purchase requests by status</caption>
+            <caption class="sr-only"><%= l(:label_caption_by_status) %></caption>
             <thead>
               <tr>
                 <th scope="col"><%= l(:field_status) %></th>
@@ -454,7 +454,7 @@
         <details class="pr-data-toggle">
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_priority_distribution) %></summary>
           <table class="dashboard-table">
-            <caption class="sr-only">Purchase requests by priority</caption>
+            <caption class="sr-only"><%= l(:label_caption_by_priority) %></caption>
             <thead>
               <tr>
                 <th scope="col"><%= l(:field_priority) %></th>
@@ -500,7 +500,7 @@
     <div class="dashboard-card-body">
       <% if @recent_requests.present? && @recent_requests.any? %>
         <table class="dashboard-table">
-          <caption class="sr-only">Recent purchase requests</caption>
+          <caption class="sr-only"><%= l(:label_caption_recent_requests) %></caption>
           <thead>
             <tr>
               <th scope="col">#</th>
@@ -538,7 +538,7 @@
     <div class="dashboard-card-body">
       <% if @top_requesters.present? && @top_requesters.any? %>
         <table class="dashboard-table">
-          <caption class="sr-only">Top requesters</caption>
+          <caption class="sr-only"><%= l(:label_caption_top_requesters) %></caption>
           <thead>
             <tr>
               <th scope="col"><%= l(:field_user) %></th>
@@ -591,6 +591,21 @@
 </div>
 
 <script>
+// Chart copy and currency come from the server so charts stay localized and
+// respect the configured default currency instead of hardcoding "$".
+const PR_CHART_LABELS = {
+  requests: '<%= j(l(:label_requests)) %>',
+  total: '<%= j(l(:label_total_cost)) %>',
+  currencySymbol: '<%= j(currency_symbol(Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD')) %>'
+};
+
+function formatChartMoney(amount) {
+  return PR_CHART_LABELS.currencySymbol + Number(amount).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Generate Status Distribution Pie Chart
   <% if @status_distribution.present? && @status_distribution.any? %>
@@ -637,6 +652,10 @@ document.addEventListener('DOMContentLoaded', function() {
 function generatePieChart(containerId, data) {
   const container = document.getElementById(containerId);
   if (!container || !data.length) return;
+
+  // Match generateBarChart: clear first so a re-render replaces the chart
+  // instead of stacking a second SVG on top of the first.
+  container.replaceChildren();
 
   const size = 120;
   const radius = size / 2 - 10;
@@ -737,7 +756,9 @@ function generateBarChart(containerId, data) {
 
     const valueLabel = document.createElement('div');
     valueLabel.className = 'chart-bar-value';
-    valueLabel.textContent = item.value;
+    // `value` drives bar height; `display` is what a human should read. Money
+    // charts pass a formatted string so bars never show a raw float.
+    valueLabel.textContent = item.display !== undefined ? item.display : item.value;
     bar.appendChild(valueLabel);
 
     const monthLabel = document.createElement('div');
@@ -745,9 +766,11 @@ function generateBarChart(containerId, data) {
     monthLabel.textContent = item.label;
     bar.appendChild(monthLabel);
 
-    bar.title = `${item.label}: ${item.value} requests`;
+    bar.title = item.tooltip !== undefined
+      ? item.tooltip
+      : `${item.label}: ${item.value} ${PR_CHART_LABELS.requests}`;
     if (item.amount !== undefined) {
-      bar.title += ` (Total: $${item.amount.toLocaleString()})`;
+      bar.title += ` (${PR_CHART_LABELS.total}: ${formatChartMoney(item.amount)})`;
     }
 
     container.appendChild(bar);
@@ -763,7 +786,10 @@ if (tpcChartContainer && tpcDistributionData.length > 0) {
   const tpcChartData = tpcDistributionData.map(item => ({
     label: item.tpc_code,
     value: item.total_cost,
-    count: item.count
+    count: item.count,
+    // Bars are sized by total_cost but must read as money, not a bare float.
+    display: formatChartMoney(item.total_cost),
+    tooltip: `${item.tpc_code}: ${formatChartMoney(item.total_cost)} (${item.count} ${PR_CHART_LABELS.requests})`
   }));
 
   generateBarChart('tpc-distribution-chart', tpcChartData);
