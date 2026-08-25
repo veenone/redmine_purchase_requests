@@ -155,7 +155,56 @@ class PurchaseRequestsController < ApplicationController
     
     # Get default currency for all conversions
     default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    
+
+    # ------------------------------------------------------------------
+    # Budget-health band: CAPEX + OPEX budget for the resolved year,
+    # narrowed by the active TPC filter. `utilized_amount` on both models
+    # is the linked purchase-request spend, so these figures stay
+    # consistent with the request costs computed below. Currency is
+    # converted with the same helper the rest of this action uses.
+    # Annual budgets don't sum meaningfully across years, so when no year
+    # is selected the band resolves to the current year.
+    # ------------------------------------------------------------------
+    @budget_year = @selected_year || Date.current.year
+    @budget_year_defaulted = @selected_year.blank?
+
+    capex_scope = Capex.for_year(@budget_year)
+    opex_scope  = Opex.for_year(@budget_year)
+    capex_scope = capex_scope.for_project(@project) if @project
+    opex_scope  = opex_scope.for_project(@project)  if @project
+    if @selected_tpc_code_id
+      capex_scope = capex_scope.where(tpc_code_id: @selected_tpc_code_id)
+      opex_scope  = opex_scope.where(tpc_code_id: @selected_tpc_code_id)
+    end
+
+    @capex_budget = 0.0
+    @capex_utilized = 0.0
+    capex_scope.each do |c|
+      cur = c.currency.presence || default_currency
+      @capex_budget   += helpers.convert_currency(c.total_amount || 0, cur, default_currency)
+      @capex_utilized += helpers.convert_currency(c.utilized_amount || 0, cur, default_currency)
+    end
+
+    @opex_budget = 0.0
+    @opex_utilized = 0.0
+    opex_scope.each do |o|
+      cur = o.currency.presence || default_currency
+      @opex_budget   += helpers.convert_currency(o.total_amount || 0, cur, default_currency)
+      @opex_utilized += helpers.convert_currency(o.utilized_amount || 0, cur, default_currency)
+    end
+
+    @capex_budget   = @capex_budget.round(2)
+    @capex_utilized = @capex_utilized.round(2)
+    @opex_budget    = @opex_budget.round(2)
+    @opex_utilized  = @opex_utilized.round(2)
+
+    @budget_total     = (@capex_budget + @opex_budget).round(2)
+    @budget_utilized  = (@capex_utilized + @opex_utilized).round(2)
+    @budget_remaining = (@budget_total - @budget_utilized).round(2)
+    @budget_utilization_pct = @budget_total > 0 ? (@budget_utilized / @budget_total * 100).round(1) : 0
+    @has_budget = @budget_total > 0
+    @budget_currency = default_currency
+
     # Calculate total costs with currency conversion
     @total_estimated_cost = 0
     @pending_cost = 0

@@ -59,6 +59,10 @@
   --pr-warning:      #df8709;
   --pr-warning-soft: #fbf1de;
   --pr-warning-ink:  #a4660a;
+  /* Darker amber for text on plain/subtle surfaces: warning-ink only reaches
+     4.2:1 on hovered table rows (#f1f3f6). This clears WCAG AA (4.89:1) on
+     every surface the plugin uses. Badges keep warning-ink on *-soft grounds. */
+  --pr-warning-ink-strong: #965d09;
 
   /* Semantic — danger */
   --pr-danger:      #dc3a3a;
@@ -472,9 +476,19 @@
 #content .capex-stat-card.utilization  { border-left-color: var(--pr-violet); }
 #content .pr-stat--danger              { border-left-color: var(--pr-danger); }
 
-/* Currency-coloured figures */
+/* Currency-coloured figures.
+   `.stat-currency` is the neutral money default used across every view.
+   The `--state` modifiers below are opt-in: apply one only where the figure's
+   state is actually known, so money reads as committed / at-risk / settled
+   instead of uniformly green. Each is paired with a text label in the markup,
+   so colour reinforces meaning and never carries it alone. */
 #content .stat-currency,
 #content .pr-stat__value.is-currency { color: var(--pr-success-ink); }
+
+#content .stat-currency--neutral  { color: var(--pr-ink); }
+#content .stat-currency--pending  { color: var(--pr-warning-ink-strong); }
+#content .stat-currency--approved { color: var(--pr-success-ink); }
+#content .stat-currency--over     { color: var(--pr-danger-ink); }
 #content .pr-stat__value .currency,
 #content .pr-stat__value .currency-code { color: var(--pr-ink-faint); font-size: 12px; font-weight: 600; }
 
@@ -1777,7 +1791,14 @@
   background: var(--pr-surface);
   border: 1px solid var(--pr-border);
   border-radius: var(--pr-radius-sm);
+  /* 12 monthly bars (26px min + 8px gap) overrun a narrow card; scroll the
+     chart inside its own box so the page body never scrolls sideways. */
+  overflow-x: auto;
+  overflow-y: hidden;
 }
+/* Bars must not shrink below their readable width when the row scrolls. */
+#content .chart-bar-container > *,
+#content .capex-bar-chart > * { flex-shrink: 0; }
 /* Line/trend charts size to their SVG instead of a fixed bar-chart box */
 #content .chart-line-container,
 #content .chart-hbar-container {
@@ -2322,3 +2343,14 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   28. Budget-health band (Purchase Requests dashboard)
+   ---------------------------------------------------------------------------
+   Focal band at the top of the dashboard: reuses .pr-card, .pr-stats and the
+   .utilization-bar/.pr-meter__fill meter; only spacing + the split line are
+   new here. */
+#content .pr-budget-band { margin: 0 0 22px; }
+#content .pr-budget-band__meter { margin-top: 14px; }
+#content .pr-budget-band__split { margin: 10px 0 0; font-size: var(--pr-text-sm); }
+#content .pr-budget-band__split strong { color: var(--pr-ink); font-weight: 600; }
