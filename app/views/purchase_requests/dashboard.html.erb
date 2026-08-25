@@ -43,6 +43,7 @@
       <% end %>
     </div>
     <div class="pr-card__body">
+      <% budget_symbol = currency_symbol(@budget_currency) %>
       <% if @has_budget %>
         <%
           over_budget = @budget_remaining < 0
@@ -50,15 +51,19 @@
         %>
         <div class="pr-stats">
           <div class="pr-stat pr-stat--accent">
-            <div class="pr-stat__value num"><%= number_with_delimiter(@budget_total.round) %> <span class="currency-code"><%= @budget_currency %></span></div>
+            <div class="pr-stat__value num"><%= budget_symbol %><%= number_with_precision(@budget_total, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
             <div class="pr-stat__label"><%= l(:label_total_budget, default: 'Total budget') %></div>
           </div>
           <div class="pr-stat pr-stat--<%= over_budget ? 'danger' : (@budget_utilization_pct >= 80 ? 'warning' : 'success') %>">
-            <div class="pr-stat__value num stat-currency--<%= over_budget ? 'over' : (@budget_utilization_pct >= 80 ? 'pending' : 'approved') %>"><%= number_with_delimiter(@budget_utilized.round) %> <span class="currency-code"><%= @budget_currency %></span></div>
+            <%# Utilized is a sum with no state of its own — per the Money-State
+                Rule it reads as plain ink; the alarm belongs on the overage. %>
+            <div class="pr-stat__value num stat-currency--neutral"><%= budget_symbol %><%= number_with_precision(@budget_utilized, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
             <div class="pr-stat__label"><%= l(:label_utilized, default: 'Utilized') %></div>
           </div>
           <div class="pr-stat pr-stat--<%= over_budget ? 'danger' : 'success' %>">
-            <div class="pr-stat__value num"><%= number_with_delimiter(@budget_remaining.round) %> <span class="currency-code"><%= @budget_currency %></span></div>
+            <%# Under an "Over budget by" label the figure must be positive:
+                the label already carries the direction. %>
+            <div class="pr-stat__value num stat-currency--<%= over_budget ? 'over' : 'approved' %>"><%= budget_symbol %><%= number_with_precision(@budget_remaining.abs, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
             <div class="pr-stat__label"><%= over_budget ? l(:label_over_budget_by, default: 'Over budget by') : l(:label_remaining, default: 'Remaining') %></div>
           </div>
           <div class="pr-stat pr-stat--violet">
@@ -66,13 +71,13 @@
             <div class="pr-stat__label"><%= l(:label_utilization, default: 'Utilization') %></div>
           </div>
         </div>
-        <div class="utilization-bar pr-budget-band__meter">
+        <div class="utilization-bar pr-budget-band__meter" aria-hidden="true">
           <div class="pr-meter__fill <%= severity %>" style="width: <%= [@budget_utilization_pct, 100].min %>%"></div>
         </div>
         <p class="pr-budget-band__split conversion-note">
-          <strong>CAPEX</strong> <%= number_with_delimiter(@capex_utilized.round) %> / <%= number_with_delimiter(@capex_budget.round) %>
+          <strong>CAPEX</strong> <%= budget_symbol %><%= number_with_precision(@capex_utilized, precision: 2, delimiter: ',') %> / <%= budget_symbol %><%= number_with_precision(@capex_budget, precision: 2, delimiter: ',') %>
           &nbsp;&middot;&nbsp;
-          <strong>OPEX</strong> <%= number_with_delimiter(@opex_utilized.round) %> / <%= number_with_delimiter(@opex_budget.round) %>
+          <strong>OPEX</strong> <%= budget_symbol %><%= number_with_precision(@opex_utilized, precision: 2, delimiter: ',') %> / <%= budget_symbol %><%= number_with_precision(@opex_budget, precision: 2, delimiter: ',') %>
           &nbsp;<%= @budget_currency %>
         </p>
       <% else %>
@@ -114,7 +119,7 @@
   <!-- Financial Overview Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_financial_overview) %></h3>
+      <h4><%= l(:label_financial_overview) %></h4>
     </div>
     <div class="dashboard-card-body">
       <table class="dashboard-table">
@@ -175,7 +180,7 @@
   <!-- Currency Breakdown with Conversion Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_currency_breakdown_with_conversion) %></h3>
+      <h4><%= l(:label_currency_breakdown_with_conversion) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @converted_currency_distribution && @converted_currency_distribution.any? %>
@@ -247,11 +252,11 @@
   <!-- Monthly Trends Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_monthly_trends) %></h3>
+      <h4><%= l(:label_monthly_trends) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @monthly_trends.present? && @monthly_trends.any? %>
-        <div class="chart-bar-container" id="monthly-trends-chart"></div>
+        <div class="chart-bar-container" id="monthly-trends-chart" data-chart-label="<%= l(:label_monthly_trends) %>"></div>
 
         <details class="pr-data-toggle">
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_monthly_trends) %></summary>
@@ -292,11 +297,11 @@
   <!-- TPC Code Distribution Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_tpc_code_distribution) %></h3>
+      <h4><%= l(:label_tpc_code_distribution) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @tpc_distribution.present? && @tpc_distribution.any? %>
-        <div class="chart-bar-container" id="tpc-distribution-chart"></div>
+        <div class="chart-bar-container" id="tpc-distribution-chart" data-chart-label="<%= l(:label_tpc_code_distribution) %>"></div>
 
         <details class="pr-data-toggle">
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_tpc_code_distribution, default: "Budget Distribution by TPC Code") %></summary>
@@ -333,7 +338,7 @@
   <!-- Top Vendors Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_top_vendors) %></h3>
+      <h4><%= l(:label_top_vendors) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @top_vendors.present? && @top_vendors.any? %>
@@ -375,7 +380,7 @@
   <!-- Status Distribution Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_status_distribution) %></h3>
+      <h4><%= l(:label_status_distribution) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @status_distribution.present? && @status_distribution.any? %>
@@ -425,7 +430,7 @@
   <!-- Priority Distribution Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_priority_distribution) %></h3>
+      <h4><%= l(:label_priority_distribution) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @priority_distribution.present? && @priority_distribution.values.sum > 0 %>
@@ -495,7 +500,7 @@
   <!-- Recent Activity Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_recent_requests) %></h3>
+      <h4><%= l(:label_recent_requests) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @recent_requests.present? && @recent_requests.any? %>
@@ -533,7 +538,7 @@
   <!-- Top Requesters Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_top_requesters) %></h3>
+      <h4><%= l(:label_top_requesters) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @top_requesters.present? && @top_requesters.any? %>
@@ -569,7 +574,7 @@
   <!-- Response Time Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_average_response_time) %></h3>
+      <h4><%= l(:label_average_response_time) %></h4>
     </div>
     <div class="dashboard-card-body">
       <div class="pr-stat__value num"><%= @avg_response_days %> <%= l(:label_days) %></div>
@@ -746,6 +751,14 @@ function generateBarChart(containerId, data) {
 
   const maxValue = Math.max(...data.map(item => item.value));
   if (maxValue === 0) return;
+
+  // Same contract as the pie charts: announce the series as one image rather
+  // than leaving a stream of unlabelled numbers. The container scrolls, so it
+  // also needs to be focusable or its later bars are keyboard-unreachable.
+  container.setAttribute('role', 'img');
+  container.setAttribute('aria-label', (container.dataset.chartLabel ? container.dataset.chartLabel + ': ' : '') +
+    data.map(i => `${i.label} ${i.display !== undefined ? i.display : i.value}`).join(', '));
+  container.setAttribute('tabindex', '0');
 
   data.forEach((item) => {
     const barHeight = (item.value / maxValue) * 120;

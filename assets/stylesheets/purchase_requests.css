@@ -395,6 +395,7 @@
 #content .pr-card__header h3,
 #content .pr-card__header h4,
 #content .dashboard-card-header h3,
+#content .dashboard-card-header h4,
 #content .capex-chart-title {
   margin: 0;
   color: var(--pr-ink);
@@ -1053,15 +1054,16 @@
   border-top: none;
 }
 #content .form-section-title,
+/* Section titles must outrank the card headers they govern: previously they
+   were smaller and fainter than the cards, so the hierarchy read backwards. */
 #content .pr-section__title {
   margin: 0 0 16px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--pr-border);
-  color: var(--pr-ink-muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
+  color: var(--pr-ink);
+  font-size: var(--pr-text-lg);
+  font-weight: 600;
+  letter-spacing: .01em;
 }
 
 /* Checkbox row */

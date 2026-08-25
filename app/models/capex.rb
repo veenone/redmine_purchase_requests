@@ -46,8 +46,17 @@ class Capex < ActiveRecord::Base
     end
   end
   
+  # Linked requests may be raised in a different currency than this CAPEX
+  # entry, so each price is converted into this entry's currency before it is
+  # summed. Summing raw prices first (the previous behaviour) silently counted
+  # e.g. USD amounts as EUR. Returned in this record's currency, matching
+  # total_amount, so callers can convert the result as a single figure.
   def utilized_amount
-    purchase_requests.where.not(estimated_price: nil).sum(:estimated_price)
+    target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    purchase_requests.where.not(estimated_price: nil).sum do |request|
+      source = request.currency.presence || target
+      PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
+    end
   end
   
   def remaining_amount

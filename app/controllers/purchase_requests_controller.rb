@@ -138,10 +138,14 @@ class PurchaseRequestsController < ApplicationController
     @available_years = scope.pluck(Arel.sql('DISTINCT YEAR(purchase_requests.created_at)')).compact.sort.reverse
     @available_years = [Date.current.year] if @available_years.empty?
 
-    # Apply year filter if selected
-    if @selected_year.present?
-      scope = scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
-    end
+    # The dashboard always describes exactly one year. Annual CAPEX/OPEX
+    # budgets don't sum meaningfully across years, so rather than let the
+    # budget band show one period while the requests below show "all years",
+    # an absent year resolves to the current one and narrows every figure on
+    # the page. The band and the request stats can then never disagree.
+    @budget_year_defaulted = @selected_year.blank?
+    @selected_year ||= Date.current.year
+    scope = scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
 
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
@@ -162,11 +166,10 @@ class PurchaseRequestsController < ApplicationController
     # is the linked purchase-request spend, so these figures stay
     # consistent with the request costs computed below. Currency is
     # converted with the same helper the rest of this action uses.
-    # Annual budgets don't sum meaningfully across years, so when no year
-    # is selected the band resolves to the current year.
+    # The year was already resolved with the request scope above, so the band
+    # and every figure on the page describe the same period.
     # ------------------------------------------------------------------
-    @budget_year = @selected_year || Date.current.year
-    @budget_year_defaulted = @selected_year.blank?
+    @budget_year = @selected_year
 
     capex_scope = Capex.for_year(@budget_year)
     opex_scope  = Opex.for_year(@budget_year)
