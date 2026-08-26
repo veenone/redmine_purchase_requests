@@ -397,7 +397,7 @@
                 <span class="utilization-text"><%= capex.utilization_percentage %>%</span>
               </td>
               <td>
-                <% pr_count = capex.purchase_requests.count %>
+                <% pr_count = capex.purchase_requests.size %>
                 <% if pr_count > 0 %>
                   <%= link_to "#{pr_count} PR#{'s' if pr_count != 1}",
                             project_capex_path(@project, capex),

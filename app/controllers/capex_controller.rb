@@ -98,7 +98,9 @@ class CapexController < ApplicationController
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     @selected_tpc_code_id = params[:tpc_code_id].presence
     capex_for_year = capex_for_year.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
-    @capex_entries = capex_for_year.ordered
+    # utilized_amount enumerates linked requests per record, so preload them
+    # once rather than issuing a query per row.
+    @capex_entries = capex_for_year.ordered.includes(:purchase_requests)
     
     # Get default currency for conversions
     @default_currency = helpers.default_capex_currency

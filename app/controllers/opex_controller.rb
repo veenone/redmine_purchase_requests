@@ -105,7 +105,9 @@ class OpexController < ApplicationController
   
   def dashboard
     @current_year = (params[:year] || Date.current.year).to_i
-    @opex_entries = @project.opex.for_year(@current_year)
+    # utilized_amount enumerates linked requests per record; preload them once
+    # rather than issuing a query per row (see Capex dashboard).
+    @opex_entries = @project.opex.for_year(@current_year).includes(:purchase_requests)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     @selected_tpc_code_id = params[:tpc_code_id].presence
     @opex_entries = @opex_entries.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id

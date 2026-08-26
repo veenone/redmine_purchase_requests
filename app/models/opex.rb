@@ -55,11 +55,26 @@ class Opex < ActiveRecord::Base
   
   # See Capex#utilized_amount: convert each linked request into this record's
   # currency before summing, rather than adding raw mixed-currency prices.
+  # Memoised: the dashboard reads this up to six times per row (directly and
+  # via remaining_amount / utilization_percentage), and each call loads every
+  # linked request and converts it in Ruby. Scoped to the instance, so a
+  # reload or a fresh request recomputes.
+  # Drop memoised aggregates when the record is reloaded.
+  def reload(*)
+    remove_instance_variable(:@utilized_amount) if defined?(@utilized_amount)
+    super
+  end
+
   def utilized_amount
+    return @utilized_amount if defined?(@utilized_amount)
+    @utilized_amount = begin
     target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    purchase_requests.where(opex: self).where.not(estimated_price: nil).sum do |request|
+    # See Capex#utilized_amount: filter in Ruby so a preloaded association is
+    # actually used instead of triggering a fresh scoped query.
+    purchase_requests.reject { |r| r.estimated_price.nil? }.sum do |request|
       source = request.currency.presence || target
       PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
+    end
     end
   end
   
