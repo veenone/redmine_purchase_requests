@@ -54,8 +54,16 @@ end
 # change, which would otherwise show up as a permanent, meaningless DIFF.
 # Normalize it away so the harness only reports diffs that reflect real
 # output changes.
+#
+# Scoped to the <form ...> tag specifically, not to any element's `name`
+# attribute: an unscoped match on /name="...[0-9a-f]{8}"/ would also catch
+# a purely-decimal value (0-9 is a subset of [0-9a-f]), e.g. a future
+# name="foo-12345678" built from a database id, and silently normalize away
+# a genuine diff.
 def normalize(html)
-  html.gsub(/name="([a-zA-Z0-9_]*-)?[0-9a-f]{8}"/) { |m| m.sub(/[0-9a-f]{8}"\z/, 'RANDOMIZED"') }
+  html.gsub(/<form\b[^>]*>/) do |form_tag|
+    form_tag.sub(/name="[a-zA-Z0-9_]*-[0-9a-f]{8}"/, 'name="RANDOMIZED"')
+  end
 end
 
 case MODE
