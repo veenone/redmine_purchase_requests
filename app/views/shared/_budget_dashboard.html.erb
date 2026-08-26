@@ -1,0 +1,283 @@
+<% if @capex_entries.any? %>
+  <!-- Summary Stats -->
+  <% if @totals_unreliable %>
+    <div class="pr-alert pr-alert-warning" role="status">
+      <strong><%= l(:label_totals_not_comparable) %>.</strong>
+      <% if @unconvertible_currencies.any? %>
+        <%= l(:text_missing_exchange_rate, currencies: @unconvertible_currencies.join(', ')) %>
+      <% else %>
+        <%= l(:text_mixed_currency_no_rates) %>
+      <% end %>
+    </div>
+  <% end %>
+  <div class="summary-stats">
+    <div class="stat-box pr-stat--accent">
+      <div class="stat-number stat-currency">
+        <% if @use_exchange_rates %>
+          <%= currency_symbol %>
+          <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
+          <span class="currency-code"><%= @default_currency %></span>
+        <% elsif @currency_breakdown.keys.length == 1 %>
+          <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
+          <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
+          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
+        <% else %>
+          <%= l(:label_multi_currency) %>
+        <% end %>
+      </div>
+      <div class="stat-label">
+        <%= l(:label_total_capex_budget) %>
+        <% if @use_exchange_rates && @unconvertible_currencies.empty? %>
+          <span class="conversion-note">(<%= l(:label_converted_to) %> <%= @default_currency %>)</span>
+        <% elsif @unconvertible_currencies.any? %>
+          <span class="pr-badge pr-badge--warning"><%= l(:label_rate_not_set) %>: <%= @unconvertible_currencies.join(', ') %></span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="stat-box pr-stat--success">
+      <div class="stat-number stat-currency">
+        <% if @use_exchange_rates %>
+          <%= currency_symbol %>
+          <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+          <span class="currency-code"><%= @default_currency %></span>
+        <% elsif @currency_breakdown.keys.length == 1 %>
+          <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
+          <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
+        <% else %>
+          <%= l(:label_multi_currency) %>
+        <% end %>
+      </div>
+      <div class="stat-label">
+        <span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
+        <% unless @totals_unreliable %>
+          <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
+            <div class="utilization-fill <%= @budget_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="stat-box pr-stat--<%= @budget_over ? 'danger' : 'warning' %>">
+      <%# Under an "Over budget by" label the figure must be positive: the
+          label carries the direction, so the number carries only magnitude. %>
+      <div class="stat-number stat-currency stat-currency--<%= @budget_over ? 'over' : 'neutral' %>">
+        <% if @use_exchange_rates %>
+          <%= currency_symbol %>
+          <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+          <span class="currency-code"><%= @default_currency %></span>
+        <% elsif @currency_breakdown.keys.length == 1 %>
+          <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
+          <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
+        <% else %>
+          <%= l(:label_multi_currency) %>
+        <% end %>
+      </div>
+      <div class="stat-label">
+        <% if @budget_over %>
+          <%= l(:label_over_budget_by) %>
+        <% else %>
+          <%= l(:label_remaining) %><% unless @totals_unreliable %> (<%= (100 - @utilization_percentage.to_f).round(2) %>%)<% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="stat-box pr-stat--accent">
+      <div class="stat-number"><%= @capex_entries.count %></div>
+      <div class="stat-label"><%= labels[:entries] %></div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="dashboard-container">
+    <!-- Budget Utilization Donut -->
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h3><%= l(:label_budget_utilization_overview) %></h3>
+      </div>
+      <div class="dashboard-card-body">
+        <% if @totals_unreliable %>
+          <%# A donut of unlike units would picture a meaningless sum. Rather
+              than repeat the banner's sentence 400px below it, this card
+              carries the figures that ARE comparable: budget per currency. %>
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_budget_by_currency) %></caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= l(:field_currency) %></th>
+                <th scope="col"><%= l(:label_total_budget) %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @currency_breakdown.each do |cur, amount| %>
+                <tr>
+                  <th scope="row"><%= cur %></th>
+                  <td class="stat-currency stat-currency--neutral">
+                    <%= currency_symbol_for.call(cur) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+                    <% if @unconvertible_currencies.include?(cur) %>
+                      <span class="pr-badge pr-badge--warning"><%= l(:label_rate_not_set) %></span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+        <div class="capex-donut-container">
+          <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
+            <div class="capex-donut-center">
+              <div style="font-weight:700;font-size:14px;"><%= @utilization_percentage %>%</div>
+              <div style="font-size:10px;color:var(--pr-ink-muted);"><%= l(:label_utilization) %></div>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <table class="dashboard-table">
+              <caption class="sr-only"><%= l(:label_caption_budget_utilization) %></caption>
+              <tr>
+                <td><span class="status-indicator status-utilized"></span><%= l(:label_utilized) %></td>
+                <td class="stat-currency">
+                  <% if @use_exchange_rates %>
+                    <%= currency_symbol %>
+                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+                    (<%= @utilization_percentage %>%)
+                  <% elsif @currency_breakdown.keys.length == 1 %>
+                    <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
+                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
+                    (<%= @utilization_percentage %>%)
+                  <% else %>
+                    <%= l(:label_multi_currency) %><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
+                  <% end %>
+                </td>
+              </tr>
+              <tr>
+                <%# The legend must tell the same story as the tile above it:
+                    over budget means a positive magnitude under a danger dot,
+                    not a bare negative beside an amber one. %>
+                <td><span class="status-indicator <%= @budget_over ? 'status-overbudget' : 'status-remaining' %>"></span><%= @budget_over ? l(:label_over_budget_by) : l(:label_remaining) %></td>
+                <td class="stat-currency stat-currency--<%= @budget_over ? 'over' : 'neutral' %>">
+                  <% if @use_exchange_rates %>
+                    <%= currency_symbol %>
+                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+                  <% elsif @currency_breakdown.keys.length == 1 %>
+                    <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
+                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+                  <% else %>
+                    <%= l(:label_multi_currency) %>
+                  <% end %>
+                  <% unless @totals_unreliable %>(<%= (100 - @utilization_percentage.to_f).round(2) %>%)<% end %>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Quarterly Distribution Bar -->
+    <div class="dashboard-card">
+      <div class="dashboard-card-header">
+        <h3><%= l(:label_quarterly_distribution) %></h3>
+      </div>
+      <div class="dashboard-card-body">
+        <div class="capex-bar-chart" id="quarterly-bar-chart" data-chart-label="<%= l(:label_quarterly_distribution) %>">
+          <!-- bars injected by JS -->
+        </div>
+
+        <details class="pr-data-toggle">
+          <summary><%= l(:label_view_data_table) %> — <%= l(:label_quarterly_distribution) %></summary>
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_quarterly) %></caption>
+            <tr>
+              <th scope="col"><%= l(:label_quarter) %></th>
+              <th scope="col"><%= l(:label_total_budget) %></th>
+            </tr>
+            <tr>
+              <td>Q1</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= currency_symbol %><%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= currency_symbol_for.call(@currency_breakdown.keys.first) %><%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q1], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td>Q2</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= currency_symbol %><%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= currency_symbol_for.call(@currency_breakdown.keys.first) %><%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q2], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td>Q3</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= currency_symbol %><%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= currency_symbol_for.call(@currency_breakdown.keys.first) %><%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q3], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+            <tr>
+              <td>Q4</td>
+              <td class="stat-currency">
+                <% if @use_exchange_rates %>
+                  <%= currency_symbol %><%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+                <% elsif @currency_breakdown.keys.length == 1 %>
+                  <%= currency_symbol_for.call(@currency_breakdown.keys.first) %><%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+                <% else %>
+                  <%= number_with_precision(@quarterly_data[:q4], precision: 2, delimiter: ',') %>
+                <% end %>
+              </td>
+            </tr>
+          </table>
+        </details>
+      </div>
+    </div>
+  </div>
+
+<%= render grouping_partial %>
+  <!-- Currency Breakdown (multi-currency only) -->
+  <% if @currency_breakdown.keys.length > 1 %>
+    <div class="details-section">
+      <h4><%= labels[:by_currency] %></h4>
+      <div class="summary-stats">
+        <% @currency_breakdown.each do |currency, amount| %>
+          <div class="stat-box pr-stat--accent">
+            <div class="stat-number stat-currency">
+              <%= currency_symbol_for.call(currency) %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+            </div>
+            <div class="stat-label"><%= currency %></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+<%= render entries_partial %>
+<% else %>
+  <div class="pr-empty">
+    <div class="pr-empty__icon">📊</div>
+    <h3><%= l(:label_no_capex_data_for) %> <%= @current_year %></h3>
+    <p><%= l(:text_no_capex_entries_for_year) %></p>
+    <% if User.current.allowed_to?(:manage_capex, @project) %>
+      <p>
+        <%= link_to new_entry_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
+          <span class="icon icon-add"></span> <%= l(:label_create_first_capex) %>
+        <% end %>
+      </p>
+    <% end %>
+  </div>
+<% end %>
