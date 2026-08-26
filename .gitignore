@@ -40,3 +40,5 @@ MIGRATION_FIXES_APPLIED.md
 !README.md
 !CHANGELOG.md
 !docs/**/*.md
+dist/
+tmp/dashboard_snapshots/
