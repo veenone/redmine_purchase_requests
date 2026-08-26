@@ -26,7 +26,7 @@
         <% end %>
       </div>
       <div class="stat-label">
-        <%= l(:label_total_capex_budget) %>
+        <%= labels[:total_budget] %>
         <% if @use_exchange_rates && @unconvertible_currencies.empty? %>
           <span class="conversion-note">(<%= l(:label_converted_to) %> <%= @default_currency %>)</span>
         <% elsif @unconvertible_currencies.any? %>

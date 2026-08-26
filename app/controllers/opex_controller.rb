@@ -214,6 +214,10 @@ class OpexController < ApplicationController
           currency_symbol: currency_symbol
         }
       end
+
+      # Alphabetical is merely what group_by returned. This section answers
+      # "which categories are at risk", so the most utilized lead.
+      @category_grouping = @category_grouping.sort_by { |_k, d| -d[:utilization_percentage].to_f }.to_h
     end
   end
 
