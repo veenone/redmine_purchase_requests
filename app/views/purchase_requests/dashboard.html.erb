@@ -58,7 +58,7 @@
             <%# Utilized is a sum with no state of its own — per the Money-State
                 Rule it reads as plain ink; the alarm belongs on the overage. %>
             <div class="pr-stat__value num stat-currency--neutral"><%= budget_symbol %><%= number_with_precision(@budget_utilized, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
-            <div class="pr-stat__label"><%= l(:label_utilized, default: 'Utilized') %></div>
+            <div class="pr-stat__label" title="<%= l(:label_committed_note) %>"><%= l(:label_utilized, default: 'Committed') %></div>
           </div>
           <div class="pr-stat pr-stat--<%= over_budget ? 'danger' : 'success' %>">
             <%# Under an "Over budget by" label the figure must be positive:
@@ -74,6 +74,7 @@
         <div class="utilization-bar pr-budget-band__meter" aria-hidden="true">
           <div class="pr-meter__fill <%= severity %>" style="width: <%= [@budget_utilization_pct, 100].min %>%"></div>
         </div>
+        <p class="pr-budget-band__note conversion-note"><%= l(:label_committed_note) %>.</p>
         <p class="pr-budget-band__split conversion-note">
           <strong>CAPEX</strong> <%= budget_symbol %><%= number_with_precision(@capex_utilized, precision: 2, delimiter: ',') %> / <%= budget_symbol %><%= number_with_precision(@capex_budget, precision: 2, delimiter: ',') %>
           &nbsp;&middot;&nbsp;
@@ -309,7 +310,7 @@
             <caption class="sr-only"><%= l(:label_caption_tpc_distribution) %></caption>
             <thead>
               <tr>
-                <th scope="col">TPC Code</th>
+                <th scope="col"><%= l(:label_tpc_code) %></th>
                 <th scope="col"><%= l(:label_requests) %></th>
                 <th scope="col"><%= l(:label_total_cost) %></th>
               </tr>
@@ -601,6 +602,7 @@
 const PR_CHART_LABELS = {
   requests: '<%= j(l(:label_requests)) %>',
   total: '<%= j(l(:label_total_cost)) %>',
+  noData: '<%= j(l(:label_no_data)) %>',
   currencySymbol: '<%= j(currency_symbol(Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD')) %>'
 };
 
@@ -749,14 +751,28 @@ function generateBarChart(containerId, data) {
 
   container.replaceChildren();
 
+  const chartLabel = container.dataset.chartLabel ? container.dataset.chartLabel + ': ' : '';
   const maxValue = Math.max(...data.map(item => item.value));
-  if (maxValue === 0) return;
 
-  // Same contract as the pie charts: announce the series as one image rather
-  // than leaving a stream of unlabelled numbers. The container scrolls, so it
-  // also needs to be focusable or its later bars are keyboard-unreachable.
+  // An all-zero series is a real, common result (a year with no requests), not
+  // an error — say so rather than leaving an empty bordered box. The label is
+  // set before this early return so the chart is never silently unlabelled.
+  if (maxValue === 0) {
+    container.setAttribute('role', 'img');
+    container.setAttribute('aria-label', chartLabel + PR_CHART_LABELS.noData);
+    container.classList.add('is-empty');
+    const empty = document.createElement('p');
+    empty.className = 'nodata';
+    empty.textContent = PR_CHART_LABELS.noData;
+    container.appendChild(empty);
+    return;
+  }
+
+  // Announce the series as one image rather than a stream of unlabelled
+  // numbers. The container scrolls, so it is also a focus stop — otherwise its
+  // later bars are keyboard-unreachable.
   container.setAttribute('role', 'img');
-  container.setAttribute('aria-label', (container.dataset.chartLabel ? container.dataset.chartLabel + ': ' : '') +
+  container.setAttribute('aria-label', chartLabel +
     data.map(i => `${i.label} ${i.display !== undefined ? i.display : i.value}`).join(', '));
   container.setAttribute('tabindex', '0');
 

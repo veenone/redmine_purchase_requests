@@ -307,10 +307,14 @@ class PurchaseRequestsController < ApplicationController
       }
     end
     
-    # Monthly trends with multi-currency support
-    @monthly_trends = 12.times.map do |i|
-      month_start = i.months.ago.beginning_of_month
-      month_end = i.months.ago.end_of_month
+    # Monthly trends with multi-currency support.
+    # These months must be the calendar months of the selected year, not a
+    # rolling window from today: `scope` is locked to YEAR(created_at) =
+    # @selected_year, so a rolling window renders months the filter has
+    # already excluded as permanently-empty bars.
+    @monthly_trends = (1..12).map do |month|
+      month_start = Date.new(@selected_year, month, 1)
+      month_end = month_start.end_of_month
       
       # Get all requests for this month
       requests = scope.where(created_at: month_start..month_end)
@@ -323,12 +327,12 @@ class PurchaseRequestsController < ApplicationController
         monthly_cost += helpers.convert_currency(request.estimated_price, curr, default_currency)
       end
       
-      { 
-        month: i.months.ago.strftime("%b %Y"),
+      {
+        month: month_start.strftime("%b %Y"),
         count: count,
         amount: monthly_cost.round(2)
       }
-    end.reverse
+    end
     
     # Create datasets for multi-series monthly chart 
     @monthly_series_data = {

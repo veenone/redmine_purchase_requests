@@ -483,7 +483,7 @@
    state is actually known, so money reads as committed / at-risk / settled
    instead of uniformly green. Each is paired with a text label in the markup,
    so colour reinforces meaning and never carries it alone. */
-#content .stat-currency,
+#content .stat-currency { color: var(--pr-ink); }
 #content .pr-stat__value.is-currency { color: var(--pr-success-ink); }
 
 #content .stat-currency--neutral  { color: var(--pr-ink); }
@@ -2356,3 +2356,31 @@
 #content .pr-budget-band__meter { margin-top: 14px; }
 #content .pr-budget-band__split { margin: 10px 0 0; font-size: var(--pr-text-sm); }
 #content .pr-budget-band__split strong { color: var(--pr-ink); font-weight: 600; }
+
+/* ---------------------------------------------------------------------------
+   29. Chart empty state + scroll-container focus
+   ------------------------------------------------------------------------- */
+/* An all-zero series says so instead of rendering an empty bordered box. */
+#content .chart-bar-container.is-empty {
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  min-height: 90px;
+}
+#content .chart-bar-container.is-empty .nodata { margin: 0; }
+
+/* Scrollable charts are focus stops (so their far bars are keyboard
+   reachable); give them the same indigo ring as every other focusable
+   element rather than the UA default. */
+#content .chart-bar-container:focus-visible,
+#content .autoscroll:focus-visible {
+  outline: 2px solid var(--pr-accent);
+  outline-offset: 2px;
+}
+
+/* Money columns align to the digit — DESIGN.md's Numbers-First Rule. */
+#content table.dashboard-table td.stat-currency,
+#content table.pr-table td.stat-currency {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
