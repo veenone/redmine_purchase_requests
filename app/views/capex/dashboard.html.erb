@@ -93,7 +93,7 @@
         <% end %>
       </div>
       <div class="stat-label">
-        <%= l(:label_utilized) %><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
+        <span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
         <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
           <div class="utilization-fill <%= capex_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
         </div>
@@ -140,9 +140,31 @@
       </div>
       <div class="dashboard-card-body">
         <% if @totals_unreliable %>
-          <%# A donut of unlike units would picture a meaningless sum. Point at
-              the per-currency breakdown instead of drawing it. %>
-          <p class="nodata"><%= l(:text_mixed_currency_no_rates) %></p>
+          <%# A donut of unlike units would picture a meaningless sum. Rather
+              than repeat the banner's sentence 400px below it, this card
+              carries the figures that ARE comparable: budget per currency. %>
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_budget_by_currency) %></caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= l(:field_currency) %></th>
+                <th scope="col"><%= l(:label_total_budget) %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @currency_breakdown.each do |cur, amount| %>
+                <tr>
+                  <th scope="row"><%= cur %></th>
+                  <td class="stat-currency stat-currency--neutral">
+                    <%= Capex.new(currency: cur).currency_symbol %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+                    <% if @unconvertible_currencies.include?(cur) %>
+                      <span class="pr-badge pr-badge--warning"><%= l(:label_rate_not_set) %></span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         <% else %>
         <div class="capex-donut-container">
           <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
@@ -288,8 +310,9 @@
                 <div class="stat-box pr-stat--success">
                   <div class="stat-number stat-currency" style="font-size:16px;">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
+                    <% if data[:mixed_currency] %><span class="pr-badge pr-badge--warning"><%= l(:label_multi_currency) %></span><% end %>
                   </div>
-                  <div class="stat-label">Utilized</div>
+                  <div class="stat-label"><%= l(:label_utilized) %></div>
                 </div>
                 <div class="stat-box">
                   <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
@@ -300,7 +323,7 @@
                 <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
               </div>
               <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
-                <%= data[:utilization_percentage] %><%= l(:label_percent_utilized) %>
+                <%= data[:utilization_percentage] %>% <%= l(:label_utilization) %>
               </div>
             </div>
           </div>

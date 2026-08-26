@@ -223,7 +223,7 @@
                   <div class="stat-number stat-currency" style="font-size:16px;">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
                   </div>
-                  <div class="stat-label"><%= l(:label_utilized) %></div>
+                  <div class="stat-label"><span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span></div>
                 </div>
                 <div class="stat-box pr-stat--accent" style="min-width:0; flex:1;">
                   <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
