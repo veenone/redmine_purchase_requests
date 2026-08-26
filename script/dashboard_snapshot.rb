@@ -10,24 +10,113 @@ TAG_A  = ARGV[1]
 TAG_B  = ARGV[2]
 ROOT   = Rails.root.join('tmp', 'dashboard_snapshots')
 
-# Fixtures: [name, controller, project_identifier, params]
-def fixtures
+# Fixtures: [name, controller, project, params, setup]
+#
+# `setup` is an optional lambda that seeds the rows a branch needs. Seeded
+# fixtures run inside a transaction that is rolled back after the HTML is
+# captured, so the database is left exactly as it was found.
+#
+# Why they exist: the four unseeded fixtures only ever exercise the
+# single-currency, exchange-rates-off, totals-reliable path. Every other branch
+# on these dashboards — over budget, exactly 100%, mixed currency with rates
+# off, a currency with no configured rate — was gated by nothing at all, and
+# those are precisely the branches where the bugs have historically lived.
+def base_project
   proj = Project.joins(:enabled_modules)
                 .where(enabled_modules: { name: 'purchase_requests' })
                 .first
   raise 'no project with purchase_requests enabled' unless proj
-  years = (Capex.pluck(:year) + Opex.pluck(:year)).compact.uniq.sort
-  y_data    = years.last || Date.current.year
-  y_empty   = (years.max || Date.current.year) + 5
+  proj
+end
+
+SEED_YEAR = 2099  # far outside real data, so seeded rows can never collide
+
+def seed_capex(project, attrs)
+  Capex.create!({
+    project: project, year: SEED_YEAR, description: 'snapshot fixture',
+    tpc_code: 'FIX-1', total_amount: 1000, currency: 'EUR',
+    q1_amount: 250, q2_amount: 250, q3_amount: 250, q4_amount: 250
+  }.merge(attrs))
+end
+
+def seed_opex(project, attrs)
+  cat = OpexCategory.first || OpexCategory.create!(name: 'Fixture')
+  Opex.create!({
+    project: project, year: SEED_YEAR, description: 'snapshot fixture',
+    opex_code: 'FIX-1', total_amount: 1000, currency: 'EUR', category_id: cat.id,
+    q1_amount: 250, q2_amount: 250, q3_amount: 250, q4_amount: 250
+  }.merge(attrs))
+end
+
+# A linked purchase request is how utilized_amount becomes non-zero.
+def seed_request(project, budget, price, currency)
+  status = PurchaseRequestStatus.first || raise('no purchase request status defined')
+  pr = PurchaseRequest.new(
+    project: project, title: 'snapshot fixture', status: status,
+    user: User.current, estimated_price: price, currency: currency
+  )
+  pr.capex = budget if budget.is_a?(Capex)
+  pr.opex  = budget if budget.is_a?(Opex)
+  pr.save!(validate: false)
+  pr
+end
+
+# Some branches are only reachable with plugin settings flipped (conversion
+# on). Settings are global, so they are restored in an ensure block — a
+# fixture must never leave configuration behind.
+def with_settings(overrides)
+  key = 'plugin_redmine_purchase_requests'
+  original = Setting.send(key).dup
+  merged = original.merge(overrides)
+  Setting.send("#{key}=", merged)
+  yield
+ensure
+  Setting.send("#{key}=", original)
+end
+
+def fixtures
+  proj = base_project
+  years = (Capex.pluck(:year) + Opex.pluck(:year)).compact.reject { |y| y == SEED_YEAR }.sort
+  y_data  = years.last || Date.current.year
+  y_empty = (years.max || Date.current.year) + 5
+  sy = { year: SEED_YEAR.to_s }
   [
-    ['capex_data',  CapexController, proj, { year: y_data.to_s }],
-    ['capex_empty', CapexController, proj, { year: y_empty.to_s }],
-    ['opex_data',   OpexController,  proj, { year: y_data.to_s }],
-    ['opex_empty',  OpexController,  proj, { year: y_empty.to_s }]
+    ['capex_data',  CapexController, proj, { year: y_data.to_s }, nil],
+    ['capex_empty', CapexController, proj, { year: y_empty.to_s }, nil],
+    ['opex_data',   OpexController,  proj, { year: y_data.to_s }, nil],
+    ['opex_empty',  OpexController,  proj, { year: y_empty.to_s }, nil],
+
+    # utilized 1500 against a 1000 budget: danger tile, "Over budget by",
+    # full danger ring (an arc with coincident endpoints paints nothing).
+    ['capex_over', CapexController, proj, sy, -> (p) {
+      c = seed_capex(p, {}); seed_request(p, c, 1500, 'EUR') }],
+    ['opex_over',  OpexController,  proj, sy, -> (p) {
+      o = seed_opex(p, {}); seed_request(p, o, 1500, 'EUR') }],
+
+    # exactly 100%: the full-circle branch, distinct from >100%.
+    ['capex_exactly_100', CapexController, proj, sy, -> (p) {
+      c = seed_capex(p, {}); seed_request(p, c, 1000, 'EUR') }],
+
+    # two currencies with conversion off: totals are a sum of unlike units,
+    # so the reliability banner shows and no severity may be derived.
+    ['capex_mixed_currency', CapexController, proj, sy, -> (p) {
+      seed_capex(p, { currency: 'EUR', tpc_code: 'FIX-1' })
+      seed_capex(p, { currency: 'USD', tpc_code: 'FIX-2' }) }],
+    ['opex_mixed_currency',  OpexController,  proj, sy, -> (p) {
+      seed_opex(p, { currency: 'EUR', opex_code: 'FIX-1' })
+      seed_opex(p, { currency: 'USD', opex_code: 'FIX-2' }) }],
+
+    # a currency with no rate in any lookup table: convert_capex_currency
+    # silently falls back to 1.0, so the page must say the total is not
+    # convertible rather than claim it was converted.
+    # Reachable only with conversion ON: with it off, unconvertible_currencies
+    # is empty by construction and this branch cannot fire.
+    ['capex_missing_rate', CapexController, proj, sy, -> (p) {
+      seed_capex(p, { currency: 'JPY' }) }, { 'capex_use_exchange_rates' => '1' }]
   ]
 end
 
-def render_one(controller_class, project, params)
+def render_one(controller_class, project, params, normalize_ids: false)
   c = controller_class.new
   request = ActionDispatch::TestRequest.create
   request.path_parameters[:controller] = controller_class.controller_path
@@ -42,7 +131,14 @@ def render_one(controller_class, project, params)
   view = c.view_context
   view.lookup_context.prefixes = [dir]
   html = view.render(template: "#{dir}/dashboard", layout: false)
-  normalize(html)
+  html = normalize(html)
+  # Seeded fixtures live inside a rolled-back transaction, but the rollback
+  # does NOT give back the auto-increment ids it consumed — so record ids
+  # differ on every run and the fixture would be permanently red. Normalise
+  # them for seeded fixtures ONLY; the real fixtures keep a strict gate that
+  # would catch a genuine href change.
+  html = html.gsub(%r{(/(?:capex|opex)/)\d+}, '\\1ID') if normalize_ids
+  html
 rescue => e
   "RENDER-ERROR #{e.class}: #{e.message}\n#{e.backtrace.first(10).join("\n")}"
 end
@@ -70,11 +166,29 @@ case MODE
 when 'capture'
   dir = ROOT.join(TAG_A)
   FileUtils.mkdir_p(dir)
-  fixtures.each do |name, klass, proj, params|
-    html = render_one(klass, proj, params)
+  User.current = User.active.where(admin: true).first
+  fixtures.each do |name, klass, proj, params, setup, settings|
+    html = nil
+    if setup
+      # Seeded fixtures create the rows a branch needs, render, then roll the
+      # whole thing back — the database must be left exactly as it was found.
+      run = lambda do
+        ActiveRecord::Base.transaction do
+          setup.call(proj)
+          html = render_one(klass, proj, params, normalize_ids: true)
+          raise ActiveRecord::Rollback
+        end
+      end
+      settings ? with_settings(settings) { run.call } : run.call
+    else
+      html = render_one(klass, proj, params)
+    end
+    html ||= 'RENDER-ERROR fixture produced no output'
     File.write(dir.join("#{name}.html"), html)
     puts "  captured #{name} (#{html.bytesize} bytes)#{' *** RENDER-ERROR ***' if html.start_with?('RENDER-ERROR')}"
   end
+  leaked = Capex.where(year: SEED_YEAR).count + Opex.where(year: SEED_YEAR).count
+  abort "FIXTURE LEAK: #{leaked} seeded rows survived rollback — refusing to continue" if leaked > 0
   puts "wrote #{dir}"
 when 'compare'
   a = ROOT.join(TAG_A); b = ROOT.join(TAG_B)

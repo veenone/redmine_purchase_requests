@@ -151,7 +151,6 @@ class OpexController < ApplicationController
       # Currency breakdown and exchange rate settings
       @currency_breakdown = opex_records.group_by(&:currency)
                                          .transform_values { |list| list.sum { |o| o.total_amount || 0 } }
-      exchange_rates_settings = Setting.plugin_redmine_purchase_requests || {}
 
       opex_rates = (Setting.plugin_redmine_purchase_requests || {})
                      .dig('opex_exchange_rates', @current_year.to_s)
