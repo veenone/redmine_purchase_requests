@@ -37,16 +37,18 @@
 <%= render 'shared/budget_dashboard',
       grouping_partial: 'capex/grouping',
       entries_partial:  'capex/entries_table',
+      entries: @capex_entries,
       labels: {
-        title:        l(:label_capex_dashboard),
-        by_group:     l(:label_budget_by_tpc_code),
-        by_currency:  l(:label_capex_by_currency),
-        entries:      l(:label_capex_entries),
-        new_entry:    l(:label_new_capex_entry),
-        back_to_list: l(:label_back_to_capex_list)
+        by_currency: l(:label_capex_by_currency),
+        entries:     l(:label_capex_entries)
       },
-      new_entry_path: new_project_capex_path(@project),
-      list_path:      project_capex_index_path(@project),
+      empty_state: {
+        title:        l(:label_no_capex_data_for),
+        text:         l(:text_no_capex_entries_for_year),
+        action_label: l(:label_create_first_capex),
+        action_path:  new_project_capex_path(@project),
+        permission:   :manage_capex
+      },
       currency_symbol: capex_currency_symbol(@default_currency),
       currency_symbol_for: ->(cur) { Capex.new(currency: cur).currency_symbol } %>
 <script>

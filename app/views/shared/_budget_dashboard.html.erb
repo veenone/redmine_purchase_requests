@@ -1,4 +1,4 @@
-<% if @capex_entries.any? %>
+<% if entries.any? %>
   <!-- Summary Stats -->
   <% if @totals_unreliable %>
     <div class="pr-alert pr-alert-warning" role="status">
@@ -85,7 +85,7 @@
     </div>
 
     <div class="stat-box pr-stat--accent">
-      <div class="stat-number"><%= @capex_entries.count %></div>
+      <div class="stat-number"><%= entries.count %></div>
       <div class="stat-label"><%= labels[:entries] %></div>
     </div>
   </div>
@@ -270,12 +270,12 @@
 <% else %>
   <div class="pr-empty">
     <div class="pr-empty__icon">📊</div>
-    <h3><%= l(:label_no_capex_data_for) %> <%= @current_year %></h3>
-    <p><%= l(:text_no_capex_entries_for_year) %></p>
-    <% if User.current.allowed_to?(:manage_capex, @project) %>
+    <h3><%= empty_state[:title] %> <%= @current_year %></h3>
+    <p><%= empty_state[:text] %></p>
+    <% if User.current.allowed_to?(empty_state[:permission], @project) %>
       <p>
-        <%= link_to new_entry_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add"></span> <%= l(:label_create_first_capex) %>
+        <%= link_to empty_state[:action_path], class: 'pr-button pr-button-primary pr-button-icon' do %>
+          <span class="icon icon-add"></span> <%= empty_state[:action_label] %>
         <% end %>
       </p>
     <% end %>
