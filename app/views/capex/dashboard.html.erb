@@ -166,24 +166,26 @@
                     <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
                     (<%= @utilization_percentage %>%)
                   <% else %>
-                    Multi-Currency (<%= @utilization_percentage %>%)
+                    <%= l(:label_multi_currency) %><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
                   <% end %>
                 </td>
               </tr>
               <tr>
-                <td><span class="status-indicator status-remaining"></span><%= l(:label_remaining) %></td>
-                <td class="stat-currency">
+                <%# The legend must tell the same story as the tile above it:
+                    over budget means a positive magnitude under a danger dot,
+                    not a bare negative beside an amber one. %>
+                <td><span class="status-indicator <%= capex_over_budget ? 'status-overbudget' : 'status-remaining' %>"></span><%= capex_over_budget ? l(:label_over_budget_by) : l(:label_remaining) %></td>
+                <td class="stat-currency stat-currency--<%= capex_over_budget ? 'over' : 'neutral' %>">
                   <% if @use_exchange_rates %>
                     <%= capex_currency_symbol(@default_currency) %>
-                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-                    (<%= (100 - @utilization_percentage).round(2) %>%)
+                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
                   <% elsif @currency_breakdown.keys.length == 1 %>
                     <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-                    (<%= (100 - @utilization_percentage).round(2) %>%)
+                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
                   <% else %>
-                    Multi-Currency (<%= (100 - @utilization_percentage).round(2) %>%)
+                    <%= l(:label_multi_currency) %>
                   <% end %>
+                  <% unless @totals_unreliable %>(<%= (100 - @utilization_percentage.to_f).round(2) %>%)<% end %>
                 </td>
               </tr>
             </table>
@@ -487,7 +489,32 @@ function generateCapexDonutChart(containerId, data) {
     { label: PR_CAPEX_LABELS.remaining, display: data.remaining.toLocaleString() }
   ], {});
 
-  var utilizedPercentage = data.utilized / total;
+  // `total` is the budget (utilized + remaining), so at or above 100% the
+  // utilized sweep reaches a full turn. An SVG arc whose endpoints coincide
+  // paints nothing, and a negative remainder skips the second arc — which is
+  // why the donut used to come out blank in exactly the over-budget state this
+  // page exists to flag. Full circles are drawn as a circle, not an arc.
+  var overBudget = data.remaining < 0;
+  var utilizedPercentage = total > 0 ? data.utilized / total : 0;
+
+  if (overBudget || utilizedPercentage >= 1) {
+    var ringRadius = (outerRadius + innerRadius) / 2;
+    var ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('cx', centerX);
+    ring.setAttribute('cy', centerY);
+    ring.setAttribute('r', ringRadius);
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', overBudget
+      ? prToken('--pr-danger', '#dc3a3a')
+      : prToken('--pr-success', '#2f9e44'));
+    ring.setAttribute('stroke-width', outerRadius - innerRadius);
+    svg.appendChild(ring);
+    // insertBefore, not appendChild: the centre label is already a child and
+    // must stay in front of the ring (matches the normal path below).
+    container.insertBefore(svg, container.firstChild);
+    return;
+  }
+
   var utilizedAngle = utilizedPercentage * 2 * Math.PI;
 
   if (utilizedPercentage > 0) {
