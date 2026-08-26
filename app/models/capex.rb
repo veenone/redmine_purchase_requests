@@ -51,11 +51,27 @@ class Capex < ActiveRecord::Base
   # summed. Summing raw prices first (the previous behaviour) silently counted
   # e.g. USD amounts as EUR. Returned in this record's currency, matching
   # total_amount, so callers can convert the result as a single figure.
+  # Memoised: the dashboard reads this up to six times per row (directly and
+  # via remaining_amount / utilization_percentage), and each call loads every
+  # linked request and converts it in Ruby. Scoped to the instance, so a
+  # reload or a fresh request recomputes.
+  # Drop memoised aggregates when the record is reloaded.
+  def reload(*)
+    remove_instance_variable(:@utilized_amount) if defined?(@utilized_amount)
+    super
+  end
+
   def utilized_amount
+    return @utilized_amount if defined?(@utilized_amount)
+    @utilized_amount = begin
     target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    purchase_requests.where.not(estimated_price: nil).sum do |request|
+    # reject/sum in Ruby rather than .where.not(...): a scoped where issues a
+    # fresh query even when the association is preloaded, defeating the
+    # controller's includes(:purchase_requests).
+    purchase_requests.reject { |r| r.estimated_price.nil? }.sum do |request|
       source = request.currency.presence || target
       PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
+    end
     end
   end
   

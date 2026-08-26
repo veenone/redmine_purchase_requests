@@ -100,7 +100,9 @@ class CapexController < ApplicationController
     capex_for_year = @project.capex.for_year(@current_year)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     capex_for_year = apply_tpc_filter(capex_for_year)
-    @capex_entries = capex_for_year.ordered
+    # utilized_amount enumerates linked requests per record, so preload them
+    # once rather than issuing a query per row.
+    @capex_entries = capex_for_year.ordered.includes(:purchase_requests)
     
     # Get default currency for conversions
     @default_currency = helpers.default_capex_currency
@@ -172,12 +174,14 @@ class CapexController < ApplicationController
       }
     end
     
+
     # Currency breakdown using unordered relation
     @currency_breakdown = capex_for_year.group(:currency).sum(:total_amount)
     
     # TPC Code grouping - new functionality
     @tpc_grouping = {}
     capex_for_year.group_by(&:tpc_code).each do |tpc_code, entries|
+      mixed_group = false
       if @use_exchange_rates
         # Convert all amounts to default currency for TPC grouping
         total_budget = 0
@@ -196,14 +200,18 @@ class CapexController < ApplicationController
         total_budget = entries.sum(&:total_amount)
         total_utilized = entries.sum(&:utilized_amount)
         
-        # Get currency symbol (assuming all entries in same TPC use same currency for simplicity)
-        first_entry = entries.first
-        currency_symbol = first_entry ? first_entry.currency_symbol : '$'
+        # Without conversion, a group spanning currencies has no single symbol
+        # and its total is a sum of unlike units — say so rather than stamping
+        # the first entry's symbol on a number that isn't in that currency.
+        group_currencies = entries.map { |e| e.currency.presence }.compact.uniq
+        mixed_group = group_currencies.length > 1
+        currency_symbol = mixed_group ? '' : (entries.first&.currency_symbol || '$')
       end
       
       utilization_percentage = total_budget > 0 ? (total_utilized / total_budget * 100).round(2) : 0
       
       @tpc_grouping[tpc_code] = {
+        mixed_currency: mixed_group,
         entries_count: entries.count,
         total_budget: total_budget,
         total_utilized: total_utilized,
@@ -211,6 +219,11 @@ class CapexController < ApplicationController
         currency_symbol: currency_symbol
       }
     end
+
+    # Alphabetical is merely what group_by returned. The question this section
+    # answers is "which codes are at risk", so the most utilized lead.
+    @tpc_grouping = @tpc_grouping.sort_by { |_code, d| -d[:utilization_percentage].to_f }.to_h
+
     
     respond_to do |format|
       format.html

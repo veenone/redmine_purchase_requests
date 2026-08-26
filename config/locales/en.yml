@@ -850,6 +850,7 @@ en:
   label_no_budget_defined: "No CAPEX/OPEX budget defined for"
   label_view_data_table: "View data table"
   label_multi_currency: "Multi-Currency"
+  label_opex_code: "OPEX Code"
   label_no_budget_data: "No budget data for this period."
   label_converted_to: "Converted to"
   label_totals_not_comparable: "Totals not comparable"

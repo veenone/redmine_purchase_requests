@@ -40,7 +40,10 @@
     # One severity vocabulary for the whole page: under 80% healthy, 80-99%
     # approaching, 100%+ over. Drives the meter fill and the Remaining tile so
     # a line at 140% can never render as a full green bar.
-    capex_over_budget = @total_remaining.to_f < 0
+    # Severity is a conclusion, and a conclusion drawn from a sum of unlike
+    # units is a false alarm. When the banner has just said the totals are not
+    # comparable, no tile goes red and no meter is drawn from that number.
+    capex_over_budget = !@totals_unreliable && @total_remaining.to_f < 0
     capex_severity = capex_over_budget ? 'high' : (@utilization_percentage.to_f >= 80 ? 'medium' : 'low')
   %>
   <% if @totals_unreliable %>
@@ -65,7 +68,7 @@
           <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
-          Multi-Currency
+          <%= l(:label_multi_currency) %>
         <% end %>
       </div>
       <div class="stat-label">
@@ -89,14 +92,16 @@
           <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
-          Multi-Currency
+          <%= l(:label_multi_currency) %>
         <% end %>
       </div>
       <div class="stat-label">
-        <%= l(:label_utilized) %><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
-        <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
-          <div class="utilization-fill <%= capex_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
-        </div>
+        <span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
+        <% unless @totals_unreliable %>
+          <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
+            <div class="utilization-fill <%= capex_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
+          </div>
+        <% end %>
       </div>
     </div>
 
@@ -140,15 +145,37 @@
       </div>
       <div class="dashboard-card-body">
         <% if @totals_unreliable %>
-          <%# A donut of unlike units would picture a meaningless sum. Point at
-              the per-currency breakdown instead of drawing it. %>
-          <p class="nodata"><%= l(:text_mixed_currency_no_rates) %></p>
+          <%# A donut of unlike units would picture a meaningless sum. Rather
+              than repeat the banner's sentence 400px below it, this card
+              carries the figures that ARE comparable: budget per currency. %>
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_budget_by_currency) %></caption>
+            <thead>
+              <tr>
+                <th scope="col"><%= l(:field_currency) %></th>
+                <th scope="col"><%= l(:label_total_budget) %></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @currency_breakdown.each do |cur, amount| %>
+                <tr>
+                  <th scope="row"><%= cur %></th>
+                  <td class="stat-currency stat-currency--neutral">
+                    <%= Capex.new(currency: cur).currency_symbol %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
+                    <% if @unconvertible_currencies.include?(cur) %>
+                      <span class="pr-badge pr-badge--warning"><%= l(:label_rate_not_set) %></span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         <% else %>
         <div class="capex-donut-container">
           <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
             <div class="capex-donut-center">
               <div style="font-weight:700;font-size: var(--pr-text-md);"><%= @utilization_percentage %>%</div>
-              <div style="font-size: var(--pr-text-2xs);color:var(--pr-ink-muted);"><%= l(:label_utilized) %></div>
+              <div style="font-size: var(--pr-text-2xs);color:var(--pr-ink-muted);"><%= l(:label_utilization) %></div>
             </div>
           </div>
           <div style="flex:1;">
@@ -166,24 +193,26 @@
                     <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
                     (<%= @utilization_percentage %>%)
                   <% else %>
-                    Multi-Currency (<%= @utilization_percentage %>%)
+                    <%= l(:label_multi_currency) %><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
                   <% end %>
                 </td>
               </tr>
               <tr>
-                <td><span class="status-indicator status-remaining"></span><%= l(:label_remaining) %></td>
-                <td class="stat-currency">
+                <%# The legend must tell the same story as the tile above it:
+                    over budget means a positive magnitude under a danger dot,
+                    not a bare negative beside an amber one. %>
+                <td><span class="status-indicator <%= capex_over_budget ? 'status-overbudget' : 'status-remaining' %>"></span><%= capex_over_budget ? l(:label_over_budget_by) : l(:label_remaining) %></td>
+                <td class="stat-currency stat-currency--<%= capex_over_budget ? 'over' : 'neutral' %>">
                   <% if @use_exchange_rates %>
                     <%= capex_currency_symbol(@default_currency) %>
-                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-                    (<%= (100 - @utilization_percentage).round(2) %>%)
+                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
                   <% elsif @currency_breakdown.keys.length == 1 %>
                     <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-                    (<%= (100 - @utilization_percentage).round(2) %>%)
+                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
                   <% else %>
-                    Multi-Currency (<%= (100 - @utilization_percentage).round(2) %>%)
+                    <%= l(:label_multi_currency) %>
                   <% end %>
+                  <% unless @totals_unreliable %>(<%= (100 - @utilization_percentage.to_f).round(2) %>%)<% end %>
                 </td>
               </tr>
             </table>
@@ -286,8 +315,9 @@
                 <div class="stat-box pr-stat--success">
                   <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
+                    <% if data[:mixed_currency] %><span class="pr-badge pr-badge--warning"><%= l(:label_multi_currency) %></span><% end %>
                   </div>
-                  <div class="stat-label">Utilized</div>
+                  <div class="stat-label"><%= l(:label_utilized) %></div>
                 </div>
                 <div class="stat-box">
                   <div class="stat-number" style="font-size: var(--pr-text-lg);"><%= data[:entries_count] %></div>
@@ -298,7 +328,7 @@
                 <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
               </div>
               <div style="text-align:center;margin-top:8px;font-size: var(--pr-text-base);color:var(--pr-ink-muted);">
-                <%= data[:utilization_percentage] %><%= l(:label_percent_utilized) %>
+                <%= data[:utilization_percentage] %>% <%= l(:label_utilization) %>
               </div>
             </div>
           </div>
@@ -361,8 +391,11 @@
                 </span>
               </td>
               <td>
-                <span class="amount <%= capex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>">
-                  <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount, precision: 2, delimiter: ',') %>
+                <%# Same rule as the tile and the legend: the label carries the
+                    direction, the number carries the magnitude. %>
+                <span class="amount <%= capex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>"
+                      title="<%= capex.remaining_amount < 0 ? l(:label_over_budget_by) : l(:label_remaining) %>">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount.to_f.abs, precision: 2, delimiter: ',') %>
                 </span>
               </td>
               <td>
@@ -372,7 +405,7 @@
                 <span class="utilization-text"><%= capex.utilization_percentage %>%</span>
               </td>
               <td>
-                <% pr_count = capex.purchase_requests.count %>
+                <% pr_count = capex.purchase_requests.size %>
                 <% if pr_count > 0 %>
                   <%= link_to "#{pr_count} PR#{'s' if pr_count != 1}",
                             project_capex_path(@project, capex),
@@ -432,6 +465,7 @@
 var PR_CAPEX_LABELS = {
   utilized: '<%= j(l(:label_utilized)) %>',
   remaining: '<%= j(l(:label_remaining)) %>',
+  overBudgetBy: '<%= j(l(:label_over_budget_by)) %>',
   noData: '<%= j(l(:label_no_budget_data)) %>'
 };
 document.addEventListener('DOMContentLoaded', function() {
@@ -481,10 +515,38 @@ function generateCapexDonutChart(containerId, data) {
 
   prChartA11y(container, [
     { label: PR_CAPEX_LABELS.utilized, display: data.utilized.toLocaleString() },
-    { label: PR_CAPEX_LABELS.remaining, display: data.remaining.toLocaleString() }
+    // Sighted users read "Over budget by $5,000" under a red dot; the label
+    // must tell the same story rather than announcing "Remaining -5000".
+    { label: data.remaining < 0 ? PR_CAPEX_LABELS.overBudgetBy : PR_CAPEX_LABELS.remaining,
+      display: Math.abs(data.remaining).toLocaleString() }
   ], {});
 
-  var utilizedPercentage = data.utilized / total;
+  // `total` is the budget (utilized + remaining), so at or above 100% the
+  // utilized sweep reaches a full turn. An SVG arc whose endpoints coincide
+  // paints nothing, and a negative remainder skips the second arc — which is
+  // why the donut used to come out blank in exactly the over-budget state this
+  // page exists to flag. Full circles are drawn as a circle, not an arc.
+  var overBudget = data.remaining < 0;
+  var utilizedPercentage = total > 0 ? data.utilized / total : 0;
+
+  if (overBudget || utilizedPercentage >= 1) {
+    var ringRadius = (outerRadius + innerRadius) / 2;
+    var ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    ring.setAttribute('cx', centerX);
+    ring.setAttribute('cy', centerY);
+    ring.setAttribute('r', ringRadius);
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('stroke', overBudget
+      ? prToken('--pr-danger', '#dc3a3a')
+      : prToken('--pr-success', '#2f9e44'));
+    ring.setAttribute('stroke-width', outerRadius - innerRadius);
+    svg.appendChild(ring);
+    // insertBefore, not appendChild: the centre label is already a child and
+    // must stay in front of the ring (matches the normal path below).
+    container.insertBefore(svg, container.firstChild);
+    return;
+  }
+
   var utilizedAngle = utilizedPercentage * 2 * Math.PI;
 
   if (utilizedPercentage > 0) {
