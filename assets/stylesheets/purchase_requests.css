@@ -37,6 +37,10 @@
   /* Borders */
   --pr-border:        #e5e7eb;
   --pr-border-strong: #d3d7df;
+  /* Outline for graphics that carry information (chart bars, meters). The
+     decorative border tones above sit near 1.4:1 on white; WCAG 1.4.11 wants
+     3:1 for non-text content that conveys meaning. This clears it at 3.16:1. */
+  --pr-border-graphic: #8a91a0;
 
   /* Text */
   --pr-ink:        #21262e;
@@ -2384,3 +2388,43 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------------------------------------------------------------------------
+   30. Year-over-year comparison (ghost bars + band delta)
+   ---------------------------------------------------------------------------
+   With a comparison year selected, each month is a slot: a muted ghost bar
+   (previous year) sits behind the solid bar (selected year). Twelve slots at
+   the original width — the comparison adds depth, not more bars. */
+#content .chart-bar-slot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex: 1 0 auto;
+  min-width: 26px;
+  height: 100%;
+}
+#content .chart-bar-slot > .chart-bar { position: relative; z-index: 1; }
+#content .chart-bar-ghost {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  min-width: 26px;
+  background: var(--pr-surface-sunken);
+  border: 1px solid var(--pr-border-graphic);
+  border-bottom: none;
+  border-radius: var(--pr-radius-xs) var(--pr-radius-xs) 0 0;
+  z-index: 0;
+}
+
+#content .pr-budget-band__compare {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--pr-border);
+  color: var(--pr-ink-muted);
+  font-size: var(--pr-text-sm);
+}
+#content .pr-budget-band__compare strong { color: var(--pr-ink); font-weight: 600; }
+#content .pr-budget-band__note { margin: 8px 0 0; }

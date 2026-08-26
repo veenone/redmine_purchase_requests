@@ -28,7 +28,11 @@
       selected_year: @selected_year,
       available_years: @available_years,
       available_tpc_codes: @available_tpc_codes,
-      selected_tpc_code_id: @selected_tpc_code_id %>
+      selected_tpc_code_id: @selected_tpc_code_id,
+      year_defaulted: @budget_year_defaulted,
+      year_required: true,
+      compare_mode: true,
+      compare_year: @compare_year %>
 
 <% if @project && (User.current.allowed_to?(:view_capex, @project) || User.current.allowed_to?(:view_opex, @project)) %>
   <% selected_tpc = @available_tpc_codes.detect { |t| t.id.to_s == @selected_tpc_code_id.to_s } if @selected_tpc_code_id %>
@@ -74,6 +78,27 @@
         <div class="utilization-bar pr-budget-band__meter" aria-hidden="true">
           <div class="pr-meter__fill <%= severity %>" style="width: <%= [@budget_utilization_pct, 100].min %>%"></div>
         </div>
+        <% if @compare_year %>
+          <p class="pr-budget-band__compare">
+            <span class="pr-badge pr-badge--neutral"><%= l(:label_vs) %> <%= @compare_year %></span>
+            <% if @compare_has_budget %>
+              <%= l(:label_utilized) %>
+              <strong><%= budget_symbol %><%= number_with_precision(@compare_budget_utilized, precision: 2, delimiter: ',') %></strong>
+              <% if @compare_utilized_delta_pct %>
+                <span class="stat-currency--<%= @compare_utilized_delta_pct > 0 ? 'pending' : 'approved' %>">
+                  (<%= @compare_utilized_delta_pct > 0 ? '+' : '' %><%= @compare_utilized_delta_pct %>%)
+                </span>
+              <% end %>
+              &middot;
+              <%= l(:label_total_budget) %>
+              <strong><%= budget_symbol %><%= number_with_precision(@compare_budget_total, precision: 2, delimiter: ',') %></strong>
+              &middot;
+              <%= @compare_utilization_pct %>%
+            <% else %>
+              <%= l(:label_no_budget_for_year) %> <%= @compare_year %>.
+            <% end %>
+          </p>
+        <% end %>
         <p class="pr-budget-band__note conversion-note"><%= l(:label_committed_note) %>.</p>
         <p class="pr-budget-band__split conversion-note">
           <strong>CAPEX</strong> <%= budget_symbol %><%= number_with_precision(@capex_utilized, precision: 2, delimiter: ',') %> / <%= budget_symbol %><%= number_with_precision(@capex_budget, precision: 2, delimiter: ',') %>
@@ -648,8 +673,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Generate Monthly Trends Bar Chart
   <% if @monthly_trends.present? && @monthly_trends.any? %>
   generateBarChart('monthly-trends-chart', [
-    <% @monthly_trends.each do |trend| %>
-      { label: '<%= j(trend[:month]) %>', value: <%= trend[:count] %>, amount: <%= trend[:amount] %> },
+    <% @monthly_trends.each_with_index do |trend, idx| %>
+      { label: '<%= j(trend[:month]) %>', value: <%= trend[:count] %>, amount: <%= trend[:amount] %><% if @compare_monthly_trends %>,
+        compare: <%= @compare_monthly_trends[idx][:count] %>,
+        compareLabel: '<%= j(@compare_monthly_trends[idx][:month]) %>'<% end %> },
     <% end %>
   ]);
   <% end %>
@@ -752,7 +779,9 @@ function generateBarChart(containerId, data) {
   container.replaceChildren();
 
   const chartLabel = container.dataset.chartLabel ? container.dataset.chartLabel + ': ' : '';
-  const maxValue = Math.max(...data.map(item => item.value));
+  const hasCompare = data.some(item => item.compare !== undefined);
+  // Both years share one scale, or the ghost bars would misrepresent size.
+  const maxValue = Math.max(...data.map(item => Math.max(item.value, item.compare || 0)));
 
   // An all-zero series is a real, common result (a year with no requests), not
   // an error — say so rather than leaving an empty bordered box. The label is
@@ -773,11 +802,29 @@ function generateBarChart(containerId, data) {
   // later bars are keyboard-unreachable.
   container.setAttribute('role', 'img');
   container.setAttribute('aria-label', chartLabel +
-    data.map(i => `${i.label} ${i.display !== undefined ? i.display : i.value}`).join(', '));
+    data.map(i => {
+      const v = i.display !== undefined ? i.display : i.value;
+      return i.compare !== undefined
+        ? `${i.label} ${v}, ${i.compareLabel} ${i.compare}`
+        : `${i.label} ${v}`;
+    }).join(', '));
   container.setAttribute('tabindex', '0');
 
   data.forEach((item) => {
     const barHeight = (item.value / maxValue) * 120;
+
+    // With a comparison year each month is a slot holding a muted ghost bar
+    // (previous year) behind the solid bar (selected year).
+    let slot = null;
+    if (hasCompare) {
+      slot = document.createElement('div');
+      slot.className = 'chart-bar-slot';
+      const ghost = document.createElement('div');
+      ghost.className = 'chart-bar-ghost';
+      ghost.style.height = ((item.compare || 0) / maxValue) * 120 + 'px';
+      ghost.title = `${item.compareLabel}: ${item.compare} ${PR_CHART_LABELS.requests}`;
+      slot.appendChild(ghost);
+    }
 
     const bar = document.createElement('div');
     bar.className = 'chart-bar';
@@ -802,7 +849,12 @@ function generateBarChart(containerId, data) {
       bar.title += ` (${PR_CHART_LABELS.total}: ${formatChartMoney(item.amount)})`;
     }
 
-    container.appendChild(bar);
+    if (slot) {
+      slot.appendChild(bar);
+      container.appendChild(slot);
+    } else {
+      container.appendChild(bar);
+    }
   });
 }
 

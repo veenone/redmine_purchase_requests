@@ -4,56 +4,86 @@
   from request.query_parameters, so it works on every dashboard route.
 
   Locals:
-    year_mode            - :fixed (fixed 2020..2030 range, year always set) or :list (nullable + "All Years")
+    year_mode            - :fixed (fixed 2020..2030 range, year always set) or :list (nullable)
     selected_year        - currently selected year value
     available_years      - array of years to offer
     available_tpc_codes  - relation/array of TpcCode for the dropdown (responds to display_name/tpc_number/id)
     selected_tpc_code_id - currently selected TPC id (string or nil)
+
+  Optional locals (default off, so dashboards that don't pass them are unaffected):
+    year_defaulted       - true when selected_year was supplied by the controller
+                           rather than chosen by the user. Suppresses the year
+                           chip and Clear, which would otherwise offer to remove
+                           a filter that immediately reapplies itself.
+    year_required        - true when the controller always resolves a year, so
+                           offering "All Years" would be a lie. Other :list
+                           dashboards (TPC) keep the option.
+    compare_mode         - true to offer a comparison-year select
+    compare_year         - currently selected comparison year (or nil)
 %>
 <%
+  year_defaulted = defined?(year_defaulted) ? year_defaulted : false
+  year_required  = defined?(year_required)  ? year_required  : false
+  compare_mode   = defined?(compare_mode)   ? compare_mode   : false
+  compare_year   = defined?(compare_year)   ? compare_year   : nil
+
   qp = request.query_parameters
   strip = ->(key) {
     remaining = qp.except(key.to_s)
     remaining.empty? ? request.path : "#{request.path}?#{remaining.to_query}"
   }
-  year_active = (year_mode == :list && selected_year.present?)
-  tpc_active  = selected_tpc_code_id.present?
+  # A defaulted year is not a filter the user can remove, so it gets no chip.
+  year_active    = (year_mode == :list && selected_year.present? && !year_defaulted)
+  tpc_active     = selected_tpc_code_id.present?
+  compare_active = compare_mode && compare_year.present?
   selected_tpc = tpc_active ? available_tpc_codes.detect { |t| t.id.to_s == selected_tpc_code_id.to_s } : nil
-  any_active  = year_active || tpc_active
+  any_active  = year_active || tpc_active || compare_active
 %>
 <%= form_tag request.path, method: :get, class: 'pr-filters-form' do %>
   <fieldset class="pr-filters">
-    <legend>Filters</legend>
+    <legend><%= l(:label_filters) %></legend>
     <div class="filter-row">
-      <label for="df_year">Year</label>
-      <% if year_mode == :list %>
-        <%= select_tag 'year',
-                       options_for_select([['All Years', '']] + available_years.map { |y| [y.to_s, y.to_s] }, selected_year),
-                       id: 'df_year' %>
-      <% else %>
-        <%= select_tag 'year',
-                       options_for_select(available_years.map { |y| [y, y] }, selected_year),
-                       id: 'df_year' %>
+      <label for="df_year"><%= l(:label_year) %></label>
+      <%
+        year_options = available_years.map { |y| [y.to_s, y.to_s] }
+        # "All Years" is only offered where the controller can actually honour
+        # it. On a dashboard that always resolves a year it is a control that
+        # does nothing, so it is omitted rather than silently overridden.
+        year_options = [[l(:label_all_years), '']] + year_options if year_mode == :list && !year_required
+      %>
+      <%= select_tag 'year', options_for_select(year_options, selected_year.to_s), id: 'df_year' %>
+
+      <% if compare_mode %>
+        <label for="df_compare_year"><%= l(:label_compare_to) %></label>
+        <%= select_tag 'compare_year',
+                       options_for_select(
+                         [[l(:label_no_comparison), '']] +
+                           available_years.reject { |y| y.to_s == selected_year.to_s }.map { |y| [y.to_s, y.to_s] },
+                         compare_year.to_s),
+                       id: 'df_compare_year' %>
       <% end %>
 
-      <label for="df_tpc">TPC</label>
+      <label for="df_tpc"><%= l(:label_tpc) %></label>
       <%= select_tag 'tpc_code_id',
-                     options_for_select([['All TPCs', '']] + available_tpc_codes.map { |t| [truncate(t.display_name, length: 60), t.id] }, selected_tpc_code_id),
+                     options_for_select([[l(:label_all_tpcs), '']] + available_tpc_codes.map { |t| [truncate(t.display_name, length: 60), t.id] }, selected_tpc_code_id),
                      id: 'df_tpc' %>
 
-      <%= submit_tag 'Apply', class: 'pr-button pr-button-primary', name: nil %>
+      <%= submit_tag l(:button_apply), class: 'pr-button pr-button-primary', name: nil %>
       <% if any_active %>
-        <%= link_to 'Clear', request.path, class: 'pr-button pr-button-secondary' %>
+        <%= link_to l(:button_clear), request.path, class: 'pr-button pr-button-secondary' %>
       <% end %>
     </div>
 
     <% if any_active %>
       <div class="pr-filter-chips">
         <% if year_active %>
-          <span class="pr-badge pr-badge--accent">Year: <%= selected_year %><%= link_to '×', strip.call('year'), class: 'pr-chip-remove', title: 'Remove year filter' %></span>
+          <span class="pr-badge pr-badge--accent"><%= l(:label_year) %>: <%= selected_year %><%= link_to '×', strip.call('year'), class: 'pr-chip-remove', title: l(:label_remove_year_filter) %></span>
+        <% end %>
+        <% if compare_active %>
+          <span class="pr-badge pr-badge--neutral"><%= l(:label_compare_to) %>: <%= compare_year %><%= link_to '×', strip.call('compare_year'), class: 'pr-chip-remove', title: l(:label_remove_comparison) %></span>
         <% end %>
         <% if tpc_active %>
-          <span class="pr-badge pr-badge--accent" title="<%= selected_tpc&.display_name %>">TPC: <%= selected_tpc&.tpc_number || selected_tpc_code_id %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: 'Remove TPC filter' %></span>
+          <span class="pr-badge pr-badge--accent" title="<%= selected_tpc&.display_name %>"><%= l(:label_tpc) %>: <%= selected_tpc&.tpc_number || selected_tpc_code_id %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: l(:label_remove_tpc_filter) %></span>
         <% end %>
       </div>
     <% end %>
