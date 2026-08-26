@@ -108,8 +108,10 @@ class OpexController < ApplicationController
   def dashboard
     @current_year = (params[:year] || Date.current.year).to_i
     # utilized_amount enumerates linked requests per record; preload them once
-    # rather than issuing a query per row (see Capex dashboard).
-    @opex_entries = @project.opex.for_year(@current_year).includes(:purchase_requests)
+    # rather than issuing a query per row (see Capex dashboard). opex_category
+    # is preloaded too: the category grouping below reads it off every loaded
+    # record instead of re-querying per category (see that block for why).
+    @opex_entries = @project.opex.for_year(@current_year).includes(:purchase_requests, :opex_category)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     @selected_tpc_code_id = params[:tpc_code_id].presence
     @opex_entries = @opex_entries.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
@@ -126,8 +128,29 @@ class OpexController < ApplicationController
     @default_currency = default_currency
 
     if @opex_entries.any?
+      # @opex_entries carries .includes(:purchase_requests, :opex_category)
+      # (see above) so Opex#utilized_amount and #opex_category don't N+1.
+      # Every aggregate below therefore sums over these *materialized*
+      # records rather than pushing SUM(:column)/GROUP BY to SQL against
+      # @opex_entries directly: Rails silently turns a SQL aggregate call
+      # over a relation carrying .includes(has_many) into a
+      # LEFT OUTER JOIN, which multiplies an entry's amount by its
+      # linked-request count. That hit @total_budget
+      # (`@opex_entries.sum(:total_amount)`: 2450.0 rendered vs the true
+      # 1450.0), @currency_breakdown, @quarterly_data (q1 alone: 2150.0
+      # rendered vs the true 1150.0 — q2-q4 happened to read correctly only
+      # because the entry with 2 linked requests has 0 in those columns),
+      # and the category grouping's total_budget (same 2450.0 vs 1450.0, both
+      # entries fall under the same category here). See task-2-report.md for
+      # the full before/after data. `.count` (no column arg) and the
+      # block-based `.sum { |o| o.utilized_amount }` calls were never
+      # affected — Rails only takes the join-dependency path when a column
+      # name is given to the aggregate.
+      opex_records = @opex_entries.to_a
+
       # Currency breakdown and exchange rate settings
-      @currency_breakdown = @opex_entries.group(:currency).sum(:total_amount)
+      @currency_breakdown = opex_records.group_by(&:currency)
+                                         .transform_values { |list| list.sum { |o| o.total_amount || 0 } }
       exchange_rates_settings = Setting.plugin_redmine_purchase_requests || {}
 
       opex_rates = (Setting.plugin_redmine_purchase_requests || {})
@@ -135,7 +158,7 @@ class OpexController < ApplicationController
       @use_exchange_rates = opex_rates.present?
 
       figures = budget_dashboard_figures(
-        @opex_entries,
+        opex_records,
         currency: @default_currency,
         # OPEX multiplies by its rate; CAPEX divides by its own. Preserved
         # exactly — reconciling the two conventions is a separate decision.
@@ -144,19 +167,6 @@ class OpexController < ApplicationController
         },
         missing_rate: (@use_exchange_rates ? ->(cur) { !(opex_rates || {}).key?(cur) } : nil)
       )
-      # budget_dashboard_figures materializes @opex_entries (.to_a) and sums
-      # in Ruby rather than pushing SUM(:total_amount) to SQL. That matters
-      # here: @opex_entries carries .includes(:purchase_requests) so
-      # Opex#utilized_amount doesn't N+1, and Rails silently turns a SQL
-      # SUM(:column) over a relation with an includes'd has-many association
-      # into `LEFT OUTER JOIN purchase_requests`, double- (or N-times-)
-      # counting any entry's total_amount by its linked-request count. The
-      # previous version of this method hit that exactly:
-      # `@opex_entries.sum(:total_amount)` reported 2450.0 for a fixture
-      # whose real total is 1450.0, because one entry with 2 linked purchase
-      # requests got counted twice. Summing over the preloaded records here
-      # fixes that while still preloading (see the .includes above) rather
-      # than reintroducing a query per row.
       @total_budget           = figures[:total_budget]
       @total_utilized         = figures[:total_utilized]
       @total_remaining        = figures[:total_remaining]
@@ -169,21 +179,27 @@ class OpexController < ApplicationController
 
       # Quarterly breakdown
       @quarterly_data = {
-        q1: @opex_entries.sum(:q1_amount),
-        q2: @opex_entries.sum(:q2_amount),
-        q3: @opex_entries.sum(:q3_amount),
-        q4: @opex_entries.sum(:q4_amount)
+        q1: opex_records.sum { |o| o.q1_amount || 0 },
+        q2: opex_records.sum { |o| o.q2_amount || 0 },
+        q3: opex_records.sum { |o| o.q3_amount || 0 },
+        q4: opex_records.sum { |o| o.q4_amount || 0 }
       }
 
-      # Category grouping (similar to TPC grouping in CAPEX)
+      # Category grouping (similar to TPC grouping in CAPEX). The distinct
+      # category-name query below is a plain DISTINCT pluck of names, not an
+      # amount aggregate, so it isn't affected by the join-duplication bug
+      # and is kept as-is to preserve category display order. Per-category
+      # figures come from opex_records (preloaded, filtered/grouped in Ruby)
+      # instead of re-querying `.joins(:opex_category).where(...)` per name,
+      # which would hit the same SUM(:column)-over-includes bug.
       @category_grouping = {}
       category_names = @opex_entries.joins(:opex_category).distinct.pluck('opex_categories.name')
 
       category_names.each do |category_name|
-        category_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => category_name)
-        total_budget = category_entries.sum(:total_amount)
+        category_entries = opex_records.select { |o| o.opex_category&.name == category_name }
+        total_budget = category_entries.sum { |o| o.total_amount || 0 }
         total_utilized = category_entries.sum { |o| o.utilized_amount }
-        entries_count = category_entries.count
+        entries_count = category_entries.size
         utilization_percentage = total_budget > 0 ? ((total_utilized / total_budget) * 100).round(2) : 0
 
         # Get currency symbol from first entry in this category
