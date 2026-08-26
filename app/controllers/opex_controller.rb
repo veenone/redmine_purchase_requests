@@ -156,14 +156,20 @@ class OpexController < ApplicationController
                      .dig('opex_exchange_rates', @current_year.to_s)
       @use_exchange_rates = opex_rates.present?
 
+      # OPEX multiplies by its rate; CAPEX divides by its own. Preserved
+      # exactly — reconciling the two conventions is a separate decision.
+      # Hoisted to a local so the quarterly breakdown below converts with the
+      # SAME arithmetic as the headline totals: rendering converted tiles above
+      # unconverted bars, under one currency symbol, is two arithmetics on one
+      # page.
+      convert = ->(amount, from) {
+        @use_exchange_rates ? ((amount || 0) * ((opex_rates || {})[from] || 1)) : (amount || 0)
+      }
+
       figures = budget_dashboard_figures(
         opex_records,
         currency: @default_currency,
-        # OPEX multiplies by its rate; CAPEX divides by its own. Preserved
-        # exactly — reconciling the two conventions is a separate decision.
-        convert: ->(amount, from) {
-          @use_exchange_rates ? (amount * ((opex_rates || {})[from] || 1)) : amount
-        },
+        convert: convert,
         missing_rate: (@use_exchange_rates ? ->(cur) { !(opex_rates || {}).key?(cur) } : nil)
       )
       @total_budget           = figures[:total_budget]
@@ -176,12 +182,12 @@ class OpexController < ApplicationController
       @budget_over            = figures[:over_budget]
       @budget_severity        = figures[:severity]
 
-      # Quarterly breakdown
+      # Quarterly breakdown — converted through the same lambda as the totals.
       @quarterly_data = {
-        q1: opex_records.sum { |o| o.q1_amount || 0 },
-        q2: opex_records.sum { |o| o.q2_amount || 0 },
-        q3: opex_records.sum { |o| o.q3_amount || 0 },
-        q4: opex_records.sum { |o| o.q4_amount || 0 }
+        q1: opex_records.sum { |o| convert.call(o.q1_amount, o.currency) }.round(2),
+        q2: opex_records.sum { |o| convert.call(o.q2_amount, o.currency) }.round(2),
+        q3: opex_records.sum { |o| convert.call(o.q3_amount, o.currency) }.round(2),
+        q4: opex_records.sum { |o| convert.call(o.q4_amount, o.currency) }.round(2)
       }
 
       # Category grouping (similar to TPC grouping in CAPEX). The distinct

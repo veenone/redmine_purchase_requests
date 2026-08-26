@@ -121,7 +121,16 @@ def fixtures
     # (in surplus) reach it.
     ['capex_unreliable_deficit', CapexController, proj, sy, -> (p) {
       c = seed_capex(p, { currency: 'JPY', total_amount: 1000 })
-      seed_request(p, c, 1500, 'JPY') }, { 'capex_use_exchange_rates' => '1' }]
+      seed_request(p, c, 1500, 'JPY') }, { 'capex_use_exchange_rates' => '1' }],
+
+    # OPEX with conversion ON. Without this, OPEX's convert lambda is the
+    # identity function in every fixture and the whole converted path — tiles
+    # AND the quarterly breakdown that must use the same arithmetic — is
+    # exercised by nothing.
+    ['opex_rates_on', OpexController, proj, sy, -> (p) {
+      seed_opex(p, { currency: 'USD', total_amount: 1000,
+                     q1_amount: 400, q2_amount: 200, q3_amount: 200, q4_amount: 200 })
+    }, { 'opex_exchange_rates' => { SEED_YEAR.to_s => { 'USD' => 2 } } }]
   ]
 end
 
