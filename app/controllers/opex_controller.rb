@@ -144,6 +144,19 @@ class OpexController < ApplicationController
         },
         missing_rate: (@use_exchange_rates ? ->(cur) { !(opex_rates || {}).key?(cur) } : nil)
       )
+      # budget_dashboard_figures materializes @opex_entries (.to_a) and sums
+      # in Ruby rather than pushing SUM(:total_amount) to SQL. That matters
+      # here: @opex_entries carries .includes(:purchase_requests) so
+      # Opex#utilized_amount doesn't N+1, and Rails silently turns a SQL
+      # SUM(:column) over a relation with an includes'd has-many association
+      # into `LEFT OUTER JOIN purchase_requests`, double- (or N-times-)
+      # counting any entry's total_amount by its linked-request count. The
+      # previous version of this method hit that exactly:
+      # `@opex_entries.sum(:total_amount)` reported 2450.0 for a fixture
+      # whose real total is 1450.0, because one entry with 2 linked purchase
+      # requests got counted twice. Summing over the preloaded records here
+      # fixes that while still preloading (see the .includes above) rather
+      # than reintroducing a query per row.
       @total_budget           = figures[:total_budget]
       @total_utilized         = figures[:total_utilized]
       @total_remaining        = figures[:total_remaining]
@@ -153,27 +166,6 @@ class OpexController < ApplicationController
       @totals_unreliable      = figures[:totals_unreliable]
       @budget_over            = figures[:over_budget]
       @budget_severity        = figures[:severity]
-
-      unless @use_exchange_rates
-        # Pre-existing quirk, preserved for byte-identical output (Task 2 is
-        # structure-only): @opex_entries carries .includes(:purchase_requests)
-        # for preload reasons (see comment above). The original code summed
-        # @total_budget with `@opex_entries.sum(:total_amount)` — a SQL
-        # aggregate — and Rails silently turns that into
-        # `SELECT SUM(total_amount) ... LEFT OUTER JOIN purchase_requests ...`
-        # whenever the relation has an includes'd has-many association, which
-        # multiplies an entry's total_amount by its linked-request count.
-        # budget_dashboard_figures sums over materialized records instead
-        # (matching @total_utilized's original block-based sum, and matching
-        # CAPEX, whose totals relation never carries the includes), so it does
-        # not reproduce that double-count. Reproducing it here keeps this
-        # task's output identical to the pre-refactor page; see
-        # task-2-report.md for the root cause and a fix recommendation.
-        @total_budget    = @opex_entries.sum(:total_amount)
-        @total_utilized  = @opex_entries.sum { |o| o.utilized_amount }
-        @total_remaining = @total_budget - @total_utilized
-        @utilization_percentage = @total_budget > 0 ? ((@total_utilized / @total_budget) * 100).round(2) : 0
-      end
 
       # Quarterly breakdown
       @quarterly_data = {

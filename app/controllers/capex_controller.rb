@@ -96,12 +96,25 @@ class CapexController < ApplicationController
   def dashboard
     @current_year = params[:year].present? ? params[:year].to_i : Date.current.year
     # Get capex entries for the year without ordering for aggregations
+    #
+    # Deliberately kept free of .includes(:purchase_requests): this relation
+    # feeds several `.sum(:column)` SQL aggregates below (quarterly totals,
+    # currency breakdown, and — via budget_dashboard_figures — the headline
+    # totals). Rails silently turns a SQL SUM(:column) over a relation whose
+    # includes has-many association into a LEFT OUTER JOIN, which multiplies
+    # an entry's amount by its linked-request count. OPEX hit exactly that
+    # bug (see task-2-report.md) when it merged its equivalent of this
+    # relation with the one carrying .includes for view rendering. If a
+    # future change adds .includes(:purchase_requests) here — e.g. to shave
+    # a query off some new feature — re-verify every `.sum(:column)` call
+    # below against it first.
     capex_for_year = @project.capex.for_year(@current_year)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     @selected_tpc_code_id = params[:tpc_code_id].presence
     capex_for_year = capex_for_year.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
     # utilized_amount enumerates linked requests per record, so preload them
-    # once rather than issuing a query per row.
+    # once rather than issuing a query per row. Kept separate from
+    # capex_for_year on purpose — see the comment above.
     @capex_entries = capex_for_year.ordered.includes(:purchase_requests)
     
     # Get default currency for conversions
