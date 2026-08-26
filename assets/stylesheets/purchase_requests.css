@@ -1631,6 +1631,11 @@
 #content .amount.over-budget { color: var(--pr-danger-ink); }
 #content .capex-currency,
 #content .capex-amount { color: var(--pr-accent-ink); font-weight: 700; }
+/* Completes the pair .capex-link/.opex-link already establishes: each
+   budget kind carries its own ink. OPEX previously borrowed the CAPEX
+   classes wholesale, so its figures rendered in CAPEX's accent. */
+#content .opex-currency,
+#content .opex-amount { color: var(--pr-success-ink); font-weight: 700; }
 #content .capex-link,
 #content .budget-link.capex-link,
 #content .pr-link { color: var(--pr-accent); text-decoration: none; font-weight: 600; }

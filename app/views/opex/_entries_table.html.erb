@@ -28,7 +28,7 @@
               </td>
               <td><%= truncate(opex.description, length: 80) %></td>
               <td>
-                <span class="capex-amount">
+                <span class="opex-amount">
                   <%= opex.currency_symbol %><%= number_with_precision(opex.total_amount, precision: 2, delimiter: ',') %>
                 </span>
                 <span class="currency-code"><%= opex.currency %></span>
@@ -57,7 +57,7 @@
                 <% if pr_count > 0 %>
                   <%= link_to "#{pr_count} PR#{'s' if pr_count != 1}",
                             project_opex_path(@project, opex),
-                            class: 'capex-link' %>
+                            class: 'opex-link' %>
                 <% else %>
                   <span class="no-prs">—</span>
                 <% end %>
