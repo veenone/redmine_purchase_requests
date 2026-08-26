@@ -824,6 +824,7 @@ en:
   label_utilization: "Utilization"
   label_no_budget_defined: "No CAPEX/OPEX budget defined for"
   label_view_data_table: "View data table"
+  label_multi_currency: "Multi-Currency"
   label_filters: "Filters"
   label_year: "Year"
   label_tpc: "TPC"

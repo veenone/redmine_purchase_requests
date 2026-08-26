@@ -74,7 +74,7 @@
       </div>
       <div class="stat-label">Total Utilized (<%= @utilization_percentage %>%)</div>
       <div class="utilization-bar" style="margin-top:8px;">
-        <div class="utilization-fill" style="width: <%= @utilization_percentage %>%"></div>
+        <div class="utilization-fill <%= @utilization_percentage.to_f >= 100 ? 'high' : (@utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
       </div>
     </div>
 
@@ -229,7 +229,7 @@
                 </div>
               </div>
               <div class="utilization-bar">
-                <div class="utilization-fill" style="width: <%= data[:utilization_percentage] %>%"></div>
+                <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
               </div>
               <div style="text-align:center; margin-top:6px; font-size:13px; color:var(--pr-ink-muted);">
                 <%= data[:utilization_percentage] %>% Utilized
@@ -302,7 +302,7 @@
               </td>
               <td>
                 <div class="utilization-bar" style="width:80px; height:12px; display:inline-block; vertical-align:middle;">
-                  <div class="utilization-fill" style="width: <%= [opex.utilization_percentage, 100].min %>%"></div>
+                  <div class="utilization-fill <%= opex.utilization_percentage.to_f >= 100 ? 'high' : (opex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [opex.utilization_percentage.to_f, 100].min %>%"></div>
                 </div>
                 <span style="font-size:12px; margin-left:4px;"><%= opex.utilization_percentage %>%</span>
               </td>

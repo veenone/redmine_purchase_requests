@@ -805,10 +805,12 @@
   border-radius: var(--pr-radius-pill);
 }
 
-/* Utilisation severity */
-#content .pr-meter__fill.low,    #content .capex-progress-bar.low    { background: var(--pr-success); }
-#content .pr-meter__fill.medium, #content .capex-progress-bar.medium { background: var(--pr-warning); }
-#content .pr-meter__fill.high,   #content .capex-progress-bar.high   { background: var(--pr-danger); }
+/* Utilisation severity. `.utilization-fill` is included so the CAPEX/OPEX
+   meters carry the same vocabulary as the Purchase Requests band — without it
+   a line at 140% rendered as a full success-green bar. */
+#content .pr-meter__fill.low,    #content .capex-progress-bar.low,    #content .utilization-fill.low    { background: var(--pr-success); }
+#content .pr-meter__fill.medium, #content .capex-progress-bar.medium, #content .utilization-fill.medium { background: var(--pr-warning); }
+#content .pr-meter__fill.high,   #content .capex-progress-bar.high,   #content .utilization-fill.high   { background: var(--pr-danger); }
 #content .pr-meter__fill.over,   #content .capex-progress-bar.over,
 #content .progress-fill.over-utilized,
 #content .utilization-fill.over-utilized { background: var(--pr-violet); }
@@ -1616,8 +1618,11 @@
 #content .pr-amount,
 #content .currency-amount,
 #content .price-amount { font-weight: 600; }
-#content .amount.utilized  { color: var(--pr-accent-ink); }
-#content .amount.remaining { color: var(--pr-success-ink); }
+/* One encoding per concept, matching DESIGN.md's stat-card mapping:
+   green = utilized, amber = remaining, red = over budget. These previously
+   disagreed with both the KPI edges and the donut legend on the same page. */
+#content .amount.utilized  { color: var(--pr-success-ink); }
+#content .amount.remaining { color: var(--pr-warning-ink-strong); }
 #content .amount.over-budget { color: var(--pr-danger-ink); }
 #content .capex-currency,
 #content .capex-amount { color: var(--pr-accent-ink); font-weight: 700; }
@@ -1880,8 +1885,8 @@
   vertical-align: middle;
 }
 #content .status-indicator.status-total      { background: var(--pr-accent); }
-#content .status-indicator.status-utilized   { background: var(--pr-warning); }
-#content .status-indicator.status-remaining  { background: var(--pr-info); }
+#content .status-indicator.status-utilized   { background: var(--pr-success); }
+#content .status-indicator.status-remaining  { background: var(--pr-warning); }
 #content .status-indicator.status-overbudget { background: var(--pr-danger); }
 
 /* ---------------------------------------------------------------------------

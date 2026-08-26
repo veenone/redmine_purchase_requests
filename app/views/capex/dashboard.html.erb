@@ -36,6 +36,13 @@
 
 <% if @capex_entries.any? %>
   <!-- Summary Stats -->
+  <%
+    # One severity vocabulary for the whole page: under 80% healthy, 80-99%
+    # approaching, 100%+ over. Drives the meter fill and the Remaining tile so
+    # a line at 140% can never render as a full green bar.
+    capex_over_budget = @total_remaining.to_f < 0
+    capex_severity = capex_over_budget ? 'high' : (@utilization_percentage.to_f >= 80 ? 'medium' : 'low')
+  %>
   <div class="summary-stats">
     <div class="stat-box pr-stat--accent">
       <div class="stat-number stat-currency">
@@ -74,28 +81,36 @@
         <% end %>
       </div>
       <div class="stat-label">
-        Total Utilized (<%= @utilization_percentage %>%)
-        <div class="utilization-bar" style="margin-top:6px;">
-          <div class="utilization-fill" style="width: <%= @utilization_percentage %>%"></div>
+        <%= l(:label_utilized) %> (<%= @utilization_percentage %>%)
+        <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
+          <div class="utilization-fill <%= capex_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
         </div>
       </div>
     </div>
 
-    <div class="stat-box pr-stat--warning">
-      <div class="stat-number stat-currency">
+    <div class="stat-box pr-stat--<%= capex_over_budget ? 'danger' : 'warning' %>">
+      <%# Under an "Over budget by" label the figure must be positive: the
+          label carries the direction, so the number carries only magnitude. %>
+      <div class="stat-number stat-currency stat-currency--<%= capex_over_budget ? 'over' : 'neutral' %>">
         <% if @use_exchange_rates %>
           <%= capex_currency_symbol(@default_currency) %>
-          <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
+          <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
           <%= Capex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-          <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
+          <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
-          Multi-Currency
+          <%= l(:label_multi_currency) %>
         <% end %>
       </div>
-      <div class="stat-label">Total Remaining (<%= (100 - @utilization_percentage).round(2) %>%)</div>
+      <div class="stat-label">
+        <% if capex_over_budget %>
+          <%= l(:label_over_budget_by) %>
+        <% else %>
+          <%= l(:label_remaining) %> (<%= (100 - @utilization_percentage.to_f).round(2) %>%)
+        <% end %>
+      </div>
     </div>
 
     <div class="stat-box pr-stat--violet">
@@ -260,7 +275,7 @@
                 </div>
               </div>
               <div class="utilization-bar">
-                <div class="utilization-fill" style="width: <%= data[:utilization_percentage] %>%"></div>
+                <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
               </div>
               <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
                 <%= data[:utilization_percentage] %>% Utilized
@@ -331,7 +346,7 @@
               </td>
               <td>
                 <div class="utilization-bar" style="width:80px;height:15px;">
-                  <div class="utilization-fill" style="width: <%= [capex.utilization_percentage, 100].min %>%"></div>
+                  <div class="utilization-fill <%= capex.utilization_percentage.to_f >= 100 ? 'high' : (capex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [capex.utilization_percentage.to_f, 100].min %>%"></div>
                 </div>
                 <span class="utilization-text"><%= capex.utilization_percentage %>%</span>
               </td>
@@ -411,6 +426,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Function to generate CAPEX donut chart using SVG
+// Read design tokens at render time so the chart can never drift from the
+// stylesheet the way hardcoded hexes did (utilized was amber here and green
+// on the KPI tile). One source of truth: the CSS custom properties.
+function prToken(name, fallback) {
+  var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+  return (v && v.trim()) || fallback;
+}
+
 function generateCapexDonutChart(containerId, data) {
   var container = document.getElementById(containerId);
   if (!container) return;
@@ -436,8 +459,8 @@ function generateCapexDonutChart(containerId, data) {
     var path1 = createDonutPath(centerX, centerY, outerRadius, innerRadius, 0, utilizedAngle);
     var utilizedPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     utilizedPath.setAttribute('d', path1);
-    utilizedPath.setAttribute('fill', '#df8709');
-    utilizedPath.setAttribute('stroke', '#fff');
+    utilizedPath.setAttribute('fill', prToken('--pr-success', '#2f9e44'));
+    utilizedPath.setAttribute('stroke', prToken('--pr-surface', '#ffffff'));
     utilizedPath.setAttribute('stroke-width', '2');
     svg.appendChild(utilizedPath);
   }
@@ -447,8 +470,8 @@ function generateCapexDonutChart(containerId, data) {
     var path2 = createDonutPath(centerX, centerY, outerRadius, innerRadius, utilizedAngle, 2 * Math.PI);
     var remainingPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     remainingPath.setAttribute('d', path2);
-    remainingPath.setAttribute('fill', '#2272c4');
-    remainingPath.setAttribute('stroke', '#fff');
+    remainingPath.setAttribute('fill', prToken('--pr-warning', '#df8709'));
+    remainingPath.setAttribute('stroke', prToken('--pr-surface', '#ffffff'));
     remainingPath.setAttribute('stroke-width', '2');
     svg.appendChild(remainingPath);
   }
