@@ -131,3 +131,48 @@ $(document).ready(function() {
     $('.vendor-details').hide();
   }
 });
+/* ---------------------------------------------------------------------------
+   Shared chart accessibility contract
+   ---------------------------------------------------------------------------
+   The Purchase Requests dashboard and the CAPEX/OPEX dashboards render charts
+   with separate engines (different bar classes and heights, donut vs pie).
+   Their *accessibility* behaviour, however, must not diverge again — the
+   CAPEX charts were silent to assistive tech for exactly as long as the two
+   copies existed. This is the single place that contract lives.
+
+   prChartA11y(container, entries, opts)
+     container - the chart element
+     entries   - [{ label, display }] already-formatted for humans
+     opts.empty     - true when there is nothing to plot
+     opts.emptyText - what to say instead
+     opts.scrollable- true if the container scrolls (adds a focus stop so
+                      off-screen bars stay keyboard-reachable)
+   -------------------------------------------------------------------------*/
+function prChartA11y(container, entries, opts) {
+  if (!container) return;
+  opts = opts || {};
+  var prefix = container.dataset && container.dataset.chartLabel
+    ? container.dataset.chartLabel + ': '
+    : '';
+
+  container.setAttribute('role', 'img');
+
+  if (opts.empty) {
+    // An empty series is a real result, not an error. Say so, and never leave
+    // a silent unlabelled box behind.
+    container.setAttribute('aria-label', prefix + (opts.emptyText || 'No data'));
+    container.classList.add('is-empty');
+    container.removeAttribute('tabindex');
+    var p = document.createElement('p');
+    p.className = 'nodata';
+    p.textContent = opts.emptyText || 'No data';
+    container.appendChild(p);
+    return;
+  }
+
+  container.classList.remove('is-empty');
+  container.setAttribute('aria-label', prefix + entries.map(function (e) {
+    return e.label + ' ' + e.display;
+  }).join(', '));
+  if (opts.scrollable) container.setAttribute('tabindex', '0');
+}

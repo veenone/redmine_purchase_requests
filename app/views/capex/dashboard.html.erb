@@ -5,27 +5,27 @@
   <%= javascript_include_tag 'capex', plugin: 'redmine_purchase_requests' %>
 <% end %>
 
-<% html_title "CAPEX Dashboard - #{@project.name}" %>
+<% html_title "#{l(:label_capex_dashboard)} - #{@project.name}" %>
 
 <div class="contextual">
   <%= link_to project_capex_index_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small' do %>
-    <span class="icon icon-cancel">Back to CAPEX List</span>
+    <span class="icon icon-cancel"><%= l(:label_back_to_capex_list) %></span>
   <% end %>
 
   <% if User.current.allowed_to?(:view_tpc_codes, @project) %>
     <%= link_to project_tpc_codes_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
-      <span class="icon icon-projects">TPC Codes</span>
+      <span class="icon icon-projects"><%= l(:label_tpc_codes) %></span>
     <% end %>
   <% end %>
 
   <% if User.current.allowed_to?(:manage_capex, @project) %>
     <%= link_to new_project_capex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-      <span class="icon icon-add">New CAPEX Entry</span>
+      <span class="icon icon-add"><%= l(:label_new_capex_entry) %></span>
     <% end %>
   <% end %>
 </div>
 
-<h2>CAPEX Dashboard — <%= @current_year %></h2>
+<h2><%= l(:label_capex_dashboard) %> — <%= @current_year %></h2>
 
 <%= render 'shared/dashboard_filters',
       year_mode: :fixed,
@@ -59,7 +59,7 @@
         <% end %>
       </div>
       <div class="stat-label">
-        Total CAPEX Budget
+        <%= l(:label_total_capex_budget) %>
         <% if @use_exchange_rates %>
           <span class="conversion-note">(Converted to <%= @default_currency %>)</span>
         <% end %>
@@ -115,7 +115,7 @@
 
     <div class="stat-box pr-stat--violet">
       <div class="stat-number"><%= @capex_entries.count %></div>
-      <div class="stat-label">Active CAPEX Entries</div>
+      <div class="stat-label"><%= l(:label_capex_entries) %></div>
     </div>
   </div>
 
@@ -124,20 +124,21 @@
     <!-- Budget Utilization Donut -->
     <div class="dashboard-card">
       <div class="dashboard-card-header">
-        <h3>Budget Utilization Overview</h3>
+        <h3><%= l(:label_budget_utilization_overview) %></h3>
       </div>
       <div class="dashboard-card-body">
         <div class="capex-donut-container">
-          <div class="capex-donut" id="utilization-donut-chart">
+          <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
             <div class="capex-donut-center">
               <div style="font-weight:700;font-size:14px;"><%= @utilization_percentage %>%</div>
-              <div style="font-size:10px;color:var(--pr-ink-muted);">Utilized</div>
+              <div style="font-size:10px;color:var(--pr-ink-muted);"><%= l(:label_utilized) %></div>
             </div>
           </div>
           <div style="flex:1;">
             <table class="dashboard-table">
+              <caption class="sr-only"><%= l(:label_caption_budget_utilization) %></caption>
               <tr>
-                <td><span class="status-indicator status-utilized"></span>Utilized</td>
+                <td><span class="status-indicator status-utilized"></span><%= l(:label_utilized) %></td>
                 <td class="stat-currency">
                   <% if @use_exchange_rates %>
                     <%= capex_currency_symbol(@default_currency) %>
@@ -153,7 +154,7 @@
                 </td>
               </tr>
               <tr>
-                <td><span class="status-indicator status-remaining"></span>Remaining</td>
+                <td><span class="status-indicator status-remaining"></span><%= l(:label_remaining) %></td>
                 <td class="stat-currency">
                   <% if @use_exchange_rates %>
                     <%= capex_currency_symbol(@default_currency) %>
@@ -177,19 +178,20 @@
     <!-- Quarterly Distribution Bar -->
     <div class="dashboard-card">
       <div class="dashboard-card-header">
-        <h3>Quarterly Distribution</h3>
+        <h3><%= l(:label_quarterly_distribution) %></h3>
       </div>
       <div class="dashboard-card-body">
-        <div class="capex-bar-chart" id="quarterly-bar-chart">
+        <div class="capex-bar-chart" id="quarterly-bar-chart" data-chart-label="<%= l(:label_quarterly_distribution) %>">
           <!-- bars injected by JS -->
         </div>
 
         <details class="pr-data-toggle">
-          <summary>View data table</summary>
+          <summary><%= l(:label_view_data_table) %> — <%= l(:label_quarterly_distribution) %></summary>
           <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_quarterly) %></caption>
             <tr>
-              <th>Quarter</th>
-              <th>Budget</th>
+              <th scope="col"><%= l(:label_quarter) %></th>
+              <th scope="col"><%= l(:label_total_budget) %></th>
             </tr>
             <tr>
               <td>Q1</td>
@@ -248,7 +250,7 @@
   <!-- TPC Code Grouping -->
   <% if @tpc_grouping && @tpc_grouping.any? %>
     <div class="details-section">
-      <h4>Budget by TPC Code</h4>
+      <h4><%= l(:label_budget_by_tpc_code) %></h4>
       <div class="dashboard-container">
         <% @tpc_grouping.each do |tpc_code, data| %>
           <div class="dashboard-card">
@@ -261,7 +263,7 @@
                   <div class="stat-number stat-currency" style="font-size:16px;">
                     <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
                   </div>
-                  <div class="stat-label">Total Budget</div>
+                  <div class="stat-label"><%= l(:label_total_budget) %></div>
                 </div>
                 <div class="stat-box pr-stat--success">
                   <div class="stat-number stat-currency" style="font-size:16px;">
@@ -271,14 +273,14 @@
                 </div>
                 <div class="stat-box">
                   <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
-                  <div class="stat-label">Entries</div>
+                  <div class="stat-label"><%= l(:label_entries) %></div>
                 </div>
               </div>
               <div class="utilization-bar">
                 <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
               </div>
               <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
-                <%= data[:utilization_percentage] %>% Utilized
+                <%= data[:utilization_percentage] %><%= l(:label_percent_utilized) %>
               </div>
             </div>
           </div>
@@ -290,7 +292,7 @@
   <!-- Currency Breakdown (multi-currency only) -->
   <% if @currency_breakdown.keys.length > 1 %>
     <div class="details-section">
-      <h4>Budget by Currency</h4>
+      <h4><%= l(:label_capex_by_currency) %></h4>
       <div class="summary-stats">
         <% @currency_breakdown.each do |currency, amount| %>
           <div class="stat-box pr-stat--accent">
@@ -306,19 +308,20 @@
 
   <!-- CAPEX Entries Details Table -->
   <div class="details-section">
-    <h4>CAPEX Entries Details</h4>
+    <h4><%= l(:label_capex_entries) %></h4>
     <div class="autoscroll">
       <table class="pr-table">
+        <caption class="sr-only"><%= l(:label_caption_entries) %></caption>
         <thead>
           <tr>
-            <th>TPC Code</th>
-            <th>Description</th>
-            <th>Budget</th>
-            <th>Utilized</th>
-            <th>Remaining</th>
-            <th>Utilization</th>
-            <th>Linked PRs</th>
-            <th class="buttons">Actions</th>
+            <th scope="col"><%= l(:label_tpc_code) %></th>
+            <th scope="col"><%= l(:field_description) %></th>
+            <th scope="col"><%= l(:label_total_budget) %></th>
+            <th scope="col"><%= l(:label_utilized) %></th>
+            <th scope="col"><%= l(:label_remaining) %></th>
+            <th scope="col"><%= l(:label_utilization) %></th>
+            <th scope="col"><%= l(:label_linked_prs) %></th>
+            <th scope="col" class="buttons"><%= l(:label_actions) %></th>
           </tr>
         </thead>
         <tbody>
@@ -364,21 +367,21 @@
                 <div class="pr-table-actions">
                   <%= link_to project_capex_path(@project, capex),
                               class: 'pr-button pr-button-secondary pr-button-icon small',
-                              title: 'View CAPEX' do %>
-                    <span class="icon icon-magnifier">View</span>
+                              title: l(:label_view_capex) do %>
+                    <span class="icon icon-magnifier"><%= l(:button_view) %></span>
                   <% end %>
                   <% if User.current.allowed_to?(:manage_capex, @project) %>
                     <%= link_to edit_project_capex_path(@project, capex),
                                 class: 'pr-button pr-button-secondary pr-button-icon small',
-                                title: 'Edit CAPEX' do %>
-                      <span class="icon icon-edit">Edit</span>
+                                title: l(:label_edit_capex) do %>
+                      <span class="icon icon-edit"><%= l(:button_edit) %></span>
                     <% end %>
                     <%= link_to project_capex_path(@project, capex),
                                 method: :delete,
-                                data: { confirm: 'Are you sure?' },
+                                data: { confirm: l(:text_are_you_sure) },
                                 class: 'pr-button pr-button-danger pr-button-icon small',
-                                title: 'Delete CAPEX' do %>
-                      <span class="icon icon-del">Delete</span>
+                                title: l(:label_delete_capex) do %>
+                      <span class="icon icon-del"><%= l(:button_delete) %></span>
                     <% end %>
                   <% end %>
                 </div>
@@ -393,12 +396,12 @@
 <% else %>
   <div class="pr-empty">
     <div class="pr-empty__icon">📊</div>
-    <h3>No CAPEX Data for <%= @current_year %></h3>
-    <p>There are no CAPEX entries for the selected year.</p>
+    <h3><%= l(:label_no_capex_data_for) %> <%= @current_year %></h3>
+    <p><%= l(:text_no_capex_entries_for_year) %></p>
     <% if User.current.allowed_to?(:manage_capex, @project) %>
       <p>
         <%= link_to new_project_capex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add"></span> Create First CAPEX Entry
+          <span class="icon icon-add"></span> <%= l(:label_create_first_capex) %>
         <% end %>
       </p>
     <% end %>
@@ -406,6 +409,12 @@
 <% end %>
 
 <script>
+// Localised strings for the chart a11y contract (see purchase_requests.js).
+var PR_CAPEX_LABELS = {
+  utilized: '<%= j(l(:label_utilized)) %>',
+  remaining: '<%= j(l(:label_remaining)) %>',
+  noData: '<%= j(l(:label_no_data)) %>'
+};
 document.addEventListener('DOMContentLoaded', function() {
   <% if @capex_entries.any? %>
     // Generate CAPEX Utilization Donut Chart
@@ -450,7 +459,15 @@ function generateCapexDonutChart(containerId, data) {
   svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
 
   var total = data.utilized + data.remaining;
-  if (total === 0) return;
+  if (total === 0) {
+    prChartA11y(container, [], { empty: true, emptyText: PR_CAPEX_LABELS.noData });
+    return;
+  }
+
+  prChartA11y(container, [
+    { label: PR_CAPEX_LABELS.utilized, display: data.utilized.toLocaleString() },
+    { label: PR_CAPEX_LABELS.remaining, display: data.remaining.toLocaleString() }
+  ], {});
 
   var utilizedPercentage = data.utilized / total;
   var utilizedAngle = utilizedPercentage * 2 * Math.PI;
@@ -512,7 +529,14 @@ function generateCapexBarChart(containerId, data) {
   }
 
   var maxValue = Math.max.apply(null, data.map(function(item) { return item.value; }));
-  if (maxValue === 0) return;
+  if (maxValue === 0) {
+    prChartA11y(container, [], { empty: true, emptyText: PR_CAPEX_LABELS.noData });
+    return;
+  }
+
+  prChartA11y(container, data.map(function (item) {
+    return { label: item.label, display: item.value.toLocaleString() };
+  }), { scrollable: true });
 
   data.forEach(function(item) {
     var barHeight = (item.value / maxValue) * 80;
