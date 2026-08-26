@@ -83,15 +83,19 @@
 
     <div class="stat-box pr-stat--<%= @budget_over ? 'danger' : 'warning' %>">
       <%# Under an "Over budget by" label the figure must be positive: the
-          label carries the direction, so the number carries only magnitude. %>
+          label carries the direction, so the number carries only magnitude.
+          But .abs is valid ONLY when the label actually says "Over budget by".
+          When totals are unreliable @budget_over is forced false, so an
+          unconverted deficit would print as a positive "Remaining" — a sign
+          inversion worse than the false alarm the suppression prevents. %>
       <div class="stat-number stat-currency stat-currency--<%= @budget_over ? 'over' : 'neutral' %>">
         <% if @use_exchange_rates %>
           <%= currency_symbol %>
-          <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+          <%= number_with_precision((@budget_over ? @total_remaining.to_f.abs : @total_remaining.to_f), precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @default_currency %></span>
         <% elsif @currency_breakdown.keys.length == 1 %>
           <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
-          <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+          <%= number_with_precision((@budget_over ? @total_remaining.to_f.abs : @total_remaining.to_f), precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
           <%= l(:label_multi_currency) %>
@@ -181,10 +185,10 @@
                 <td class="stat-currency stat-currency--<%= @budget_over ? 'over' : 'neutral' %>">
                   <% if @use_exchange_rates %>
                     <%= currency_symbol %>
-                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+                    <%= number_with_precision((@budget_over ? @total_remaining.to_f.abs : @total_remaining.to_f), precision: 2, delimiter: ',') %>
                   <% elsif @currency_breakdown.keys.length == 1 %>
                     <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
-                    <%= number_with_precision(@total_remaining.to_f.abs, precision: 2, delimiter: ',') %>
+                    <%= number_with_precision((@budget_over ? @total_remaining.to_f.abs : @total_remaining.to_f), precision: 2, delimiter: ',') %>
                   <% else %>
                     <%= l(:label_multi_currency) %>
                   <% end %>

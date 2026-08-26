@@ -112,7 +112,16 @@ def fixtures
     # Reachable only with conversion ON: with it off, unconvertible_currencies
     # is empty by construction and this branch cannot fire.
     ['capex_missing_rate', CapexController, proj, sy, -> (p) {
-      seed_capex(p, { currency: 'JPY' }) }, { 'capex_use_exchange_rates' => '1' }]
+      seed_capex(p, { currency: 'JPY' }) }, { 'capex_use_exchange_rates' => '1' }],
+
+    # Unreliable totals AND a deficit. This combination is the one that hid a
+    # sign inversion: over_budget is forced false when totals are unreliable,
+    # so an unguarded .abs printed a deficit as a positive "Remaining".
+    # Neither the over-budget fixtures (reliable) nor the missing-rate fixture
+    # (in surplus) reach it.
+    ['capex_unreliable_deficit', CapexController, proj, sy, -> (p) {
+      c = seed_capex(p, { currency: 'JPY', total_amount: 1000 })
+      seed_request(p, c, 1500, 'JPY') }, { 'capex_use_exchange_rates' => '1' }]
   ]
 end
 
