@@ -825,6 +825,7 @@ en:
   label_no_budget_defined: "No CAPEX/OPEX budget defined for"
   label_view_data_table: "View data table"
   label_multi_currency: "Multi-Currency"
+  label_no_budget_data: "No budget data for this period."
   label_converted_to: "Converted to"
   label_totals_not_comparable: "Totals not comparable"
   text_mixed_currency_no_rates: "Entries use more than one currency and exchange rates are off, so budget totals and the utilization percentage are not shown. Per-currency figures are below."

@@ -44,7 +44,7 @@
     capex_severity = capex_over_budget ? 'high' : (@utilization_percentage.to_f >= 80 ? 'medium' : 'low')
   %>
   <% if @totals_unreliable %>
-    <div class="pr-alert pr-alert--warning" role="status">
+    <div class="pr-alert pr-alert-warning" role="status">
       <strong><%= l(:label_totals_not_comparable) %>.</strong>
       <% if @unconvertible_currencies.any? %>
         <%= l(:text_missing_exchange_rate, currencies: @unconvertible_currencies.join(', ')) %>
@@ -125,7 +125,7 @@
       </div>
     </div>
 
-    <div class="stat-box pr-stat--violet">
+    <div class="stat-box pr-stat--accent">
       <div class="stat-number"><%= @capex_entries.count %></div>
       <div class="stat-label"><%= l(:label_capex_entries) %></div>
     </div>
@@ -431,7 +431,7 @@
 var PR_CAPEX_LABELS = {
   utilized: '<%= j(l(:label_utilized)) %>',
   remaining: '<%= j(l(:label_remaining)) %>',
-  noData: '<%= j(l(:label_no_data)) %>'
+  noData: '<%= j(l(:label_no_budget_data)) %>'
 };
 document.addEventListener('DOMContentLoaded', function() {
   <% if @capex_entries.any? %>

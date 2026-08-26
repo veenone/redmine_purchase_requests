@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <div class="stat-box pr-stat--warning">
+    <div class="stat-box pr-stat--success">
       <div class="stat-number stat-currency">
         <% if @use_exchange_rates %>
           <%= opex_currency_symbol(@default_currency) %>
@@ -78,7 +78,7 @@
       </div>
     </div>
 
-    <div class="stat-box pr-stat--success">
+    <div class="stat-box pr-stat--warning">
       <div class="stat-number stat-currency">
         <% if @use_exchange_rates %>
           <%= opex_currency_symbol(@default_currency) %>
@@ -95,7 +95,7 @@
       <div class="stat-label">Total Remaining (<%= (100 - @utilization_percentage).round(2) %>%)</div>
     </div>
 
-    <div class="stat-box pr-stat--info">
+    <div class="stat-box pr-stat--accent">
       <div class="stat-number"><%= @opex_entries.count %></div>
       <div class="stat-label">Active OPEX Entries</div>
     </div>
@@ -225,7 +225,7 @@
                   </div>
                   <div class="stat-label">Utilized</div>
                 </div>
-                <div class="stat-box pr-stat--info" style="min-width:0; flex:1;">
+                <div class="stat-box pr-stat--accent" style="min-width:0; flex:1;">
                   <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
                   <div class="stat-label">Entries</div>
                 </div>
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fgCircle.setAttribute('cy', '70');
     fgCircle.setAttribute('r', '50');
     fgCircle.setAttribute('fill', 'none');
-    fgCircle.setAttribute('stroke', 'var(--pr-warning)');
+    fgCircle.setAttribute('stroke', 'var(--pr-success)');
     fgCircle.setAttribute('stroke-width', '20');
     fgCircle.setAttribute('stroke-dasharray', String(circumference));
     fgCircle.setAttribute('stroke-dashoffset', String(strokeDashoffset));

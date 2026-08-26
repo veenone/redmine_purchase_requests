@@ -480,6 +480,7 @@
 #content .pr-stat--violet,
 #content .capex-stat-card.utilization  { border-left-color: var(--pr-violet); }
 #content .pr-stat--danger              { border-left-color: var(--pr-danger); }
+#content .pr-stat--info                { border-left-color: var(--pr-info); }
 
 /* Currency-coloured figures.
    `.stat-currency` is the neutral money default used across every view.
@@ -2370,17 +2371,25 @@
    29. Chart empty state + scroll-container focus
    ------------------------------------------------------------------------- */
 /* An all-zero series says so instead of rendering an empty bordered box. */
+#content .capex-donut.is-empty,
+#content .capex-bar-chart.is-empty,
 #content .chart-bar-container.is-empty {
   align-items: center;
   justify-content: center;
   height: auto;
   min-height: 90px;
 }
+#content .capex-donut.is-empty .nodata,
+#content .capex-bar-chart.is-empty .nodata,
 #content .chart-bar-container.is-empty .nodata { margin: 0; }
+/* The donut centre label must not sit behind the empty-state sentence. */
+#content .capex-donut.is-empty { width: auto; height: auto; }
+#content .capex-donut.is-empty .capex-donut-center { display: none; }
 
 /* Scrollable charts are focus stops (so their far bars are keyboard
    reachable); give them the same indigo ring as every other focusable
    element rather than the UA default. */
+#content .capex-bar-chart:focus-visible,
 #content .chart-bar-container:focus-visible,
 #content .autoscroll:focus-visible {
   outline: 2px solid var(--pr-accent);
