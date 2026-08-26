@@ -98,32 +98,43 @@ class CapexController < ApplicationController
     # Get capex entries for the year without ordering for aggregations
     #
     # Deliberately kept free of .includes(:purchase_requests): this relation
-    # feeds several `.sum(:column)` SQL aggregates below (quarterly totals,
-    # currency breakdown, and — via budget_dashboard_figures — the headline
-    # totals). Rails silently turns a SQL SUM(:column) over a relation whose
-    # includes has-many association into a LEFT OUTER JOIN, which multiplies
-    # an entry's amount by its linked-request count. OPEX hit exactly that
-    # bug (see task-2-report.md) when it merged its equivalent of this
-    # relation with the one carrying .includes for view rendering. If a
-    # future change adds .includes(:purchase_requests) here — e.g. to shave
-    # a query off some new feature — re-verify every `.sum(:column)` call
-    # below against it first.
+    # feeds the `.sum(:column)`/`.group(...).sum(...)` SQL aggregates below
+    # (quarterly totals and currency breakdown). Rails silently turns a SQL
+    # SUM(:column) over a relation whose includes has-many association into
+    # a LEFT OUTER JOIN, which multiplies an entry's amount by its
+    # linked-request count. OPEX hit exactly that bug (see task-2-report.md)
+    # when it merged its equivalent of this relation with the one carrying
+    # .includes for view rendering. If a future change adds
+    # .includes(:purchase_requests) here — e.g. to shave a query off some
+    # new feature — re-verify every `.sum(:column)` call below against it
+    # first.
+    #
+    # The headline totals (budget_dashboard_figures) and the TPC grouping
+    # further down do NOT use this relation, on purpose: both enumerate
+    # records in Ruby and call e.utilized_amount per record (an association
+    # walk, not a SQL aggregate), so they use @capex_entries instead — see
+    # the comment where it's assigned.
     capex_for_year = @project.capex.for_year(@current_year)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     @selected_tpc_code_id = params[:tpc_code_id].presence
     capex_for_year = capex_for_year.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
     # utilized_amount enumerates linked requests per record, so preload them
-    # once rather than issuing a query per row. Kept separate from
-    # capex_for_year on purpose — see the comment above.
+    # once rather than issuing a query per row. This is the row set used by
+    # budget_dashboard_figures, the TPC grouping below, and view rendering —
+    # one preloaded load shared by all three, instead of the table being
+    # queried once per consumer (kept separate from capex_for_year above
+    # because that relation must stay preload-free — see its comment).
     @capex_entries = capex_for_year.ordered.includes(:purchase_requests)
-    
+
     # Get default currency for conversions
     @default_currency = helpers.default_capex_currency
     @use_exchange_rates = helpers.capex_use_exchange_rates?
-    
-    # Calculate summary statistics using unordered relation
+
+    # Calculate summary statistics using the preloaded relation — entries.to_a
+    # plus Ruby-side sums, not a SQL aggregate, so the LEFT-OUTER-JOIN
+    # double-count risk above doesn't apply here.
     figures = budget_dashboard_figures(
-      capex_for_year,
+      @capex_entries,
       currency: @default_currency,
       convert: ->(amount, from) {
         @use_exchange_rates ? helpers.convert_capex_currency(amount, from, @default_currency, @current_year) : amount
@@ -166,8 +177,13 @@ class CapexController < ApplicationController
     @currency_breakdown = capex_for_year.group(:currency).sum(:total_amount)
     
     # TPC Code grouping - new functionality
+    #
+    # Grouped from @capex_entries (preloaded, identical row set to
+    # capex_for_year), not capex_for_year: this loop calls entry.utilized_amount
+    # per record, an association walk that would otherwise N+1 against an
+    # un-preloaded relation.
     @tpc_grouping = {}
-    capex_for_year.group_by(&:tpc_code).each do |tpc_code, entries|
+    @capex_entries.group_by(&:tpc_code).each do |tpc_code, entries|
       mixed_group = false
       if @use_exchange_rates
         # Convert all amounts to default currency for TPC grouping

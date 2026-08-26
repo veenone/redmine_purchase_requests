@@ -794,6 +794,10 @@
 #content .utilization-bar { height: 16px; }
 #content .workflow-progress-bar { height: 10px; }
 #content .mini-progress-bar { height: 16px; min-width: 60px; }
+/* Compact variant used under a stat-label's percentage text (shared
+   CAPEX/OPEX dashboard header tiles) — the default 16px reads as an
+   oversized bar in that spot. */
+#content .utilization-bar.utilization-bar--inline { height: 4px; margin-top: 6px; }
 
 #content .pr-meter__fill,
 #content .capex-progress-bar,

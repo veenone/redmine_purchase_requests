@@ -1,3 +1,25 @@
+<%#
+  Shared CAPEX/OPEX dashboard shell. A third caller needs BOTH of the
+  following in scope, or sections silently render blank:
+
+  Locals (passed explicitly via render):
+    entries              - the preloaded relation/array of line items
+    labels               - hash with :total_budget, :by_currency, :entries
+    empty_state           - hash with :title, :text, :action_label,
+                            :action_path, :permission
+    grouping_partial      - partial path for the per-group card grid
+    entries_partial       - partial path for the details table
+    currency_symbol       - symbol for @default_currency (single-currency /
+                            exchange-rate display)
+    currency_symbol_for   - lambda: currency code -> symbol, for per-currency
+                            display when @use_exchange_rates is false
+
+  Instance variables (set by the controller action, not passed as locals):
+    @totals_unreliable, @unconvertible_currencies, @use_exchange_rates,
+    @default_currency, @total_budget, @total_utilized, @total_remaining,
+    @budget_severity, @budget_over, @utilization_percentage,
+    @currency_breakdown, @quarterly_data, @current_year, @project
+%>
 <% if entries.any? %>
   <!-- Summary Stats -->
   <% if @totals_unreliable %>

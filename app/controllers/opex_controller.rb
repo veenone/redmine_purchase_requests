@@ -197,16 +197,42 @@ class OpexController < ApplicationController
 
       category_names.each do |category_name|
         category_entries = opex_records.select { |o| o.opex_category&.name == category_name }
-        total_budget = category_entries.sum { |o| o.total_amount || 0 }
-        total_utilized = category_entries.sum { |o| o.utilized_amount }
+        mixed_group = false
+
+        if @use_exchange_rates
+          # Convert all amounts to default currency for category grouping,
+          # same as the headline totals above (OPEX multiplies by its rate).
+          total_budget = 0
+          total_utilized = 0
+
+          category_entries.each do |entry|
+            rate = (opex_rates || {})[entry.currency] || 1
+            total_budget += (entry.total_amount || 0) * rate
+            total_utilized += (entry.utilized_amount || 0) * rate
+          end
+
+          total_budget = total_budget.round(2)
+          total_utilized = total_utilized.round(2)
+          currency_symbol = opex_currency_symbol(@default_currency)
+        else
+          # Use original amounts
+          total_budget = category_entries.sum { |o| o.total_amount || 0 }
+          total_utilized = category_entries.sum { |o| o.utilized_amount }
+
+          # Without conversion, a group spanning currencies has no single
+          # symbol and its total is a sum of unlike units — say so rather
+          # than stamping the first entry's symbol on a number that isn't in
+          # that currency (mirrors the CAPEX TPC grouping fix).
+          group_currencies = category_entries.map { |o| o.currency.presence }.compact.uniq
+          mixed_group = group_currencies.length > 1
+          currency_symbol = mixed_group ? '' : (category_entries.first&.currency_symbol || '$')
+        end
+
         entries_count = category_entries.size
         utilization_percentage = total_budget > 0 ? ((total_utilized / total_budget) * 100).round(2) : 0
 
-        # Get currency symbol from first entry in this category
-        first_opex = category_entries.first
-        currency_symbol = first_opex&.currency_symbol || '$'
-
         @category_grouping[category_name] = {
+          mixed_currency: mixed_group,
           total_budget: total_budget,
           total_utilized: total_utilized,
           entries_count: entries_count,

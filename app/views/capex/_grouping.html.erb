@@ -1,42 +1,5 @@
   <!-- TPC Code Grouping -->
-  <% if @tpc_grouping && @tpc_grouping.any? %>
-    <div class="details-section">
-      <h4><%= l(:label_budget_by_tpc_code) %></h4>
-      <div class="dashboard-container">
-        <% @tpc_grouping.each do |tpc_code, data| %>
-          <div class="dashboard-card">
-            <div class="dashboard-card-header">
-              <h3><span class="tpc-number"><%= tpc_code %></span></h3>
-            </div>
-            <div class="dashboard-card-body">
-              <div class="summary-stats" style="margin-bottom:12px;">
-                <div class="stat-box pr-stat--accent">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
-                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
-                  </div>
-                  <div class="stat-label"><%= l(:label_total_budget) %></div>
-                </div>
-                <div class="stat-box pr-stat--success">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
-                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
-                    <% if data[:mixed_currency] %><span class="pr-badge pr-badge--warning"><%= l(:label_multi_currency) %></span><% end %>
-                  </div>
-                  <div class="stat-label"><%= l(:label_utilized) %></div>
-                </div>
-                <div class="stat-box">
-                  <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
-                  <div class="stat-label"><%= l(:label_entries) %></div>
-                </div>
-              </div>
-              <div class="utilization-bar">
-                <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
-              </div>
-              <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
-                <%= data[:utilization_percentage] %>% <%= l(:label_utilization) %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
+  <%= render 'shared/budget_grouping',
+        grouping: @tpc_grouping,
+        heading: l(:label_budget_by_tpc_code),
+        title_for: ->(tpc_code) { content_tag(:span, tpc_code, class: 'tpc-number') } %>
