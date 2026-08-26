@@ -824,6 +824,7 @@ en:
   label_edit_capex: "Edit CAPEX"
   label_delete_capex: "Delete CAPEX"
   label_caption_budget_utilization: "Budget utilization summary"
+  label_caption_chart_legend: "Chart legend: which colour means what"
   label_caption_quarterly: "Quarterly budget distribution"
   label_caption_budget_by_currency: "Budget by currency"
   label_caption_entries: "Budget entries detail"

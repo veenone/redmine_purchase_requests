@@ -159,41 +159,19 @@
             </div>
           </div>
           <div style="flex:1;">
+            <%# A legend maps colour to concept. The figures themselves are in
+                the stat tiles directly above — restating them here duplicated
+                every value, every percentage and all three currency branches
+                within one viewport, which is a scanning tax rather than
+                reinforcement. The donut's own aria-label still carries the
+                values for assistive tech. %>
             <table class="dashboard-table">
-              <caption class="sr-only"><%= l(:label_caption_budget_utilization) %></caption>
+              <caption class="sr-only"><%= l(:label_caption_chart_legend) %></caption>
               <tr>
                 <td><span class="status-indicator status-utilized"></span><%= l(:label_utilized) %></td>
-                <td class="stat-currency">
-                  <% if @use_exchange_rates %>
-                    <%= currency_symbol %>
-                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-                    (<%= @utilization_percentage %>%)
-                  <% elsif @currency_breakdown.keys.length == 1 %>
-                    <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
-                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-                    (<%= @utilization_percentage %>%)
-                  <% else %>
-                    <%= l(:label_multi_currency) %><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
-                  <% end %>
-                </td>
               </tr>
               <tr>
-                <%# The legend must tell the same story as the tile above it:
-                    over budget means a positive magnitude under a danger dot,
-                    not a bare negative beside an amber one. %>
                 <td><span class="status-indicator <%= @budget_over ? 'status-overbudget' : 'status-remaining' %>"></span><%= @budget_over ? l(:label_over_budget_by) : l(:label_remaining) %></td>
-                <td class="stat-currency stat-currency--<%= @budget_over ? 'over' : 'neutral' %>">
-                  <% if @use_exchange_rates %>
-                    <%= currency_symbol %>
-                    <%= number_with_precision((@budget_over ? @total_remaining.to_f.abs : @total_remaining.to_f), precision: 2, delimiter: ',') %>
-                  <% elsif @currency_breakdown.keys.length == 1 %>
-                    <%= currency_symbol_for.call(@currency_breakdown.keys.first) %>
-                    <%= number_with_precision((@budget_over ? @total_remaining.to_f.abs : @total_remaining.to_f), precision: 2, delimiter: ',') %>
-                  <% else %>
-                    <%= l(:label_multi_currency) %>
-                  <% end %>
-                  <% unless @totals_unreliable %>(<%= (100 - @utilization_percentage.to_f).round(2) %>%)<% end %>
-                </td>
               </tr>
             </table>
           </div>
@@ -276,7 +254,11 @@
 
 <%= render grouping_partial %>
   <!-- Currency Breakdown (multi-currency only) -->
-  <% if @currency_breakdown.keys.length > 1 %>
+  <%# Suppressed when the totals are unreliable: the utilization card has
+      already rendered the per-currency budgets in place of a donut it refused
+      to draw, and showing the same figures again ~600px lower reads as a
+      second, different cut of the data rather than the same one. %>
+  <% if @currency_breakdown.keys.length > 1 && !@totals_unreliable %>
     <div class="details-section">
       <h4><%= labels[:by_currency] %></h4>
       <div class="summary-stats">
