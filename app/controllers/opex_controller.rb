@@ -1,4 +1,6 @@
 class OpexController < ApplicationController
+  include BudgetDashboard
+
   layout 'base'
   before_action :find_project
   before_action :find_opex, only: [:show, :edit, :update, :destroy]
@@ -122,57 +124,80 @@ class OpexController < ApplicationController
     @category_grouping = {}
     @use_exchange_rates = false
     @default_currency = default_currency
-    
+
     if @opex_entries.any?
       # Currency breakdown and exchange rate settings
       @currency_breakdown = @opex_entries.group(:currency).sum(:total_amount)
       exchange_rates_settings = Setting.plugin_redmine_purchase_requests || {}
-      
-      if exchange_rates_settings['opex_exchange_rates'] && exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
-        @use_exchange_rates = true
-        year_rates = exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
-        
-        # Convert all amounts to default currency
-        @total_budget = @opex_entries.sum do |opex|
-          rate = year_rates[opex.currency] || 1
-          opex.total_amount * rate
-        end
-        
-        @total_utilized = @opex_entries.sum do |opex|
-          rate = year_rates[opex.currency] || 1
-          opex.utilized_amount * rate
-        end
-      else
-        @total_budget = @opex_entries.sum(:total_amount)
-        @total_utilized = @opex_entries.sum { |o| o.utilized_amount }
+
+      opex_rates = (Setting.plugin_redmine_purchase_requests || {})
+                     .dig('opex_exchange_rates', @current_year.to_s)
+      @use_exchange_rates = opex_rates.present?
+
+      figures = budget_dashboard_figures(
+        @opex_entries,
+        currency: @default_currency,
+        # OPEX multiplies by its rate; CAPEX divides by its own. Preserved
+        # exactly — reconciling the two conventions is a separate decision.
+        convert: ->(amount, from) {
+          @use_exchange_rates ? (amount * ((opex_rates || {})[from] || 1)) : amount
+        },
+        missing_rate: (@use_exchange_rates ? ->(cur) { !(opex_rates || {}).key?(cur) } : nil)
+      )
+      @total_budget           = figures[:total_budget]
+      @total_utilized         = figures[:total_utilized]
+      @total_remaining        = figures[:total_remaining]
+      @utilization_percentage = figures[:utilization_percentage]
+      @currencies_mixed        = figures[:currencies_mixed]
+      @unconvertible_currencies = figures[:unconvertible_currencies]
+      @totals_unreliable      = figures[:totals_unreliable]
+      @budget_over            = figures[:over_budget]
+      @budget_severity        = figures[:severity]
+
+      unless @use_exchange_rates
+        # Pre-existing quirk, preserved for byte-identical output (Task 2 is
+        # structure-only): @opex_entries carries .includes(:purchase_requests)
+        # for preload reasons (see comment above). The original code summed
+        # @total_budget with `@opex_entries.sum(:total_amount)` — a SQL
+        # aggregate — and Rails silently turns that into
+        # `SELECT SUM(total_amount) ... LEFT OUTER JOIN purchase_requests ...`
+        # whenever the relation has an includes'd has-many association, which
+        # multiplies an entry's total_amount by its linked-request count.
+        # budget_dashboard_figures sums over materialized records instead
+        # (matching @total_utilized's original block-based sum, and matching
+        # CAPEX, whose totals relation never carries the includes), so it does
+        # not reproduce that double-count. Reproducing it here keeps this
+        # task's output identical to the pre-refactor page; see
+        # task-2-report.md for the root cause and a fix recommendation.
+        @total_budget    = @opex_entries.sum(:total_amount)
+        @total_utilized  = @opex_entries.sum { |o| o.utilized_amount }
+        @total_remaining = @total_budget - @total_utilized
+        @utilization_percentage = @total_budget > 0 ? ((@total_utilized / @total_budget) * 100).round(2) : 0
       end
-      
-      @total_remaining = @total_budget - @total_utilized
-      @utilization_percentage = @total_budget > 0 ? ((@total_utilized / @total_budget) * 100).round(2) : 0
-      
+
       # Quarterly breakdown
       @quarterly_data = {
         q1: @opex_entries.sum(:q1_amount),
-        q2: @opex_entries.sum(:q2_amount), 
+        q2: @opex_entries.sum(:q2_amount),
         q3: @opex_entries.sum(:q3_amount),
         q4: @opex_entries.sum(:q4_amount)
       }
-      
+
       # Category grouping (similar to TPC grouping in CAPEX)
       @category_grouping = {}
       category_names = @opex_entries.joins(:opex_category).distinct.pluck('opex_categories.name')
-      
+
       category_names.each do |category_name|
         category_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => category_name)
         total_budget = category_entries.sum(:total_amount)
         total_utilized = category_entries.sum { |o| o.utilized_amount }
         entries_count = category_entries.count
         utilization_percentage = total_budget > 0 ? ((total_utilized / total_budget) * 100).round(2) : 0
-        
+
         # Get currency symbol from first entry in this category
         first_opex = category_entries.first
         currency_symbol = first_opex&.currency_symbol || '$'
-        
+
         @category_grouping[category_name] = {
           total_budget: total_budget,
           total_utilized: total_utilized,
@@ -183,7 +208,7 @@ class OpexController < ApplicationController
       end
     end
   end
-  
+
   # AJAX endpoint to get dashboard data
   def dashboard_data
     @current_year = (params[:year] || Date.current.year).to_i

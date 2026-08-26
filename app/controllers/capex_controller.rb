@@ -1,4 +1,6 @@
 class CapexController < ApplicationController
+  include BudgetDashboard
+
   before_action :find_project
   before_action :authorize, except: [:quarterly_data, :dashboard_data]
   before_action :find_capex, only: [:show, :edit, :update, :destroy]
@@ -107,50 +109,24 @@ class CapexController < ApplicationController
     @use_exchange_rates = helpers.capex_use_exchange_rates?
     
     # Calculate summary statistics using unordered relation
-    if @use_exchange_rates
-      # Convert all amounts to default currency
-      @total_budget = 0
-      @total_utilized = 0
-      
-      capex_for_year.each do |capex|
-        converted_budget = helpers.convert_capex_currency(capex.total_amount, capex.currency, @default_currency, @current_year)
-        converted_utilized = helpers.convert_capex_currency(capex.utilized_amount, capex.currency, @default_currency, @current_year)
-        
-        @total_budget += converted_budget
-        @total_utilized += converted_utilized
-      end
-      
-      @total_budget = @total_budget.round(2)
-      @total_utilized = @total_utilized.round(2)
-    else
-      # Use original amounts without conversion
-      @total_budget = capex_for_year.sum(:total_amount)
-      @total_utilized = capex_for_year.sum { |c| c.utilized_amount }
-    end
-    
-    @total_remaining = @total_budget - @total_utilized
-    @utilization_percentage = @total_budget > 0 ? (@total_utilized / @total_budget * 100).round(2) : 0
-    # ------------------------------------------------------------------
-    # Can these aggregates be trusted?
-    #
-    # Two ways they cannot, and the page must say which:
-    #   1. Conversion is off and more than one currency is present — the
-    #      totals above added unlike units, so everything derived from them
-    #      (including the utilization %) is meaningless.
-    #   2. Conversion is on but a currency has no rate configured anywhere —
-    #      convert_capex_currency passed it through at 1.0, so the total is
-    #      part-converted while claiming to be converted.
-    # ------------------------------------------------------------------
-    entry_currencies = capex_for_year.map { |c| c.currency.presence }.compact.uniq
-    @currencies_mixed = entry_currencies.length > 1
-    @unconvertible_currencies =
-      if @use_exchange_rates
-        entry_currencies.select { |cur| helpers.capex_missing_rate?(cur, @default_currency, @current_year) }
-      else
-        []
-      end
-    @totals_unreliable = (@currencies_mixed && !@use_exchange_rates) || @unconvertible_currencies.any?
-    
+    figures = budget_dashboard_figures(
+      capex_for_year,
+      currency: @default_currency,
+      convert: ->(amount, from) {
+        @use_exchange_rates ? helpers.convert_capex_currency(amount, from, @default_currency, @current_year) : amount
+      },
+      missing_rate: (@use_exchange_rates ? ->(cur) { helpers.capex_missing_rate?(cur, @default_currency, @current_year) } : nil)
+    )
+    @total_budget            = figures[:total_budget]
+    @total_utilized          = figures[:total_utilized]
+    @total_remaining         = figures[:total_remaining]
+    @utilization_percentage  = figures[:utilization_percentage]
+    @currencies_mixed        = figures[:currencies_mixed]
+    @unconvertible_currencies = figures[:unconvertible_currencies]
+    @totals_unreliable       = figures[:totals_unreliable]
+    @budget_over             = figures[:over_budget]
+    @budget_severity         = figures[:severity]
+
     # Quarterly breakdown using unordered relation
     if @use_exchange_rates
       @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
