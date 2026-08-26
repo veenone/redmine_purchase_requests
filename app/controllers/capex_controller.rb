@@ -2,7 +2,7 @@ class CapexController < ApplicationController
   include BudgetDashboard
 
   before_action :find_project
-  before_action :authorize, except: [:quarterly_data, :dashboard_data]
+  before_action :authorize, except: [:quarterly_data]
   before_action :find_capex, only: [:show, :edit, :update, :destroy]
   before_action :check_quarterly_data_permission, only: [:quarterly_data]
   skip_before_action :verify_authenticity_token, only: [:quarterly_data]
@@ -259,124 +259,6 @@ class CapexController < ApplicationController
         }
       end
     end
-  end
-
-  # New method to handle AJAX requests for dashboard data
-  def dashboard_data
-    @current_year = params[:year].present? ? params[:year].to_i : Date.current.year
-    # Apply filters from params
-    capex_for_year = @project.capex.for_year(@current_year)
-    
-    # Apply additional filters if present
-    if params[:tpc_code].present?
-      capex_for_year = capex_for_year.where(tpc_code: params[:tpc_code])
-    end
-    
-    if params[:currency].present?
-      capex_for_year = capex_for_year.where(currency: params[:currency])
-    end
-    
-    # Get default currency for conversions
-    @default_currency = helpers.default_capex_currency
-    @use_exchange_rates = helpers.capex_use_exchange_rates?
-    
-    # Calculate summary statistics
-    if @use_exchange_rates
-      # Convert all amounts to default currency
-      @total_budget = 0
-      @total_utilized = 0
-      
-      capex_for_year.each do |capex|
-        converted_budget = helpers.convert_capex_currency(capex.total_amount, capex.currency, @default_currency, @current_year)
-        converted_utilized = helpers.convert_capex_currency(capex.utilized_amount, capex.currency, @default_currency, @current_year)
-        
-        @total_budget += converted_budget
-        @total_utilized += converted_utilized
-      end
-      
-      @total_budget = @total_budget.round(2)
-      @total_utilized = @total_utilized.round(2)
-    else
-      # Use original amounts without conversion
-      @total_budget = capex_for_year.sum(:total_amount)
-      @total_utilized = capex_for_year.sum { |c| c.utilized_amount }
-    end
-    
-    @total_remaining = @total_budget - @total_utilized
-    @utilization_percentage = @total_budget > 0 ? (@total_utilized / @total_budget * 100).round(2) : 0
-    
-    # Quarterly breakdown
-    if @use_exchange_rates
-      @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
-      
-      capex_for_year.each do |capex|
-        @quarterly_data[:q1] += helpers.convert_capex_currency(capex.q1_amount, capex.currency, @default_currency, @current_year)
-        @quarterly_data[:q2] += helpers.convert_capex_currency(capex.q2_amount, capex.currency, @default_currency, @current_year)
-        @quarterly_data[:q3] += helpers.convert_capex_currency(capex.q3_amount, capex.currency, @default_currency, @current_year)
-        @quarterly_data[:q4] += helpers.convert_capex_currency(capex.q4_amount, capex.currency, @default_currency, @current_year)
-      end
-      
-      @quarterly_data.each { |k, v| @quarterly_data[k] = v.round(2) }
-    else
-      @quarterly_data = {
-        q1: capex_for_year.sum(:q1_amount),
-        q2: capex_for_year.sum(:q2_amount),
-        q3: capex_for_year.sum(:q3_amount),
-        q4: capex_for_year.sum(:q4_amount)
-      }
-    end
-    
-    # Currency breakdown
-    @currency_breakdown = capex_for_year.group(:currency).sum(:total_amount)
-    
-    # TPC Code grouping
-    @tpc_grouping = {}
-    capex_for_year.group_by(&:tpc_code).each do |tpc_code, entries|
-      if @use_exchange_rates
-        # Convert all amounts to default currency for TPC grouping
-        total_budget = 0
-        total_utilized = 0
-        
-        entries.each do |entry|
-          total_budget += helpers.convert_capex_currency(entry.total_amount, entry.currency, @default_currency, @current_year)
-          total_utilized += helpers.convert_capex_currency(entry.utilized_amount, entry.currency, @default_currency, @current_year)
-        end
-        
-        total_budget = total_budget.round(2)
-        total_utilized = total_utilized.round(2)
-        currency_symbol = helpers.capex_currency_symbol(@default_currency)
-      else
-        # Use original amounts
-        total_budget = entries.sum(&:total_amount)
-        total_utilized = entries.sum(&:utilized_amount)
-        
-        # Get currency symbol (assuming all entries in same TPC use same currency for simplicity)
-        first_entry = entries.first
-        currency_symbol = first_entry ? first_entry.currency_symbol : '$'
-      end
-      
-      utilization_percentage = total_budget > 0 ? (total_utilized / total_budget * 100).round(2) : 0
-      
-      @tpc_grouping[tpc_code] = {
-        entries_count: entries.count,
-        total_budget: total_budget,
-        total_utilized: total_utilized,
-        utilization_percentage: utilization_percentage,
-        currency_symbol: currency_symbol
-      }
-    end
-    
-    render json: {
-      total_budget: @total_budget,
-      total_utilized: @total_utilized,
-      total_remaining: @total_remaining,
-      utilization_percentage: @utilization_percentage,
-      quarterly_data: @quarterly_data,
-      currency_breakdown: @currency_breakdown,
-      tpc_grouping: @tpc_grouping,
-      use_exchange_rates: @use_exchange_rates,
-      default_currency: @default_currency
-    }
   end
 
   private

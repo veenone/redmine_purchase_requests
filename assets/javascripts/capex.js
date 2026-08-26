@@ -4,7 +4,6 @@
 $(document).ready(function() {
   // Initialize CAPEX functionality
   initializeCapexForm();
-  initializeCapexDashboard();
   initializeCapexTable();
 });
 
@@ -223,211 +222,6 @@ function formatCurrency(amount, currency) {
   return formatter.format(amount);
 }
 
-// CAPEX Dashboard Functionality
-function initializeCapexDashboard() {
-  if ($('.capex-dashboard').length === 0) return;
-  
-  // Initialize charts if ApexCharts is available
-  if (typeof ApexCharts !== 'undefined') {
-    initializeCapexCharts();
-  }
-  
-  // Initialize dashboard filters
-  initializeDashboardFilters();
-  
-  // Auto-refresh dashboard data
-  setInterval(refreshDashboardData, 300000); // 5 minutes
-}
-
-// Initialize CAPEX charts
-function initializeCapexCharts() {
-  // Utilization pie chart
-  if ($('#capex-utilization-chart').length > 0) {
-    renderUtilizationChart();
-  }
-  
-  // Currency breakdown chart
-  if ($('#capex-currency-chart').length > 0) {
-    renderCurrencyChart();
-  }
-  
-  // Monthly trend chart
-  if ($('#capex-trend-chart').length > 0) {
-    renderTrendChart();
-  }
-  
-  // Quarterly distribution chart
-  if ($('#capex-quarterly-chart').length > 0) {
-    renderQuarterlyChart();
-  }
-}
-
-// Render utilization pie chart
-function renderUtilizationChart() {
-  var options = {
-    series: capexDashboardData.utilization.values,
-    chart: {
-      type: 'pie',
-      height: 350
-    },
-    labels: capexDashboardData.utilization.labels,
-    colors: ['#4CAF50', '#FF9800', '#f44336'],
-    legend: {
-      position: 'bottom'
-    },
-    responsive: [{
-      breakpoint: 480,
-      options: {
-        chart: {
-          height: 300
-        },
-        legend: {
-          position: 'bottom'
-        }
-      }
-    }]
-  };
-  
-  var chart = new ApexCharts(document.querySelector("#capex-utilization-chart"), options);
-  chart.render();
-}
-
-// Render currency breakdown chart
-function renderCurrencyChart() {
-  var options = {
-    series: [{
-      data: capexDashboardData.currency.values
-    }],
-    chart: {
-      type: 'bar',
-      height: 350
-    },
-    xaxis: {
-      categories: capexDashboardData.currency.labels
-    },
-    colors: ['#2196F3'],
-    plotOptions: {
-      bar: {
-        horizontal: true
-      }
-    }
-  };
-  
-  var chart = new ApexCharts(document.querySelector("#capex-currency-chart"), options);
-  chart.render();
-}
-
-// Render trend chart
-function renderTrendChart() {
-  var options = {
-    series: [{
-      name: 'Budget',
-      data: capexDashboardData.trend.budget
-    }, {
-      name: 'Utilized',
-      data: capexDashboardData.trend.utilized
-    }],
-    chart: {
-      type: 'line',
-      height: 350
-    },
-    xaxis: {
-      categories: capexDashboardData.trend.months
-    },
-    colors: ['#2196F3', '#4CAF50'],
-    stroke: {
-      curve: 'smooth'
-    }
-  };
-  
-  var chart = new ApexCharts(document.querySelector("#capex-trend-chart"), options);
-  chart.render();
-}
-
-// Render quarterly distribution chart
-function renderQuarterlyChart() {
-  var options = {
-    series: [{
-      name: 'Q1',
-      data: capexDashboardData.quarterly.q1
-    }, {
-      name: 'Q2',
-      data: capexDashboardData.quarterly.q2
-    }, {
-      name: 'Q3',
-      data: capexDashboardData.quarterly.q3
-    }, {
-      name: 'Q4',
-      data: capexDashboardData.quarterly.q4
-    }],
-    chart: {
-      type: 'bar',
-      height: 350,
-      stacked: true
-    },
-    xaxis: {
-      categories: capexDashboardData.quarterly.entries
-    },
-    colors: ['#2196F3', '#4CAF50', '#FF9800', '#9C27B0']
-  };
-  
-  var chart = new ApexCharts(document.querySelector("#capex-quarterly-chart"), options);
-  chart.render();
-}
-
-// Initialize dashboard filters
-function initializeDashboardFilters() {
-  $('.capex-filter-field select, .capex-filter-field input').on('change', function() {
-    refreshDashboardData();
-  });
-}
-
-// Refresh dashboard data
-function refreshDashboardData() {
-  var filters = {};
-  $('.capex-filter-field select, .capex-filter-field input').each(function() {
-    var name = $(this).attr('name');
-    var value = $(this).val();
-    if (value) {
-      filters[name] = value;
-    }
-  });
-  
-  // Show loading indicator
-  $('.capex-dashboard').addClass('loading');
-  
-  $.ajax({
-    url: window.location.pathname + '/dashboard_data',
-    method: 'GET',
-    data: filters,
-    success: function(data) {
-      updateDashboardStats(data);
-      updateDashboardCharts(data);
-    },
-    complete: function() {
-      $('.capex-dashboard').removeClass('loading');
-    }
-  });
-}
-
-// Update dashboard statistics
-function updateDashboardStats(data) {
-  $('.capex-stat-card.budget .capex-stat-value').text(formatCurrency(data.total_budget));
-  $('.capex-stat-card.utilized .capex-stat-value').text(formatCurrency(data.utilized_budget));
-  $('.capex-stat-card.remaining .capex-stat-value').text(formatCurrency(data.remaining_budget));
-  $('.capex-stat-card.utilization .capex-stat-value').text(data.average_utilization + '%');
-}
-
-// Update dashboard charts
-function updateDashboardCharts(data) {
-  // Update chart data
-  capexDashboardData = data;
-  
-  // Re-render charts
-  $('.capex-chart-container').empty();
-  initializeCapexCharts();
-}
-
 // CAPEX Table Functionality
 function initializeCapexTable() {
   if ($('.capex-table').length === 0) return;
@@ -481,36 +275,6 @@ function updateTableVisibility() {
   }
 }
 
-// CAPEX Alerts
-function checkCapexAlerts() {
-  $.ajax({
-    url: '/capex/alerts',
-    method: 'GET',
-    success: function(alerts) {
-      displayCapexAlerts(alerts);
-    }
-  });
-}
-
-// Display CAPEX alerts
-function displayCapexAlerts(alerts) {
-  var alertsContainer = $('.capex-alerts');
-  if (alertsContainer.length === 0) {
-    alertsContainer = $('<div class="capex-alerts"></div>');
-    $('.capex-dashboard').prepend(alertsContainer);
-  }
-  
-  alertsContainer.empty();
-  
-  alerts.forEach(function(alert) {
-    var alertHtml = '<div class="capex-alert ' + alert.type + '">' +
-                   '<span class="capex-alert-icon">' + alert.icon + '</span>' +
-                   '<span class="capex-alert-message">' + alert.message + '</span>' +
-                   '</div>';
-    alertsContainer.append(alertHtml);
-  });
-}
-
 // Utility functions
 function showCapexNotification(message, type) {
   type = type || 'info';
@@ -534,8 +298,6 @@ function confirmCapexAction(message, callback) {
 window.CapexManager = {
   validateQuarterlyAmounts: validateQuarterlyAmounts,
   autoDistributeQuarterlyAmounts: autoDistributeQuarterlyAmounts,
-  refreshDashboardData: refreshDashboardData,
-  checkCapexAlerts: checkCapexAlerts,
   showCapexNotification: showCapexNotification,
   confirmCapexAction: confirmCapexAction
 };

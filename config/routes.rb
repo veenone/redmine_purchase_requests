@@ -22,7 +22,6 @@ RedmineApp::Application.routes.draw do
     resources :capex, path: 'capex', as: 'capex' do
       collection do
         get 'dashboard'
-        get 'dashboard_data'
       end
       member do
         get 'quarterly_data'
@@ -33,7 +32,6 @@ RedmineApp::Application.routes.draw do
     resources :opex, path: 'opex', as: 'opex' do
       collection do
         get 'dashboard'
-        get 'dashboard_data'
       end
       member do
         get 'quarterly_data'
