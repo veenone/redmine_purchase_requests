@@ -53,8 +53,14 @@ class Opex < ActiveRecord::Base
     end
   end
   
+  # See Capex#utilized_amount: convert each linked request into this record's
+  # currency before summing, rather than adding raw mixed-currency prices.
   def utilized_amount
-    purchase_requests.where(opex: self).sum(:estimated_price) || 0
+    target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    purchase_requests.where(opex: self).where.not(estimated_price: nil).sum do |request|
+      source = request.currency.presence || target
+      PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
+    end
   end
   
   def remaining_amount

@@ -100,6 +100,22 @@ module PurchaseRequestsHelper
     end
   end
 
+  # Module-level conversion so models (Capex/Opex) can convert per-record
+  # without including this whole helper. Same rules as the instance method
+  # below, which delegates here to keep one source of truth.
+  def self.convert_amount(amount, from_currency, to_currency = nil)
+    return amount if amount.nil? || from_currency.nil?
+
+    to_currency ||= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    return amount if from_currency == to_currency
+
+    exchange_rates = Setting.plugin_redmine_purchase_requests['exchange_rates'] || {}
+    rate = exchange_rates[from_currency].to_f
+    rate = 1.0 if rate <= 0
+
+    (amount / rate).round(2)
+  end
+
   # Convert an amount from one currency to another using exchange rates
   def convert_currency(amount, from_currency, to_currency = nil)
     return amount if amount.nil? || from_currency.nil?

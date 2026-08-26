@@ -178,7 +178,7 @@ if (prContainer) {
     label.title = item.name + (item.department ? ' (' + item.department + ')' : '');
 
     const barContainer = document.createElement('div');
-    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:30px;border-radius:4px;overflow:hidden;';
+    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:30px;border-radius:var(--pr-radius-sm);overflow:hidden;';
 
     const barFill = document.createElement('div');
     const percentage = (item.count / maxCount) * 100;
@@ -212,7 +212,7 @@ if (departmentContainer) {
     label.title = dept;
 
     const barContainer = document.createElement('div');
-    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:25px;border-radius:4px;overflow:hidden;';
+    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:25px;border-radius:var(--pr-radius-sm);overflow:hidden;';
 
     const barFill = document.createElement('div');
     const percentage = (count / maxDeptCount) * 100;
@@ -244,7 +244,7 @@ if (costChartContainer) {
     label.textContent = tpc.tpc_code;
 
     const barContainer = document.createElement('div');
-    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:30px;border-radius:4px;overflow:hidden;';
+    barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:30px;border-radius:var(--pr-radius-sm);overflow:hidden;';
 
     const barFill = document.createElement('div');
     const percentage = maxCost > 0 ? (tpc.total_cost / maxCost) * 100 : 0;

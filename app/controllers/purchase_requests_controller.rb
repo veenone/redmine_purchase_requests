@@ -149,15 +149,25 @@ class PurchaseRequestsController < ApplicationController
     @available_years = scope.pluck(Arel.sql('DISTINCT YEAR(purchase_requests.created_at)')).compact.sort.reverse
     @available_years = [Date.current.year] if @available_years.empty?
 
-    # Apply year filter if selected
-    if @selected_year.present?
-      scope = scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
-    end
+    # The dashboard always describes exactly one year. Annual CAPEX/OPEX
+    # budgets don't sum meaningfully across years, so rather than let the
+    # budget band show one period while the requests below show "all years",
+    # an absent year resolves to the current one and narrows every figure on
+    # the page. The band and the request stats can then never disagree.
+    @budget_year_defaulted = @selected_year.blank?
+    @selected_year ||= Date.current.year
+    year_agnostic_scope = scope
+    scope = scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
 
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
     @available_tpc_codes = tpc_scope.active.ordered
-    scope = apply_tpc_filter(scope)
+    # Multi-select filtering lives in the TpcFilterable concern. Applied to
+    # both scopes: year_agnostic_scope drives the year-over-year comparison
+    # added on main, and a TPC filter has to narrow that too or the
+    # comparison would be against a different population.
+    scope               = apply_tpc_filter(scope)
+    year_agnostic_scope = apply_tpc_filter(year_agnostic_scope)
 
     @total_requests = scope.count
     @open_requests = scope.open.count
@@ -165,7 +175,48 @@ class PurchaseRequestsController < ApplicationController
     
     # Get default currency for all conversions
     default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    
+
+    # ------------------------------------------------------------------
+    # Budget-health band: CAPEX + OPEX budget for the resolved year,
+    # narrowed by the active TPC filter. `utilized_amount` on both models
+    # is the linked purchase-request spend, so these figures stay
+    # consistent with the request costs computed below. Currency is
+    # converted with the same helper the rest of this action uses.
+    # The year was already resolved with the request scope above, so the band
+    # and every figure on the page describe the same period.
+    # ------------------------------------------------------------------
+    @budget_year = @selected_year
+    @budget_currency = default_currency
+
+    budget = budget_figures_for(@budget_year, default_currency)
+    @capex_budget   = budget[:capex_budget]
+    @capex_utilized = budget[:capex_utilized]
+    @opex_budget    = budget[:opex_budget]
+    @opex_utilized  = budget[:opex_utilized]
+    @budget_total     = budget[:total]
+    @budget_utilized  = budget[:utilized]
+    @budget_remaining = budget[:remaining]
+    @budget_utilization_pct = budget[:utilization_pct]
+    @has_budget = budget[:has_budget]
+
+    # Optional comparison year. Off unless explicitly chosen — a silent default
+    # is what made the old "All Years" control lie. Uses the same figures
+    # function, so the currency and scoping rules apply identically.
+    @compare_year = params[:compare_year].presence&.to_i
+    @compare_year = nil if @compare_year == @selected_year
+    if @compare_year
+      compare = budget_figures_for(@compare_year, default_currency)
+      @compare_budget_total     = compare[:total]
+      @compare_budget_utilized  = compare[:utilized]
+      @compare_budget_remaining = compare[:remaining]
+      @compare_utilization_pct  = compare[:utilization_pct]
+      @compare_has_budget       = compare[:has_budget]
+      @compare_utilized_delta_pct =
+        if @compare_budget_utilized > 0
+          (((@budget_utilized - @compare_budget_utilized) / @compare_budget_utilized) * 100).round(1)
+        end
+    end
+
     # Calculate total costs with currency conversion
     @total_estimated_cost = 0
     @pending_cost = 0
@@ -265,29 +316,16 @@ class PurchaseRequestsController < ApplicationController
       }
     end
     
-    # Monthly trends with multi-currency support
-    @monthly_trends = 12.times.map do |i|
-      month_start = i.months.ago.beginning_of_month
-      month_end = i.months.ago.end_of_month
-      
-      # Get all requests for this month
-      requests = scope.where(created_at: month_start..month_end)
-      count = requests.count
-      
-      # Calculate converted total for the month
-      monthly_cost = 0
-      requests.where.not(estimated_price: nil).each do |request|
-        curr = request.currency.presence || default_currency
-        monthly_cost += helpers.convert_currency(request.estimated_price, curr, default_currency)
-      end
-      
-      { 
-        month: i.months.ago.strftime("%b %Y"),
-        count: count,
-        amount: monthly_cost.round(2)
-      }
-    end.reverse
-    
+    # Monthly trends: calendar months of the selected year (never a rolling
+    # window — `scope` is year-locked, so a rolling window would render months
+    # the filter excludes as permanently-empty bars).
+    @monthly_trends = monthly_series_for(@selected_year, year_agnostic_scope, default_currency)
+
+    # Comparison series for the ghost bars, same shape, same code path.
+    if @compare_year
+      @compare_monthly_trends = monthly_series_for(@compare_year, year_agnostic_scope, default_currency)
+    end
+
     # Create datasets for multi-series monthly chart 
     @monthly_series_data = {
       labels: @monthly_trends.map { |t| t[:month] },
@@ -521,6 +559,68 @@ class PurchaseRequestsController < ApplicationController
   end
   
   private
+
+  # CAPEX + OPEX budget figures for one year, narrowed by the active project
+  # and TPC filter, expressed in `target_currency`. Extracted so the selected
+  # year and an optional comparison year are computed by identical code —
+  # `utilized_amount` already converts each linked request into its record's
+  # currency, so only the record-level figure is converted here.
+  def budget_figures_for(year, target_currency)
+    capex_scope = Capex.for_year(year)
+    opex_scope  = Opex.for_year(year)
+    capex_scope = capex_scope.for_project(@project) if @project
+    opex_scope  = opex_scope.for_project(@project)  if @project
+    if @selected_tpc_code_id
+      capex_scope = capex_scope.where(tpc_code_id: @selected_tpc_code_id)
+      opex_scope  = opex_scope.where(tpc_code_id: @selected_tpc_code_id)
+    end
+
+    capex_budget = 0.0
+    capex_utilized = 0.0
+    capex_scope.each do |c|
+      cur = c.currency.presence || target_currency
+      capex_budget   += helpers.convert_currency(c.total_amount || 0, cur, target_currency)
+      capex_utilized += helpers.convert_currency(c.utilized_amount || 0, cur, target_currency)
+    end
+
+    opex_budget = 0.0
+    opex_utilized = 0.0
+    opex_scope.each do |o|
+      cur = o.currency.presence || target_currency
+      opex_budget   += helpers.convert_currency(o.total_amount || 0, cur, target_currency)
+      opex_utilized += helpers.convert_currency(o.utilized_amount || 0, cur, target_currency)
+    end
+
+    total    = (capex_budget + opex_budget).round(2)
+    utilized = (capex_utilized + opex_utilized).round(2)
+
+    {
+      capex_budget: capex_budget.round(2),
+      capex_utilized: capex_utilized.round(2),
+      opex_budget: opex_budget.round(2),
+      opex_utilized: opex_utilized.round(2),
+      total: total,
+      utilized: utilized,
+      remaining: (total - utilized).round(2),
+      utilization_pct: total > 0 ? (utilized / total * 100).round(1) : 0,
+      has_budget: total > 0
+    }
+  end
+
+  # Request counts/amounts per calendar month of `year`, for the trend chart.
+  def monthly_series_for(year, base_scope, default_currency)
+    (1..12).map do |month|
+      month_start = Date.new(year, month, 1)
+      month_end = month_start.end_of_month
+      requests = base_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), year)
+                           .where(created_at: month_start..month_end)
+      amount = 0
+      requests.where.not(estimated_price: nil).each do |r|
+        amount += helpers.convert_currency(r.estimated_price, r.currency.presence || default_currency, default_currency)
+      end
+      { month: month_start.strftime("%b %Y"), count: requests.count, amount: amount.round(2) }
+    end
+  end
   
   def find_project
     @project = Project.find(params[:project_id])

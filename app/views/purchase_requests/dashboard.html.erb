@@ -28,7 +28,90 @@
       selected_year: @selected_year,
       available_years: @available_years,
       available_tpc_codes: @available_tpc_codes,
-      selected_tpc_code_ids: selected_tpc_code_ids %>
+      selected_tpc_code_ids: selected_tpc_code_ids,
+      year_defaulted: @budget_year_defaulted,
+      year_required: true,
+      compare_mode: true,
+      compare_year: @compare_year %>
+
+<% if @project && (User.current.allowed_to?(:view_capex, @project) || User.current.allowed_to?(:view_opex, @project)) %>
+  <% band_tpcs = @available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } %>
+  <div class="pr-card pr-budget-band">
+    <div class="pr-card__header">
+      <h3>
+        <%= l(:label_budget_health, default: 'Budget health') %>
+        &mdash; <%= @budget_year %><% if band_tpcs.one? %> &middot; <%= band_tpcs.first.tpc_number %><% elsif band_tpcs.any? %> &middot; <%= band_tpcs.size %> <%= l(:label_tpc) %><% end %>
+      </h3>
+      <% if @budget_year_defaulted %>
+        <span class="pr-badge pr-badge--neutral"><%= l(:label_showing_current_year, default: 'Showing current year') %></span>
+      <% end %>
+    </div>
+    <div class="pr-card__body">
+      <% budget_symbol = currency_symbol(@budget_currency) %>
+      <% if @has_budget %>
+        <%
+          over_budget = @budget_remaining < 0
+          severity = over_budget ? 'high' : (@budget_utilization_pct >= 80 ? 'medium' : 'low')
+        %>
+        <div class="pr-stats">
+          <div class="pr-stat pr-stat--accent">
+            <div class="pr-stat__value num"><%= budget_symbol %><%= number_with_precision(@budget_total, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
+            <div class="pr-stat__label"><%= l(:label_total_budget, default: 'Total budget') %></div>
+          </div>
+          <div class="pr-stat pr-stat--<%= over_budget ? 'danger' : (@budget_utilization_pct >= 80 ? 'warning' : 'success') %>">
+            <%# Utilized is a sum with no state of its own — per the Money-State
+                Rule it reads as plain ink; the alarm belongs on the overage. %>
+            <div class="pr-stat__value num stat-currency--neutral"><%= budget_symbol %><%= number_with_precision(@budget_utilized, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
+            <div class="pr-stat__label" title="<%= l(:label_committed_note) %>"><%= l(:label_utilized, default: 'Committed') %></div>
+          </div>
+          <div class="pr-stat pr-stat--<%= over_budget ? 'danger' : 'success' %>">
+            <%# Under an "Over budget by" label the figure must be positive:
+                the label already carries the direction. %>
+            <div class="pr-stat__value num stat-currency--<%= over_budget ? 'over' : 'approved' %>"><%= budget_symbol %><%= number_with_precision(@budget_remaining.abs, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
+            <div class="pr-stat__label"><%= over_budget ? l(:label_over_budget_by, default: 'Over budget by') : l(:label_remaining, default: 'Remaining') %></div>
+          </div>
+          <div class="pr-stat pr-stat--violet">
+            <div class="pr-stat__value num"><%= @budget_utilization_pct %>%</div>
+            <div class="pr-stat__label"><%= l(:label_utilization, default: 'Utilization') %></div>
+          </div>
+        </div>
+        <div class="utilization-bar pr-budget-band__meter" aria-hidden="true">
+          <div class="pr-meter__fill <%= severity %>" style="width: <%= [@budget_utilization_pct, 100].min %>%"></div>
+        </div>
+        <% if @compare_year %>
+          <p class="pr-budget-band__compare">
+            <span class="pr-badge pr-badge--neutral"><%= l(:label_vs) %> <%= @compare_year %></span>
+            <% if @compare_has_budget %>
+              <%= l(:label_utilized) %>
+              <strong><%= budget_symbol %><%= number_with_precision(@compare_budget_utilized, precision: 2, delimiter: ',') %></strong>
+              <% if @compare_utilized_delta_pct %>
+                <span class="stat-currency--<%= @compare_utilized_delta_pct > 0 ? 'pending' : 'approved' %>">
+                  (<%= @compare_utilized_delta_pct > 0 ? '+' : '' %><%= @compare_utilized_delta_pct %>%)
+                </span>
+              <% end %>
+              &middot;
+              <%= l(:label_total_budget) %>
+              <strong><%= budget_symbol %><%= number_with_precision(@compare_budget_total, precision: 2, delimiter: ',') %></strong>
+              &middot;
+              <%= @compare_utilization_pct %>%
+            <% else %>
+              <%= l(:label_no_budget_for_year) %> <%= @compare_year %>.
+            <% end %>
+          </p>
+        <% end %>
+        <p class="pr-budget-band__note conversion-note"><%= l(:label_committed_note) %>.</p>
+        <p class="pr-budget-band__split conversion-note">
+          <strong>CAPEX</strong> <%= budget_symbol %><%= number_with_precision(@capex_utilized, precision: 2, delimiter: ',') %> / <%= budget_symbol %><%= number_with_precision(@capex_budget, precision: 2, delimiter: ',') %>
+          &nbsp;&middot;&nbsp;
+          <strong>OPEX</strong> <%= budget_symbol %><%= number_with_precision(@opex_utilized, precision: 2, delimiter: ',') %> / <%= budget_symbol %><%= number_with_precision(@opex_budget, precision: 2, delimiter: ',') %>
+          &nbsp;<%= @budget_currency %>
+        </p>
+      <% else %>
+        <p class="conversion-note"><%= l(:label_no_budget_defined, default: 'No CAPEX/OPEX budget defined for') %> <%= @budget_year %>.</p>
+      <% end %>
+    </div>
+  </div>
+<% end %>
 
 <div class="summary-stats">
   <div class="stat-box pr-stat--accent">
@@ -50,143 +133,23 @@
     summary_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
     summary_symbol = currency_symbol(summary_currency)
   %>
-  <div class="stat-box pr-stat--violet">
-    <div class="stat-number stat-currency"><%= summary_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
+  <div class="stat-box pr-stat--accent">
+    <div class="stat-number stat-currency stat-currency--neutral"><%= summary_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %></div>
     <div class="stat-label"><%= l(:label_total_estimated_cost) %></div>
   </div>
 </div>
 
-<div class="dashboard-container">
-  <!-- Status Distribution Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_status_distribution) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <% if @status_distribution.present? && @status_distribution.any? %>
-        <div class="chart-pie-container">
-          <div class="chart-pie" id="status-pie-chart"></div>
-          <div class="chart-pie-legend">
-            <% @status_distribution.each do |status| %>
-              <div class="legend-item">
-                <div class="legend-color" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></div>
-                <span><%= status[:name] %> (<%= status[:count] %> - <%= status[:percentage] %>%)</span>
-              </div>
-            <% end %>
-          </div>
-        </div>
-
-        <details class="pr-data-toggle">
-          <summary>View data table</summary>
-          <div class="autoscroll">
-            <table class="dashboard-table">
-              <caption class="sr-only">Purchase requests by status</caption>
-              <thead>
-                <tr>
-                  <th scope="col"><%= l(:field_status) %></th>
-                  <th scope="col"><%= l(:label_count) %></th>
-                  <th scope="col"><%= l(:label_percentage) %></th>
-                </tr>
-              </thead>
-              <tbody>
-              <% @status_distribution.each do |status| %>
-                <tr>
-                  <td>
-                    <span class="pr-swatch" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></span>
-                    <%= status[:name] %>
-                  </td>
-                  <td><%= status[:count] %></td>
-                  <td><%= status[:percentage] %>%</td>
-                </tr>
-              <% end %>
-              </tbody>
-            </table>
-          </div>
-        </details>
-      <% else %>
-        <p class="nodata"><%= l(:label_no_data) %></p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Priority Distribution Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_priority_distribution) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <% if @priority_distribution.present? && @priority_distribution.values.sum > 0 %>
-        <div class="chart-pie-container">
-          <div class="chart-pie" id="priority-pie-chart"></div>
-          <div class="chart-pie-legend">
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: var(--pr-danger);"></div>
-              <span><%= l(:label_priority_urgent) %> (<%= @priority_distribution[:urgent] %> - <%= @priority_percentages[:urgent] %>%)</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: var(--pr-warning);"></div>
-              <span><%= l(:label_priority_high) %> (<%= @priority_distribution[:high] %> - <%= @priority_percentages[:high] %>%)</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: var(--pr-success);"></div>
-              <span><%= l(:label_priority_normal) %> (<%= @priority_distribution[:normal] %> - <%= @priority_percentages[:normal] %>%)</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color" style="background-color: var(--pr-info);"></div>
-              <span><%= l(:label_priority_low) %> (<%= @priority_distribution[:low] %> - <%= @priority_percentages[:low] %>%)</span>
-            </div>
-          </div>
-        </div>
-
-        <details class="pr-data-toggle">
-          <summary>View data table</summary>
-          <table class="dashboard-table">
-            <caption class="sr-only">Purchase requests by priority</caption>
-            <thead>
-              <tr>
-                <th scope="col"><%= l(:field_priority) %></th>
-                <th scope="col"><%= l(:label_count) %></th>
-                <th scope="col"><%= l(:label_percentage) %></th>
-              </tr>
-            </thead>
-            <tbody>
-            <tr>
-              <td><span class="pr-swatch" style="background-color: var(--pr-danger);"></span><%= l(:label_priority_urgent) %></td>
-              <td><%= @priority_distribution[:urgent] %></td>
-              <td><%= @priority_percentages[:urgent] %>%</td>
-            </tr>
-            <tr>
-              <td><span class="pr-swatch" style="background-color: var(--pr-warning);"></span><%= l(:label_priority_high) %></td>
-              <td><%= @priority_distribution[:high] %></td>
-              <td><%= @priority_percentages[:high] %>%</td>
-            </tr>
-            <tr>
-              <td><span class="pr-swatch" style="background-color: var(--pr-success);"></span><%= l(:label_priority_normal) %></td>
-              <td><%= @priority_distribution[:normal] %></td>
-              <td><%= @priority_percentages[:normal] %>%</td>
-            </tr>
-            <tr>
-              <td><span class="pr-swatch" style="background-color: var(--pr-info);"></span><%= l(:label_priority_low) %></td>
-              <td><%= @priority_distribution[:low] %></td>
-              <td><%= @priority_percentages[:low] %>%</td>
-            </tr>
-            </tbody>
-          </table>
-        </details>
-      <% else %>
-        <p class="nodata"><%= l(:label_no_data) %></p>
-      <% end %>
-    </div>
-  </div>
-
+<section class="pr-section">
+  <h3 class="pr-section__title"><%= l(:label_section_financial) %></h3>
+  <div class="dashboard-container">
   <!-- Financial Overview Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_financial_overview) %></h3>
+      <h4><%= l(:label_financial_overview) %></h4>
     </div>
     <div class="dashboard-card-body">
       <table class="dashboard-table">
-        <caption class="sr-only">Financial overview</caption>
+        <caption class="sr-only"><%= l(:label_caption_financial_overview) %></caption>
         <%
           default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
           default_symbol = currency_symbol(default_currency)
@@ -194,28 +157,28 @@
         <tbody>
         <tr>
           <th scope="row"><%= l(:label_total_estimated_cost) %></th>
-          <td class="stat-currency">
+          <td class="stat-currency stat-currency--neutral">
             <%= default_symbol %><%= number_with_precision(@total_estimated_cost, precision: 2, delimiter: ',') %>
             <span class="currency-code"><%= default_currency %></span>
           </td>
         </tr>
         <tr>
           <th scope="row"><%= l(:label_pending_cost) %></th>
-          <td class="stat-currency">
+          <td class="stat-currency stat-currency--pending">
             <%= default_symbol %><%= number_with_precision(@pending_cost, precision: 2, delimiter: ',') %>
             <span class="currency-code"><%= default_currency %></span>
           </td>
         </tr>
         <tr>
           <th scope="row"><%= l(:label_approved_cost) %></th>
-          <td class="stat-currency">
+          <td class="stat-currency stat-currency--approved">
             <%= default_symbol %><%= number_with_precision(@approved_cost, precision: 2, delimiter: ',') %>
             <span class="currency-code"><%= default_currency %></span>
           </td>
         </tr>
         <tr>
           <th scope="row"><%= l(:label_average_request_amount) %></th>
-          <td class="stat-currency">
+          <td class="stat-currency stat-currency--neutral">
             <% avg = @total_requests > 0 ? @total_estimated_cost / @total_requests : 0 %>
             <%= default_symbol %><%= number_with_precision(avg, precision: 2, delimiter: ',') %>
             <span class="currency-code"><%= default_currency %></span>
@@ -240,219 +203,16 @@
     </div>
   </div>
 
-  <!-- Top Requesters Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_top_requesters) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <% if @top_requesters.present? && @top_requesters.any? %>
-        <table class="dashboard-table">
-          <caption class="sr-only">Top requesters</caption>
-          <thead>
-            <tr>
-              <th scope="col"><%= l(:field_user) %></th>
-              <th scope="col"><%= l(:label_requests) %></th>
-              <th scope="col"><%= l(:label_total_cost) %></th>
-            </tr>
-          </thead>
-          <tbody>
-          <%
-            requester_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            requester_symbol = currency_symbol(requester_currency)
-          %>
-          <% @top_requesters.each do |user| %>
-            <tr>
-              <td><%= link_to(user.name.presence || user.login, user_path(user)) %></td>
-              <td><%= user.request_count %></td>
-              <td class="stat-currency"><%= requester_symbol %><%= number_with_precision(user.total_cost, precision: 2, delimiter: ',') %></td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        <p class="nodata"><%= l(:label_no_data) %></p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Monthly Trends Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_monthly_trends) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <% if @monthly_trends.present? && @monthly_trends.any? %>
-        <div class="chart-bar-container" id="monthly-trends-chart"></div>
-
-        <details class="pr-data-toggle">
-          <summary>View data table</summary>
-          <table class="dashboard-table">
-            <caption class="sr-only">Monthly purchase request trends</caption>
-            <thead>
-              <tr>
-                <th scope="col"><%= l(:label_month) %></th>
-                <th scope="col"><%= l(:label_requests) %></th>
-                <th scope="col"><%= l(:label_amount) %></th>
-              </tr>
-            </thead>
-            <tbody>
-            <% @monthly_trends.each do |trend| %>
-              <tr>
-                <td><%= trend[:month] %></td>
-                <td><%= trend[:count] %></td>
-                <td class="stat-currency">
-                  <%= currency_symbol(default_currency) %><%= number_with_precision(trend[:amount], precision: 2, delimiter: ',') %>
-                </td>
-              </tr>
-            <% end %>
-            </tbody>
-          </table>
-        </details>
-      <% else %>
-        <p class="nodata"><%= l(:label_no_data) %></p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Recent Activity Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_recent_requests) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <% if @recent_requests.present? && @recent_requests.any? %>
-        <table class="dashboard-table">
-          <caption class="sr-only">Recent purchase requests</caption>
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col"><%= l(:field_title) %></th>
-              <th scope="col"><%= l(:field_status) %></th>
-              <th scope="col"><%= l(:field_created_on) %></th>
-            </tr>
-          </thead>
-          <tbody>
-          <% @recent_requests.each do |request| %>
-            <tr>
-              <td><%= link_to "##{request.id}", project_purchase_request_path(@project, request), class: 'pr-id-link' %></td>
-              <td><%= link_to truncate(request.title, length: 30), project_purchase_request_path(@project, request), class: 'pr-title-link' %></td>
-              <td>
-                <span class="status-badge" style="background-color: <%= request.status.display_color %>; color: <%= readable_text_color(request.status.display_color) %>">
-                  <%= request.status.name %>
-                </span>
-              </td>
-              <td><%= format_time(request.created_at) %></td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        <p class="nodata"><%= l(:label_no_data) %></p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Top Vendors Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_top_vendors) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <% if @top_vendors.present? && @top_vendors.any? %>
-        <table class="dashboard-table">
-          <caption class="sr-only">Top vendors by purchase requests</caption>
-          <thead>
-            <tr>
-              <th scope="col"><%= l(:field_vendor) %></th>
-              <th scope="col"><%= l(:label_requests) %></th>
-              <th scope="col"><%= l(:label_total_cost) %></th>
-            </tr>
-          </thead>
-          <tbody>
-          <%
-            vendor_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-            vendor_symbol = currency_symbol(vendor_currency)
-          %>
-          <% @top_vendors.each do |vendor| %>
-            <tr>
-              <td><%= vendor[:vendor] %></td>
-              <td><%= vendor[:count] %></td>
-              <td class="stat-currency"><%= vendor_symbol %><%= number_with_precision(vendor[:total_cost], precision: 2, delimiter: ',') %></td>
-            </tr>
-          <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        <p class="nodata"><%= l(:label_no_data) %></p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- TPC Code Distribution Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3>Budget Distribution by TPC Code</h3>
-    </div>
-    <div class="dashboard-card-body">
-      <% if @tpc_distribution.present? && @tpc_distribution.any? %>
-        <div class="chart-bar-container" id="tpc-distribution-chart"></div>
-
-        <details class="pr-data-toggle">
-          <summary>View data table</summary>
-          <table class="dashboard-table">
-            <caption class="sr-only">Budget distribution by TPC code</caption>
-            <thead>
-              <tr>
-                <th scope="col">TPC Code</th>
-                <th scope="col">Requests</th>
-                <th scope="col">Total Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-            <%
-              tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-              tpc_symbol = currency_symbol(tpc_currency)
-            %>
-            <% @tpc_distribution.each do |tpc| %>
-              <tr>
-                <td class="tpc-code-cell"><strong><%= tpc[:tpc_code] %></strong></td>
-                <td><%= tpc[:count] %></td>
-                <td class="stat-currency"><%= tpc_symbol %><%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %></td>
-              </tr>
-            <% end %>
-            </tbody>
-          </table>
-        </details>
-      <% else %>
-        <p class="nodata">No TPC code data available</p>
-      <% end %>
-    </div>
-  </div>
-
-  <!-- Response Time Card -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_average_response_time) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <div class="stat-box pr-stat--accent">
-        <div class="stat-number"><%= @avg_response_days %> <%= l(:label_days) %></div>
-        <div class="stat-label"><%= l(:label_avg_processing_time) %></div>
-      </div>
-    </div>
-  </div>
-
   <!-- Currency Breakdown with Conversion Card -->
   <div class="dashboard-card">
     <div class="dashboard-card-header">
-      <h3><%= l(:label_currency_breakdown_with_conversion) %></h3>
+      <h4><%= l(:label_currency_breakdown_with_conversion) %></h4>
     </div>
     <div class="dashboard-card-body">
       <% if @converted_currency_distribution && @converted_currency_distribution.any? %>
         <table class="dashboard-table">
-          <caption class="sr-only">Currency breakdown with conversion</caption>
-          <thead>
+          <caption class="sr-only"><%= l(:label_caption_currency_conversion) %></caption>
+          <th scope="col"ead>
             <tr>
               <th scope="col"><%= l(:field_currency) %></th>
               <th scope="col"><%= l(:label_original_amount) %></th>
@@ -493,8 +253,8 @@
           </div>
           <p class="info"><%= l(:text_exchange_rates_info) %></p>
           <table class="dashboard-table">
-            <caption class="sr-only">Exchange rates</caption>
-            <thead>
+            <caption class="sr-only"><%= l(:label_caption_exchange_rates) %></caption>
+            <th scope="col"ead>
               <tr>
                 <th scope="col"><%= l(:field_currency) %></th>
                 <th scope="col"><%= l(:label_rate_to) %> <%= default_currency %></th>
@@ -515,7 +275,344 @@
       <% end %>
     </div>
   </div>
-</div>
+  <!-- Monthly Trends Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_monthly_trends) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @monthly_trends.present? && @monthly_trends.any? %>
+        <div class="chart-bar-container" id="monthly-trends-chart" data-chart-label="<%= l(:label_monthly_trends) %>"></div>
+
+        <details class="pr-data-toggle">
+          <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_monthly_trends) %></summary>
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_monthly_trends) %></caption>
+            <th scope="col"ead>
+              <tr>
+                <th scope="col"><%= l(:label_month) %></th>
+                <th scope="col"><%= l(:label_requests) %></th>
+                <th scope="col"><%= l(:label_amount) %></th>
+              </tr>
+            </thead>
+            <tbody>
+            <% @monthly_trends.each do |trend| %>
+              <tr>
+                <td><%= trend[:month] %></td>
+                <td><%= trend[:count] %></td>
+                <td class="stat-currency">
+                  <%= currency_symbol(default_currency) %><%= number_with_precision(trend[:amount], precision: 2, delimiter: ',') %>
+                </td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </details>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  </div>
+</section>
+
+<section class="pr-section">
+  <h3 class="pr-section__title"><%= l(:label_section_governance) %></h3>
+  <div class="dashboard-container">
+  <!-- TPC Code Distribution Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_tpc_code_distribution) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @tpc_distribution.present? && @tpc_distribution.any? %>
+        <div class="chart-bar-container" id="tpc-distribution-chart" data-chart-label="<%= l(:label_tpc_code_distribution) %>"></div>
+
+        <details class="pr-data-toggle">
+          <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_tpc_code_distribution, default: "Budget Distribution by TPC Code") %></summary>
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_tpc_distribution) %></caption>
+            <th scope="col"ead>
+              <tr>
+                <th scope="col"><%= l(:label_tpc_code) %></th>
+                <th scope="col"><%= l(:label_requests) %></th>
+                <th scope="col"><%= l(:label_total_cost) %></th>
+              </tr>
+            </thead>
+            <tbody>
+            <%
+              tpc_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+              tpc_symbol = currency_symbol(tpc_currency)
+            %>
+            <% @tpc_distribution.each do |tpc| %>
+              <tr>
+                <td class="tpc-code-cell"><strong><%= tpc[:tpc_code] %></strong></td>
+                <td><%= tpc[:count] %></td>
+                <td class="stat-currency"><%= tpc_symbol %><%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %></td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+        </details>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_tpc_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Top Vendors Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_top_vendors) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @top_vendors.present? && @top_vendors.any? %>
+        <table class="dashboard-table">
+          <caption class="sr-only"><%= l(:label_caption_top_vendors) %></caption>
+          <th scope="col"ead>
+            <tr>
+              <th scope="col"><%= l(:field_vendor) %></th>
+              <th scope="col"><%= l(:label_requests) %></th>
+              <th scope="col"><%= l(:label_total_cost) %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <%
+            vendor_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+            vendor_symbol = currency_symbol(vendor_currency)
+          %>
+          <% @top_vendors.each do |vendor| %>
+            <tr>
+              <td><%= vendor[:vendor] %></td>
+              <td><%= vendor[:count] %></td>
+              <td class="stat-currency"><%= vendor_symbol %><%= number_with_precision(vendor[:total_cost], precision: 2, delimiter: ',') %></td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  </div>
+</section>
+
+<section class="pr-section">
+  <h3 class="pr-section__title"><%= l(:label_section_activity) %></h3>
+  <div class="dashboard-container">
+  <!-- Status Distribution Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_status_distribution) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @status_distribution.present? && @status_distribution.any? %>
+        <div class="chart-pie-container">
+          <div class="chart-pie" id="status-pie-chart" data-chart-label="<%= l(:label_status_distribution) %>"></div>
+          <div class="chart-pie-legend">
+            <% @status_distribution.each do |status| %>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></div>
+                <span><%= status[:name] %> (<%= status[:count] %> - <%= status[:percentage] %>%)</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <details class="pr-data-toggle">
+          <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_status_distribution) %></summary>
+          <div class="autoscroll">
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_by_status) %></caption>
+            <th scope="col"ead>
+              <tr>
+                <th scope="col"><%= l(:field_status) %></th>
+                <th scope="col"><%= l(:label_count) %></th>
+                <th scope="col"><%= l(:label_percentage) %></th>
+              </tr>
+            </thead>
+            <tbody>
+            <% @status_distribution.each do |status| %>
+              <tr>
+                <td>
+                  <span class="pr-swatch" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></span>
+                  <%= status[:name] %>
+                </td>
+                <td><%= status[:count] %></td>
+                <td><%= status[:percentage] %>%</td>
+              </tr>
+            <% end %>
+            </tbody>
+          </table>
+          </div>
+        </details>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Priority Distribution Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_priority_distribution) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @priority_distribution.present? && @priority_distribution.values.sum > 0 %>
+        <div class="chart-pie-container">
+          <div class="chart-pie" id="priority-pie-chart" data-chart-label="<%= l(:label_priority_distribution) %>"></div>
+          <div class="chart-pie-legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--pr-danger);"></div>
+              <span><%= l(:label_priority_urgent) %> (<%= @priority_distribution[:urgent] %> - <%= @priority_percentages[:urgent] %>%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--pr-warning);"></div>
+              <span><%= l(:label_priority_high) %> (<%= @priority_distribution[:high] %> - <%= @priority_percentages[:high] %>%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--pr-success);"></div>
+              <span><%= l(:label_priority_normal) %> (<%= @priority_distribution[:normal] %> - <%= @priority_percentages[:normal] %>%)</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--pr-info);"></div>
+              <span><%= l(:label_priority_low) %> (<%= @priority_distribution[:low] %> - <%= @priority_percentages[:low] %>%)</span>
+            </div>
+          </div>
+        </div>
+
+        <details class="pr-data-toggle">
+          <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_priority_distribution) %></summary>
+          <table class="dashboard-table">
+            <caption class="sr-only"><%= l(:label_caption_by_priority) %></caption>
+            <th scope="col"ead>
+              <tr>
+                <th scope="col"><%= l(:field_priority) %></th>
+                <th scope="col"><%= l(:label_count) %></th>
+                <th scope="col"><%= l(:label_percentage) %></th>
+              </tr>
+            </thead>
+            <tbody>
+            <tr>
+              <td><span class="pr-swatch" style="background-color: var(--pr-danger);"></span><%= l(:label_priority_urgent) %></td>
+              <td><%= @priority_distribution[:urgent] %></td>
+              <td><%= @priority_percentages[:urgent] %>%</td>
+            </tr>
+            <tr>
+              <td><span class="pr-swatch" style="background-color: var(--pr-warning);"></span><%= l(:label_priority_high) %></td>
+              <td><%= @priority_distribution[:high] %></td>
+              <td><%= @priority_percentages[:high] %>%</td>
+            </tr>
+            <tr>
+              <td><span class="pr-swatch" style="background-color: var(--pr-success);"></span><%= l(:label_priority_normal) %></td>
+              <td><%= @priority_distribution[:normal] %></td>
+              <td><%= @priority_percentages[:normal] %>%</td>
+            </tr>
+            <tr>
+              <td><span class="pr-swatch" style="background-color: var(--pr-info);"></span><%= l(:label_priority_low) %></td>
+              <td><%= @priority_distribution[:low] %></td>
+              <td><%= @priority_percentages[:low] %>%</td>
+            </tr>
+            </tbody>
+          </table>
+        </details>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Recent Activity Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_recent_requests) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @recent_requests.present? && @recent_requests.any? %>
+        <table class="dashboard-table">
+          <caption class="sr-only"><%= l(:label_caption_recent_requests) %></caption>
+          <th scope="col"ead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col"><%= l(:field_title) %></th>
+              <th scope="col"><%= l(:field_status) %></th>
+              <th scope="col"><%= l(:field_created_on) %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <% @recent_requests.each do |request| %>
+            <tr>
+              <td><%= link_to "##{request.id}", project_purchase_request_path(@project, request), class: 'pr-id-link' %></td>
+              <td><%= link_to truncate(request.title, length: 30), project_purchase_request_path(@project, request), class: 'pr-title-link' %></td>
+              <td>
+                <span class="status-badge" style="background-color: <%= request.status.display_color %>; color: <%= readable_text_color(request.status.display_color) %>">
+                  <%= request.status.name %>
+                </span>
+              </td>
+              <td><%= format_time(request.created_at) %></td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Top Requesters Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_top_requesters) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <% if @top_requesters.present? && @top_requesters.any? %>
+        <table class="dashboard-table">
+          <caption class="sr-only"><%= l(:label_caption_top_requesters) %></caption>
+          <th scope="col"ead>
+            <tr>
+              <th scope="col"><%= l(:field_user) %></th>
+              <th scope="col"><%= l(:label_requests) %></th>
+              <th scope="col"><%= l(:label_total_cost) %></th>
+            </tr>
+          </thead>
+          <tbody>
+          <%
+            requester_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+            requester_symbol = currency_symbol(requester_currency)
+          %>
+          <% @top_requesters.each do |user| %>
+            <tr>
+              <td><%= link_to(user.name.presence || user.login, user_path(user)) %></td>
+              <td><%= user.request_count %></td>
+              <td class="stat-currency"><%= requester_symbol %><%= number_with_precision(user.total_cost, precision: 2, delimiter: ',') %></td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="nodata"><%= l(:label_no_data) %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Response Time Card -->
+  <div class="dashboard-card">
+    <div class="dashboard-card-header">
+      <h4><%= l(:label_average_response_time) %></h4>
+    </div>
+    <div class="dashboard-card-body">
+      <div class="pr-stat__value num"><%= @avg_response_days %> <%= l(:label_days) %></div>
+      <div class="pr-stat__label"><%= l(:label_avg_processing_time) %></div>
+    </div>
+  </div>
+
+  </div>
+</section>
+
 
 <div class="pr-form-actions left-aligned">
   <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-secondary pr-button-icon' do %>
@@ -528,6 +625,22 @@
 
 <%= render 'reports/chart_colors' %>
 <script>
+// Chart copy and currency come from the server so charts stay localized and
+// respect the configured default currency instead of hardcoding "$".
+const PR_CHART_LABELS = {
+  requests: '<%= j(l(:label_requests)) %>',
+  total: '<%= j(l(:label_total_cost)) %>',
+  noData: '<%= j(l(:label_no_data)) %>',
+  currencySymbol: '<%= j(currency_symbol(Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD')) %>'
+};
+
+function formatChartMoney(amount) {
+  return PR_CHART_LABELS.currencySymbol + Number(amount).toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   // Generate Status Distribution Pie Chart
   <% if @status_distribution.present? && @status_distribution.any? %>
@@ -563,8 +676,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Generate Monthly Trends Bar Chart
   <% if @monthly_trends.present? && @monthly_trends.any? %>
   generateBarChart('monthly-trends-chart', [
-    <% @monthly_trends.each do |trend| %>
-      { label: '<%= j(trend[:month]) %>', value: <%= trend[:count] %>, amount: <%= trend[:amount] %> },
+    <% @monthly_trends.each_with_index do |trend, idx| %>
+      { label: '<%= j(trend[:month]) %>', value: <%= trend[:count] %>, amount: <%= trend[:amount] %><% if @compare_monthly_trends %>,
+        compare: <%= @compare_monthly_trends[idx][:count] %>,
+        compareLabel: '<%= j(@compare_monthly_trends[idx][:month]) %>'<% end %> },
     <% end %>
   ]);
   <% end %>
@@ -574,6 +689,10 @@ document.addEventListener('DOMContentLoaded', function() {
 function generatePieChart(containerId, data) {
   const container = document.getElementById(containerId);
   if (!container || !data.length) return;
+
+  // Match generateBarChart: clear first so a re-render replaces the chart
+  // instead of stacking a second SVG on top of the first.
+  container.replaceChildren();
 
   const size = 120;
   const radius = size / 2 - 10;
@@ -587,6 +706,14 @@ function generatePieChart(containerId, data) {
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
   if (total === 0) return;
+
+  // The chart is a single image for assistive tech: announce the whole
+  // breakdown rather than leaving the graphic silent. The adjacent legend and
+  // the "View data table" disclosure carry the same figures as real text.
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', container.dataset.chartLabel
+    ? `${container.dataset.chartLabel}: ${data.map(i => `${i.label} ${Math.round(i.value / total * 100)}%`).join(', ')}`
+    : data.map(i => `${i.label} ${Math.round(i.value / total * 100)}%`).join(', '));
 
   let currentAngle = 0;
 
@@ -619,10 +746,19 @@ function generatePieChart(containerId, data) {
       path.setAttribute('stroke-width', '1');
       path.setAttribute('class', 'pie-slice');
 
+      // Slice tooltip, matching the bar charts' hover affordance.
+      const sliceTitle = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+      sliceTitle.textContent = `${item.label}: ${item.value} (${Math.round(percentage * 100)}%)`;
+      path.appendChild(sliceTitle);
+
       path.addEventListener('mouseenter', function() {
         this.style.opacity = '0.8';
-        this.style.transform = 'scale(1.05)';
-        this.style.transformOrigin = `${centerX}px ${centerY}px`;
+        // Honor the OS reduced-motion preference: keep the opacity cue (which
+        // is not movement) and skip the scale for users who asked for less.
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          this.style.transform = 'scale(1.05)';
+          this.style.transformOrigin = `${centerX}px ${centerY}px`;
+        }
       });
 
       path.addEventListener('mouseleave', function() {
@@ -645,11 +781,53 @@ function generateBarChart(containerId, data) {
 
   container.replaceChildren();
 
-  const maxValue = Math.max(...data.map(item => item.value));
-  if (maxValue === 0) return;
+  const chartLabel = container.dataset.chartLabel ? container.dataset.chartLabel + ': ' : '';
+  const hasCompare = data.some(item => item.compare !== undefined);
+  // Both years share one scale, or the ghost bars would misrepresent size.
+  const maxValue = Math.max(...data.map(item => Math.max(item.value, item.compare || 0)));
+
+  // An all-zero series is a real, common result (a year with no requests), not
+  // an error — say so rather than leaving an empty bordered box. The label is
+  // set before this early return so the chart is never silently unlabelled.
+  if (maxValue === 0) {
+    container.setAttribute('role', 'img');
+    container.setAttribute('aria-label', chartLabel + PR_CHART_LABELS.noData);
+    container.classList.add('is-empty');
+    const empty = document.createElement('p');
+    empty.className = 'nodata';
+    empty.textContent = PR_CHART_LABELS.noData;
+    container.appendChild(empty);
+    return;
+  }
+
+  // Announce the series as one image rather than a stream of unlabelled
+  // numbers. The container scrolls, so it is also a focus stop — otherwise its
+  // later bars are keyboard-unreachable.
+  container.setAttribute('role', 'img');
+  container.setAttribute('aria-label', chartLabel +
+    data.map(i => {
+      const v = i.display !== undefined ? i.display : i.value;
+      return i.compare !== undefined
+        ? `${i.label} ${v}, ${i.compareLabel} ${i.compare}`
+        : `${i.label} ${v}`;
+    }).join(', '));
+  container.setAttribute('tabindex', '0');
 
   data.forEach((item) => {
     const barHeight = (item.value / maxValue) * 120;
+
+    // With a comparison year each month is a slot holding a muted ghost bar
+    // (previous year) behind the solid bar (selected year).
+    let slot = null;
+    if (hasCompare) {
+      slot = document.createElement('div');
+      slot.className = 'chart-bar-slot';
+      const ghost = document.createElement('div');
+      ghost.className = 'chart-bar-ghost';
+      ghost.style.height = ((item.compare || 0) / maxValue) * 120 + 'px';
+      ghost.title = `${item.compareLabel}: ${item.compare} ${PR_CHART_LABELS.requests}`;
+      slot.appendChild(ghost);
+    }
 
     const bar = document.createElement('div');
     bar.className = 'chart-bar';
@@ -657,7 +835,9 @@ function generateBarChart(containerId, data) {
 
     const valueLabel = document.createElement('div');
     valueLabel.className = 'chart-bar-value';
-    valueLabel.textContent = item.value;
+    // `value` drives bar height; `display` is what a human should read. Money
+    // charts pass a formatted string so bars never show a raw float.
+    valueLabel.textContent = item.display !== undefined ? item.display : item.value;
     bar.appendChild(valueLabel);
 
     const monthLabel = document.createElement('div');
@@ -665,12 +845,19 @@ function generateBarChart(containerId, data) {
     monthLabel.textContent = item.label;
     bar.appendChild(monthLabel);
 
-    bar.title = `${item.label}: ${item.value} requests`;
+    bar.title = item.tooltip !== undefined
+      ? item.tooltip
+      : `${item.label}: ${item.value} ${PR_CHART_LABELS.requests}`;
     if (item.amount !== undefined) {
-      bar.title += ` (Total: $${item.amount.toLocaleString()})`;
+      bar.title += ` (${PR_CHART_LABELS.total}: ${formatChartMoney(item.amount)})`;
     }
 
-    container.appendChild(bar);
+    if (slot) {
+      slot.appendChild(bar);
+      container.appendChild(slot);
+    } else {
+      container.appendChild(bar);
+    }
   });
 }
 
@@ -683,7 +870,10 @@ if (tpcChartContainer && tpcDistributionData.length > 0) {
   const tpcChartData = tpcDistributionData.map(item => ({
     label: item.tpc_code,
     value: item.total_cost,
-    count: item.count
+    count: item.count,
+    // Bars are sized by total_cost but must read as money, not a bare float.
+    display: formatChartMoney(item.total_cost),
+    tooltip: `${item.tpc_code}: ${formatChartMoney(item.total_cost)} (${item.count} ${PR_CHART_LABELS.requests})`
   }));
 
   generateBarChart('tpc-distribution-chart', tpcChartData);
