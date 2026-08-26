@@ -22,7 +22,16 @@
       <% grouping.each do |group_key, data| %>
         <div class="dashboard-card">
           <div class="dashboard-card-header">
-            <h3><%= title_for.call(group_key) %></h3>
+            <h3>
+              <%# A card is the answer to "which line is at risk"; linking it is
+                  the only way to then ask "on what". Callers that have no
+                  filtered view to point at return nil and the title stays text. %>
+              <% href = defined?(link_for) && link_for ? link_for.call(group_key, data) : nil %>
+              <% if href %><%= link_to title_for.call(group_key), href %><% else %><%= title_for.call(group_key) %><% end %>
+              <% if data[:utilization_percentage].to_f >= 100 %>
+                <span class="pr-badge pr-badge--danger"><%= l(:label_over_budget_by) %></span>
+              <% end %>
+            </h3>
           </div>
           <div class="dashboard-card-body">
             <div class="summary-stats" style="margin-bottom:12px;">
@@ -48,7 +57,12 @@
               <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
             </div>
             <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
-              <%= data[:utilization_percentage] %>% <%= l(:label_utilization) %>
+              <%# The bar is clamped so it cannot overflow its track, so the
+                  figure beside it carries the real magnitude — otherwise 101%
+                  and 300% render identically. %>
+              <%= content_tag :span, "#{data[:utilization_percentage]}%",
+                    class: (data[:utilization_percentage].to_f >= 100 ? 'stat-currency--over' : nil) %>
+              <%= l(:label_utilization) %>
             </div>
           </div>
         </div>

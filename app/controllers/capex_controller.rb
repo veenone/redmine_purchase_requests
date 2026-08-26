@@ -214,6 +214,9 @@ class CapexController < ApplicationController
       utilization_percentage = total_budget > 0 ? (total_utilized / total_budget * 100).round(2) : 0
       
       @tpc_grouping[tpc_code] = {
+        # Carried so the dashboard can link a card to its filtered view;
+        # the grouping is keyed by code string but the filter takes an id.
+        tpc_code_id: entries.first&.tpc_code_id,
         mixed_currency: mixed_group,
         entries_count: entries.count,
         total_budget: total_budget,
