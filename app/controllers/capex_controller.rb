@@ -128,6 +128,26 @@ class CapexController < ApplicationController
     
     @total_remaining = @total_budget - @total_utilized
     @utilization_percentage = @total_budget > 0 ? (@total_utilized / @total_budget * 100).round(2) : 0
+    # ------------------------------------------------------------------
+    # Can these aggregates be trusted?
+    #
+    # Two ways they cannot, and the page must say which:
+    #   1. Conversion is off and more than one currency is present — the
+    #      totals above added unlike units, so everything derived from them
+    #      (including the utilization %) is meaningless.
+    #   2. Conversion is on but a currency has no rate configured anywhere —
+    #      convert_capex_currency passed it through at 1.0, so the total is
+    #      part-converted while claiming to be converted.
+    # ------------------------------------------------------------------
+    entry_currencies = capex_for_year.map { |c| c.currency.presence }.compact.uniq
+    @currencies_mixed = entry_currencies.length > 1
+    @unconvertible_currencies =
+      if @use_exchange_rates
+        entry_currencies.select { |cur| helpers.capex_missing_rate?(cur, @default_currency, @current_year) }
+      else
+        []
+      end
+    @totals_unreliable = (@currencies_mixed && !@use_exchange_rates) || @unconvertible_currencies.any?
     
     # Quarterly breakdown using unordered relation
     if @use_exchange_rates

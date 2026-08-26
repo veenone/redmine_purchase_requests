@@ -1,4 +1,26 @@
 module CapexHelper
+  # True when no exchange rate is configured anywhere for this currency pair.
+  #
+  # convert_capex_currency falls back to a rate of 1.0 in that case, which
+  # passes the amount through untouched — so a figure can be labelled
+  # "converted" while being nothing of the sort. Callers use this to say so
+  # instead of publishing a number they cannot stand behind.
+  def capex_missing_rate?(from_currency, to_currency = nil, year = nil)
+    return false if from_currency.blank?
+
+    to_currency ||= Setting.plugin_redmine_purchase_requests['default_capex_currency'] ||
+                    Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    return false if from_currency == to_currency
+
+    year ||= Date.current.year
+    lookups = [
+      Setting.plugin_redmine_purchase_requests["capex_exchange_rates_#{year}"] || {},
+      Setting.plugin_redmine_purchase_requests['capex_exchange_rates'] || {},
+      Setting.plugin_redmine_purchase_requests['exchange_rates'] || {}
+    ]
+    lookups.none? { |rates| rates[from_currency].to_f > 0 }
+  end
+
   # Convert CAPEX amount from one currency to another using year-specific exchange rates
   def convert_capex_currency(amount, from_currency, to_currency = nil, year = nil)
     return amount if amount.nil? || from_currency.nil?

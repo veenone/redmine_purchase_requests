@@ -43,6 +43,16 @@
     capex_over_budget = @total_remaining.to_f < 0
     capex_severity = capex_over_budget ? 'high' : (@utilization_percentage.to_f >= 80 ? 'medium' : 'low')
   %>
+  <% if @totals_unreliable %>
+    <div class="pr-alert pr-alert--warning" role="status">
+      <strong><%= l(:label_totals_not_comparable) %>.</strong>
+      <% if @unconvertible_currencies.any? %>
+        <%= l(:text_missing_exchange_rate, currencies: @unconvertible_currencies.join(', ')) %>
+      <% else %>
+        <%= l(:text_mixed_currency_no_rates) %>
+      <% end %>
+    </div>
+  <% end %>
   <div class="summary-stats">
     <div class="stat-box pr-stat--accent">
       <div class="stat-number stat-currency">
@@ -60,8 +70,10 @@
       </div>
       <div class="stat-label">
         <%= l(:label_total_capex_budget) %>
-        <% if @use_exchange_rates %>
-          <span class="conversion-note">(Converted to <%= @default_currency %>)</span>
+        <% if @use_exchange_rates && @unconvertible_currencies.empty? %>
+          <span class="conversion-note">(<%= l(:label_converted_to) %> <%= @default_currency %>)</span>
+        <% elsif @unconvertible_currencies.any? %>
+          <span class="pr-badge pr-badge--warning"><%= l(:label_rate_not_set) %>: <%= @unconvertible_currencies.join(', ') %></span>
         <% end %>
       </div>
     </div>
@@ -81,7 +93,7 @@
         <% end %>
       </div>
       <div class="stat-label">
-        <%= l(:label_utilized) %> (<%= @utilization_percentage %>%)
+        <%= l(:label_utilized) %><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
         <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
           <div class="utilization-fill <%= capex_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
         </div>
@@ -108,7 +120,7 @@
         <% if capex_over_budget %>
           <%= l(:label_over_budget_by) %>
         <% else %>
-          <%= l(:label_remaining) %> (<%= (100 - @utilization_percentage.to_f).round(2) %>%)
+          <%= l(:label_remaining) %><% unless @totals_unreliable %> (<%= (100 - @utilization_percentage.to_f).round(2) %>%)<% end %>
         <% end %>
       </div>
     </div>
@@ -127,6 +139,11 @@
         <h3><%= l(:label_budget_utilization_overview) %></h3>
       </div>
       <div class="dashboard-card-body">
+        <% if @totals_unreliable %>
+          <%# A donut of unlike units would picture a meaningless sum. Point at
+              the per-currency breakdown instead of drawing it. %>
+          <p class="nodata"><%= l(:text_mixed_currency_no_rates) %></p>
+        <% else %>
         <div class="capex-donut-container">
           <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
             <div class="capex-donut-center">
@@ -172,6 +189,7 @@
             </table>
           </div>
         </div>
+        <% end %>
       </div>
     </div>
 
