@@ -40,7 +40,10 @@
     # One severity vocabulary for the whole page: under 80% healthy, 80-99%
     # approaching, 100%+ over. Drives the meter fill and the Remaining tile so
     # a line at 140% can never render as a full green bar.
-    capex_over_budget = @total_remaining.to_f < 0
+    # Severity is a conclusion, and a conclusion drawn from a sum of unlike
+    # units is a false alarm. When the banner has just said the totals are not
+    # comparable, no tile goes red and no meter is drawn from that number.
+    capex_over_budget = !@totals_unreliable && @total_remaining.to_f < 0
     capex_severity = capex_over_budget ? 'high' : (@utilization_percentage.to_f >= 80 ? 'medium' : 'low')
   %>
   <% if @totals_unreliable %>
@@ -65,7 +68,7 @@
           <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
-          Multi-Currency
+          <%= l(:label_multi_currency) %>
         <% end %>
       </div>
       <div class="stat-label">
@@ -89,14 +92,16 @@
           <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
           <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
         <% else %>
-          Multi-Currency
+          <%= l(:label_multi_currency) %>
         <% end %>
       </div>
       <div class="stat-label">
         <span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
-        <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
-          <div class="utilization-fill <%= capex_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
-        </div>
+        <% unless @totals_unreliable %>
+          <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
+            <div class="utilization-fill <%= capex_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
+          </div>
+        <% end %>
       </div>
     </div>
 
@@ -170,7 +175,7 @@
           <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
             <div class="capex-donut-center">
               <div style="font-weight:700;font-size:14px;"><%= @utilization_percentage %>%</div>
-              <div style="font-size:10px;color:var(--pr-ink-muted);"><%= l(:label_utilized) %></div>
+              <div style="font-size:10px;color:var(--pr-ink-muted);"><%= l(:label_utilization) %></div>
             </div>
           </div>
           <div style="flex:1;">
@@ -386,8 +391,11 @@
                 </span>
               </td>
               <td>
-                <span class="amount <%= capex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>">
-                  <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount, precision: 2, delimiter: ',') %>
+                <%# Same rule as the tile and the legend: the label carries the
+                    direction, the number carries the magnitude. %>
+                <span class="amount <%= capex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>"
+                      title="<%= capex.remaining_amount < 0 ? l(:label_over_budget_by) : l(:label_remaining) %>">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount.to_f.abs, precision: 2, delimiter: ',') %>
                 </span>
               </td>
               <td>
@@ -456,6 +464,7 @@
 var PR_CAPEX_LABELS = {
   utilized: '<%= j(l(:label_utilized)) %>',
   remaining: '<%= j(l(:label_remaining)) %>',
+  overBudgetBy: '<%= j(l(:label_over_budget_by)) %>',
   noData: '<%= j(l(:label_no_budget_data)) %>'
 };
 document.addEventListener('DOMContentLoaded', function() {
@@ -478,14 +487,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Function to generate CAPEX donut chart using SVG
-// Read design tokens at render time so the chart can never drift from the
-// stylesheet the way hardcoded hexes did (utilized was amber here and green
-// on the KPI tile). One source of truth: the CSS custom properties.
-function prToken(name, fallback) {
-  var v = getComputedStyle(document.documentElement).getPropertyValue(name);
-  return (v && v.trim()) || fallback;
-}
-
 function generateCapexDonutChart(containerId, data) {
   var container = document.getElementById(containerId);
   if (!container) return;
@@ -509,7 +510,10 @@ function generateCapexDonutChart(containerId, data) {
 
   prChartA11y(container, [
     { label: PR_CAPEX_LABELS.utilized, display: data.utilized.toLocaleString() },
-    { label: PR_CAPEX_LABELS.remaining, display: data.remaining.toLocaleString() }
+    // Sighted users read "Over budget by $5,000" under a red dot; the label
+    // must tell the same story rather than announcing "Remaining -5000".
+    { label: data.remaining < 0 ? PR_CAPEX_LABELS.overBudgetBy : PR_CAPEX_LABELS.remaining,
+      display: Math.abs(data.remaining).toLocaleString() }
   ], {});
 
   // `total` is the budget (utilized + remaining), so at or above 100% the

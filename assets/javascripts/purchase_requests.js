@@ -176,3 +176,17 @@ function prChartA11y(container, entries, opts) {
   }).join(', '));
   if (opts.scrollable) container.setAttribute('tabindex', '0');
 }
+
+
+/* ---------------------------------------------------------------------------
+   Design-token reader for charts
+   ---------------------------------------------------------------------------
+   CSS custom properties are NOT substituted inside SVG presentation
+   attributes — setAttribute('stroke', 'var(--pr-success)') yields an invalid
+   value and the shape silently draws nothing. Read the token here and pass a
+   real colour, so a chart can never drift from the stylesheet or vanish.
+   -------------------------------------------------------------------------*/
+function prToken(name, fallback) {
+  var v = getComputedStyle(document.documentElement).getPropertyValue(name);
+  return (v && v.trim()) || fallback;
+}
