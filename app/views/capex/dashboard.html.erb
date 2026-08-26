@@ -294,49 +294,7 @@
     </div>
   </div>
 
-  <!-- TPC Code Grouping -->
-  <% if @tpc_grouping && @tpc_grouping.any? %>
-    <div class="details-section">
-      <h4><%= l(:label_budget_by_tpc_code) %></h4>
-      <div class="dashboard-container">
-        <% @tpc_grouping.each do |tpc_code, data| %>
-          <div class="dashboard-card">
-            <div class="dashboard-card-header">
-              <h3><span class="tpc-number"><%= tpc_code %></span></h3>
-            </div>
-            <div class="dashboard-card-body">
-              <div class="summary-stats" style="margin-bottom:12px;">
-                <div class="stat-box pr-stat--accent">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
-                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
-                  </div>
-                  <div class="stat-label"><%= l(:label_total_budget) %></div>
-                </div>
-                <div class="stat-box pr-stat--success">
-                  <div class="stat-number stat-currency" style="font-size:16px;">
-                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
-                    <% if data[:mixed_currency] %><span class="pr-badge pr-badge--warning"><%= l(:label_multi_currency) %></span><% end %>
-                  </div>
-                  <div class="stat-label"><%= l(:label_utilized) %></div>
-                </div>
-                <div class="stat-box">
-                  <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
-                  <div class="stat-label"><%= l(:label_entries) %></div>
-                </div>
-              </div>
-              <div class="utilization-bar">
-                <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
-              </div>
-              <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
-                <%= data[:utilization_percentage] %>% <%= l(:label_utilization) %>
-              </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
+<%= render 'capex/grouping' %>
   <!-- Currency Breakdown (multi-currency only) -->
   <% if @currency_breakdown.keys.length > 1 %>
     <div class="details-section">
@@ -354,96 +312,7 @@
     </div>
   <% end %>
 
-  <!-- CAPEX Entries Details Table -->
-  <div class="details-section">
-    <h4><%= l(:label_capex_entries) %></h4>
-    <div class="autoscroll">
-      <table class="pr-table">
-        <caption class="sr-only"><%= l(:label_caption_entries) %></caption>
-        <thead>
-          <tr>
-            <th scope="col"><%= l(:label_tpc_code) %></th>
-            <th scope="col"><%= l(:field_description) %></th>
-            <th scope="col"><%= l(:label_total_budget) %></th>
-            <th scope="col"><%= l(:label_utilized) %></th>
-            <th scope="col"><%= l(:label_remaining) %></th>
-            <th scope="col"><%= l(:label_utilization) %></th>
-            <th scope="col"><%= l(:label_linked_prs) %></th>
-            <th scope="col" class="buttons"><%= l(:label_actions) %></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @capex_entries.each do |capex| %>
-            <tr class="<%= cycle('odd', 'even') %>">
-              <td>
-                <span class="tpc-number"><%= capex.tpc_code %></span>
-              </td>
-              <td><%= truncate(capex.description, length: 80) %></td>
-              <td>
-                <span class="capex-amount">
-                  <%= capex.currency_symbol %><%= number_with_precision(capex.total_amount, precision: 2, delimiter: ',') %>
-                </span>
-                <span class="currency-code"><%= capex.currency %></span>
-              </td>
-              <td>
-                <span class="amount utilized">
-                  <%= capex.currency_symbol %><%= number_with_precision(capex.utilized_amount, precision: 2, delimiter: ',') %>
-                </span>
-              </td>
-              <td>
-                <%# Same rule as the tile and the legend: the label carries the
-                    direction, the number carries the magnitude. %>
-                <span class="amount <%= capex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>"
-                      title="<%= capex.remaining_amount < 0 ? l(:label_over_budget_by) : l(:label_remaining) %>">
-                  <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount.to_f.abs, precision: 2, delimiter: ',') %>
-                </span>
-              </td>
-              <td>
-                <div class="utilization-bar" style="width:80px;height:15px;">
-                  <div class="utilization-fill <%= capex.utilization_percentage.to_f >= 100 ? 'high' : (capex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [capex.utilization_percentage.to_f, 100].min %>%"></div>
-                </div>
-                <span class="utilization-text"><%= capex.utilization_percentage %>%</span>
-              </td>
-              <td>
-                <% pr_count = capex.purchase_requests.size %>
-                <% if pr_count > 0 %>
-                  <%= link_to "#{pr_count} PR#{'s' if pr_count != 1}",
-                            project_capex_path(@project, capex),
-                            class: 'capex-link' %>
-                <% else %>
-                  <span class="no-prs">—</span>
-                <% end %>
-              </td>
-              <td class="buttons">
-                <div class="pr-table-actions">
-                  <%= link_to project_capex_path(@project, capex),
-                              class: 'pr-button pr-button-secondary pr-button-icon small',
-                              title: l(:label_view_capex) do %>
-                    <span class="icon icon-magnifier"><%= l(:button_view) %></span>
-                  <% end %>
-                  <% if User.current.allowed_to?(:manage_capex, @project) %>
-                    <%= link_to edit_project_capex_path(@project, capex),
-                                class: 'pr-button pr-button-secondary pr-button-icon small',
-                                title: l(:label_edit_capex) do %>
-                      <span class="icon icon-edit"><%= l(:button_edit) %></span>
-                    <% end %>
-                    <%= link_to project_capex_path(@project, capex),
-                                method: :delete,
-                                data: { confirm: l(:text_are_you_sure) },
-                                class: 'pr-button pr-button-danger pr-button-icon small',
-                                title: l(:label_delete_capex) do %>
-                      <span class="icon icon-del"><%= l(:button_delete) %></span>
-                    <% end %>
-                  <% end %>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
+<%= render 'capex/entries_table' %>
 <% else %>
   <div class="pr-empty">
     <div class="pr-empty__icon">📊</div>

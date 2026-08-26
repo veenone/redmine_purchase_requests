@@ -1,0 +1,89 @@
+  <!-- CAPEX Entries Details Table -->
+  <div class="details-section">
+    <h4><%= l(:label_capex_entries) %></h4>
+    <div class="autoscroll">
+      <table class="pr-table">
+        <caption class="sr-only"><%= l(:label_caption_entries) %></caption>
+        <thead>
+          <tr>
+            <th scope="col"><%= l(:label_tpc_code) %></th>
+            <th scope="col"><%= l(:field_description) %></th>
+            <th scope="col"><%= l(:label_total_budget) %></th>
+            <th scope="col"><%= l(:label_utilized) %></th>
+            <th scope="col"><%= l(:label_remaining) %></th>
+            <th scope="col"><%= l(:label_utilization) %></th>
+            <th scope="col"><%= l(:label_linked_prs) %></th>
+            <th scope="col" class="buttons"><%= l(:label_actions) %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @capex_entries.each do |capex| %>
+            <tr class="<%= cycle('odd', 'even') %>">
+              <td>
+                <span class="tpc-number"><%= capex.tpc_code %></span>
+              </td>
+              <td><%= truncate(capex.description, length: 80) %></td>
+              <td>
+                <span class="capex-amount">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.total_amount, precision: 2, delimiter: ',') %>
+                </span>
+                <span class="currency-code"><%= capex.currency %></span>
+              </td>
+              <td>
+                <span class="amount utilized">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.utilized_amount, precision: 2, delimiter: ',') %>
+                </span>
+              </td>
+              <td>
+                <%# Same rule as the tile and the legend: the label carries the
+                    direction, the number carries the magnitude. %>
+                <span class="amount <%= capex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>"
+                      title="<%= capex.remaining_amount < 0 ? l(:label_over_budget_by) : l(:label_remaining) %>">
+                  <%= capex.currency_symbol %><%= number_with_precision(capex.remaining_amount.to_f.abs, precision: 2, delimiter: ',') %>
+                </span>
+              </td>
+              <td>
+                <div class="utilization-bar" style="width:80px;height:15px;">
+                  <div class="utilization-fill <%= capex.utilization_percentage.to_f >= 100 ? 'high' : (capex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [capex.utilization_percentage.to_f, 100].min %>%"></div>
+                </div>
+                <span class="utilization-text"><%= capex.utilization_percentage %>%</span>
+              </td>
+              <td>
+                <% pr_count = capex.purchase_requests.size %>
+                <% if pr_count > 0 %>
+                  <%= link_to "#{pr_count} PR#{'s' if pr_count != 1}",
+                            project_capex_path(@project, capex),
+                            class: 'capex-link' %>
+                <% else %>
+                  <span class="no-prs">—</span>
+                <% end %>
+              </td>
+              <td class="buttons">
+                <div class="pr-table-actions">
+                  <%= link_to project_capex_path(@project, capex),
+                              class: 'pr-button pr-button-secondary pr-button-icon small',
+                              title: l(:label_view_capex) do %>
+                    <span class="icon icon-magnifier"><%= l(:button_view) %></span>
+                  <% end %>
+                  <% if User.current.allowed_to?(:manage_capex, @project) %>
+                    <%= link_to edit_project_capex_path(@project, capex),
+                                class: 'pr-button pr-button-secondary pr-button-icon small',
+                                title: l(:label_edit_capex) do %>
+                      <span class="icon icon-edit"><%= l(:button_edit) %></span>
+                    <% end %>
+                    <%= link_to project_capex_path(@project, capex),
+                                method: :delete,
+                                data: { confirm: l(:text_are_you_sure) },
+                                class: 'pr-button pr-button-danger pr-button-icon small',
+                                title: l(:label_delete_capex) do %>
+                      <span class="icon icon-del"><%= l(:button_delete) %></span>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
