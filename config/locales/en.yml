@@ -793,6 +793,7 @@ en:
   # is the answer; the rest is available but not in the way.
   label_show_all_groups: "Show all %{count}"
   label_groups_hidden: "%{count} not shown"
+  label_remove_category_filter: "Remove category filter"
   label_utilization: "Utilization"
   label_no_budget_defined: "No CAPEX/OPEX budget defined for"
   label_view_data_table: "View data table"

@@ -116,6 +116,20 @@ class OpexController < ApplicationController
     @selected_tpc_code_id = params[:tpc_code_id].presence
     @opex_entries = @opex_entries.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
 
+    # Category filter, so a card in the grouping grid has somewhere to point.
+    # CAPEX cards have linked to their filtered dashboard since that fix
+    # landed; OPEX passed no link_for and its cards were dead text — the
+    # partial's `defined?` guard made the omission silent, which is the exact
+    # drift the shared shell exists to prevent.
+    #
+    # Filtered by name because the grouping is keyed by name. belongs_to, so
+    # the join is one row per entry and cannot multiply any aggregate.
+    @selected_category = params[:category].presence
+    if @selected_category
+      @opex_entries = @opex_entries.joins(:opex_category)
+                                   .where(opex_categories: { name: @selected_category })
+    end
+
     # Initialize variables
     @total_budget = 0
     @total_utilized = 0

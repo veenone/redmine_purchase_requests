@@ -10,6 +10,7 @@
              dashboard_project_opex_index_path(@project,
                { year: @current_year,
                  tpc_code_id: @selected_tpc_code_id,
+                 category: @selected_category,
                  all_groups: params[:all_groups].presence }.compact.merge(extra))
            } %>
         <thead>

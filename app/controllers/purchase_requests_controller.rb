@@ -1,4 +1,9 @@
 class PurchaseRequestsController < ApplicationController
+  # The budget-health band sums the same CAPEX and OPEX lines the two budget
+  # dashboards do, so it takes their reliability rules from the same place
+  # rather than deciding "over budget" on its own.
+  include BudgetDashboard
+
   before_action :find_project, only: [:index, :new, :create, :dashboard]
   before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue]
   before_action :authorize, except: [:show]
@@ -186,6 +191,10 @@ class PurchaseRequestsController < ApplicationController
     @budget_remaining = budget[:remaining]
     @budget_utilization_pct = budget[:utilization_pct]
     @has_budget = budget[:has_budget]
+    @budget_totals_unreliable      = budget[:totals_unreliable]
+    @budget_unconvertible_currencies = budget[:unconvertible_currencies]
+    @budget_over                   = budget[:over_budget]
+    @budget_severity               = budget[:severity]
 
     # Optional comparison year. Off unless explicitly chosen — a silent default
     # is what made the old "All Years" control lie. Uses the same figures
@@ -563,9 +572,12 @@ class PurchaseRequestsController < ApplicationController
       opex_scope  = opex_scope.where(tpc_code_id: @selected_tpc_code_id)
     end
 
+    capex_records = capex_scope.to_a
+    opex_records  = opex_scope.to_a
+
     capex_budget = 0.0
     capex_utilized = 0.0
-    capex_scope.each do |c|
+    capex_records.each do |c|
       cur = c.currency.presence || target_currency
       capex_budget   += helpers.convert_currency(c.total_amount || 0, cur, target_currency)
       capex_utilized += helpers.convert_currency(c.utilized_amount || 0, cur, target_currency)
@@ -573,25 +585,41 @@ class PurchaseRequestsController < ApplicationController
 
     opex_budget = 0.0
     opex_utilized = 0.0
-    opex_scope.each do |o|
+    opex_records.each do |o|
       cur = o.currency.presence || target_currency
       opex_budget   += helpers.convert_currency(o.total_amount || 0, cur, target_currency)
       opex_utilized += helpers.convert_currency(o.utilized_amount || 0, cur, target_currency)
     end
 
-    total    = (capex_budget + opex_budget).round(2)
-    utilized = (capex_utilized + opex_utilized).round(2)
+    # The CAPEX/OPEX split above is this band's own — the two dashboards each
+    # show one side of it. The totals and every conclusion drawn from them come
+    # from BudgetDashboard, so this band cannot reach a verdict the dashboards
+    # would refuse to reach on the same rows. convert_currency falls back to a
+    # rate of 1.0 for an unconfigured pair, which is exactly the silent lie
+    # missing_rate? reports.
+    figures = budget_dashboard_figures(
+      capex_records + opex_records,
+      currency: target_currency,
+      convert: ->(amount, from) {
+        helpers.convert_currency(amount || 0, from.presence || target_currency, target_currency)
+      },
+      missing_rate: ->(cur) { helpers.missing_rate?(cur, target_currency) }
+    )
 
     {
       capex_budget: capex_budget.round(2),
       capex_utilized: capex_utilized.round(2),
       opex_budget: opex_budget.round(2),
       opex_utilized: opex_utilized.round(2),
-      total: total,
-      utilized: utilized,
-      remaining: (total - utilized).round(2),
-      utilization_pct: total > 0 ? (utilized / total * 100).round(1) : 0,
-      has_budget: total > 0
+      total: figures[:total_budget],
+      utilized: figures[:total_utilized],
+      remaining: figures[:total_remaining],
+      utilization_pct: figures[:utilization_percentage],
+      has_budget: figures[:total_budget] > 0,
+      totals_unreliable: figures[:totals_unreliable],
+      unconvertible_currencies: figures[:unconvertible_currencies],
+      over_budget: figures[:over_budget],
+      severity: figures[:severity]
     }
   end
 

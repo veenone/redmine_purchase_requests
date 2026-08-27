@@ -50,9 +50,20 @@
       <% budget_symbol = currency_symbol(@budget_currency) %>
       <% if @has_budget %>
         <%
-          over_budget = @budget_remaining < 0
-          severity = over_budget ? 'high' : (@budget_utilization_pct >= 80 ? 'medium' : 'low')
+          # Both come from BudgetDashboard now. This band used to decide
+          # `@budget_remaining < 0` on its own, with no notion of whether the
+          # total it was comparing was a sum of unlike units — so it drew the
+          # over-budget conclusion the CAPEX and OPEX dashboards refuse to draw
+          # on exactly the same rows, on the surface most people see first.
+          over_budget = @budget_over
+          severity = @budget_severity
         %>
+        <% if @budget_totals_unreliable %>
+          <div class="pr-alert pr-alert-warning" role="status">
+            <strong><%= l(:label_totals_not_comparable) %>.</strong>
+            <%= l(:text_missing_exchange_rate, currencies: @budget_unconvertible_currencies.join(', ')) %>
+          </div>
+        <% end %>
         <div class="pr-stats">
           <div class="pr-stat pr-stat--accent">
             <div class="pr-stat__value num"><%= budget_symbol %><%= number_with_precision(@budget_total, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
@@ -66,18 +77,26 @@
           </div>
           <div class="pr-stat pr-stat--<%= over_budget ? 'danger' : 'success' %>">
             <%# Under an "Over budget by" label the figure must be positive:
-                the label already carries the direction. %>
-            <div class="pr-stat__value num stat-currency--<%= over_budget ? 'over' : 'approved' %>"><%= budget_symbol %><%= number_with_precision(@budget_remaining.abs, precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
+                the label already carries the direction. But .abs is valid ONLY
+                when the label actually says it. over_budget is forced false
+                when totals are unreliable, so an unguarded .abs would print an
+                unconverted deficit as a positive "Remaining" — a sign
+                inversion worse than the false alarm the suppression prevents.
+                Same guard as the CAPEX/OPEX tile. %>
+            <div class="pr-stat__value num stat-currency--<%= over_budget ? 'over' : 'approved' %>"><%= budget_symbol %><%= number_with_precision((over_budget ? @budget_remaining.to_f.abs : @budget_remaining.to_f), precision: 2, delimiter: ',') %> <span class="currency-code"><%= @budget_currency %></span></div>
             <div class="pr-stat__label"><%= over_budget ? l(:label_over_budget_by, default: 'Over budget by') : l(:label_remaining, default: 'Remaining') %></div>
           </div>
           <div class="pr-stat pr-stat--violet">
-            <div class="pr-stat__value num"><%= @budget_utilization_pct %>%</div>
+            <%# A percentage of a sum of unlike units is not a percentage. %>
+            <div class="pr-stat__value num"><%= @budget_totals_unreliable ? '—' : "#{@budget_utilization_pct}%" %></div>
             <div class="pr-stat__label"><%= l(:label_utilization, default: 'Utilization') %></div>
           </div>
         </div>
-        <div class="utilization-bar pr-budget-band__meter" aria-hidden="true">
-          <div class="pr-meter__fill <%= severity %>" style="width: <%= [@budget_utilization_pct, 100].min %>%"></div>
-        </div>
+        <% unless @budget_totals_unreliable %>
+          <div class="utilization-bar pr-budget-band__meter" aria-hidden="true">
+            <div class="pr-meter__fill <%= severity %>" style="width: <%= [@budget_utilization_pct, 100].min %>%"></div>
+          </div>
+        <% end %>
         <% if @compare_year %>
           <p class="pr-budget-band__compare">
             <span class="pr-badge pr-badge--neutral"><%= l(:label_vs) %> <%= @compare_year %></span>

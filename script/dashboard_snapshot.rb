@@ -180,7 +180,31 @@ def fixtures
     # Column sort. Runs against the real data fixture so the ordering has
     # something to reorder; ascending remaining puts the worst line first.
     ['capex_sorted_remaining_asc', CapexController, proj,
-     { year: y_data.to_s, sort: 'remaining', direction: 'asc' }, nil]
+     { year: y_data.to_s, sort: 'remaining', direction: 'asc' }, nil],
+
+    # The Purchase Requests dashboard's budget-health band. It sums the same
+    # CAPEX and OPEX rows as the two dashboards above, so it is covered here
+    # rather than left to be the one budget surface with no fixture.
+    ['pr_dashboard', PurchaseRequestsController, proj, { year: y_data.to_s }, nil],
+
+    # A deficit whose total is unreliable. This is the combination that hid a
+    # sign inversion on the CAPEX tile, and the band carried the same
+    # unguarded .abs — with no reliability model at all, so it also drew the
+    # over-budget verdict the other two dashboards refuse to draw here.
+    ['pr_dashboard_unreliable_deficit', PurchaseRequestsController, proj, sy, -> (p) {
+      c = seed_capex(p, { currency: 'JPY', total_amount: 1000 })
+      seed_request(p, c, 1500, 'JPY') }],
+
+    # OPEX category drill-down: the destination its group cards now link to.
+    # The category name has to match whatever seed_opex actually attaches —
+    # OpexCategory.first if the install already has one, only otherwise
+    # 'Fixture'. Hardcoding the latter filtered every row out and the fixture
+    # quietly recorded an empty state as its expected result.
+    ['opex_category_filtered', OpexController, proj,
+     sy.merge(category: (OpexCategory.first&.name || 'Fixture')), -> (p) {
+       seed_opex(p, { opex_code: 'FIX-1' })
+       seed_opex(p, { opex_code: 'FIX-2', total_amount: 500,
+                      q1_amount: 125, q2_amount: 125, q3_amount: 125, q4_amount: 125 }) }]
   ]
 end
 
