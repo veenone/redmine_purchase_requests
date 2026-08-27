@@ -22,7 +22,6 @@ RedmineApp::Application.routes.draw do
     resources :capex, path: 'capex', as: 'capex' do
       collection do
         get 'dashboard'
-        get 'dashboard_data'
         get 'export_csv'
         get 'export_xlsx'
         get 'export_pdf'
@@ -36,7 +35,6 @@ RedmineApp::Application.routes.draw do
     resources :opex, path: 'opex', as: 'opex' do
       collection do
         get 'dashboard'
-        get 'dashboard_data'
         get 'export_csv'
         get 'export_xlsx'
         get 'export_pdf'

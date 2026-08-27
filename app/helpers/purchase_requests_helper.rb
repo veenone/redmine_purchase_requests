@@ -117,6 +117,23 @@ module PurchaseRequestsHelper
   end
 
   # Convert an amount from one currency to another using exchange rates
+  # True when no exchange rate is configured for this currency pair.
+  #
+  # convert_currency below falls back to a rate of 1.0 in that case, which
+  # passes the amount through untouched — so a figure can be labelled
+  # "converted" while being nothing of the sort. Callers use this to say so
+  # instead of publishing a number they cannot stand behind. Mirrors
+  # capex_missing_rate?, which exists for the same reason on the CAPEX rates.
+  def missing_rate?(from_currency, to_currency = nil)
+    return false if from_currency.blank?
+
+    to_currency ||= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
+    return false if from_currency == to_currency
+
+    rates = Setting.plugin_redmine_purchase_requests['exchange_rates'] || {}
+    rates[from_currency].to_f <= 0
+  end
+
   def convert_currency(amount, from_currency, to_currency = nil)
     return amount if amount.nil? || from_currency.nil?
 

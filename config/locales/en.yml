@@ -9,13 +9,11 @@ en:
   label_enable_notifications: Enable Notifications
   label_default_assigned_to: Default Assigned To
   label_manage_statuses: Manage Statuses
-  label_general: "General"
   label_new_status: "New Status"
   label_status_name: "Status Name"
   label_status_position: "Position"
   label_status_is_closed: "Is Closed"
   label_status_color: "Color"
-  label_new_purchase_request: "New Purchase Request"
   label_no_data: "No purchase requests have been created yet."
   label_no_tpc_codes_available: "No TPC codes available"
   label_no_departments: "No departments have been created yet."
@@ -38,10 +36,7 @@ en:
   label_priority_high: "High"
   label_priority_urgent: "Urgent"
   button_create_request: "Create Request"
-  button_cancel: "Cancel"
-  button_back: "Back to List"
   button_show: "View"
-  button_save: "Save Changes"
   button_edit: "Edit"
   button_delete: "Delete"
   text_purchase_title_info: "Brief description of the item you want to purchase"
@@ -71,7 +66,6 @@ en:
   text_optional: "(optional)"
   invalid_url: "is not a valid URL. It should start with http:// or https://"
   label_edit_purchase_request: "Edit Purchase Request"
-  label_last_updated: "Last updated"
   label_general: "General"
   label_details: "Details"
   text_status_info: "The current status of the purchase request"
@@ -85,7 +79,6 @@ en:
   text_attachment_size_limit: "Maximum file size: 5MB per attachment"
   text_attachment_types_allowed: "Allowed file types: PDF, DOC, XLS, JPG, PNG"
   text_attachment_naming: "Use descriptive filenames for easier identification"
-  text_are_you_sure: "Are you sure?"
   text_edit_purchase_request_subtitle: "Edit the details of your purchase request below. Make sure to review all fields before saving."
   label_editing_request: "Editing Purchase Request" 
   text_edit_purchase_request_guidelines: "Please review the following guidelines before submitting your changes:"
@@ -93,15 +86,8 @@ en:
   # New Vendor Settings Translations
   label_vendor_configuration: "Vendor Configuration"
   text_vendor_settings_description: "Configure vendor management options for your purchase requests"
-  label_vendor_management: "Vendor Management"
-  button_migrate_vendors: "Migrate Vendors from Settings"
 
   # Vendor Settings Translations
-  label_allow_custom_vendors: "Allow Custom Vendors"
-  text_allow_custom_vendors_info: "Enable adding new vendors that are not pre-configured in the system"
-  label_global_vendor_settings: "Global Vendor Settings"
-  text_vendor_database_info: "Manage and configure your vendor database for purchase requests"
-  text_vendor_management_moved_to_project: "Vendor management has been moved to the project-level settings. You can now manage vendors per project."
 
   # General Settings Translations
   label_general_settings: "General Settings"
@@ -162,8 +148,6 @@ en:
   label_view_all_requests: "View All Requests"
   
   # CAPEX Dashboard Specific
-  label_capex_dashboard: "CAPEX Dashboard"
-  label_capex_settings: "CAPEX Settings"
   label_capex_use_exchange_rates: "Use Exchange Rates for CAPEX"
   label_capex_exchange_rates: "CAPEX Exchange Rates"
   text_capex_use_exchange_rates_info: "Convert all CAPEX amounts to default currency using exchange rates"
@@ -174,11 +158,9 @@ en:
   # CAPEX Management
   label_capex: "CAPEX"
   label_capex_entries: "CAPEX Entries"
-  label_capex_entry: "CAPEX Entry"
   label_capex_dashboard: "CAPEX Dashboard"
   label_capex_settings: "CAPEX Settings"
   label_new_capex: "New CAPEX Entry"
-  label_edit_capex: "Edit CAPEX Entry"
   label_show_capex: "View CAPEX Entry"
   label_capex_management: "CAPEX Management"
   label_manage_capex: "Manage CAPEX"
@@ -327,11 +309,8 @@ en:
   # OPEX Management
   label_opex: "OPEX"
   label_opex_entries: "OPEX Entries"
-  label_opex_entry: "OPEX Entry"
-  label_opex_dashboard: "OPEX Dashboard"
   label_opex_settings: "OPEX Settings"
   label_new_opex: "New OPEX Entry"
-  label_edit_opex: "Edit OPEX Entry"
   label_show_opex: "View OPEX Entry"
   label_opex_management: "OPEX Management"
   label_manage_opex: "Manage OPEX"
@@ -393,7 +372,6 @@ en:
   text_opex_description_info: "Brief description of the operational expenditure"
   text_opex_total_amount_info: "Total budget amount for this OPEX entry"
   text_opex_quarterly_info: "Quarterly distribution of the budget (must sum to total amount)"
-  text_opex_category_info: "Select the OPEX category this purchase request belongs to"
   text_opex_cost_center_info: "Cost center or department responsible for this expense"
   text_opex_form_validation: "Please ensure quarterly amounts sum to the total amount"
   text_opex_dashboard_info: "Overview of OPEX entries, utilization, and budget tracking"
@@ -424,23 +402,13 @@ en:
   label_basic_information: "Basic Information"
   label_product_details: "Product Details"
   label_attachments_and_notes: "Attachments & Notes"
-  label_before_you_begin: "Before You Begin"
   label_basic_info: "Basic Info"
-  label_attachments_review: "Attachments & Review"
   text_new_purchase_request_subtitle: "Please provide detailed information about your purchase request"
-  text_purchase_request_guidelines: "Please review the following guidelines before submitting your request:"
-  text_check_budget_approval: "Ensure budget approval is obtained for purchases over threshold"
-  text_check_vendor_requirements: "Verify vendor compliance with company requirements"
-  text_prepare_specifications: "Prepare detailed specifications and quotes if available"
   
   # Field Labels and Validation Messages
-  field_contact_person: "Contact Person"
   field_is_active: "Active"
   field_website: "Website"
-  field_address: "Address"
   field_country: "Country"
-  field_phone: "Phone"
-  field_email: "Email"
   
   # Enhanced Validation Messages
   error_title_too_short: "Title is too short (minimum 5 characters)"
@@ -492,17 +460,14 @@ en:
   text_opex_category_info: "Select the OPEX category this purchase request belongs to"
 
   field_vendor_name: "Vendor Name"
-  field_vendor_id: "Vendor ID"
   label_vendor_new: "New Vendor"
   label_vendor_search: "Search Vendor"
-  label_vendor_management: "Vendor Management"
   text_global_vendor_management_info: "Global Vendor Management"
   text_vendor_management_info: "Manage vendors globally across all projects. Add, edit, or remove vendors as needed."
   
   # OPEX Dashboard Labels
   label_total_opex_budget: "Total OPEX Budget"
   label_opex_by_year: "OPEX by Year"
-  label_opex_by_currency: "OPEX by Currency"
   label_opex_utilization_trend: "Utilization Trend"
   label_top_opex_entries: "Top OPEX Entries"
   label_recent_opex_activity: "Recent OPEX Activity"
@@ -846,6 +811,14 @@ en:
   label_committed_note: "Requests linked to a budget line, any status, converted at current rates"
   label_remaining: "Remaining"
   label_over_budget_by: "Over budget by"
+  # A zero budget has no ratio to report. utilization_percentage returns 0
+  # there because it must return a number; this is what gets shown instead.
+  label_no_budget_set: "No budget set"
+  # Card-grid cap. The grid is sorted worst-first, so the first screenful
+  # is the answer; the rest is available but not in the way.
+  label_show_all_groups: "Show all %{count}"
+  label_groups_hidden: "%{count} not shown"
+  label_remove_category_filter: "Remove category filter"
   label_utilization: "Utilization"
   label_no_budget_defined: "No CAPEX/OPEX budget defined for"
   label_view_data_table: "View data table"
@@ -884,6 +857,7 @@ en:
   label_edit_capex: "Edit CAPEX"
   label_delete_capex: "Delete CAPEX"
   label_caption_budget_utilization: "Budget utilization summary"
+  label_caption_chart_legend: "Chart legend: which colour means what"
   label_caption_quarterly: "Quarterly budget distribution"
   label_caption_budget_by_currency: "Budget by currency"
   label_caption_entries: "Budget entries detail"

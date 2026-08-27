@@ -32,6 +32,11 @@
                             dashboards (TPC) keep the option.
     compare_mode          - true to offer a comparison-year select
     compare_year          - currently selected comparison year (or nil)
+    selected_category     - active OPEX category filter (or nil). Gets a
+                            removable chip and a hidden field, but no select:
+                            it is set by clicking a card in the grouping grid,
+                            and the chip is the way back out. Without the
+                            hidden field, pressing Apply would silently drop it.
 %>
 <%
   qp = request.query_parameters
@@ -45,6 +50,7 @@
   compare_year          = local_assigns[:compare_year]
   show_year             = year_mode != :none
   selected_tpc_code_ids = Array(local_assigns[:selected_tpc_code_ids]).map(&:to_s)
+  selected_category     = local_assigns[:selected_category]
 
   strip = ->(key) {
     remaining = qp.except(key.to_s)
@@ -60,11 +66,12 @@
   }
 
   # A defaulted year is not a filter the user can remove, so it gets no chip.
-  year_active    = show_year && year_mode == :list && selected_year.present? && !year_defaulted
-  tpc_active     = selected_tpc_code_ids.any?
-  compare_active = show_year && compare_mode && compare_year.present?
-  selected_tpcs  = tpc_active ? available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } : []
-  any_active     = year_active || tpc_active || compare_active
+  year_active     = show_year && year_mode == :list && selected_year.present? && !year_defaulted
+  tpc_active      = selected_tpc_code_ids.any?
+  compare_active  = show_year && compare_mode && compare_year.present?
+  category_active = selected_category.present?
+  selected_tpcs   = tpc_active ? available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } : []
+  any_active      = year_active || tpc_active || compare_active || category_active
 %>
 <%= form_tag request.path, method: :get, class: 'pr-filters-form' do %>
   <fieldset class="pr-filters">
@@ -97,6 +104,10 @@
                  available_tpc_codes: available_tpc_codes,
                  selected_tpc_code_ids: selected_tpc_code_ids %>
 
+      <%# Carried through Apply. The category has no select of its own, so
+          without this it would be dropped by any other filter change. %>
+      <% if category_active %><%= hidden_field_tag 'category', selected_category, id: nil %><% end %>
+
       <%= submit_tag l(:button_apply), class: 'pr-button pr-button-primary', name: nil %>
       <% if any_active %>
         <%= link_to l(:button_clear), request.path, class: 'pr-button pr-button-secondary' %>
@@ -117,6 +128,9 @@
         <% if tpc_active && selected_tpcs.size < selected_tpc_code_ids.size %>
           <%# ids that are filtered but not in available_tpc_codes (inactive or out of project scope) %>
           <span class="pr-badge pr-badge--neutral" title="<%= l(:text_tpc_filter_unavailable, default: 'Some selected TPC codes are not in the current list') %>"><%= l(:label_tpc) %>: +<%= selected_tpc_code_ids.size - selected_tpcs.size %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: l(:label_remove_tpc_filter) %></span>
+        <% end %>
+        <% if category_active %>
+          <span class="pr-badge pr-badge--accent"><%= l(:field_opex_category) %>: <%= selected_category %><%= link_to '×', strip.call('category'), class: 'pr-chip-remove', title: l(:label_remove_category_filter) %></span>
         <% end %>
       </div>
     <% end %>

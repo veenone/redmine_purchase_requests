@@ -552,6 +552,43 @@
   white-space: nowrap;
 }
 
+/* Sortable column headers. The header is already uppercase micro-type, so the
+   sorted column is marked by ink weight and a caret rather than by a colour
+   the rest of the row cannot echo. */
+#content table.pr-table thead th a.pr-sort {
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+#content table.pr-table thead th a.pr-sort:hover {
+  color: var(--pr-accent);
+  text-decoration: underline;
+}
+
+#content table.pr-table thead th a.pr-sort--active {
+  color: var(--pr-ink);
+}
+
+#content .pr-sort__caret {
+  font-size: var(--pr-text-2xs);
+  line-height: 1;
+}
+
+/* "Show all N" under a capped card grid. Quiet by construction: it is a way
+   out of the cap, not a call to action. */
+#content .pr-grouping-more {
+  margin: 10px 0 0;
+  font-size: var(--pr-text-base);
+}
+
+#content .pr-grouping-more__note {
+  color: var(--pr-ink-muted);
+  margin-left: 6px;
+}
+
 #content table.pr-table tbody td {
   padding: var(--pr-space-4) var(--pr-space-5);
   border-bottom: 1px solid var(--pr-border);
@@ -809,6 +846,10 @@
 #content .utilization-bar { height: 16px; }
 #content .workflow-progress-bar { height: 10px; }
 #content .mini-progress-bar { height: 16px; min-width: 60px; }
+/* Compact variant used under a stat-label's percentage text (shared
+   CAPEX/OPEX dashboard header tiles) — the default 16px reads as an
+   oversized bar in that spot. */
+#content .utilization-bar.utilization-bar--inline { height: 4px; margin-top: 6px; }
 
 #content .pr-meter__fill,
 #content .capex-progress-bar,
@@ -1655,6 +1696,11 @@
 #content .amount.over-budget { color: var(--pr-danger-ink); }
 #content .capex-currency,
 #content .capex-amount { color: var(--pr-accent-ink); font-weight: 700; }
+/* Completes the pair .capex-link/.opex-link already establishes: each
+   budget kind carries its own ink. OPEX previously borrowed the CAPEX
+   classes wholesale, so its figures rendered in CAPEX's accent. */
+#content .opex-currency,
+#content .opex-amount { color: var(--pr-success-ink); font-weight: 700; }
 #content .capex-link,
 #content .budget-link.capex-link,
 #content .pr-link { color: var(--pr-accent); text-decoration: none; font-weight: 600; }

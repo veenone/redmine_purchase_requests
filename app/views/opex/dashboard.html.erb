@@ -31,446 +31,67 @@
       selected_year: @current_year,
       available_years: (2020..2030).to_a,
       available_tpc_codes: @available_tpc_codes,
-      selected_tpc_code_ids: selected_tpc_code_ids %>
+      selected_tpc_code_ids: selected_tpc_code_ids,
+      selected_category: @selected_category %>
 
+<%= render 'shared/budget_dashboard',
+      grouping_partial: 'opex/grouping',
+      entries_partial:  'opex/entries_table',
+      entries: @opex_entries,
+      labels: {
+        total_budget: l(:label_total_opex_budget),
+        by_currency:  l(:label_opex_by_currency),
+        entries:      l(:label_opex_entries)
+      },
+      empty_state: {
+        title:        l(:label_no_opex_data_for),
+        text:         l(:text_no_opex_entries_for_year),
+        action_label: l(:label_create_first_opex),
+        action_path:  new_project_opex_path(@project),
+        permission:   :manage_opex
+      },
+      currency_symbol: opex_currency_symbol(@default_currency),
+      currency_symbol_for: ->(cur) { Opex.new(currency: cur).currency_symbol } %>
+
+<%# Redmine's own other-formats block rather than a button in .contextual:
+    every list in this application offers CSV in exactly this place, and a
+    dashboard that replaces a spreadsheet has to let the numbers leave it. %>
 <% if @opex_entries.any? %>
-  <!-- Summary stat tiles -->
-  <div class="summary-stats">
-    <div class="stat-box pr-stat--accent">
-      <div class="stat-number stat-currency">
-        <% if @use_exchange_rates %>
-          <%= opex_currency_symbol(@default_currency) %>
-          <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
-          <span class="currency-code"><%= @default_currency %></span>
-        <% elsif @currency_breakdown.keys.length == 1 %>
-          <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-          <%= number_with_precision(@total_budget, precision: 2, delimiter: ',') %>
-          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
-        <% else %>
-          <%= l(:label_multi_currency) %>
-        <% end %>
-      </div>
-      <div class="stat-label">
-        <%= l(:label_total_opex_budget) %>
-        <% if @use_exchange_rates %>
-          <span style="display:block; font-size: var(--pr-text-2xs); color:var(--pr-ink-faint); font-style:italic;">(<%= l(:label_converted_to) %> <%= @default_currency %>)</span>
-        <% end %>
-      </div>
-    </div>
-
-    <div class="stat-box pr-stat--success">
-      <div class="stat-number stat-currency">
-        <% if @use_exchange_rates %>
-          <%= opex_currency_symbol(@default_currency) %>
-          <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-          <span class="currency-code"><%= @default_currency %></span>
-        <% elsif @currency_breakdown.keys.length == 1 %>
-          <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-          <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
-        <% else %>
-          <%= l(:label_multi_currency) %>
-        <% end %>
-      </div>
-      <div class="stat-label">Total Utilized (<%= @utilization_percentage %>%)</div>
-      <div class="utilization-bar" style="margin-top:8px;">
-        <div class="utilization-fill <%= @utilization_percentage.to_f >= 100 ? 'high' : (@utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
-      </div>
-    </div>
-
-    <div class="stat-box pr-stat--warning">
-      <div class="stat-number stat-currency">
-        <% if @use_exchange_rates %>
-          <%= opex_currency_symbol(@default_currency) %>
-          <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-          <span class="currency-code"><%= @default_currency %></span>
-        <% elsif @currency_breakdown.keys.length == 1 %>
-          <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-          <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-          <span class="currency-code"><%= @currency_breakdown.keys.first %></span>
-        <% else %>
-          <%= l(:label_multi_currency) %>
-        <% end %>
-      </div>
-      <div class="stat-label">Total Remaining (<%= (100 - @utilization_percentage).round(2) %>%)</div>
-    </div>
-
-    <div class="stat-box pr-stat--accent">
-      <div class="stat-number"><%= @opex_entries.count %></div>
-      <div class="stat-label"><%= l(:label_opex_entries) %></div>
-    </div>
-  </div>
-
-  <!-- Dashboard cards -->
-  <div class="dashboard-container">
-    <!-- Budget Utilization Overview -->
-    <div class="dashboard-card">
-      <div class="dashboard-card-header">
-        <h3><%= l(:label_budget_utilization_overview) %></h3>
-      </div>
-      <div class="dashboard-card-body">
-        <div class="capex-donut-container">
-          <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
-            <div class="capex-donut-center">
-              <div style="font-weight:bold; font-size: var(--pr-text-md);"><%= @utilization_percentage %>%</div>
-              <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink-muted);"><%= l(:label_utilized) %></div>
-            </div>
-          </div>
-          <div style="flex:1;">
-            <table class="dashboard-table">
-              <caption class="sr-only"><%= l(:label_caption_budget_utilization) %></caption>
-              <tr>
-                <td>
-                  <span class="status-indicator status-utilized"></span><%= l(:label_utilized) %>
-                </td>
-                <td class="stat-currency">
-                  <% if @use_exchange_rates %>
-                    <%= opex_currency_symbol(@default_currency) %>
-                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-                    (<%= @utilization_percentage %>%)
-                  <% elsif @currency_breakdown.keys.length == 1 %>
-                    <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                    <%= number_with_precision(@total_utilized, precision: 2, delimiter: ',') %>
-                    (<%= @utilization_percentage %>%)
-                  <% else %>
-                    Multi-Currency (<%= @utilization_percentage %>%)
-                  <% end %>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <span class="status-indicator status-remaining"></span><%= l(:label_remaining) %>
-                </td>
-                <td class="stat-currency">
-                  <% if @use_exchange_rates %>
-                    <%= opex_currency_symbol(@default_currency) %>
-                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-                    (<%= (100 - @utilization_percentage).round(2) %>%)
-                  <% elsif @currency_breakdown.keys.length == 1 %>
-                    <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                    <%= number_with_precision(@total_remaining, precision: 2, delimiter: ',') %>
-                    (<%= (100 - @utilization_percentage).round(2) %>%)
-                  <% else %>
-                    Multi-Currency (<%= (100 - @utilization_percentage).round(2) %>%)
-                  <% end %>
-                </td>
-              </tr>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Quarterly Distribution -->
-    <div class="dashboard-card">
-      <div class="dashboard-card-header">
-        <h3><%= l(:label_quarterly_distribution) %></h3>
-      </div>
-      <div class="dashboard-card-body">
-        <div class="capex-bar-chart" id="quarterly-bar-chart" data-chart-label="<%= l(:label_quarterly_distribution) %>">
-          <!-- Bars generated by script -->
-        </div>
-
-        <details class="pr-data-toggle">
-          <summary><%= l(:label_view_data_table) %> — <%= l(:label_quarterly_distribution) %></summary>
-          <table class="dashboard-table">
-            <caption class="sr-only"><%= l(:label_caption_quarterly) %></caption>
-            <tr>
-              <th scope="col"><%= l(:label_quarter) %></th>
-              <th scope="col"><%= l(:label_total_budget) %></th>
-            </tr>
-            <% [:q1, :q2, :q3, :q4].each_with_index do |q, i| %>
-              <tr>
-                <td>Q<%= i + 1 %></td>
-                <td class="stat-currency">
-                  <% if @use_exchange_rates %>
-                    <%= opex_currency_symbol(@default_currency) %>
-                    <%= number_with_precision(@quarterly_data[q], precision: 2, delimiter: ',') %>
-                  <% elsif @currency_breakdown.keys.length == 1 %>
-                    <%= Opex.new(currency: @currency_breakdown.keys.first).currency_symbol %>
-                    <%= number_with_precision(@quarterly_data[q], precision: 2, delimiter: ',') %>
-                  <% else %>
-                    <%= number_with_precision(@quarterly_data[q], precision: 2, delimiter: ',') %>
-                  <% end %>
-                </td>
-              </tr>
-            <% end %>
-          </table>
-        </details>
-      </div>
-    </div>
-  </div>
-
-  <!-- Category Grouping -->
-  <% if @category_grouping && @category_grouping.any? %>
-    <div class="details-section" style="margin-top:30px;">
-      <h4><%= l(:label_budget_by_category) %></h4>
-      <div class="dashboard-container">
-        <% @category_grouping.each do |category_name, data| %>
-          <div class="dashboard-card">
-            <div class="dashboard-card-header">
-              <h3><%= category_name %></h3>
-            </div>
-            <div class="dashboard-card-body">
-              <div class="summary-stats" style="margin-bottom:12px;">
-                <div class="stat-box pr-stat--accent pr-fill">
-                  <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
-                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
-                  </div>
-                  <div class="stat-label"><%= l(:label_total_budget) %></div>
-                </div>
-                <div class="stat-box pr-stat--warning pr-fill">
-                  <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
-                    <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
-                  </div>
-                  <div class="stat-label"><span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span></div>
-                </div>
-                <div class="stat-box pr-stat--accent pr-fill">
-                  <div class="stat-number" style="font-size: var(--pr-text-lg);"><%= data[:entries_count] %></div>
-                  <div class="stat-label"><%= l(:label_entries) %></div>
-                </div>
-              </div>
-              <div class="utilization-bar">
-                <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
-              </div>
-              <div style="text-align:center; margin-top:6px; font-size: var(--pr-text-base); color:var(--pr-ink-muted);">
-                <%= data[:utilization_percentage] %>% Utilized
-              </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <!-- Currency Breakdown (multi-currency) -->
-  <% if @currency_breakdown.keys.length > 1 %>
-    <div class="details-section" style="margin-top:30px;">
-      <h4><%= l(:label_opex_by_currency) %></h4>
-      <div class="summary-stats" style="flex-wrap:wrap; gap:12px;">
-        <% @currency_breakdown.each do |currency, amount| %>
-          <div class="stat-box pr-stat--accent" style="min-width:180px;">
-            <div class="stat-number stat-currency">
-              <%= Opex.new(currency: currency).currency_symbol %><%= number_with_precision(amount, precision: 2, delimiter: ',') %>
-            </div>
-            <div class="stat-label"><span class="currency-code"><%= currency %></span></div>
-          </div>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <!-- OPEX Entries Details Table -->
-  <div class="details-section" style="margin-top:30px;">
-    <h4><%= l(:label_opex_entries) %></h4>
-    <div class="autoscroll">
-      <table class="pr-table">
-        <caption class="sr-only"><%= l(:label_caption_entries) %></caption>
-        <thead>
-          <tr>
-            <th scope="col"><%= l(:label_opex_code) %></th>
-            <th scope="col"><%= l(:label_category) %></th>
-            <th scope="col"><%= l(:field_description) %></th>
-            <th scope="col"><%= l(:label_total_budget) %></th>
-            <th scope="col"><%= l(:label_utilized) %></th>
-            <th scope="col"><%= l(:label_remaining) %></th>
-            <th scope="col"><%= l(:label_utilization) %></th>
-            <th scope="col"><%= l(:label_linked_prs) %></th>
-            <th scope="col" class="buttons"><%= l(:label_actions) %></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @opex_entries.each do |opex| %>
-            <tr class="<%= cycle('odd', 'even') %>">
-              <td class="tpc-number">
-                <strong><%= opex.opex_code %></strong>
-              </td>
-              <td>
-                <span class="pr-badge pr-badge--info"><%= opex.opex_category&.name %></span>
-              </td>
-              <td>
-                <%= truncate(opex.description, length: 80) %>
-              </td>
-              <td class="stat-currency">
-                <%= opex.currency_symbol %><%= number_with_precision(opex.total_amount, precision: 2, delimiter: ',') %>
-                <span class="currency-code"><%= opex.currency %></span>
-              </td>
-              <td class="stat-currency">
-                <%= opex.currency_symbol %><%= number_with_precision(opex.utilized_amount, precision: 2, delimiter: ',') %>
-              </td>
-              <td>
-                <span class="<%= opex.remaining_amount < 0 ? 'over-budget' : 'remaining-budget' %>">
-                  <%= opex.currency_symbol %><%= number_with_precision(opex.remaining_amount, precision: 2, delimiter: ',') %>
-                </span>
-              </td>
-              <td>
-                <div class="utilization-bar" style="width:80px; height:12px; display:inline-block; vertical-align:middle;">
-                  <div class="utilization-fill <%= opex.utilization_percentage.to_f >= 100 ? 'high' : (opex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [opex.utilization_percentage.to_f, 100].min %>%"></div>
-                </div>
-                <span style="font-size: var(--pr-text-sm); margin-left:4px;"><%= opex.utilization_percentage %>%</span>
-              </td>
-              <td>
-                <% linked_prs = opex.purchase_requests %>
-                <% if linked_prs.any? %>
-                  <% linked_prs.limit(3).each do |pr| %>
-                    <%= link_to "##{pr.id}", project_purchase_request_path(@project, pr), title: pr.title %>
-                  <% end %>
-                  <% if linked_prs.count > 3 %>
-                    <span title="<%= linked_prs.count %> total PRs">+<%= linked_prs.count - 3 %></span>
-                  <% end %>
-                <% else %>
-                  <span class="no-data"><%= l(:label_none) %></span>
-                <% end %>
-              </td>
-              <td class="buttons">
-                <div class="pr-table-actions">
-                  <%= link_to project_opex_path(@project, opex),
-                              class: 'pr-button pr-button-secondary pr-button-icon small',
-                              title: l(:label_view_opex) do %>
-                    <span class="icon icon-magnifier"><%= l(:button_view) %></span>
-                  <% end %>
-                  <% if User.current.allowed_to?(:manage_opex, @project) %>
-                    <%= link_to edit_project_opex_path(@project, opex),
-                                class: 'pr-button pr-button-secondary pr-button-icon small',
-                                title: l(:label_edit_opex) do %>
-                      <span class="icon icon-edit"><%= l(:button_edit) %></span>
-                    <% end %>
-                    <%= link_to project_opex_path(@project, opex),
-                                method: :delete,
-                                data: { confirm: l(:text_are_you_sure) },
-                                class: 'pr-button pr-button-danger pr-button-icon small',
-                                title: l(:label_delete_opex) do %>
-                      <span class="icon icon-del"><%= l(:button_delete) %></span>
-                    <% end %>
-                  <% end %>
-                </div>
-              </td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-<% else %>
-  <div class="pr-empty">
-    <div class="pr-empty__icon">📊</div>
-    <h3><%= l(:label_no_opex_data_for) %> <%= @current_year %></h3>
-    <p><%= l(:text_no_opex_entries_for_year) %></p>
-    <% if User.current.allowed_to?(:manage_opex, @project) %>
-      <p>
-        <%= link_to new_project_opex_path(@project), class: 'pr-button pr-button-primary pr-button-icon' do %>
-          <span class="icon icon-add"></span> <%= l(:label_create_first_opex) %>
-        <% end %>
-      </p>
-    <% end %>
-  </div>
+  <p class="other-formats">
+    <%= l(:label_export_to) %>
+    <%= link_to 'CSV',
+                dashboard_project_opex_index_path(@project,
+                  { year: @current_year, tpc_code_id: @selected_tpc_code_id,
+                    category: @selected_category,
+                    sort: @sort_key, direction: @sort_dir, format: 'csv' }.compact),
+                class: 'csv' %>
+  </p>
 <% end %>
-
-<%= render 'reports/chart_colors' %>
 <script>
-// Localised strings for the shared chart a11y contract (purchase_requests.js).
+// Localised strings for the chart a11y contract (see purchase_requests.js).
 var PR_OPEX_LABELS = {
   utilized: '<%= j(l(:label_utilized)) %>',
   remaining: '<%= j(l(:label_remaining)) %>',
+  overBudgetBy: '<%= j(l(:label_over_budget_by)) %>',
   noData: '<%= j(l(:label_no_budget_data)) %>'
 };
-
 document.addEventListener('DOMContentLoaded', function() {
-  // Generate SVG donut chart for utilization
-  var utilizationChart = document.getElementById('utilization-donut-chart');
-  if (utilizationChart) {
-    var percentage = <%= @utilization_percentage %>;
-    var opexUtilized = <%= @total_utilized.to_f %>;
-    var opexRemaining = <%= @total_remaining.to_f %>;
+  <% if @opex_entries.any? %>
+    // Generate OPEX Utilization Donut Chart (shared implementation — see
+    // generateBudgetDonutChart in purchase_requests.js).
+    generateBudgetDonutChart('utilization-donut-chart', {
+      utilized: <%= @total_utilized %>,
+      remaining: <%= @total_remaining %>,
+      percentage: <%= @utilization_percentage %>
+    }, PR_OPEX_LABELS);
 
-    // Same accessibility contract as the CAPEX charts — see purchase_requests.js.
-    if (opexUtilized === 0 && opexRemaining === 0) {
-      prChartA11y(utilizationChart, [], { empty: true, emptyText: PR_OPEX_LABELS.noData });
-    } else {
-      prChartA11y(utilizationChart, [
-        { label: PR_OPEX_LABELS.utilized, display: opexUtilized.toLocaleString() },
-        { label: PR_OPEX_LABELS.remaining, display: Math.abs(opexRemaining).toLocaleString() }
-      ], {});
-    }
-
-    var circumference = 2 * Math.PI * 50;
-    var strokeDashoffset = circumference - (Math.min(percentage, 100) / 100) * circumference;
-
-    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', '140');
-    svg.setAttribute('height', '140');
-    svg.setAttribute('viewBox', '0 0 140 140');
-
-    var bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    bgCircle.setAttribute('cx', '70');
-    bgCircle.setAttribute('cy', '70');
-    bgCircle.setAttribute('r', '50');
-    bgCircle.setAttribute('fill', 'none');
-    bgCircle.setAttribute('stroke', prToken('--pr-surface-sunken', '#eceef2'));
-    bgCircle.setAttribute('stroke-width', '20');
-
-    var fgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    fgCircle.setAttribute('cx', '70');
-    fgCircle.setAttribute('cy', '70');
-    fgCircle.setAttribute('r', '50');
-    fgCircle.setAttribute('fill', 'none');
-    // Over budget is the state this ring exists to flag; green would hide it.
-    fgCircle.setAttribute('stroke', percentage >= 100
-      ? prToken('--pr-danger', '#dc3a3a')
-      : prToken('--pr-success', '#2f9e44'));
-    fgCircle.setAttribute('stroke-width', '20');
-    fgCircle.setAttribute('stroke-dasharray', String(circumference));
-    fgCircle.setAttribute('stroke-dashoffset', String(strokeDashoffset));
-    fgCircle.setAttribute('stroke-linecap', 'round');
-    fgCircle.setAttribute('transform', 'rotate(-90 70 70)');
-
-    svg.appendChild(bgCircle);
-    svg.appendChild(fgCircle);
-    utilizationChart.insertBefore(svg, utilizationChart.firstChild);
-  }
-
-  // Generate quarterly bar chart using capex-quarter-* classes (shared design-system styles)
-  var quarterlyChart = document.getElementById('quarterly-bar-chart');
-  if (quarterlyChart) {
-    var quarterlyData = [
+    // Generate Quarterly Bar Chart
+    generateBudgetBarChart('quarterly-bar-chart', [
       { label: 'Q1', value: <%= @quarterly_data[:q1] %> },
       { label: 'Q2', value: <%= @quarterly_data[:q2] %> },
       { label: 'Q3', value: <%= @quarterly_data[:q3] %> },
       { label: 'Q4', value: <%= @quarterly_data[:q4] %> }
-    ];
-
-    var maxValue = Math.max.apply(Math, quarterlyData.map(function(d) { return d.value; }));
-    // if/else rather than an early return: this runs inside the
-    // DOMContentLoaded callback, so a bare return would silently skip any
-    // future block appended after this one.
-    if (maxValue === 0) {
-      prChartA11y(quarterlyChart, [], { empty: true, emptyText: PR_OPEX_LABELS.noData });
-    } else {
-    prChartA11y(quarterlyChart, quarterlyData.map(function (q) {
-      return { label: q.label, display: q.value.toLocaleString() };
-    }), { scrollable: true });
-
-    quarterlyData.forEach(function(quarter) {
-      var height = (quarter.value / maxValue) * 100;
-      var bar = document.createElement('div');
-      bar.className = 'capex-quarter-bar';
-      bar.style.height = height + '%';
-      bar.title = quarter.label + ': ' + quarter.value.toLocaleString();
-
-      var labelEl = document.createElement('div');
-      labelEl.className = 'capex-quarter-label';
-      labelEl.textContent = quarter.label;
-
-      var valueEl = document.createElement('div');
-      valueEl.className = 'capex-quarter-value';
-      valueEl.textContent = quarter.value.toLocaleString();
-
-      bar.appendChild(labelEl);
-      bar.appendChild(valueEl);
-      quarterlyChart.appendChild(bar);
-    });
-    }
-  }
+    ], PR_OPEX_LABELS);
+  <% end %>
 });
 </script>

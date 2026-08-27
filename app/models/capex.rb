@@ -83,7 +83,17 @@ class Capex < ActiveRecord::Base
     return 0 if total_amount.zero?
     (utilized_amount / total_amount * 100).round(2)
   end
-  
+
+  # A ratio with a zero denominator is undefined, not zero — but
+  # utilization_percentage has to return a number, so it returns 0. Rendered
+  # straight, that paints spend against an unset budget as 0% utilised: a green
+  # bar, no badge, the healthiest-looking row in the table. Uncontrolled spend
+  # is the most severe thing this dashboard exists to surface, so callers use
+  # this to render it as its own state instead of as a percentage.
+  def budget_undefined?
+    total_amount.to_f <= 0 && utilized_amount.to_f > 0
+  end
+
   def tpc_code_display
     if tpc_code_id.present? && tpc_code_record.present?
       # Use the association to get the TPC code number (just the number for table display)

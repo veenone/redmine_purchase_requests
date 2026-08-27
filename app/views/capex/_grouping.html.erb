@@ -1,0 +1,7 @@
+  <!-- TPC Code Grouping -->
+  <%= render 'shared/budget_grouping',
+        grouping: @tpc_grouping,
+        heading: l(:label_budget_by_tpc_code),
+        link_for: ->(_code, data) { data[:tpc_code_id] ? dashboard_project_capex_index_path(@project, year: @current_year, tpc_code_id: data[:tpc_code_id]) : nil },
+        show_all_path: dashboard_project_capex_index_path(@project, { year: @current_year, tpc_code_id: @selected_tpc_code_id, all_groups: 1 }.compact),
+      title_for: ->(tpc_code) { content_tag(:span, tpc_code, class: 'tpc-number') } %>

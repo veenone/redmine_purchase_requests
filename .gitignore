@@ -43,3 +43,5 @@ MIGRATION_FIXES_APPLIED.md
 
 # Keep the real test suite; the patterns above target root-level scratch scripts
 !test/**/*_test.rb
+dist/
+tmp/dashboard_snapshots/

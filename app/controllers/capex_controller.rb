@@ -2,8 +2,10 @@ class CapexController < ApplicationController
   helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
+  include BudgetDashboard
+
   before_action :find_project
-  before_action :authorize, except: [:quarterly_data, :dashboard_data]
+  before_action :authorize, except: [:quarterly_data]
   before_action :find_capex, only: [:show, :edit, :update, :destroy]
   before_action :check_quarterly_data_permission, only: [:quarterly_data]
   skip_before_action :verify_authenticity_token, only: [:quarterly_data]
@@ -97,62 +99,68 @@ class CapexController < ApplicationController
   def dashboard
     @current_year = params[:year].present? ? params[:year].to_i : Date.current.year
     # Get capex entries for the year without ordering for aggregations
+    #
+    # Deliberately kept free of .includes(:purchase_requests): this relation
+    # feeds the `.sum(:column)`/`.group(...).sum(...)` SQL aggregates below
+    # (quarterly totals and currency breakdown). Rails silently turns a SQL
+    # SUM(:column) over a relation whose includes has-many association into
+    # a LEFT OUTER JOIN, which multiplies an entry's amount by its
+    # linked-request count. OPEX hit exactly that bug (see task-2-report.md)
+    # when it merged its equivalent of this relation with the one carrying
+    # .includes for view rendering. If a future change adds
+    # .includes(:purchase_requests) here — e.g. to shave a query off some
+    # new feature — re-verify every `.sum(:column)` call below against it
+    # first.
+    #
+    # The headline totals (budget_dashboard_figures) and the TPC grouping
+    # further down do NOT use this relation, on purpose: both enumerate
+    # records in Ruby and call e.utilized_amount per record (an association
+    # walk, not a SQL aggregate), so they use @capex_entries instead — see
+    # the comment where it's assigned.
     capex_for_year = @project.capex.for_year(@current_year)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     capex_for_year = apply_tpc_filter(capex_for_year)
     # utilized_amount enumerates linked requests per record, so preload them
-    # once rather than issuing a query per row.
+    # once rather than issuing a query per row. This is the row set used by
+    # budget_dashboard_figures, the TPC grouping below, and view rendering —
+    # one preloaded load shared by all three, instead of the table being
+    # queried once per consumer (kept separate from capex_for_year above
+    # because that relation must stay preload-free — see its comment).
     @capex_entries = capex_for_year.ordered.includes(:purchase_requests)
-    
+
     # Get default currency for conversions
     @default_currency = helpers.default_capex_currency
     @use_exchange_rates = helpers.capex_use_exchange_rates?
-    
-    # Calculate summary statistics using unordered relation
-    if @use_exchange_rates
-      # Convert all amounts to default currency
-      @total_budget = 0
-      @total_utilized = 0
-      
-      capex_for_year.each do |capex|
-        converted_budget = helpers.convert_capex_currency(capex.total_amount, capex.currency, @default_currency, @current_year)
-        converted_utilized = helpers.convert_capex_currency(capex.utilized_amount, capex.currency, @default_currency, @current_year)
-        
-        @total_budget += converted_budget
-        @total_utilized += converted_utilized
-      end
-      
-      @total_budget = @total_budget.round(2)
-      @total_utilized = @total_utilized.round(2)
-    else
-      # Use original amounts without conversion
-      @total_budget = capex_for_year.sum(:total_amount)
-      @total_utilized = capex_for_year.sum { |c| c.utilized_amount }
-    end
-    
-    @total_remaining = @total_budget - @total_utilized
-    @utilization_percentage = @total_budget > 0 ? (@total_utilized / @total_budget * 100).round(2) : 0
-    # ------------------------------------------------------------------
-    # Can these aggregates be trusted?
-    #
-    # Two ways they cannot, and the page must say which:
-    #   1. Conversion is off and more than one currency is present — the
-    #      totals above added unlike units, so everything derived from them
-    #      (including the utilization %) is meaningless.
-    #   2. Conversion is on but a currency has no rate configured anywhere —
-    #      convert_capex_currency passed it through at 1.0, so the total is
-    #      part-converted while claiming to be converted.
-    # ------------------------------------------------------------------
-    entry_currencies = capex_for_year.map { |c| c.currency.presence }.compact.uniq
-    @currencies_mixed = entry_currencies.length > 1
-    @unconvertible_currencies =
-      if @use_exchange_rates
-        entry_currencies.select { |cur| helpers.capex_missing_rate?(cur, @default_currency, @current_year) }
-      else
-        []
-      end
-    @totals_unreliable = (@currencies_mixed && !@use_exchange_rates) || @unconvertible_currencies.any?
-    
+
+    # Calculate summary statistics using the preloaded relation — entries.to_a
+    # plus Ruby-side sums, not a SQL aggregate, so the LEFT-OUTER-JOIN
+    # double-count risk above doesn't apply here.
+    figures = budget_dashboard_figures(
+      @capex_entries,
+      currency: @default_currency,
+      convert: ->(amount, from) {
+        @use_exchange_rates ? helpers.convert_capex_currency(amount, from, @default_currency, @current_year) : amount
+      },
+      missing_rate: (@use_exchange_rates ? ->(cur) { helpers.capex_missing_rate?(cur, @default_currency, @current_year) } : nil)
+    )
+    @total_budget            = figures[:total_budget]
+    @total_utilized          = figures[:total_utilized]
+    @total_remaining         = figures[:total_remaining]
+    @utilization_percentage  = figures[:utilization_percentage]
+    @currencies_mixed        = figures[:currencies_mixed]
+    @unconvertible_currencies = figures[:unconvertible_currencies]
+    @totals_unreliable       = figures[:totals_unreliable]
+    @budget_over             = figures[:over_budget]
+    @budget_severity         = figures[:severity]
+    @budget_undefined        = figures[:budget_undefined]
+
+    # Sorting is applied to the materialised rows, not to @capex_entries: that
+    # stays a relation because the TPC grouping below and the JSON branch both
+    # use it, and re-ordering it in SQL would drop the preload.
+    @sort_key = params[:sort].presence
+    @sort_dir = params[:direction].to_s == 'asc' ? 'asc' : 'desc'
+    @sorted_entries = budget_dashboard_sort(@capex_entries, @sort_key, @sort_dir)
+
     # Quarterly breakdown using unordered relation
     if @use_exchange_rates
       @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
@@ -179,8 +187,13 @@ class CapexController < ApplicationController
     @currency_breakdown = capex_for_year.group(:currency).sum(:total_amount)
     
     # TPC Code grouping - new functionality
+    #
+    # Grouped from @capex_entries (preloaded, identical row set to
+    # capex_for_year), not capex_for_year: this loop calls entry.utilized_amount
+    # per record, an association walk that would otherwise N+1 against an
+    # un-preloaded relation.
     @tpc_grouping = {}
-    capex_for_year.group_by(&:tpc_code).each do |tpc_code, entries|
+    @capex_entries.group_by(&:tpc_code).each do |tpc_code, entries|
       mixed_group = false
       if @use_exchange_rates
         # Convert all amounts to default currency for TPC grouping
@@ -209,24 +222,41 @@ class CapexController < ApplicationController
       end
       
       utilization_percentage = total_budget > 0 ? (total_utilized / total_budget * 100).round(2) : 0
-      
+
       @tpc_grouping[tpc_code] = {
+        # Carried so the dashboard can link a card to its filtered view;
+        # the grouping is keyed by code string but the filter takes an id.
+        tpc_code_id: entries.first&.tpc_code_id,
         mixed_currency: mixed_group,
         entries_count: entries.count,
         total_budget: total_budget,
         total_utilized: total_utilized,
         utilization_percentage: utilization_percentage,
+        # Spend with no budget behind it. utilization_percentage is 0 here
+        # because the denominator is, which would render the group as a green
+        # low-severity card. See BudgetDashboard#budget_dashboard_figures.
+        budget_undefined: total_budget.to_f <= 0 && total_utilized.to_f > 0,
         currency_symbol: currency_symbol
       }
     end
 
     # Alphabetical is merely what group_by returned. The question this section
-    # answers is "which codes are at risk", so the most utilized lead.
-    @tpc_grouping = @tpc_grouping.sort_by { |_code, d| -d[:utilization_percentage].to_f }.to_h
+    # answers is "which codes are at risk", so the most at-risk lead — with
+    # budget-less spend ahead of any percentage, since its ratio is undefined
+    # rather than low (budget_group_rank).
+    @tpc_grouping = @tpc_grouping.sort_by { |_code, d| budget_group_rank(d) }.to_h
 
     
     respond_to do |format|
       format.html
+      # Exports exactly what is on screen: same year, same TPC filter, same
+      # sort order. A dashboard whose numbers cannot leave it is why the
+      # spreadsheet it replaces stays open in the next tab.
+      format.csv do
+        send_data capex_dashboard_csv,
+                  filename: "capex_dashboard_#{@project.identifier}_#{@current_year}.csv",
+                  type: 'text/csv'
+      end
       format.json do
         render json: {
           total_budget: @total_budget,
@@ -255,152 +285,28 @@ class CapexController < ApplicationController
     end
   end
 
-  # New method to handle AJAX requests for dashboard data
-  def dashboard_data
-    @current_year = params[:year].present? ? params[:year].to_i : Date.current.year
-    # Apply filters from params
-    capex_for_year = @project.capex.for_year(@current_year)
-    
-    # Apply additional filters if present
-    if params[:tpc_code].present?
-      capex_for_year = capex_for_year.where(tpc_code: params[:tpc_code])
-    end
-    
-    if params[:currency].present?
-      capex_for_year = capex_for_year.where(currency: params[:currency])
-    end
-    
-    # Get default currency for conversions
-    @default_currency = helpers.default_capex_currency
-    @use_exchange_rates = helpers.capex_use_exchange_rates?
-    
-    # Calculate summary statistics
-    if @use_exchange_rates
-      # Convert all amounts to default currency
-      @total_budget = 0
-      @total_utilized = 0
-      
-      capex_for_year.each do |capex|
-        converted_budget = helpers.convert_capex_currency(capex.total_amount, capex.currency, @default_currency, @current_year)
-        converted_utilized = helpers.convert_capex_currency(capex.utilized_amount, capex.currency, @default_currency, @current_year)
-        
-        @total_budget += converted_budget
-        @total_utilized += converted_utilized
-      end
-      
-      @total_budget = @total_budget.round(2)
-      @total_utilized = @total_utilized.round(2)
-    else
-      # Use original amounts without conversion
-      @total_budget = capex_for_year.sum(:total_amount)
-      @total_utilized = capex_for_year.sum { |c| c.utilized_amount }
-    end
-    
-    @total_remaining = @total_budget - @total_utilized
-    @utilization_percentage = @total_budget > 0 ? (@total_utilized / @total_budget * 100).round(2) : 0
-    
-    # Quarterly breakdown
-    if @use_exchange_rates
-      @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
-      
-      capex_for_year.each do |capex|
-        @quarterly_data[:q1] += helpers.convert_capex_currency(capex.q1_amount, capex.currency, @default_currency, @current_year)
-        @quarterly_data[:q2] += helpers.convert_capex_currency(capex.q2_amount, capex.currency, @default_currency, @current_year)
-        @quarterly_data[:q3] += helpers.convert_capex_currency(capex.q3_amount, capex.currency, @default_currency, @current_year)
-        @quarterly_data[:q4] += helpers.convert_capex_currency(capex.q4_amount, capex.currency, @default_currency, @current_year)
-      end
-      
-      @quarterly_data.each { |k, v| @quarterly_data[k] = v.round(2) }
-    else
-      @quarterly_data = {
-        q1: capex_for_year.sum(:q1_amount),
-        q2: capex_for_year.sum(:q2_amount),
-        q3: capex_for_year.sum(:q3_amount),
-        q4: capex_for_year.sum(:q4_amount)
-      }
-    end
-    
-    # Currency breakdown
-    @currency_breakdown = capex_for_year.group(:currency).sum(:total_amount)
-    
-    # TPC Code grouping
-    @tpc_grouping = {}
-    capex_for_year.group_by(&:tpc_code).each do |tpc_code, entries|
-      if @use_exchange_rates
-        # Convert all amounts to default currency for TPC grouping
-        total_budget = 0
-        total_utilized = 0
-        
-        entries.each do |entry|
-          total_budget += helpers.convert_capex_currency(entry.total_amount, entry.currency, @default_currency, @current_year)
-          total_utilized += helpers.convert_capex_currency(entry.utilized_amount, entry.currency, @default_currency, @current_year)
-        end
-        
-        total_budget = total_budget.round(2)
-        total_utilized = total_utilized.round(2)
-        currency_symbol = helpers.capex_currency_symbol(@default_currency)
-      else
-        # Use original amounts
-        total_budget = entries.sum(&:total_amount)
-        total_utilized = entries.sum(&:utilized_amount)
-        
-        # Get currency symbol (assuming all entries in same TPC use same currency for simplicity)
-        first_entry = entries.first
-        currency_symbol = first_entry ? first_entry.currency_symbol : '$'
-      end
-      
-      utilization_percentage = total_budget > 0 ? (total_utilized / total_budget * 100).round(2) : 0
-      
-      @tpc_grouping[tpc_code] = {
-        entries_count: entries.count,
-        total_budget: total_budget,
-        total_utilized: total_utilized,
-        utilization_percentage: utilization_percentage,
-        currency_symbol: currency_symbol
-      }
-    end
-    
-    render json: {
-      total_budget: @total_budget,
-      total_utilized: @total_utilized,
-      total_remaining: @total_remaining,
-      utilization_percentage: @utilization_percentage,
-      quarterly_data: @quarterly_data,
-      currency_breakdown: @currency_breakdown,
-      tpc_grouping: @tpc_grouping,
-      use_exchange_rates: @use_exchange_rates,
-      default_currency: @default_currency
-    }
-  end
-
-  # Export the currently filtered CAPEX list as CSV.
-  def export_csv
-    scope = capex_index_scope
-    send_data Capex.to_csv(scope),
-              filename: capex_export_filename('csv'),
-              type: 'text/csv',
-              disposition: 'attachment'
-  end
-
-  # Export the currently filtered CAPEX list as XLSX.
-  def export_xlsx
-    scope = capex_index_scope
-    send_data generate_capex_xlsx(scope),
-              filename: capex_export_filename('xlsx'),
-              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-              disposition: 'attachment'
-  end
-
-  # Export the currently filtered CAPEX list as PDF.
-  def export_pdf
-    scope = capex_index_scope
-    send_data generate_capex_pdf(scope),
-              filename: capex_export_filename('pdf'),
-              type: 'application/pdf',
-              disposition: 'attachment'
-  end
-
   private
+
+  # Rows in the order the table shows them, with the same "No budget set"
+  # wording the page uses — a 0 in the utilization column of an export would
+  # reproduce the exact misreading the dashboard was fixed to avoid.
+  def capex_dashboard_csv
+    Redmine::Export::CSV.generate do |csv|
+      csv << [l(:label_tpc_code), l(:field_description), l(:field_currency),
+              l(:label_total_budget), l(:label_utilized), l(:label_remaining),
+              l(:label_utilization), l(:label_linked_prs)]
+      @sorted_entries.each do |capex|
+        csv << [capex.tpc_code,
+                capex.description,
+                capex.currency,
+                capex.total_amount,
+                capex.utilized_amount,
+                capex.remaining_amount,
+                (capex.budget_undefined? ? l(:label_no_budget_set) : capex.utilization_percentage),
+                capex.purchase_requests.size]
+      end
+    end
+  end
 
   def find_project
     @project = Project.find(params[:project_id])

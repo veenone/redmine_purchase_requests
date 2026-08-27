@@ -2,10 +2,12 @@ class OpexController < ApplicationController
   helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
+  include BudgetDashboard
+
   layout 'base'
   before_action :find_project
   before_action :find_opex, only: [:show, :edit, :update, :destroy]
-  before_action :authorize, except: [:quarterly_data, :dashboard_data]
+  before_action :authorize, except: [:quarterly_data]
   before_action :check_quarterly_data_permission, only: [:quarterly_data]
   skip_before_action :verify_authenticity_token, only: [:quarterly_data]
   
@@ -105,10 +107,26 @@ class OpexController < ApplicationController
   def dashboard
     @current_year = (params[:year] || Date.current.year).to_i
     # utilized_amount enumerates linked requests per record; preload them once
-    # rather than issuing a query per row (see Capex dashboard).
-    @opex_entries = @project.opex.for_year(@current_year).includes(:purchase_requests)
+    # rather than issuing a query per row (see Capex dashboard). opex_category
+    # is preloaded too: the category grouping below reads it off every loaded
+    # record instead of re-querying per category (see that block for why).
+    @opex_entries = @project.opex.for_year(@current_year).includes(:purchase_requests, :opex_category)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
     @opex_entries = apply_tpc_filter(@opex_entries)
+
+    # Category filter, so a card in the grouping grid has somewhere to point.
+    # CAPEX cards have linked to their filtered dashboard since that fix
+    # landed; OPEX passed no link_for and its cards were dead text — the
+    # partial's `defined?` guard made the omission silent, which is the exact
+    # drift the shared shell exists to prevent.
+    #
+    # Filtered by name because the grouping is keyed by name. belongs_to, so
+    # the join is one row per entry and cannot multiply any aggregate.
+    @selected_category = params[:category].presence
+    if @selected_category
+      @opex_entries = @opex_entries.joins(:opex_category)
+                                   .where(opex_categories: { name: @selected_category })
+    end
 
     # Initialize variables
     @total_budget = 0
@@ -120,164 +138,158 @@ class OpexController < ApplicationController
     @category_grouping = {}
     @use_exchange_rates = false
     @default_currency = default_currency
-    
+    # Declared with the other defaults so the empty-year path never leaves the
+    # entries table reading a nil.
+    @sorted_entries = []
+    @sort_key = params[:sort].presence
+    @sort_dir = params[:direction].to_s == 'asc' ? 'asc' : 'desc'
+
     if @opex_entries.any?
+      # @opex_entries carries .includes(:purchase_requests, :opex_category)
+      # (see above) so Opex#utilized_amount and #opex_category don't N+1.
+      # Every aggregate below therefore sums over these *materialized*
+      # records rather than pushing SUM(:column)/GROUP BY to SQL against
+      # @opex_entries directly: Rails silently turns a SQL aggregate call
+      # over a relation carrying .includes(has_many) into a
+      # LEFT OUTER JOIN, which multiplies an entry's amount by its
+      # linked-request count. That hit @total_budget
+      # (`@opex_entries.sum(:total_amount)`: 2450.0 rendered vs the true
+      # 1450.0), @currency_breakdown, @quarterly_data (q1 alone: 2150.0
+      # rendered vs the true 1150.0 — q2-q4 happened to read correctly only
+      # because the entry with 2 linked requests has 0 in those columns),
+      # and the category grouping's total_budget (same 2450.0 vs 1450.0, both
+      # entries fall under the same category here). See task-2-report.md for
+      # the full before/after data. `.count` (no column arg) and the
+      # block-based `.sum { |o| o.utilized_amount }` calls were never
+      # affected — Rails only takes the join-dependency path when a column
+      # name is given to the aggregate.
+      opex_records = @opex_entries.to_a
+
       # Currency breakdown and exchange rate settings
-      @currency_breakdown = @opex_entries.group(:currency).sum(:total_amount)
-      exchange_rates_settings = Setting.plugin_redmine_purchase_requests || {}
-      
-      if exchange_rates_settings['opex_exchange_rates'] && exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
-        @use_exchange_rates = true
-        year_rates = exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
-        
-        # Convert all amounts to default currency
-        @total_budget = @opex_entries.sum do |opex|
-          rate = year_rates[opex.currency] || 1
-          opex.total_amount * rate
-        end
-        
-        @total_utilized = @opex_entries.sum do |opex|
-          rate = year_rates[opex.currency] || 1
-          opex.utilized_amount * rate
-        end
-      else
-        @total_budget = @opex_entries.sum(:total_amount)
-        @total_utilized = @opex_entries.sum { |o| o.utilized_amount }
-      end
-      
-      @total_remaining = @total_budget - @total_utilized
-      @utilization_percentage = @total_budget > 0 ? ((@total_utilized / @total_budget) * 100).round(2) : 0
-      
-      # Quarterly breakdown
-      @quarterly_data = {
-        q1: @opex_entries.sum(:q1_amount),
-        q2: @opex_entries.sum(:q2_amount), 
-        q3: @opex_entries.sum(:q3_amount),
-        q4: @opex_entries.sum(:q4_amount)
+      @currency_breakdown = opex_records.group_by(&:currency)
+                                         .transform_values { |list| list.sum { |o| o.total_amount || 0 } }
+
+      opex_rates = (Setting.plugin_redmine_purchase_requests || {})
+                     .dig('opex_exchange_rates', @current_year.to_s)
+      @use_exchange_rates = opex_rates.present?
+
+      # OPEX multiplies by its rate; CAPEX divides by its own. Preserved
+      # exactly — reconciling the two conventions is a separate decision.
+      # Hoisted to a local so the quarterly breakdown below converts with the
+      # SAME arithmetic as the headline totals: rendering converted tiles above
+      # unconverted bars, under one currency symbol, is two arithmetics on one
+      # page.
+      convert = ->(amount, from) {
+        @use_exchange_rates ? ((amount || 0) * ((opex_rates || {})[from] || 1)) : (amount || 0)
       }
-      
-      # Category grouping (similar to TPC grouping in CAPEX)
+
+      figures = budget_dashboard_figures(
+        opex_records,
+        currency: @default_currency,
+        convert: convert,
+        missing_rate: (@use_exchange_rates ? ->(cur) { !(opex_rates || {}).key?(cur) } : nil)
+      )
+      @total_budget           = figures[:total_budget]
+      @total_utilized         = figures[:total_utilized]
+      @total_remaining        = figures[:total_remaining]
+      @utilization_percentage = figures[:utilization_percentage]
+      @currencies_mixed        = figures[:currencies_mixed]
+      @unconvertible_currencies = figures[:unconvertible_currencies]
+      @totals_unreliable      = figures[:totals_unreliable]
+      @budget_over            = figures[:over_budget]
+      @budget_severity        = figures[:severity]
+      @budget_undefined       = figures[:budget_undefined]
+
+      # Sorted from the materialised rows, not from @opex_entries: that stays a
+      # relation because the distinct category-name query below joins on it.
+      @sorted_entries = budget_dashboard_sort(opex_records, @sort_key, @sort_dir)
+
+      # Quarterly breakdown — converted through the same lambda as the totals.
+      @quarterly_data = {
+        q1: opex_records.sum { |o| convert.call(o.q1_amount, o.currency) }.round(2),
+        q2: opex_records.sum { |o| convert.call(o.q2_amount, o.currency) }.round(2),
+        q3: opex_records.sum { |o| convert.call(o.q3_amount, o.currency) }.round(2),
+        q4: opex_records.sum { |o| convert.call(o.q4_amount, o.currency) }.round(2)
+      }
+
+      # Category grouping (similar to TPC grouping in CAPEX). The distinct
+      # category-name query below is a plain DISTINCT pluck of names, not an
+      # amount aggregate, so it isn't affected by the join-duplication bug
+      # and is kept as-is to preserve category display order. Per-category
+      # figures come from opex_records (preloaded, filtered/grouped in Ruby)
+      # instead of re-querying `.joins(:opex_category).where(...)` per name,
+      # which would hit the same SUM(:column)-over-includes bug.
       @category_grouping = {}
       category_names = @opex_entries.joins(:opex_category).distinct.pluck('opex_categories.name')
-      
+
       category_names.each do |category_name|
-        category_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => category_name)
-        total_budget = category_entries.sum(:total_amount)
-        total_utilized = category_entries.sum { |o| o.utilized_amount }
-        entries_count = category_entries.count
+        category_entries = opex_records.select { |o| o.opex_category&.name == category_name }
+        mixed_group = false
+
+        if @use_exchange_rates
+          # Convert all amounts to default currency for category grouping,
+          # same as the headline totals above (OPEX multiplies by its rate).
+          total_budget = 0
+          total_utilized = 0
+
+          category_entries.each do |entry|
+            rate = (opex_rates || {})[entry.currency] || 1
+            total_budget += (entry.total_amount || 0) * rate
+            total_utilized += (entry.utilized_amount || 0) * rate
+          end
+
+          total_budget = total_budget.round(2)
+          total_utilized = total_utilized.round(2)
+          currency_symbol = opex_currency_symbol(@default_currency)
+        else
+          # Use original amounts
+          total_budget = category_entries.sum { |o| o.total_amount || 0 }
+          total_utilized = category_entries.sum { |o| o.utilized_amount }
+
+          # Without conversion, a group spanning currencies has no single
+          # symbol and its total is a sum of unlike units — say so rather
+          # than stamping the first entry's symbol on a number that isn't in
+          # that currency (mirrors the CAPEX TPC grouping fix).
+          group_currencies = category_entries.map { |o| o.currency.presence }.compact.uniq
+          mixed_group = group_currencies.length > 1
+          currency_symbol = mixed_group ? '' : (category_entries.first&.currency_symbol || '$')
+        end
+
+        entries_count = category_entries.size
         utilization_percentage = total_budget > 0 ? ((total_utilized / total_budget) * 100).round(2) : 0
-        
-        # Get currency symbol from first entry in this category
-        first_opex = category_entries.first
-        currency_symbol = first_opex&.currency_symbol || '$'
-        
+
         @category_grouping[category_name] = {
+          mixed_currency: mixed_group,
           total_budget: total_budget,
           total_utilized: total_utilized,
           entries_count: entries_count,
           utilization_percentage: utilization_percentage,
+          # Spend with no budget behind it. utilization_percentage is 0 here
+          # because the denominator is, which would render the group as a green
+          # low-severity card. See BudgetDashboard#budget_dashboard_figures.
+          budget_undefined: total_budget.to_f <= 0 && total_utilized.to_f > 0,
           currency_symbol: currency_symbol
         }
       end
+
+      # Alphabetical is merely what group_by returned. This section answers
+      # "which categories are at risk", so the most at-risk lead — with
+      # budget-less spend ahead of any percentage, since its ratio is undefined
+      # rather than low (budget_group_rank).
+      @category_grouping = @category_grouping.sort_by { |_k, d| budget_group_rank(d) }.to_h
     end
-  end
-  
-  # AJAX endpoint to get dashboard data
-  def dashboard_data
-    @current_year = (params[:year] || Date.current.year).to_i
-    @opex_entries = @project.opex.for_year(@current_year)
-    
-    # Apply additional filters if present
-    if params[:category].present?
-      @opex_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => params[:category])
-    end
-    
-    if params[:currency].present?
-      @opex_entries = @opex_entries.where(currency: params[:currency])
-    end
-    
-    # Initialize variables
-    @total_budget = 0
-    @total_utilized = 0
-    @total_remaining = 0
-    @utilization_percentage = 0
-    @currency_breakdown = {}
-    @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
-    @category_grouping = {}
-    @use_exchange_rates = false
-    @default_currency = default_currency
-    
-    if @opex_entries.any?
-      # Currency breakdown and exchange rate settings
-      @currency_breakdown = @opex_entries.group(:currency).sum(:total_amount)
-      exchange_rates_settings = Setting.plugin_redmine_purchase_requests || {}
-      
-      if exchange_rates_settings['opex_exchange_rates'] && exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
-        @use_exchange_rates = true
-        year_rates = exchange_rates_settings['opex_exchange_rates'][@current_year.to_s]
-        
-        # Convert all amounts to default currency
-        @total_budget = @opex_entries.sum do |opex|
-          rate = year_rates[opex.currency] || 1
-          opex.total_amount * rate
-        end
-        
-        @total_utilized = @opex_entries.sum do |opex|
-          rate = year_rates[opex.currency] || 1
-          opex.utilized_amount * rate
-        end
-      else
-        @total_budget = @opex_entries.sum(:total_amount)
-        @total_utilized = @opex_entries.sum { |o| o.utilized_amount }
-      end
-      
-      @total_remaining = @total_budget - @total_utilized
-      @utilization_percentage = @total_budget > 0 ? ((@total_utilized / @total_budget) * 100).round(2) : 0
-      
-      # Quarterly breakdown
-      @quarterly_data = {
-        q1: @opex_entries.sum(:q1_amount),
-        q2: @opex_entries.sum(:q2_amount), 
-        q3: @opex_entries.sum(:q3_amount),
-        q4: @opex_entries.sum(:q4_amount)
-      }
-      
-      # Category grouping (similar to TPC grouping in CAPEX)
-      @category_grouping = {}
-      category_names = @opex_entries.joins(:opex_category).distinct.pluck('opex_categories.name')
-      
-      category_names.each do |category_name|
-        category_entries = @opex_entries.joins(:opex_category).where('opex_categories.name' => category_name)
-        total_budget = category_entries.sum(:total_amount)
-        total_utilized = category_entries.sum { |o| o.utilized_amount }
-        entries_count = category_entries.count
-        utilization_percentage = total_budget > 0 ? ((total_utilized / total_budget) * 100).round(2) : 0
-        
-        # Get currency symbol from first entry in this category
-        first_opex = category_entries.first
-        currency_symbol = first_opex&.currency_symbol || '$'
-        
-        @category_grouping[category_name] = {
-          total_budget: total_budget,
-          total_utilized: total_utilized,
-          entries_count: entries_count,
-          utilization_percentage: utilization_percentage,
-          currency_symbol: currency_symbol
-        }
+
+    respond_to do |format|
+      format.html
+      # Exports exactly what is on screen: same year, same filter, same sort
+      # order. A dashboard whose numbers cannot leave it is why the spreadsheet
+      # it replaces stays open in the next tab.
+      format.csv do
+        send_data opex_dashboard_csv,
+                  filename: "opex_dashboard_#{@project.identifier}_#{@current_year}.csv",
+                  type: 'text/csv'
       end
     end
-    
-    render json: {
-      total_budget: @total_budget,
-      total_utilized: @total_utilized,
-      total_remaining: @total_remaining,
-      utilization_percentage: @utilization_percentage,
-      quarterly_data: @quarterly_data,
-      currency_breakdown: @currency_breakdown,
-      category_grouping: @category_grouping,
-      use_exchange_rates: @use_exchange_rates,
-      default_currency: @default_currency
-    }
   end
 
   # Export the currently filtered OPEX list as CSV.
@@ -308,6 +320,28 @@ class OpexController < ApplicationController
   end
 
   private
+
+  # Rows in the order the table shows them, with the same "No budget set"
+  # wording the page uses — a 0 in the utilization column of an export would
+  # reproduce the exact misreading the dashboard was fixed to avoid.
+  def opex_dashboard_csv
+    Redmine::Export::CSV.generate do |csv|
+      csv << [l(:label_opex_code), l(:field_opex_category), l(:field_description),
+              l(:field_currency), l(:label_total_budget), l(:label_utilized),
+              l(:label_remaining), l(:label_utilization), l(:label_linked_prs)]
+      @sorted_entries.each do |opex|
+        csv << [opex.opex_code,
+                opex.opex_category&.name,
+                opex.description,
+                opex.currency,
+                opex.total_amount,
+                opex.utilized_amount,
+                opex.remaining_amount,
+                (opex.budget_undefined? ? l(:label_no_budget_set) : opex.utilization_percentage),
+                opex.purchase_requests.size]
+      end
+    end
+  end
 
   def find_project
     @project = Project.find(params[:project_id])

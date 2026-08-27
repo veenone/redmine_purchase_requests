@@ -1,0 +1,115 @@
+  <!-- OPEX Entries Details Table -->
+  <div class="details-section">
+    <h4><%= l(:label_opex_entries) %></h4>
+    <div class="autoscroll">
+      <table class="pr-table">
+        <caption class="sr-only"><%= l(:label_caption_entries) %></caption>
+        <%# Sort links carry the year, the filter and the card-grid cap, so
+            sorting never silently drops the filter the reader is looking at. %>
+        <% sort_path = ->(extra) {
+             dashboard_project_opex_index_path(@project,
+               { year: @current_year,
+                 tpc_code_id: @selected_tpc_code_id,
+                 category: @selected_category,
+                 all_groups: params[:all_groups].presence }.compact.merge(extra))
+           } %>
+        <thead>
+          <tr>
+            <th scope="col"><%= l(:label_opex_code) %></th>
+            <th scope="col"><%= l(:field_opex_category) %></th>
+            <th scope="col"><%= l(:field_description) %></th>
+            <%= render 'shared/sort_header', key: 'budget',      label: l(:label_total_budget), path_for: sort_path %>
+            <%= render 'shared/sort_header', key: 'utilized',    label: l(:label_utilized),     path_for: sort_path %>
+            <%= render 'shared/sort_header', key: 'remaining',   label: l(:label_remaining),    path_for: sort_path %>
+            <%= render 'shared/sort_header', key: 'utilization', label: l(:label_utilization),  path_for: sort_path %>
+            <th scope="col"><%= l(:label_linked_prs) %></th>
+            <th scope="col" class="buttons"><%= l(:label_actions) %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @sorted_entries.each do |opex| %>
+            <tr class="<%= cycle('odd', 'even') %>">
+              <td>
+                <span class="tpc-number"><%= opex.opex_code %></span>
+              </td>
+              <td>
+                <span class="pr-badge pr-badge--info"><%= opex.opex_category&.name %></span>
+              </td>
+              <td><%= truncate(opex.description, length: 80) %></td>
+              <td>
+                <span class="opex-amount">
+                  <%= opex.currency_symbol %><%= number_with_precision(opex.total_amount, precision: 2, delimiter: ',') %>
+                </span>
+                <span class="currency-code"><%= opex.currency %></span>
+              </td>
+              <td>
+                <span class="amount utilized">
+                  <%= opex.currency_symbol %><%= number_with_precision(opex.utilized_amount, precision: 2, delimiter: ',') %>
+                </span>
+              </td>
+              <td>
+                <%# The tile above can put the direction in a label because it
+                    has one label per figure. A column has one header for every
+                    row, so the direction has to travel on the number itself.
+                    A minus sign is text: it survives colour-blindness, a
+                    stylesheet that never loaded, and a touch device with no
+                    hover — none of which the previous colour + title="" pairing
+                    did, which left a 500 surplus and a 500 deficit identical. %>
+                <% remaining = opex.remaining_amount.to_f %>
+                <span class="amount <%= remaining < 0 ? 'over-budget' : 'remaining' %>">
+                  <% if remaining < 0 %><span class="sr-only"><%= l(:label_over_budget_by) %>: </span>&minus;<% end %><%= opex.currency_symbol %><%= number_with_precision(remaining.abs, precision: 2, delimiter: ',') %>
+                </span>
+              </td>
+              <td>
+                <% if opex.budget_undefined? %>
+                  <%# utilization_percentage returns 0 when total_amount is 0,
+                      because it has to return something. Printing that 0 gave
+                      budget-less spend a green bar and the lowest severity in
+                      the table. There is no ratio to draw here — say so. %>
+                  <span class="pr-badge pr-badge--danger"><%= l(:label_no_budget_set) %></span>
+                <% else %>
+                  <div class="utilization-bar" style="width:80px;height:15px;">
+                    <div class="utilization-fill <%= opex.utilization_percentage.to_f >= 100 ? 'high' : (opex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [opex.utilization_percentage.to_f, 100].min %>%"></div>
+                  </div>
+                  <span class="utilization-text"><%= opex.utilization_percentage %>%</span>
+                <% end %>
+              </td>
+              <td>
+                <% pr_count = opex.purchase_requests.size %>
+                <% if pr_count > 0 %>
+                  <%= link_to "#{pr_count} PR#{'s' if pr_count != 1}",
+                            project_opex_path(@project, opex),
+                            class: 'opex-link' %>
+                <% else %>
+                  <span class="no-prs">—</span>
+                <% end %>
+              </td>
+              <td class="buttons">
+                <div class="pr-table-actions">
+                  <%= link_to project_opex_path(@project, opex),
+                              class: 'pr-button pr-button-secondary pr-button-icon small',
+                              title: l(:label_view_opex) do %>
+                    <span class="icon icon-magnifier"><%= l(:button_view) %></span>
+                  <% end %>
+                  <% if User.current.allowed_to?(:manage_opex, @project) %>
+                    <%= link_to edit_project_opex_path(@project, opex),
+                                class: 'pr-button pr-button-secondary pr-button-icon small',
+                                title: l(:label_edit_opex) do %>
+                      <span class="icon icon-edit"><%= l(:button_edit) %></span>
+                    <% end %>
+                    <%= link_to project_opex_path(@project, opex),
+                                method: :delete,
+                                data: { confirm: l(:text_are_you_sure) },
+                                class: 'pr-button pr-button-danger pr-button-icon small',
+                                title: l(:label_delete_opex) do %>
+                      <span class="icon icon-del"><%= l(:button_delete) %></span>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
