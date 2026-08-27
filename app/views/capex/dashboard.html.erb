@@ -51,6 +51,20 @@
       },
       currency_symbol: capex_currency_symbol(@default_currency),
       currency_symbol_for: ->(cur) { Capex.new(currency: cur).currency_symbol } %>
+
+<%# Redmine's own other-formats block rather than a button in .contextual:
+    every list in this application offers CSV in exactly this place, and a
+    dashboard that replaces a spreadsheet has to let the numbers leave it. %>
+<% if @capex_entries.any? %>
+  <p class="other-formats">
+    <%= l(:label_export_to) %>
+    <%= link_to 'CSV',
+                dashboard_project_capex_index_path(@project,
+                  { year: @current_year, tpc_code_id: @selected_tpc_code_id,
+                    sort: @sort_key, direction: @sort_dir, format: 'csv' }.compact),
+                class: 'csv' %>
+  </p>
+<% end %>
 <script>
 // Localised strings for the chart a11y contract (see purchase_requests.js).
 var PR_CAPEX_LABELS = {

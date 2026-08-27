@@ -126,6 +126,11 @@ class OpexController < ApplicationController
     @category_grouping = {}
     @use_exchange_rates = false
     @default_currency = default_currency
+    # Declared with the other defaults so the empty-year path never leaves the
+    # entries table reading a nil.
+    @sorted_entries = []
+    @sort_key = params[:sort].presence
+    @sort_dir = params[:direction].to_s == 'asc' ? 'asc' : 'desc'
 
     if @opex_entries.any?
       # @opex_entries carries .includes(:purchase_requests, :opex_category)
@@ -182,6 +187,10 @@ class OpexController < ApplicationController
       @budget_over            = figures[:over_budget]
       @budget_severity        = figures[:severity]
       @budget_undefined       = figures[:budget_undefined]
+
+      # Sorted from the materialised rows, not from @opex_entries: that stays a
+      # relation because the distinct category-name query below joins on it.
+      @sorted_entries = budget_dashboard_sort(opex_records, @sort_key, @sort_dir)
 
       # Quarterly breakdown — converted through the same lambda as the totals.
       @quarterly_data = {
@@ -257,10 +266,44 @@ class OpexController < ApplicationController
       # rather than low (budget_group_rank).
       @category_grouping = @category_grouping.sort_by { |_k, d| budget_group_rank(d) }.to_h
     end
+
+    respond_to do |format|
+      format.html
+      # Exports exactly what is on screen: same year, same filter, same sort
+      # order. A dashboard whose numbers cannot leave it is why the spreadsheet
+      # it replaces stays open in the next tab.
+      format.csv do
+        send_data opex_dashboard_csv,
+                  filename: "opex_dashboard_#{@project.identifier}_#{@current_year}.csv",
+                  type: 'text/csv'
+      end
+    end
   end
 
   private
-  
+
+  # Rows in the order the table shows them, with the same "No budget set"
+  # wording the page uses — a 0 in the utilization column of an export would
+  # reproduce the exact misreading the dashboard was fixed to avoid.
+  def opex_dashboard_csv
+    Redmine::Export::CSV.generate do |csv|
+      csv << [l(:label_opex_code), l(:field_opex_category), l(:field_description),
+              l(:field_currency), l(:label_total_budget), l(:label_utilized),
+              l(:label_remaining), l(:label_utilization), l(:label_linked_prs)]
+      @sorted_entries.each do |opex|
+        csv << [opex.opex_code,
+                opex.opex_category&.name,
+                opex.description,
+                opex.currency,
+                opex.total_amount,
+                opex.utilized_amount,
+                opex.remaining_amount,
+                (opex.budget_undefined? ? l(:label_no_budget_set) : opex.utilization_percentage),
+                opex.purchase_requests.size]
+      end
+    end
+  end
+
   def find_project
     @project = Project.find(params[:project_id])
   rescue ActiveRecord::RecordNotFound

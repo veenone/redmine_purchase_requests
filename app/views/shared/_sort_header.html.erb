@@ -1,0 +1,28 @@
+<%#
+  One sortable column header for the budget dashboards' entries table.
+
+  A partial rather than a helper on purpose: partial lookup is global across
+  the plugin's view paths, so this resolves identically from CapexController
+  and OpexController. Helper-module visibility across plugin controllers is
+  not, and a header that silently renders as nothing is exactly the failure
+  this table cannot afford.
+
+  Locals:
+    key      - one of BudgetDashboard::BUDGET_SORT_KEYS
+    label    - localized column name
+    path_for - lambda taking a params hash and returning the dashboard URL
+               with the current year/filter/cap preserved
+
+  Reads @sort_key and @sort_dir, set by the controller.
+%>
+<%
+  active   = @sort_key.to_s == key.to_s
+  # Clicking a new column starts at descending: on money and utilization the
+  # question is always "which is worst", and worst is the large end.
+  next_dir = (active && @sort_dir == 'desc') ? 'asc' : 'desc'
+  aria     = active ? (@sort_dir == 'asc' ? 'ascending' : 'descending') : 'none'
+%>
+<th scope="col" aria-sort="<%= aria %>">
+  <%= link_to path_for.call(sort: key, direction: next_dir),
+              class: "pr-sort#{active ? ' pr-sort--active' : ''}" do %><%= label %><% if active %><span class="pr-sort__caret" aria-hidden="true"><%= @sort_dir == 'asc' ? '▲' : '▼' %></span><% end %><% end %>
+</th>

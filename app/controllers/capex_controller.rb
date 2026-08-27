@@ -152,6 +152,13 @@ class CapexController < ApplicationController
     @budget_severity         = figures[:severity]
     @budget_undefined        = figures[:budget_undefined]
 
+    # Sorting is applied to the materialised rows, not to @capex_entries: that
+    # stays a relation because the TPC grouping below and the JSON branch both
+    # use it, and re-ordering it in SQL would drop the preload.
+    @sort_key = params[:sort].presence
+    @sort_dir = params[:direction].to_s == 'asc' ? 'asc' : 'desc'
+    @sorted_entries = budget_dashboard_sort(@capex_entries, @sort_key, @sort_dir)
+
     # Quarterly breakdown using unordered relation
     if @use_exchange_rates
       @quarterly_data = { q1: 0, q2: 0, q3: 0, q4: 0 }
@@ -240,6 +247,14 @@ class CapexController < ApplicationController
     
     respond_to do |format|
       format.html
+      # Exports exactly what is on screen: same year, same TPC filter, same
+      # sort order. A dashboard whose numbers cannot leave it is why the
+      # spreadsheet it replaces stays open in the next tab.
+      format.csv do
+        send_data capex_dashboard_csv,
+                  filename: "capex_dashboard_#{@project.identifier}_#{@current_year}.csv",
+                  type: 'text/csv'
+      end
       format.json do
         render json: {
           total_budget: @total_budget,
@@ -269,6 +284,27 @@ class CapexController < ApplicationController
   end
 
   private
+
+  # Rows in the order the table shows them, with the same "No budget set"
+  # wording the page uses — a 0 in the utilization column of an export would
+  # reproduce the exact misreading the dashboard was fixed to avoid.
+  def capex_dashboard_csv
+    Redmine::Export::CSV.generate do |csv|
+      csv << [l(:label_tpc_code), l(:field_description), l(:field_currency),
+              l(:label_total_budget), l(:label_utilized), l(:label_remaining),
+              l(:label_utilization), l(:label_linked_prs)]
+      @sorted_entries.each do |capex|
+        csv << [capex.tpc_code,
+                capex.description,
+                capex.currency,
+                capex.total_amount,
+                capex.utilized_amount,
+                capex.remaining_amount,
+                (capex.budget_undefined? ? l(:label_no_budget_set) : capex.utilization_percentage),
+                capex.purchase_requests.size]
+      end
+    end
+  end
 
   def find_project
     @project = Project.find(params[:project_id])

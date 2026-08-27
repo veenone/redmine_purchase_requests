@@ -79,4 +79,33 @@ module BudgetDashboard
   def budget_group_rank(data)
     [data[:budget_undefined] ? 0 : 1, -data[:utilization_percentage].to_f]
   end
+
+  # Sortable columns for the entries table.
+  #
+  # Sorted in Ruby rather than SQL, and not by preference: utilized_amount,
+  # remaining_amount and utilization_percentage are each computed by walking a
+  # record's linked purchase requests and converting them, so there is no
+  # column to ORDER BY. Pushing the sort into the relation would also re-issue
+  # the query and defeat the `.includes(:purchase_requests)` preload the
+  # figures depend on. The rows are already materialised by then, so this costs
+  # an array sort.
+  BUDGET_SORT_KEYS = {
+    'budget'    => ->(e) { e.total_amount.to_f },
+    'utilized'  => ->(e) { e.utilized_amount.to_f },
+    'remaining' => ->(e) { e.remaining_amount.to_f },
+    # An undefined ratio is not a low one. Budget-less spend sorts as the most
+    # utilized, matching how budget_group_rank ranks it in the card grid.
+    'utilization' => ->(e) { e.budget_undefined? ? Float::INFINITY : e.utilization_percentage.to_f }
+  }.freeze
+
+  # Unknown or absent sort key returns the rows in their existing order, so a
+  # hand-edited or stale URL degrades to the default view rather than 500ing.
+  def budget_dashboard_sort(entries, sort_key, direction)
+    rows = entries.to_a
+    key = BUDGET_SORT_KEYS[sort_key.to_s]
+    return rows unless key
+
+    rows = rows.sort_by { |e| key.call(e) }
+    direction.to_s == 'asc' ? rows : rows.reverse
+  end
 end

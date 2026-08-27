@@ -165,7 +165,22 @@ def fixtures
     ['opex_rates_on', OpexController, proj, sy, -> (p) {
       seed_opex(p, { currency: 'USD', total_amount: 1000,
                      q1_amount: 400, q2_amount: 200, q3_amount: 200, q4_amount: 200 })
-    }, { 'opex_exchange_rates' => { SEED_YEAR.to_s => { 'USD' => 2 } } }]
+    }, { 'opex_exchange_rates' => { SEED_YEAR.to_s => { 'USD' => 2 } } }],
+
+    # More groups than the card grid's cap. Without this the cap is dead code
+    # in every fixture: the real project has far fewer TPC codes than 12, which
+    # is exactly why an uncapped grid looked fine for so long.
+    ['capex_many_groups', CapexController, proj, sy, -> (p) {
+      14.times { |i| seed_capex(p, { tpc_code: format('FIX-%02d', i) }) } }],
+    # ...and the escape hatch out of it. The pair is what proves the cap hides
+    # nothing permanently.
+    ['capex_many_groups_all', CapexController, proj, sy.merge(all_groups: '1'), -> (p) {
+      14.times { |i| seed_capex(p, { tpc_code: format('FIX-%02d', i) }) } }],
+
+    # Column sort. Runs against the real data fixture so the ordering has
+    # something to reorder; ascending remaining puts the worst line first.
+    ['capex_sorted_remaining_asc', CapexController, proj,
+     { year: y_data.to_s, sort: 'remaining', direction: 'asc' }, nil]
   ]
 end
 

@@ -2,4 +2,5 @@
   <%= render 'shared/budget_grouping',
         grouping: @category_grouping,
         heading: l(:label_budget_by_category),
+        show_all_path: dashboard_project_opex_index_path(@project, { year: @current_year, tpc_code_id: @selected_tpc_code_id, all_groups: 1 }.compact),
         title_for: ->(category_name) { category_name } %>

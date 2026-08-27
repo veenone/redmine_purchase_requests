@@ -4,20 +4,28 @@
     <div class="autoscroll">
       <table class="pr-table">
         <caption class="sr-only"><%= l(:label_caption_entries) %></caption>
+        <%# Sort links carry the year, the TPC filter and the card-grid cap, so
+            sorting never silently drops the filter the reader is looking at. %>
+        <% sort_path = ->(extra) {
+             dashboard_project_capex_index_path(@project,
+               { year: @current_year,
+                 tpc_code_id: @selected_tpc_code_id,
+                 all_groups: params[:all_groups].presence }.compact.merge(extra))
+           } %>
         <thead>
           <tr>
             <th scope="col"><%= l(:label_tpc_code) %></th>
             <th scope="col"><%= l(:field_description) %></th>
-            <th scope="col"><%= l(:label_total_budget) %></th>
-            <th scope="col"><%= l(:label_utilized) %></th>
-            <th scope="col"><%= l(:label_remaining) %></th>
-            <th scope="col"><%= l(:label_utilization) %></th>
+            <%= render 'shared/sort_header', key: 'budget',      label: l(:label_total_budget), path_for: sort_path %>
+            <%= render 'shared/sort_header', key: 'utilized',    label: l(:label_utilized),     path_for: sort_path %>
+            <%= render 'shared/sort_header', key: 'remaining',   label: l(:label_remaining),    path_for: sort_path %>
+            <%= render 'shared/sort_header', key: 'utilization', label: l(:label_utilization),  path_for: sort_path %>
             <th scope="col"><%= l(:label_linked_prs) %></th>
             <th scope="col" class="buttons"><%= l(:label_actions) %></th>
           </tr>
         </thead>
         <tbody>
-          <% @capex_entries.each do |capex| %>
+          <% @sorted_entries.each do |capex| %>
             <tr class="<%= cycle('odd', 'even') %>">
               <td>
                 <span class="tpc-number"><%= capex.tpc_code %></span>

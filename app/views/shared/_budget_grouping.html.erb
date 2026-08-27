@@ -14,12 +14,27 @@
     title_for - lambda/proc taking a group_key and returning the markup (or
                 plain string — either is fine, both get run through `<%=`)
                 for the card's <h3>
+    show_all_path - dashboard URL carrying all_groups=1. Optional, but a
+                caller that omits it gets an UNCAPPED grid rather than a
+                silently truncated one: hiding groups with no way to reveal
+                them is the worse failure, and a missing local must fail in
+                the safe direction.
 %>
 <% if grouping && grouping.any? %>
+  <%
+    # The grid answers "which lines are at risk", and that is answered by the
+    # first screenful. A year with dozens of groups turned the answer into a
+    # scroll — 60 cards at a 420px minimum before the entries table even
+    # starts. Sorted worst-first, so the cap keeps the part that matters.
+    can_show_all = defined?(show_all_path) && show_all_path.present?
+    cap    = (params[:all_groups].present? || !can_show_all) ? grouping.size : 12
+    shown  = grouping.first(cap)
+    hidden = grouping.size - shown.size
+  %>
   <div class="details-section">
     <h4><%= heading %></h4>
     <div class="dashboard-container">
-      <% grouping.each do |group_key, data| %>
+      <% shown.each do |group_key, data| %>
         <div class="dashboard-card">
           <div class="dashboard-card-header">
             <h3>
@@ -80,5 +95,11 @@
         </div>
       <% end %>
     </div>
+    <% if hidden > 0 %>
+      <p class="pr-grouping-more">
+        <%= link_to l(:label_show_all_groups, count: grouping.size), show_all_path %>
+        <span class="pr-grouping-more__note"><%= l(:label_groups_hidden, count: hidden) %></span>
+      </p>
+    <% end %>
   </div>
 <% end %>
