@@ -786,6 +786,9 @@ en:
   label_committed_note: "Requests linked to a budget line, any status, converted at current rates"
   label_remaining: "Remaining"
   label_over_budget_by: "Over budget by"
+  # A zero budget has no ratio to report. utilization_percentage returns 0
+  # there because it must return a number; this is what gets shown instead.
+  label_no_budget_set: "No budget set"
   label_utilization: "Utilization"
   label_no_budget_defined: "No CAPEX/OPEX budget defined for"
   label_view_data_table: "View data table"

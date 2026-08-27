@@ -150,6 +150,7 @@ class CapexController < ApplicationController
     @totals_unreliable       = figures[:totals_unreliable]
     @budget_over             = figures[:over_budget]
     @budget_severity         = figures[:severity]
+    @budget_undefined        = figures[:budget_undefined]
 
     # Quarterly breakdown using unordered relation
     if @use_exchange_rates
@@ -212,7 +213,7 @@ class CapexController < ApplicationController
       end
       
       utilization_percentage = total_budget > 0 ? (total_utilized / total_budget * 100).round(2) : 0
-      
+
       @tpc_grouping[tpc_code] = {
         # Carried so the dashboard can link a card to its filtered view;
         # the grouping is keyed by code string but the filter takes an id.
@@ -222,13 +223,19 @@ class CapexController < ApplicationController
         total_budget: total_budget,
         total_utilized: total_utilized,
         utilization_percentage: utilization_percentage,
+        # Spend with no budget behind it. utilization_percentage is 0 here
+        # because the denominator is, which would render the group as a green
+        # low-severity card. See BudgetDashboard#budget_dashboard_figures.
+        budget_undefined: total_budget.to_f <= 0 && total_utilized.to_f > 0,
         currency_symbol: currency_symbol
       }
     end
 
     # Alphabetical is merely what group_by returned. The question this section
-    # answers is "which codes are at risk", so the most utilized lead.
-    @tpc_grouping = @tpc_grouping.sort_by { |_code, d| -d[:utilization_percentage].to_f }.to_h
+    # answers is "which codes are at risk", so the most at-risk lead — with
+    # budget-less spend ahead of any percentage, since its ratio is undefined
+    # rather than low (budget_group_rank).
+    @tpc_grouping = @tpc_grouping.sort_by { |_code, d| budget_group_rank(d) }.to_h
 
     
     respond_to do |format|

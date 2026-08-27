@@ -31,21 +31,37 @@ end
 
 SEED_YEAR = 2099  # far outside real data, so seeded rows can never collide
 
-def seed_capex(project, attrs)
-  Capex.create!({
+def seed_capex_record(project, attrs)
+  Capex.new({
     project: project, year: SEED_YEAR, description: 'snapshot fixture',
     tpc_code: 'FIX-1', total_amount: 1000, currency: 'EUR',
     q1_amount: 250, q2_amount: 250, q3_amount: 250, q4_amount: 250
   }.merge(attrs))
 end
 
-def seed_opex(project, attrs)
+def seed_opex_record(project, attrs)
   cat = OpexCategory.first || OpexCategory.create!(name: 'Fixture')
-  Opex.create!({
+  Opex.new({
     project: project, year: SEED_YEAR, description: 'snapshot fixture',
     opex_code: 'FIX-1', total_amount: 1000, currency: 'EUR', category_id: cat.id,
     q1_amount: 250, q2_amount: 250, q3_amount: 250, q4_amount: 250
   }.merge(attrs))
+end
+
+def seed_capex(project, attrs)
+  seed_capex_record(project, attrs).tap { |c| c.save! }
+end
+
+def seed_opex(project, attrs)
+  seed_opex_record(project, attrs).tap { |o| o.save! }
+end
+
+# Only for states the model's own validations forbid. Every use must say in a
+# comment why the state is worth rendering correctly even though the app cannot
+# produce it — otherwise this is just a way to test impossible things.
+def seed_unvalidated(record)
+  record.save!(validate: false)
+  record
 end
 
 # A linked purchase request is how utilized_amount becomes non-zero.
@@ -96,6 +112,25 @@ def fixtures
     # exactly 100%: the full-circle branch, distinct from >100%.
     ['capex_exactly_100', CapexController, proj, sy, -> (p) {
       c = seed_capex(p, {}); seed_request(p, c, 1000, 'EUR') }],
+
+    # Spend against a zero budget: the ratio has no denominator, so every
+    # percentage path returns 0 and renders the most severe state on the page
+    # as its greenest. Covers the tile, the group card, the entries-table cell
+    # and the donut, which all read that same 0.
+    #
+    # Seeded with validate: false deliberately. Capex/Opex validate
+    # total_amount as greater_than: 0, so this state cannot be reached through
+    # the application today and the rendering below is a guard, not a live
+    # bugfix — see Capex#budget_undefined?. The fixture exists so that if the
+    # validation is ever relaxed (allowing a budget line to be opened before
+    # its amount is agreed is a plausible request), the page is already right
+    # instead of silently reporting 0% against committed spend.
+    ['capex_no_budget', CapexController, proj, sy, -> (p) {
+      c = seed_unvalidated(seed_capex_record(p, { total_amount: 0, q1_amount: 0, q2_amount: 0, q3_amount: 0, q4_amount: 0 }))
+      seed_request(p, c, 750, 'EUR') }],
+    ['opex_no_budget',  OpexController,  proj, sy, -> (p) {
+      o = seed_unvalidated(seed_opex_record(p, { total_amount: 0, q1_amount: 0, q2_amount: 0, q3_amount: 0, q4_amount: 0 }))
+      seed_request(p, o, 750, 'EUR') }],
 
     # two currencies with conversion off: totals are a sum of unlike units,
     # so the reliability banner shows and no severity may be derived.

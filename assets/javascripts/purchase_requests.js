@@ -218,7 +218,13 @@ function generateBudgetDonutChart(containerId, data, labels) {
   svg.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
 
   var total = data.utilized + data.remaining;
-  if (total === 0) {
+  // A zero total is only "no data" when nothing was committed either. Spend
+  // against a zero budget also sums to zero here (utilized + -utilized), and
+  // testing `total === 0` sent the most severe state this chart can show —
+  // money spent with no budget behind it — down the empty-state path and drew
+  // "No budget data" over it. Test both terms, so that case falls through to
+  // the over-budget ring below.
+  if (data.utilized === 0 && data.remaining === 0) {
     prChartA11y(container, [], { empty: true, emptyText: labels.noData });
     return;
   }

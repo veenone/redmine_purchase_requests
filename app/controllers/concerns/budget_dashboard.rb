@@ -46,6 +46,14 @@ module BudgetDashboard
     # is a false alarm, so it is suppressed rather than shown in red.
     over_budget = !totals_unreliable && total_remaining < 0
 
+    # `pct` above is 0 whenever the denominator is 0, because it has to return
+    # a number. Spend against an unset budget therefore reads as 0% utilised —
+    # a green bar and no badge on the one condition this page exists to catch.
+    # Flagged here so the views can render it as its own state. Suppressed when
+    # totals are unreliable for the same reason over_budget is: it is a
+    # conclusion, and a conclusion drawn from unlike units is a false alarm.
+    budget_undefined = !totals_unreliable && total_budget <= 0 && total_utilized > 0
+
     {
       total_budget: total_budget,
       total_utilized: total_utilized,
@@ -55,7 +63,20 @@ module BudgetDashboard
       unconvertible_currencies: unconvertible,
       totals_unreliable: totals_unreliable,
       over_budget: over_budget,
-      severity: over_budget ? 'high' : (pct >= 80 ? 'medium' : 'low')
+      budget_undefined: budget_undefined,
+      # budget_undefined implies over_budget (remaining is -total_utilized), so
+      # it is already 'high'. Named in the condition anyway: the two flags are
+      # set independently and a later change to either must not silently
+      # downgrade this one.
+      severity: (over_budget || budget_undefined) ? 'high' : (pct >= 80 ? 'medium' : 'low')
     }
+  end
+
+  # Ranking key for the per-group card grid. Groups with spend against no
+  # budget have an undefined ratio, so sorting on utilization_percentage alone
+  # (which is 0 there) buries the most severe groups at the bottom of a
+  # worst-first list.
+  def budget_group_rank(data)
+    [data[:budget_undefined] ? 0 : 1, -data[:utilization_percentage].to_f]
   end
 end

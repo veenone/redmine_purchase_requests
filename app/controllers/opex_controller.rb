@@ -181,6 +181,7 @@ class OpexController < ApplicationController
       @totals_unreliable      = figures[:totals_unreliable]
       @budget_over            = figures[:over_budget]
       @budget_severity        = figures[:severity]
+      @budget_undefined       = figures[:budget_undefined]
 
       # Quarterly breakdown — converted through the same lambda as the totals.
       @quarterly_data = {
@@ -242,13 +243,19 @@ class OpexController < ApplicationController
           total_utilized: total_utilized,
           entries_count: entries_count,
           utilization_percentage: utilization_percentage,
+          # Spend with no budget behind it. utilization_percentage is 0 here
+          # because the denominator is, which would render the group as a green
+          # low-severity card. See BudgetDashboard#budget_dashboard_figures.
+          budget_undefined: total_budget.to_f <= 0 && total_utilized.to_f > 0,
           currency_symbol: currency_symbol
         }
       end
 
       # Alphabetical is merely what group_by returned. This section answers
-      # "which categories are at risk", so the most utilized lead.
-      @category_grouping = @category_grouping.sort_by { |_k, d| -d[:utilization_percentage].to_f }.to_h
+      # "which categories are at risk", so the most at-risk lead — with
+      # budget-less spend ahead of any percentage, since its ratio is undefined
+      # rather than low (budget_group_rank).
+      @category_grouping = @category_grouping.sort_by { |_k, d| budget_group_rank(d) }.to_h
     end
   end
 

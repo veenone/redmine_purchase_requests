@@ -72,8 +72,16 @@
         <% end %>
       </div>
       <div class="stat-label">
-        <span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span><% unless @totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
-        <% unless @totals_unreliable %>
+        <%# @budget_undefined is checked before the percentage: with a zero
+            budget the ratio has no denominator, and printing the 0 that
+            utilization_percentage has to return renders committed spend as
+            0% utilised under a green bar. %>
+        <span title="<%= l(:label_committed_note) %>"><%= l(:label_utilized) %></span><% if @budget_undefined %> <span class="pr-badge pr-badge--danger"><%= l(:label_no_budget_set) %></span><% elsif !@totals_unreliable %> (<%= @utilization_percentage %>%)<% end %>
+        <% if @budget_undefined %>
+          <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
+            <div class="utilization-fill high" style="width: 100%"></div>
+          </div>
+        <% elsif !@totals_unreliable %>
           <div class="utilization-bar utilization-bar--inline" aria-hidden="true">
             <div class="utilization-fill <%= @budget_severity %>" style="width: <%= [@utilization_percentage.to_f, 100].min %>%"></div>
           </div>
@@ -154,8 +162,12 @@
         <div class="capex-donut-container">
           <div class="capex-donut" id="utilization-donut-chart" data-chart-label="<%= l(:label_budget_utilization_overview) %>">
             <div class="capex-donut-center">
-              <div style="font-weight:700;font-size:14px;"><%= @utilization_percentage %>%</div>
-              <div style="font-size:10px;color:var(--pr-ink-muted);"><%= l(:label_utilization) %></div>
+              <%# An undefined ratio gets a dash, not a 0. The words go below,
+                  where there is room for them; the ring itself comes out solid
+                  danger because remaining is negative (see
+                  generateBudgetDonutChart). %>
+              <div style="font-weight:700;font-size:14px;"><%= @budget_undefined ? '—' : "#{@utilization_percentage}%" %></div>
+              <div style="font-size:10px;color:var(--pr-ink-muted);"><%= @budget_undefined ? l(:label_no_budget_set) : l(:label_utilization) %></div>
             </div>
           </div>
           <div style="flex:1;">

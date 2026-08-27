@@ -8,7 +8,7 @@
   Locals:
     grouping  - Hash of group_key => figures hash with keys :mixed_currency,
                 :entries_count, :total_budget, :total_utilized,
-                :utilization_percentage, :currency_symbol
+                :utilization_percentage, :budget_undefined, :currency_symbol
                 (CAPEX: @tpc_grouping; OPEX: @category_grouping)
     heading   - localized heading shown above the card grid
     title_for - lambda/proc taking a group_key and returning the markup (or
@@ -28,7 +28,12 @@
                   filtered view to point at return nil and the title stays text. %>
               <% href = defined?(link_for) && link_for ? link_for.call(group_key, data) : nil %>
               <% if href %><%= link_to title_for.call(group_key), href %><% else %><%= title_for.call(group_key) %><% end %>
-              <% if data[:utilization_percentage].to_f >= 100 %>
+              <%# Budget-less spend is checked first and named differently.
+                  Its ratio is undefined, not 100% — calling it "over budget by"
+                  would imply a budget it could be over. %>
+              <% if data[:budget_undefined] %>
+                <span class="pr-badge pr-badge--danger"><%= l(:label_no_budget_set) %></span>
+              <% elsif data[:utilization_percentage].to_f >= 100 %>
                 <span class="pr-badge pr-badge--danger"><%= l(:label_over_budget_by) %></span>
               <% end %>
             </h3>
@@ -54,15 +59,22 @@
               </div>
             </div>
             <div class="utilization-bar">
-              <div class="utilization-fill <%= data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [data[:utilization_percentage].to_f, 100].min %>%"></div>
+              <div class="utilization-fill <%= data[:budget_undefined] || data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= data[:budget_undefined] ? 100 : [data[:utilization_percentage].to_f, 100].min %>%"></div>
             </div>
             <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
-              <%# The bar is clamped so it cannot overflow its track, so the
-                  figure beside it carries the real magnitude — otherwise 101%
-                  and 300% render identically. %>
-              <%= content_tag :span, "#{data[:utilization_percentage]}%",
-                    class: (data[:utilization_percentage].to_f >= 100 ? 'stat-currency--over' : nil) %>
-              <%= l(:label_utilization) %>
+              <% if data[:budget_undefined] %>
+                <%# No denominator, so no percentage to print. Saying "0%"
+                    here is what made budget-less spend the greenest card on
+                    the page. %>
+                <span class="stat-currency--over"><%= l(:label_no_budget_set) %></span>
+              <% else %>
+                <%# The bar is clamped so it cannot overflow its track, so the
+                    figure beside it carries the real magnitude — otherwise 101%
+                    and 300% render identically. %>
+                <%= content_tag :span, "#{data[:utilization_percentage]}%",
+                      class: (data[:utilization_percentage].to_f >= 100 ? 'stat-currency--over' : nil) %>
+                <%= l(:label_utilization) %>
+              <% end %>
             </div>
           </div>
         </div>

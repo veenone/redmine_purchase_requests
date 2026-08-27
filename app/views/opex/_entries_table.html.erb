@@ -52,10 +52,18 @@
                 </span>
               </td>
               <td>
-                <div class="utilization-bar" style="width:80px;height:15px;">
-                  <div class="utilization-fill <%= opex.utilization_percentage.to_f >= 100 ? 'high' : (opex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [opex.utilization_percentage.to_f, 100].min %>%"></div>
-                </div>
-                <span class="utilization-text"><%= opex.utilization_percentage %>%</span>
+                <% if opex.budget_undefined? %>
+                  <%# utilization_percentage returns 0 when total_amount is 0,
+                      because it has to return something. Printing that 0 gave
+                      budget-less spend a green bar and the lowest severity in
+                      the table. There is no ratio to draw here — say so. %>
+                  <span class="pr-badge pr-badge--danger"><%= l(:label_no_budget_set) %></span>
+                <% else %>
+                  <div class="utilization-bar" style="width:80px;height:15px;">
+                    <div class="utilization-fill <%= opex.utilization_percentage.to_f >= 100 ? 'high' : (opex.utilization_percentage.to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= [opex.utilization_percentage.to_f, 100].min %>%"></div>
+                  </div>
+                  <span class="utilization-text"><%= opex.utilization_percentage %>%</span>
+                <% end %>
               </td>
               <td>
                 <% pr_count = opex.purchase_requests.size %>
