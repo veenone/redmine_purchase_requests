@@ -39,11 +39,16 @@
                 </span>
               </td>
               <td>
-                <%# Same rule as the tile and the legend: the label carries the
-                    direction, the number carries the magnitude. %>
-                <span class="amount <%= opex.remaining_amount < 0 ? 'over-budget' : 'remaining' %>"
-                      title="<%= opex.remaining_amount < 0 ? l(:label_over_budget_by) : l(:label_remaining) %>">
-                  <%= opex.currency_symbol %><%= number_with_precision(opex.remaining_amount.to_f.abs, precision: 2, delimiter: ',') %>
+                <%# The tile above can put the direction in a label because it
+                    has one label per figure. A column has one header for every
+                    row, so the direction has to travel on the number itself.
+                    A minus sign is text: it survives colour-blindness, a
+                    stylesheet that never loaded, and a touch device with no
+                    hover — none of which the previous colour + title="" pairing
+                    did, which left a 500 surplus and a 500 deficit identical. %>
+                <% remaining = opex.remaining_amount.to_f %>
+                <span class="amount <%= remaining < 0 ? 'over-budget' : 'remaining' %>">
+                  <% if remaining < 0 %><span class="sr-only"><%= l(:label_over_budget_by) %>: </span>&minus;<% end %><%= opex.currency_symbol %><%= number_with_precision(remaining.abs, precision: 2, delimiter: ',') %>
                 </span>
               </td>
               <td>
