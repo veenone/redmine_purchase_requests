@@ -45,3 +45,6 @@ MIGRATION_FIXES_APPLIED.md
 !test/**/*_test.rb
 dist/
 tmp/dashboard_snapshots/
+
+# SDD scratch: ledger, briefs, review packages. Not part of the plugin.
+.superpowers/
