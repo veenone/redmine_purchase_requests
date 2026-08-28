@@ -135,6 +135,23 @@ far the request got before it stopped.
 Clears the four cancellation fields and returns `lifecycle` to `active`.
 Refused when a successor exists.
 
+## Prerequisite: the test environment cannot currently boot
+
+```
+redmine_customize_core_fields plugin requires the redmine_base_rspec plugin
+  (Redmine::PluginRequirementError)
+```
+
+`redmine_customize_core_fields` declares a test-only dependency on
+`redmine_base_rspec`, which is not installed. The test environment therefore
+fails during initialisation, and the plugin's six existing test files have
+never run on this instance.
+
+The first task installs `redmine_base_rspec`, satisfying the declaration.
+Everything after it is test-driven; without it, nothing here can be verified
+by a test at all. A `redmine_test` database is already configured and separate
+from production, so the plugin dependency is the only obstacle.
+
 ## The budget rule
 
 ```ruby
@@ -146,13 +163,40 @@ end
 Completed requests still count: that money is committed. Only cancelled and
 superseded requests stop.
 
-Applied at twelve sites where a figure represents committed spend:
+### Thirty sites, one rule
 
-- `Capex#utilized_amount`, `Opex#utilized_amount`
-- two dashboard currency totals in `PurchaseRequestsController`
-- two monthly-trend sums in `PurchaseRequestsController`
-- six value rollups in `ReportsController` (total estimated value; CAPEX,
-  OPEX, direct-TPC and non-budgeted values; and the period sum)
+An earlier count of twelve was taken from a truncated search. The real figure
+is thirty:
+
+| Location | Sites |
+| --- | --- |
+| `Capex#utilized_amount`, `Opex#utilized_amount` | 2 |
+| `PurchaseRequestsController` — currency totals, monthly trends | 4 |
+| `ReportsController` — value rollups, lines 279 to 2183 | 24 |
+
+Thirty hand-edits, each individually plausible, is the shape of change where
+one gets missed and two screens disagree about the same money without anyone
+noticing. So the rule is stated once and called, rather than copied:
+
+```ruby
+# PurchaseRequest
+scope :budgeted, -> { where(lifecycle: 'active') }
+
+def self.committed_sum(scope = all)
+  scope.budgeted.where.not(estimated_price: nil).sum(:estimated_price)
+end
+```
+
+`ReportsController` repeats `.where.not(estimated_price: nil).sum(:estimated_price)`
+two dozen times, several wrapped in `rescue 0`. Each becomes a
+`PurchaseRequest.committed_sum(...)` call. A site missed during the sweep is
+then a visible leftover of the old pattern rather than an invisible wrong
+number, which is the difference between a bug you can grep for and one you
+cannot.
+
+The count sites are still left alone: total, open and closed counts, the
+priority breakdown, monthly request counts, `TpcCode#purchase_requests.count`,
+and the OPEX entries-table count.
 
 Left alone, deliberately: total/open/closed counts, the priority breakdown,
 monthly request counts, `TpcCode#purchase_requests.count`, and the OPEX
@@ -258,10 +302,15 @@ fixed as part of it.
 
 ## Risks
 
-**Twelve call sites is enough to miss one.** A missed site shows as two
-screens disagreeing about the same money. The plan should list them
-explicitly and check each off, and the report test above covers the class of
-error.
+**Thirty call sites is more than enough to miss one.** The
+`committed_sum` helper is the mitigation: after the sweep, any surviving
+`.where.not(estimated_price: nil).sum(:estimated_price)` is a missed site and
+can be found with a single search. The plan lists every line, and the report
+test covers the class of error.
+
+**`ReportsController` is over 2,000 lines**, which is why the pattern was
+copied so many times. Splitting it is out of scope here, but the helper at
+least removes one reason to keep copying.
 
 **The preload interaction is easy to undo.** The comment at each of the two
 techniques is the mitigation; the query-count test is the backstop.
