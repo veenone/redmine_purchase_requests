@@ -3,7 +3,7 @@
 <% end %>
 
 <div class="contextual">
-  <%= link_to new_department_path, class: 'pr-button pr-button-primary pr-button-icon' do %>
+  <%= link_to new_department_path_for, class: 'pr-button pr-button-primary pr-button-icon' do %>
     <span class="icon icon-add"><%= l(:label_department_new, default: 'New Department') %></span>
   <% end %>
 </div>
@@ -29,10 +29,10 @@
             <td><%= @tpc_counts.fetch(department.id, 0) %></td>
             <td class="buttons">
               <div class="pr-table-actions">
-                <%= link_to edit_department_path(department), class: 'pr-button pr-button-secondary pr-button-icon small' do %>
+                <%= link_to edit_department_path_for(department), class: 'pr-button pr-button-secondary pr-button-icon small' do %>
                   <span class="icon icon-edit"><%= l(:button_edit) %></span>
                 <% end %>
-                <%= link_to department_path(department), method: :delete,
+                <%= link_to department_path_for(department), method: :delete,
                             data: { confirm: l(:text_are_you_sure) },
                             class: 'pr-button pr-button-danger pr-button-icon small' do %>
                   <span class="icon icon-del"><%= l(:button_delete) %></span>

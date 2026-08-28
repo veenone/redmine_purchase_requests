@@ -1,5 +1,5 @@
 <%= form_with model: @department,
-              url: (@department.new_record? ? departments_path : department_path(@department)),
+              url: (@department.new_record? ? departments_index_path_for : department_path_for(@department)),
               method: (@department.new_record? ? :post : :patch),
               local: true, html: { class: 'department-form' } do |f| %>
   <% if @department.errors.any? %>
@@ -33,6 +33,6 @@
 
   <div class="pr-form-actions">
     <%= f.submit (@department.new_record? ? l(:button_create) : l(:button_save)), class: 'pr-button pr-button-primary' %>
-    <%= link_to l(:button_cancel), departments_path, class: 'pr-button pr-button-cancel' %>
+    <%= link_to l(:button_cancel), departments_index_path_for, class: 'pr-button pr-button-cancel' %>
   </div>
 <% end %>

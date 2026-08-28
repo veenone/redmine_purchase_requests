@@ -141,8 +141,9 @@ Redmine::Plugin.register :redmine_purchase_requests do
   menu :project_menu, :departments,
        { controller: 'departments', action: 'index' },
        caption: :label_departments,
+       param: :project_id,
        parent: :budget_management,
-       if: Proc.new { |project| project.module_enabled?(:purchase_requests) && (User.current.admin? || User.current.allowed_to?(:view_departments, nil, global: true)) }
+       if: Proc.new { |project| project.module_enabled?(:purchase_requests) && (User.current.admin? || User.current.allowed_to?(:view_departments, project)) }
 
   # Add global TPC codes menu to top navigation (configurable via plugin settings)
   menu :top_menu, :global_tpc_codes,

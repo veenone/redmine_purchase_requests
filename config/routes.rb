@@ -57,6 +57,12 @@ RedmineApp::Application.routes.draw do
       end
     end
     
+    # Departments are global data, but reachable from inside a project so
+    # the Budget Management menu can link to them without dropping the user
+    # out of the project. Same controller and same rows either way — the
+    # controller notices params[:project_id] and keeps the context.
+    resources :departments, except: [:show]
+
     # Add project-scoped reports
     resources :reports, only: [:index] do
       collection do
