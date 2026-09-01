@@ -638,6 +638,7 @@ class PurchaseRequestsController < ApplicationController
       month_end = month_start.end_of_month
       requests = base_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), year)
                            .where(created_at: month_start..month_end)
+                           .budgeted
       amount = 0
       requests.where.not(estimated_price: nil).each do |r|
         amount += helpers.convert_currency(r.estimated_price, r.currency.presence || default_currency, default_currency)

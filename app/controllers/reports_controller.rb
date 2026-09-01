@@ -454,6 +454,7 @@ class ReportsController < ApplicationController
 
     # Top vendors by total value
     vendor_by_value = base_vendors.joins(:purchase_requests)
+                                  .where(purchase_requests: { lifecycle: 'active' })
                                   .where.not(purchase_requests: { estimated_price: nil })
                                   .group('vendors.id', 'vendors.name')
                                   .sum('purchase_requests.estimated_price')
@@ -599,7 +600,7 @@ class ReportsController < ApplicationController
       # Get costs from CAPEX entries
       capex_scope = @project ? tpc.capex.where(project_id: @project.id) : tpc.capex
       capex_scope.each do |capex|
-        capex.purchase_requests.each do |pr|
+        capex.purchase_requests.budgeted.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency_for_report(pr.estimated_price || 0, curr, default_currency)
           request_count += 1
@@ -610,7 +611,7 @@ class ReportsController < ApplicationController
       # Get costs from OPEX entries
       opex_scope = @project ? tpc.opex.where(project_id: @project.id) : tpc.opex
       opex_scope.each do |opex|
-        opex.purchase_requests.each do |pr|
+        opex.purchase_requests.budgeted.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency_for_report(pr.estimated_price || 0, curr, default_currency)
           request_count += 1
@@ -620,7 +621,7 @@ class ReportsController < ApplicationController
 
       # Get costs from direct purchase requests
       pr_scope = @project ? tpc.purchase_requests.where(project_id: @project.id) : tpc.purchase_requests
-      pr_scope.where.not(estimated_price: nil).each do |pr|
+      pr_scope.budgeted.where.not(estimated_price: nil).each do |pr|
         curr = pr.currency.presence || default_currency
         total_cost += convert_currency_for_report(pr.estimated_price, curr, default_currency)
         request_count += 1
@@ -804,6 +805,7 @@ class ReportsController < ApplicationController
     # Total PRs linked to CAPEX
     total_capex_prs = capex_items.joins(:purchase_requests).count
     total_capex_pr_value = capex_items.joins(:purchase_requests)
+                                      .where(purchase_requests: { lifecycle: 'active' })
                                       .where.not(purchase_requests: { estimated_price: nil })
                                       .sum('purchase_requests.estimated_price')
 

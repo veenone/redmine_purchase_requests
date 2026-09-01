@@ -366,7 +366,7 @@ class TpcCodesController < ApplicationController
       # Get costs from CAPEX entries (filter by project and year if applicable)
       capex_scope = @project ? tpc.capex.where(project_id: @project.id) : tpc.capex
       capex_scope.each do |capex|
-        capex_pr_scope = @selected_year ? capex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) : capex.purchase_requests
+        capex_pr_scope = @selected_year ? capex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year).budgeted : capex.purchase_requests.budgeted
         capex_pr_scope.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
@@ -377,7 +377,7 @@ class TpcCodesController < ApplicationController
       # Get costs from OPEX entries (filter by project and year if applicable)
       opex_scope = @project ? tpc.opex.where(project_id: @project.id) : tpc.opex
       opex_scope.each do |opex|
-        opex_pr_scope = @selected_year ? opex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) : opex.purchase_requests
+        opex_pr_scope = @selected_year ? opex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year).budgeted : opex.purchase_requests.budgeted
         opex_pr_scope.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
@@ -388,7 +388,7 @@ class TpcCodesController < ApplicationController
       # Get costs from direct purchase requests (filter by project and year if applicable)
       pr_scope = @project ? tpc.purchase_requests.where(project_id: @project.id) : tpc.purchase_requests
       pr_scope = pr_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) if @selected_year
-      pr_scope.where.not(estimated_price: nil).each do |pr|
+      pr_scope.budgeted.where.not(estimated_price: nil).each do |pr|
         curr = pr.currency.presence || default_currency
         total_cost += convert_currency(pr.estimated_price, curr, default_currency)
         request_count += 1
@@ -433,19 +433,19 @@ class TpcCodesController < ApplicationController
           tpc_total = 0
 
           # Direct TPC assignments
-          month_pr_scope.where(tpc_code_id: tpc_id).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.where(tpc_code_id: tpc_id).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via CAPEX
-          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via OPEX
-          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
@@ -475,19 +475,19 @@ class TpcCodesController < ApplicationController
           tpc_total = 0
 
           # Direct TPC assignments
-          month_pr_scope.where(tpc_code_id: tpc_id).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.where(tpc_code_id: tpc_id).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via CAPEX
-          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via OPEX
-          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end

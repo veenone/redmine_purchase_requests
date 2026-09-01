@@ -128,14 +128,22 @@ ActiveRecord::Base.transaction do
     before == 500 && opex.utilized_amount == 200
   end
 
-  check('no money sum bypasses the lifecycle rule') do
+  check('no money site bypasses the lifecycle rule') do
     root = File.expand_path('../..', __dir__)
+    shapes = {
+      'sum(:estimated_price)'   => /\.sum\(:estimated_price\)/,
+      'sum(string)'             => /\.sum\(['"][\w.]*estimated_price['"]\)/,
+      'average(:estimated_price)' => /\.average\(:estimated_price\)/,
+      'ruby accumulation'       => /\+=.*estimated_price/
+    }
+    filtered = /committed_sum|\.budgeted|counts_toward_budget\?|lifecycle/
     offenders = []
     Dir[File.join(root, 'app', 'controllers', '*.rb')].each do |path|
-      File.readlines(path).each_with_index do |line, i|
-        next unless line.include?('sum(:estimated_price)')
-        next if line.include?('committed_sum')
-        next if line.include?('.budgeted')
+      lines = File.readlines(path)
+      lines.each_with_index do |line, i|
+        next unless shapes.values.any? { |re| line =~ re }
+        window = lines[[0, i - 6].max..i].join
+        next if line =~ filtered || window =~ filtered
         offenders << "#{File.basename(path)}:#{i + 1}"
       end
     end
