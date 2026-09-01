@@ -8,6 +8,7 @@ RedmineApp::Application.routes.draw do
         get 'cancel'
         post 'cancel', action: 'perform_cancel'
         post 'uncancel'
+        post 'revise'
       end
       collection do
         get 'dashboard'

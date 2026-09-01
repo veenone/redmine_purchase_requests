@@ -16,6 +16,17 @@ class PurchaseRequest < ActiveRecord::Base
 
   LIFECYCLES = %w[active cancelled superseded].freeze
 
+  # Fields a revision carries forward from the request it supersedes.
+  # attributes.slice returns string keys, which is why this list uses
+  # strings. vendor is a string column shadowed by the vendor association --
+  # copying it through attributes is safe, but assigning vendor: to new()
+  # would hit the association and raise AssociationTypeMismatch.
+  COPIED_ON_REVISION = %w[
+    title description project_id vendor_id vendor tpc_code_id
+    capex_id opex_id category_id allocated_quarter allocated_amount
+    estimated_price currency priority due_date product_url notes user_id
+  ].freeze
+
   belongs_to :revision_of, class_name: 'PurchaseRequest', optional: true
   belongs_to :cancelled_by, class_name: 'User', optional: true
   has_one :superseded_by, class_name: 'PurchaseRequest', foreign_key: 'revision_of_id'
@@ -76,6 +87,46 @@ class PurchaseRequest < ActiveRecord::Base
 
     update!(lifecycle: 'active', cancelled_by_id: nil,
             cancelled_at: nil, cancellation_reason: nil)
+  end
+
+  def revisable?
+    active?
+  end
+
+  # Attachments are not copied: the superseded request keeps the quotation
+  # it was approved against, and the revision receives the new one.
+  # issue_id is not copied: the issue belongs to the version that raised it.
+  # status resets, because the price changed and needs approving again.
+  def build_revision
+    copied = attributes.slice(*COPIED_ON_REVISION)
+    # vendor is shadowed by belongs_to :vendor: assign_attributes calls
+    # vendor=, which is the association setter regardless of whether the key
+    # arrived as a string or a symbol, so handing it to new() still raises
+    # AssociationTypeMismatch. Set the raw column directly instead, the same
+    # way every build_request helper in test/verification/*.rb does.
+    vendor_value = copied.delete('vendor')
+    child = PurchaseRequest.new(copied)
+    child.write_attribute(:vendor, vendor_value)
+    child.revision_of_id  = id
+    child.revision_number = revision_number + 1
+    child.lifecycle       = 'active'
+    child.status_id       = PurchaseRequestStatus.default&.id
+    child
+  end
+
+  # One transaction: a parent superseded with no child would delete budget
+  # silently. The unique index on revision_of_id is what stops a second
+  # revision, so no check here can be raced past.
+  def revise!(user:)
+    raise "cannot revise a #{lifecycle} request" unless revisable?
+
+    child = nil
+    transaction do
+      child = build_revision
+      child.save!
+      update!(lifecycle: 'superseded')
+    end
+    child
   end
 
   has_many :purchase_request_subtasks, dependent: :destroy

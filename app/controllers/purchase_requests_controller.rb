@@ -8,7 +8,7 @@ class PurchaseRequestsController < ApplicationController
   include BudgetDashboard
 
   before_action :find_project, only: [:index, :new, :create, :dashboard]
-  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue, :cancel, :perform_cancel, :uncancel]
+  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue, :cancel, :perform_cancel, :uncancel, :revise]
   before_action :authorize, except: [:show]
   
   # Set the current menu item for proper highlighting
@@ -162,6 +162,12 @@ class PurchaseRequestsController < ApplicationController
     @purchase_request.uncancel!
     flash[:notice] = l(:notice_purchase_request_reinstated)
     redirect_to project_purchase_request_path(@project, @purchase_request)
+  end
+
+  def revise
+    child = @purchase_request.revise!(user: User.current)
+    flash[:notice] = l(:notice_purchase_request_revised)
+    redirect_to edit_project_purchase_request_path(@project, child)
   end
 
   def dashboard

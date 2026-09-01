@@ -27,6 +27,10 @@ Redmine::Plugin.register :redmine_purchase_requests do
     # role can be allowed to edit a request without being allowed to release
     # its money.
     permission :cancel_purchase_requests, { purchase_requests: [:cancel, :perform_cancel, :uncancel] }
+    # Revising creates a new record and supersedes this one, moving its
+    # budget to the successor -- the same reason cancelling is a separate
+    # permission from ordinary editing.
+    permission :revise_purchase_requests, { purchase_requests: [:revise] }
     permission :manage_purchase_request_settings, { purchase_request_settings: [:index] }
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
     permission :view_project_vendors, { project_vendors: [:index, :show] }
