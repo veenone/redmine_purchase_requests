@@ -8,7 +8,7 @@ class PurchaseRequestsController < ApplicationController
   include BudgetDashboard
 
   before_action :find_project, only: [:index, :new, :create, :dashboard]
-  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue]
+  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue, :cancel, :perform_cancel, :uncancel]
   before_action :authorize, except: [:show]
   
   # Set the current menu item for proper highlighting
@@ -142,6 +142,25 @@ class PurchaseRequestsController < ApplicationController
         flash[:error] = l(:error_creating_workflow_issue, default: 'Failed to create workflow issue. Please check the plugin settings.')
       end
     end
+    redirect_to project_purchase_request_path(@project, @purchase_request)
+  end
+
+  def cancel
+    render_403 and return unless @purchase_request.cancellable?
+  end
+
+  def perform_cancel
+    @purchase_request.cancel!(user: User.current, reason: params[:cancellation_reason])
+    flash[:notice] = l(:notice_purchase_request_cancelled)
+    redirect_to project_purchase_request_path(@project, @purchase_request)
+  rescue ArgumentError => e
+    flash.now[:error] = e.message
+    render :cancel
+  end
+
+  def uncancel
+    @purchase_request.uncancel!
+    flash[:notice] = l(:notice_purchase_request_reinstated)
     redirect_to project_purchase_request_path(@project, @purchase_request)
   end
 

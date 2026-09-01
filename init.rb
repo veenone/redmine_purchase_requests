@@ -23,6 +23,10 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :add_purchase_requests, { purchase_requests: [:new, :create] }
     permission :edit_purchase_requests, { purchase_requests: [:edit, :update, :create_workflow_issue] }
     permission :delete_purchase_requests, { purchase_requests: [:destroy] }
+    # Cancelling frees budget, so it is separable from ordinary editing -- a
+    # role can be allowed to edit a request without being allowed to release
+    # its money.
+    permission :cancel_purchase_requests, { purchase_requests: [:cancel, :perform_cancel, :uncancel] }
     permission :manage_purchase_request_settings, { purchase_request_settings: [:index] }
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
     permission :view_project_vendors, { project_vendors: [:index, :show] }

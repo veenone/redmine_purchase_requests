@@ -5,6 +5,9 @@ RedmineApp::Application.routes.draw do
     resources :purchase_requests do
       member do
         post 'create_workflow_issue'
+        get 'cancel'
+        post 'cancel', action: 'perform_cancel'
+        post 'uncancel'
       end
       collection do
         get 'dashboard'

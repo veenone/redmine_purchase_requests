@@ -53,6 +53,31 @@ class PurchaseRequest < ActiveRecord::Base
     active?
   end
 
+  def cancellable?
+    active?
+  end
+
+  # Reinstating is refused once something supersedes the request: the budget
+  # it would reclaim already belongs to its successor.
+  def uncancellable?
+    cancelled? && superseded_by.nil?
+  end
+
+  def cancel!(user:, reason:)
+    raise ArgumentError, 'a cancellation reason is required' if reason.to_s.strip.empty?
+    raise "cannot cancel a #{lifecycle} request" unless cancellable?
+
+    update!(lifecycle: 'cancelled', cancelled_by: user,
+            cancelled_at: Time.current, cancellation_reason: reason.strip)
+  end
+
+  def uncancel!
+    raise "cannot reinstate a #{lifecycle} request" unless uncancellable?
+
+    update!(lifecycle: 'active', cancelled_by_id: nil,
+            cancelled_at: nil, cancellation_reason: nil)
+  end
+
   has_many :purchase_request_subtasks, dependent: :destroy
   has_many :subtask_issues, through: :purchase_request_subtasks, source: :issue
   
