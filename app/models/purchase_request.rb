@@ -25,6 +25,18 @@ class PurchaseRequest < ActiveRecord::Base
   # Only active requests represent money anyone still intends to spend.
   scope :budgeted, -> { where(lifecycle: 'active') }
 
+  # The single statement of "money we are still committed to". Every figure
+  # representing committed spend calls this rather than repeating the
+  # filter, so a site missed during a sweep is a visible leftover of the old
+  # pattern rather than an invisible wrong number.
+  #
+  # Use this wherever the scope is a plain relation. Where an association
+  # has been preloaded -- Capex and Opex -- filter in Ruby instead; see
+  # those models for why.
+  def self.committed_sum(scope = all)
+    scope.budgeted.where.not(estimated_price: nil).sum(:estimated_price)
+  end
+
   def active?
     lifecycle == 'active'
   end

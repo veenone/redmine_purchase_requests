@@ -71,7 +71,7 @@ class Opex < ActiveRecord::Base
     target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
     # See Capex#utilized_amount: filter in Ruby so a preloaded association is
     # actually used instead of triggering a fresh scoped query.
-    purchase_requests.reject { |r| r.estimated_price.nil? }.sum do |request|
+    purchase_requests.reject { |r| r.estimated_price.nil? || !r.counts_toward_budget? }.sum do |request|
       source = request.currency.presence || target
       PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
     end

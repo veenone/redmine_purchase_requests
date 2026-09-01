@@ -65,10 +65,12 @@ class Capex < ActiveRecord::Base
     return @utilized_amount if defined?(@utilized_amount)
     @utilized_amount = begin
     target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    # reject/sum in Ruby rather than .where.not(...): a scoped where issues a
-    # fresh query even when the association is preloaded, defeating the
-    # controller's includes(:purchase_requests).
-    purchase_requests.reject { |r| r.estimated_price.nil? }.sum do |request|
+    # Filtered in Ruby, not with a scoped where. The dashboard controller
+    # preloads this association with includes(:purchase_requests); a scoped
+    # where issues a fresh query per record even when it is preloaded, which
+    # is the N+1 that preload was added to remove. PurchaseRequest.committed_sum
+    # is for plain relations, not for this.
+    purchase_requests.reject { |r| r.estimated_price.nil? || !r.counts_toward_budget? }.sum do |request|
       source = request.currency.presence || target
       PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
     end
