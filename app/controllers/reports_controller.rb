@@ -276,7 +276,7 @@ class ReportsController < ApplicationController
     priority_breakdown = purchase_requests.group(:priority).count
 
     # Financial summary
-    total_estimated_value = purchase_requests.where.not(estimated_price: nil).sum(:estimated_price)
+    total_estimated_value = PurchaseRequest.committed_sum(purchase_requests)
     avg_estimated_value = purchase_requests.where.not(estimated_price: nil).average(:estimated_price)
 
     # Monthly trend (last 12 months)
@@ -311,10 +311,10 @@ class ReportsController < ApplicationController
     }
 
     # Budget source by value
-    capex_value = purchase_requests.where.not(capex_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
-    opex_value = purchase_requests.where.not(opex_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
-    direct_tpc_value = purchase_requests.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
-    non_budgeted_value = purchase_requests.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price)
+    capex_value = PurchaseRequest.committed_sum(purchase_requests.where.not(capex_id: nil))
+    opex_value = PurchaseRequest.committed_sum(purchase_requests.where.not(opex_id: nil))
+    direct_tpc_value = PurchaseRequest.committed_sum(purchase_requests.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil))
+    non_budgeted_value = PurchaseRequest.committed_sum(purchase_requests.where(capex_id: nil, opex_id: nil, tpc_code_id: nil))
 
     budget_source_value = {
       'CAPEX' => capex_value || 0,
@@ -363,17 +363,17 @@ class ReportsController < ApplicationController
     direct_tpc_values = purchase_requests.joins(:tpc_code)
                                          .where.not(estimated_price: nil)
                                          .group('tpc_codes.tpc_number')
-                                         .sum(:estimated_price)
+                                         .budgeted.sum(:estimated_price)
 
     capex_tpc_values = purchase_requests.joins(capex: :tpc_code_record)
                                         .where.not(estimated_price: nil)
                                         .group('tpc_codes.tpc_number')
-                                        .sum(:estimated_price)
+                                        .budgeted.sum(:estimated_price)
 
     opex_tpc_values = purchase_requests.joins(opex: :tpc_code)
                                        .where.not(estimated_price: nil)
                                        .group('tpc_codes.tpc_number')
-                                       .sum(:estimated_price)
+                                       .budgeted.sum(:estimated_price)
 
     [direct_tpc_values, capex_tpc_values, opex_tpc_values].each do |tpc_hash|
       tpc_hash.each do |tpc_number, value|
@@ -387,9 +387,7 @@ class ReportsController < ApplicationController
     12.times do |i|
       month_start = i.months.ago.beginning_of_month
       month_end = month_start.end_of_month
-      value = purchase_requests.where(created_at: month_start..month_end)
-                               .where.not(estimated_price: nil)
-                               .sum(:estimated_price)
+      value = PurchaseRequest.committed_sum(purchase_requests.where(created_at: month_start..month_end))
       monthly_cost_trend[month_start.strftime('%b %Y')] = value || 0
     end
     monthly_cost_trend = monthly_cost_trend.to_a.reverse.to_h
@@ -647,9 +645,7 @@ class ReportsController < ApplicationController
 
     # Non-budgeted purchase requests (no CAPEX, OPEX, or direct TPC)
     non_budgeted_count = pr_base_scope.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).count
-    non_budgeted_value = pr_base_scope.where(capex_id: nil, opex_id: nil, tpc_code_id: nil)
-                                      .where.not(estimated_price: nil)
-                                      .sum(:estimated_price)
+    non_budgeted_value = PurchaseRequest.committed_sum(pr_base_scope.where(capex_id: nil, opex_id: nil, tpc_code_id: nil))
 
     # Monthly trend (last 12 months)
     monthly_trend = {}
@@ -756,7 +752,7 @@ class ReportsController < ApplicationController
     capex_items.includes(:purchase_requests).each do |capex|
       next if capex.total_amount.nil? || capex.total_amount == 0
 
-      spent = capex.purchase_requests.where.not(estimated_price: nil).sum(:estimated_price)
+      spent = PurchaseRequest.committed_sum(capex.purchase_requests)
       budgeted = capex.total_amount
       utilization_pct = (spent.to_f / budgeted * 100).round(1)
 
@@ -993,7 +989,7 @@ class ReportsController < ApplicationController
     currency_by_value = purchase_requests.where.not(currency: [nil, ''])
                                          .where.not(estimated_price: nil)
                                          .group(:currency)
-                                         .sum(:estimated_price)
+                                         .budgeted.sum(:estimated_price)
 
     {
       by_count: currency_by_count,
@@ -1043,9 +1039,7 @@ class ReportsController < ApplicationController
     # This month's activity
     this_month_start = Date.current.beginning_of_month
     this_month_prs = purchase_requests.where('created_at >= ?', this_month_start).count
-    this_month_value = purchase_requests.where('created_at >= ?', this_month_start)
-                                        .where.not(estimated_price: nil)
-                                        .sum(:estimated_price)
+    this_month_value = PurchaseRequest.committed_sum(purchase_requests.where('created_at >= ?', this_month_start))
 
     # Last month comparison
     last_month_start = 1.month.ago.beginning_of_month
@@ -1146,7 +1140,7 @@ class ReportsController < ApplicationController
       csv << ['ID', 'Name', 'Vendor ID', 'Country', 'Email', 'Phone', 'Contact Person', 'Address', 'Website', 'Active', 'Scope', 'Purchase Requests Count', 'Total PR Value', 'Created']
 
       vendors.each do |vendor|
-        total_value = vendor.purchase_requests.where.not(estimated_price: nil).sum(:estimated_price)
+        total_value = PurchaseRequest.committed_sum(vendor.purchase_requests)
         csv << [
           vendor.id,
           vendor.name,
@@ -1185,7 +1179,7 @@ class ReportsController < ApplicationController
         opex_total = tpc.opex.sum(:total_amount) rescue 0
         direct_prs = PurchaseRequest.where(tpc_code_id: tpc.id)
         direct_pr_count = direct_prs.count
-        direct_pr_value = direct_prs.where.not(estimated_price: nil).sum(:estimated_price)
+        direct_pr_value = PurchaseRequest.committed_sum(direct_prs)
         total_budget = capex_total + opex_total
 
         csv << [
@@ -1225,7 +1219,7 @@ class ReportsController < ApplicationController
         # Calculate utilization from purchase requests
         prs = PurchaseRequest.where(capex_id: capex.id)
         pr_count = prs.count
-        utilized_amount = prs.where.not(estimated_price: nil).sum(:estimated_price)
+        utilized_amount = PurchaseRequest.committed_sum(prs)
         total = capex.total_amount || 0
         utilization_pct = total > 0 ? ((utilized_amount / total.to_f) * 100).round(1) : 0
         remaining = total - utilized_amount
@@ -1281,7 +1275,7 @@ class ReportsController < ApplicationController
         # Calculate utilization from purchase requests
         prs = PurchaseRequest.where(opex_id: opex.id)
         pr_count = prs.count
-        utilized_amount = prs.where.not(estimated_price: nil).sum(:estimated_price)
+        utilized_amount = PurchaseRequest.committed_sum(prs)
         total = opex.total_amount || 0
         utilization_pct = total > 0 ? ((utilized_amount / total.to_f) * 100).round(1) : 0
         remaining = total - utilized_amount
@@ -1407,7 +1401,7 @@ class ReportsController < ApplicationController
       csv << ['CAPEX Summary', '---', '---']
       csv << ['CAPEX', 'Total Items', capex_data[:summary][:total_items]]
       csv << ['CAPEX', 'Total Budget Value', capex_data[:summary][:total_value]]
-      capex_utilized = PurchaseRequest.where.not(capex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+      capex_utilized = PurchaseRequest.committed_sum(PurchaseRequest.where.not(capex_id: nil)) rescue 0
       csv << ['CAPEX', 'Utilized Amount', capex_utilized]
       csv << ['CAPEX', 'Utilization %', capex_data[:summary][:total_value].to_f > 0 ? "#{((capex_utilized / capex_data[:summary][:total_value].to_f) * 100).round(1)}%" : '0%']
 
@@ -1417,7 +1411,7 @@ class ReportsController < ApplicationController
       csv << ['OPEX Summary', '---', '---']
       csv << ['OPEX', 'Total Items', opex_data[:summary][:total_items]]
       csv << ['OPEX', 'Total Budget Value', opex_data[:summary][:total_value]]
-      opex_utilized = PurchaseRequest.where.not(opex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+      opex_utilized = PurchaseRequest.committed_sum(PurchaseRequest.where.not(opex_id: nil)) rescue 0
       csv << ['OPEX', 'Utilized Amount', opex_utilized]
       csv << ['OPEX', 'Utilization %', opex_data[:summary][:total_value].to_f > 0 ? "#{((opex_utilized / opex_data[:summary][:total_value].to_f) * 100).round(1)}%" : '0%']
 
@@ -2152,13 +2146,13 @@ class ReportsController < ApplicationController
 
     pdf.set_font('helvetica', '', 8)
     capex_pr_count = PurchaseRequest.where.not(capex_id: nil).count rescue 0
-    capex_pr_value = PurchaseRequest.where.not(capex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    capex_pr_value = PurchaseRequest.committed_sum(PurchaseRequest.where.not(capex_id: nil)) rescue 0
     opex_pr_count = PurchaseRequest.where.not(opex_id: nil).count rescue 0
-    opex_pr_value = PurchaseRequest.where.not(opex_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    opex_pr_value = PurchaseRequest.committed_sum(PurchaseRequest.where.not(opex_id: nil)) rescue 0
     direct_tpc_count = PurchaseRequest.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).count rescue 0
-    direct_tpc_value = PurchaseRequest.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    direct_tpc_value = PurchaseRequest.committed_sum(PurchaseRequest.where(capex_id: nil, opex_id: nil).where.not(tpc_code_id: nil)) rescue 0
     non_budgeted_count = PurchaseRequest.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).count rescue 0
-    non_budgeted_value = PurchaseRequest.where(capex_id: nil, opex_id: nil, tpc_code_id: nil).where.not(estimated_price: nil).sum(:estimated_price) rescue 0
+    non_budgeted_value = PurchaseRequest.committed_sum(PurchaseRequest.where(capex_id: nil, opex_id: nil, tpc_code_id: nil)) rescue 0
     total_pr_value = capex_pr_value + opex_pr_value + direct_tpc_value + non_budgeted_value
 
     [
@@ -2180,7 +2174,7 @@ class ReportsController < ApplicationController
     pdf.cell(0, 8, 'Currency Usage Analysis', 0, 1, 'L')
 
     currency_data = PurchaseRequest.group(:currency).count rescue {}
-    currency_values = PurchaseRequest.group(:currency).where.not(estimated_price: nil).sum(:estimated_price) rescue {}
+    currency_values = PurchaseRequest.budgeted.group(:currency).where.not(estimated_price: nil).sum(:estimated_price) rescue {}
 
     if currency_data.any?
       pdf.set_font('helvetica', 'B', 8)

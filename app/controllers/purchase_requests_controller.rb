@@ -303,14 +303,14 @@ class PurchaseRequestsController < ApplicationController
     
     # Currency distribution with original amounts
     @currency_distribution = {}
-    scope.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+    scope.budgeted.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
       curr = currency.presence || default_currency
       @currency_distribution[curr] = amount.round(2)
     end
-    
+
     # Currency distribution with converted amounts for comparison
     @converted_currency_distribution = {}
-    scope.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+    scope.budgeted.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
       curr = currency.presence || default_currency
       converted_amount = helpers.convert_currency(amount, curr, default_currency)
       
@@ -411,7 +411,7 @@ class PurchaseRequestsController < ApplicationController
         next if monthly_requests.empty?
         
         # Calculate both original and converted amounts
-        original_amount = monthly_requests.sum(:estimated_price)
+        original_amount = PurchaseRequest.committed_sum(monthly_requests)
         converted_amount = 0
         
         # Convert each request amount individually to ensure accurate conversion
@@ -437,7 +437,7 @@ class PurchaseRequestsController < ApplicationController
       if monthly_null_requests.any? && @currency_monthly_trends.key?(default_currency)
         month_idx = @currency_monthly_trends[default_currency].index { |m| m[:month] == month_str }
         if month_idx
-          null_amount = monthly_null_requests.sum(:estimated_price)
+          null_amount = PurchaseRequest.committed_sum(monthly_null_requests)
           @currency_monthly_trends[default_currency][month_idx][:amount] += null_amount.round(2)
           @currency_monthly_trends[default_currency][month_idx][:converted_amount] += null_amount.round(2)
         end

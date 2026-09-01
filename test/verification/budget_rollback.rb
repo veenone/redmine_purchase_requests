@@ -128,6 +128,21 @@ ActiveRecord::Base.transaction do
     before == 500 && opex.utilized_amount == 200
   end
 
+  check('no money sum bypasses the lifecycle rule') do
+    root = File.expand_path('../..', __dir__)
+    offenders = []
+    Dir[File.join(root, 'app', 'controllers', '*.rb')].each do |path|
+      File.readlines(path).each_with_index do |line, i|
+        next unless line.include?('sum(:estimated_price)')
+        next if line.include?('committed_sum')
+        next if line.include?('.budgeted')
+        offenders << "#{File.basename(path)}:#{i + 1}"
+      end
+    end
+    puts "      offenders: #{offenders.join(', ')}" if offenders.any?
+    offenders.empty?
+  end
+
   raise ActiveRecord::Rollback
 end
 
