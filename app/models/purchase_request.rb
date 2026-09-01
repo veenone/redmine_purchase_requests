@@ -14,6 +14,33 @@ class PurchaseRequest < ActiveRecord::Base
   belongs_to :tpc_code, optional: true
   belongs_to :issue, optional: true
 
+  LIFECYCLES = %w[active cancelled superseded].freeze
+
+  belongs_to :revision_of, class_name: 'PurchaseRequest', optional: true
+  belongs_to :cancelled_by, class_name: 'User', optional: true
+  has_one :superseded_by, class_name: 'PurchaseRequest', foreign_key: 'revision_of_id'
+
+  validates :lifecycle, inclusion: { in: LIFECYCLES }
+
+  # Only active requests represent money anyone still intends to spend.
+  scope :budgeted, -> { where(lifecycle: 'active') }
+
+  def active?
+    lifecycle == 'active'
+  end
+
+  def cancelled?
+    lifecycle == 'cancelled'
+  end
+
+  def superseded?
+    lifecycle == 'superseded'
+  end
+
+  def counts_toward_budget?
+    active?
+  end
+
   has_many :purchase_request_subtasks, dependent: :destroy
   has_many :subtask_issues, through: :purchase_request_subtasks, source: :issue
   
