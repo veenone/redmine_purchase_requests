@@ -49,9 +49,18 @@
                      options_from_collection_for_select(PurchaseRequestStatus.sorted, :id, :name, params[:status_id]),
                      { include_blank: 'All Statuses' } %>
 
+        <label for="lifecycle"><%= l(:field_lifecycle) %></label>
+        <%= f.select :lifecycle,
+                     options_for_select(
+                       [[l(:label_lifecycle_active), 'active'],
+                        [l(:label_lifecycle_cancelled), 'cancelled'],
+                        [l(:label_lifecycle_superseded), 'superseded'],
+                        [l(:label_lifecycle_all), 'all']],
+                       @lifecycle) %>
+
         <%= render 'shared/tpc_filter_field', available_tpc_codes: @available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
         <%= f.submit 'Filter', class: 'pr-button pr-button-secondary' %>
-        <% if params[:status_id].present? || params[:search].present? || params[:tpc_code_id].present? %>
+        <% if params[:status_id].present? || params[:search].present? || params[:tpc_code_id].present? || params[:lifecycle].present? %>
           <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel' %>
         <% end %>
       </div>
@@ -77,9 +86,17 @@
       </thead>
       <tbody>
         <% @purchase_requests.each do |purchase_request| %>
-          <tr class="<%= cycle('odd', 'even') %> <%= purchase_request.status.is_closed? ? 'closed' : '' %>">
+          <tr class="<%= cycle('odd', 'even') %> <%= purchase_request.status.is_closed? ? 'closed' : '' %> <%= purchase_request.counts_toward_budget? ? '' : 'pr-row--void' %>">
             <td class="pr-cell-id">
               <%= link_to "##{purchase_request.id}", project_purchase_request_path(@project, purchase_request) %>
+              <% unless purchase_request.counts_toward_budget? %>
+                <span class="pr-badge <%= purchase_request.cancelled? ? 'pr-badge--danger' : 'pr-badge--neutral' %>">
+                  <%= purchase_request.cancelled? ? l(:label_lifecycle_cancelled) : l(:label_lifecycle_superseded) %>
+                </span>
+              <% end %>
+              <% if purchase_request.revision_number > 1 %>
+                <span class="pr-badge pr-badge--info"><%= l(:label_revision_number, number: purchase_request.revision_number) %></span>
+              <% end %>
             </td>
             <td class="title">
               <%= link_to purchase_request.title, project_purchase_request_path(@project, purchase_request), class: 'pr-title-link' %>

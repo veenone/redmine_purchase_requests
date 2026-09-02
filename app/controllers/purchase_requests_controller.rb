@@ -19,7 +19,7 @@ class PurchaseRequestsController < ApplicationController
     @limit = per_page_option
 
     sort_init 'created_at', 'desc'
-    sort_update %w[id title status_id user_id estimated_price tpc_code_id created_at updated_at]
+    sort_update %w[id title status_id user_id estimated_price tpc_code_id created_at updated_at lifecycle]
     
     scope = @project ? @project.purchase_requests : PurchaseRequest
     
@@ -32,6 +32,9 @@ class PurchaseRequestsController < ApplicationController
       scope = scope.where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", search_terms, search_terms)
     end
     
+    @lifecycle = params[:lifecycle].presence || 'active'
+    scope = scope.for_lifecycle(params[:lifecycle])
+
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
     @available_tpc_codes = tpc_scope.active.ordered

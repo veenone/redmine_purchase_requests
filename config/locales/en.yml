@@ -909,3 +909,8 @@ en:
   label_linked_purchase_requests: "Linked purchase requests"
   text_does_not_count_toward_budget: "does not count toward budget"
   text_n_count_toward_budget: "%{count} count toward budget"
+  field_lifecycle: "State"
+  label_lifecycle_active: "Active"
+  label_lifecycle_cancelled: "Cancelled"
+  label_lifecycle_superseded: "Superseded"
+  label_lifecycle_all: "All states"

@@ -36,6 +36,20 @@ class PurchaseRequest < ActiveRecord::Base
   # Only active requests represent money anyone still intends to spend.
   scope :budgeted, -> { where(lifecycle: 'active') }
 
+  # An unrecognised value falls back to active rather than raising or
+  # returning everything: this reads a query parameter, so a typo or a
+  # probe must not widen what the caller sees.
+  scope :for_lifecycle, lambda { |value|
+    value = value.to_s
+    if value == 'all'
+      all
+    elsif LIFECYCLES.include?(value)
+      where(lifecycle: value)
+    else
+      where(lifecycle: 'active')
+    end
+  }
+
   # The single statement of "money we are still committed to". Every figure
   # representing committed spend calls this rather than repeating the
   # filter, so a site missed during a sweep is a visible leftover of the old
