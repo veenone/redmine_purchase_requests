@@ -19,9 +19,10 @@ class PurchaseRequestsController < ApplicationController
     @limit = per_page_option
 
     sort_init 'created_at', 'desc'
-    sort_update %w[id title status_id user_id estimated_price tpc_code_id created_at updated_at lifecycle]
+    sort_update %w[id title status_id user_id estimated_price tpc_code_id created_at updated_at]
     
     scope = @project ? @project.purchase_requests : PurchaseRequest
+    @unfiltered_count = (@project ? @project.purchase_requests : PurchaseRequest).count
     
     if params[:status_id].present?
       scope = scope.where(status_id: params[:status_id])

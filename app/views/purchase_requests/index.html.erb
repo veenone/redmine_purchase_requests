@@ -25,7 +25,7 @@
   <p>Manage purchase requests for <strong><%= @project.name %></strong>. Track requests from creation to completion with budget integration and status monitoring.</p>
 </div>
 
-<% if @purchase_requests.empty? %>
+<% if @unfiltered_count.zero? %>
   <div class="pr-empty">
     <div class="pr-empty__icon">📋</div>
     <h3>No Purchase Requests Yet</h3>
@@ -60,13 +60,23 @@
 
         <%= render 'shared/tpc_filter_field', available_tpc_codes: @available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
         <%= f.submit 'Filter', class: 'pr-button pr-button-secondary' %>
-        <% if params[:status_id].present? || params[:search].present? || params[:tpc_code_id].present? || params[:lifecycle].present? %>
+        <% if params[:status_id].present? || params[:search].present? || params[:tpc_code_id].present? || (params[:lifecycle].present? && params[:lifecycle] != 'active') %>
           <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel' %>
         <% end %>
       </div>
     </fieldset>
   <% end %>
 
+  <% if @purchase_request_count.zero? %>
+    <div class="pr-empty">
+      <div class="pr-empty__icon">🔍</div>
+      <h3><%= l(:label_no_matching_requests) %></h3>
+      <p><%= l(:text_no_requests_match_filters) %></p>
+      <p>
+        <%= link_to 'Clear', project_purchase_requests_path(@project), class: 'pr-button pr-button-secondary' %>
+      </p>
+    </div>
+  <% else %>
   <div class="autoscroll">
     <table class="pr-table">
       <caption class="sr-only">Purchase requests</caption>
@@ -215,5 +225,6 @@
     <div class="pr-pagination">
       <%= pagination_links_full @pages, @purchase_request_count, per_page: @limit %>
     </div>
+  <% end %>
   <% end %>
 <% end %>

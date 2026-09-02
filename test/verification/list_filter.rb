@@ -95,19 +95,31 @@ ActiveRecord::Base.transaction do
     ids.include?(active.id) && !ids.include?(to_cancel.id) && !ids.include?(to_revise.id)
   end
 
-  check("6: composes with project scoping -- a project-scoped relation stays within the project after for_lifecycle('all')") do
-    # project.purchase_requests (the association the controller actually
-    # calls) cannot be exercised from `rails runner` on this host: the
-    # host-application Project class is patched in from
-    # lib/redmine_purchase_requests/patches/project_patch.rb via a
-    # to_prepare hook, and that hook is only proven to fire under the
-    # request/reloader cycle of a running server, not under `rails runner`
-    # (confirmed directly: Project.reflect_on_association(:purchase_requests)
-    # is nil in this process). `.where(project: project)` is the same SQL
-    # shape `project.purchase_requests` would produce and is what checks 1-5
-    # already rely on, so it is what is actually verifiable here.
-    ids = PurchaseRequest.where(project: project).for_lifecycle('all').pluck(:id)
-    ids.include?(active.id) && ids.include?(to_cancel.id) && ids.include?(to_revise.id) && !ids.include?(decoy.id)
+  check("6: composes with project scoping -- project.purchase_requests.for_lifecycle('all') stays within the project") do
+    # project.purchase_requests -- the association the controller actually
+    # calls -- does not resolve under a plain `rails runner` on this host.
+    # Root cause: init.rb:271 loads lib/redmine_purchase_requests/patches/
+    # project_patch.rb with require_dependency inside
+    # Rails.application.config.to_prepare. That block does fire, but with
+    # eager_load = false a later reloader pass discards the autoloaded
+    # Project constant, and require_dependency will not re-execute an
+    # already-required file, so the include is lost by the time this
+    # script's own code runs. Production runs with eager_load = true, so
+    # the association is present there, which is why the controller works
+    # in the running app. Force the same include here -- guarded, so this
+    # stays honest and becomes a no-op if the patch is ever present on its
+    # own -- rather than substituting something else for what the
+    # controller actually calls.
+    unless Project.included_modules.include?(RedminePurchaseRequests::Patches::ProjectPatch)
+      Project.include(RedminePurchaseRequests::Patches::ProjectPatch)
+    end
+
+    all_ids = project.purchase_requests.for_lifecycle('all').pluck(:id)
+    cancelled_ids = project.purchase_requests.for_lifecycle('cancelled').pluck(:id)
+
+    all_ids.include?(active.id) && all_ids.include?(to_cancel.id) && all_ids.include?(to_revise.id) &&
+      !all_ids.include?(decoy.id) &&
+      cancelled_ids == [to_cancel.id]
   end
 
   check('7: for_lifecycle works on the class as well as on a real association') do

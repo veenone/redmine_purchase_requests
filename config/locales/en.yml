@@ -914,3 +914,5 @@ en:
   label_lifecycle_cancelled: "Cancelled"
   label_lifecycle_superseded: "Superseded"
   label_lifecycle_all: "All states"
+  label_no_matching_requests: "No Matching Purchase Requests"
+  text_no_requests_match_filters: "No purchase requests match the current filters."
