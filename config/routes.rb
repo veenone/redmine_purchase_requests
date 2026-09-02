@@ -68,7 +68,7 @@ RedmineApp::Application.routes.draw do
     resources :departments, except: [:show]
 
     # Add project-scoped reports
-    resources :reports, only: [:index] do
+    resources :reports, only: [:index], controller: 'purchase_requests_reports' do
       collection do
         get 'purchase_requests'
         get 'vendors'
@@ -118,7 +118,7 @@ RedmineApp::Application.routes.draw do
   resources :departments, except: [:show]
   
   # Global reports
-  resources :reports, only: [:index] do
+  resources :reports, only: [:index], controller: 'purchase_requests_reports' do
     collection do
       get 'purchase_requests'
       get 'vendors'

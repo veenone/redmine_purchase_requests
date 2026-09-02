@@ -1,4 +1,4 @@
-class ReportsController < ApplicationController
+class PurchaseRequestsReportsController < ApplicationController
   include ActionView::Helpers::TextHelper
   include ActionView::Helpers::NumberHelper
   include PurchaseRequestsHelper

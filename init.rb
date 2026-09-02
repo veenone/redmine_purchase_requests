@@ -44,14 +44,14 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :view_tpc_codes, { tpc_codes: [:index, :show] }
     permission :manage_tpc_codes, { tpc_codes: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export] }
     permission :view_tpc_dashboard, { tpc_codes: [:dashboard] }
-    permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }
+    permission :view_purchase_request_reports, { purchase_requests_reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }
     
     # Global permissions (outside project context but grouped under purchase_requests module)
     permission :view_global_vendors, { vendors: [:index, :show, :autocomplete] }, global: true
     permission :manage_global_vendors, { vendors: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export, :import_template, :migrate_from_settings] }, global: true
     permission :view_global_tpc_codes, { tpc_codes: [:global_index, :show] }, global: true
     permission :manage_global_tpc_codes, { tpc_codes: [:global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import, :global_export, :global_import_export] }, global: true
-    permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
+    permission :view_purchase_request_reports, { purchase_requests_reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
     permission :view_departments, { departments: [:index] }, global: true
     permission :manage_departments, { departments: [:new, :create, :edit, :update, :destroy] }, global: true
   end
@@ -85,7 +85,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
        if: Proc.new { |project| project.module_enabled?(:purchase_requests) }
 
   menu :project_menu, :purchase_request_reports,
-       { controller: 'reports', action: 'index' },
+       { controller: 'purchase_requests_reports', action: 'index' },
        caption: :label_reports,
        param: :project_id,
        parent: :procurement,
@@ -185,7 +185,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
 
   # Add global reports menu to top navigation (configurable via plugin settings)
   menu :top_menu, :global_reports,
-       { controller: 'reports', action: 'index' },
+       { controller: 'purchase_requests_reports', action: 'index' },
        caption: 'Purchase Request Reports',
        if: Proc.new {
          User.current.logged? &&
