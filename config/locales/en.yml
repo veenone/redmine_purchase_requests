@@ -906,3 +906,6 @@ en:
   label_cancelled_on: "Cancelled %{date} by"
   text_cancelled_no_budget: "This request no longer counts toward budget."
   text_superseded_no_budget: "This version no longer counts toward budget."
+  label_linked_purchase_requests: "Linked purchase requests"
+  text_does_not_count_toward_budget: "does not count toward budget"
+  text_n_count_toward_budget: "%{count} count toward budget"

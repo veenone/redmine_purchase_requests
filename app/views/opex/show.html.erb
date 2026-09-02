@@ -169,7 +169,13 @@
 <!-- Linked Purchase Requests -->
 <% if @linked_requests.any? %>
   <div class="details-section" style="margin-top:30px; padding-top:20px; border-top:1px solid var(--pr-border);">
-    <h4>Linked Purchase Requests (<%= @linked_requests.count %>)</h4>
+    <% counting = @linked_requests.count(&:counts_toward_budget?) %>
+    <h4>
+      <%= l(:label_linked_purchase_requests) %> (<%= @linked_requests.count %>)
+      <% if counting < @linked_requests.count %>
+        <span class="pr-hint"><%= l(:text_n_count_toward_budget, count: counting) %></span>
+      <% end %>
+    </h4>
 
     <div class="autoscroll">
       <table class="pr-table">
@@ -187,9 +193,12 @@
         </thead>
         <tbody>
           <% @linked_requests.each do |pr| %>
-            <tr class="<%= cycle('odd', 'even') %>">
+            <tr class="<%= cycle('odd', 'even') %> <%= 'pr-row--void' unless pr.counts_toward_budget? %>">
               <td class="pr-cell-id">
                 <%= link_to "##{pr.id}", project_purchase_request_path(@project, pr) %>
+                <% unless pr.counts_toward_budget? %>
+                  <span class="pr-hint"><%= l(:text_does_not_count_toward_budget) %></span>
+                <% end %>
               </td>
               <td class="title">
                 <%= link_to truncate(pr.title, length: 50), project_purchase_request_path(@project, pr), class: 'pr-title-link' %>

@@ -2635,3 +2635,10 @@
 }
 #content .pr-budget-band__compare strong { color: var(--pr-ink); font-weight: 600; }
 #content .pr-budget-band__note { margin: 8px 0 0; }
+
+/* A row that is listed but does not count toward the total. Without the
+   distinction, a table of five requests beside a total covering three
+   reads as a defect rather than as a fact about cancelled work. */
+#content .pr-row--void td { color: var(--pr-ink-faint); }
+#content .pr-row--void .capex-amount,
+#content .pr-row--void .stat-currency { text-decoration: line-through; }
