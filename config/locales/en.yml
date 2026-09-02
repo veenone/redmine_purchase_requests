@@ -903,3 +903,6 @@ en:
   label_section_financial: "Financial"
   label_section_governance: "Budget & Governance"
   label_section_activity: "Requests & Activity"
+  label_cancelled_on: "Cancelled %{date} by"
+  text_cancelled_no_budget: "This request no longer counts toward budget."
+  text_superseded_no_budget: "This version no longer counts toward budget."

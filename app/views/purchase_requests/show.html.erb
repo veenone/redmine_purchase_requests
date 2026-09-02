@@ -21,10 +21,46 @@
       <span class="icon icon-del"><%= l(:button_delete) %></span>
     <% end %>
   <% end %>
+  <% if @purchase_request.revisable? && User.current.allowed_to?(:revise_purchase_requests, @project) %>
+    <%= link_to revise_project_purchase_request_path(@project, @purchase_request),
+              method: :post,
+              data: { confirm: l(:text_are_you_sure) },
+              class: 'pr-button pr-button-primary pr-button-icon small',
+              title: l(:button_revise) do %>
+      <span class="icon icon-add"><%= l(:button_revise) %></span>
+    <% end %>
+  <% end %>
+  <% if @purchase_request.cancellable? && User.current.allowed_to?(:cancel_purchase_requests, @project) %>
+    <%= link_to cancel_project_purchase_request_path(@project, @purchase_request),
+              class: 'pr-button pr-button-danger pr-button-icon small',
+              title: l(:button_cancel_request) do %>
+      <span class="icon icon-cancel"><%= l(:button_cancel_request) %></span>
+    <% end %>
+  <% end %>
+  <% if @purchase_request.uncancellable? && User.current.allowed_to?(:cancel_purchase_requests, @project) %>
+    <%= link_to uncancel_project_purchase_request_path(@project, @purchase_request),
+              method: :post,
+              class: 'pr-button pr-button-secondary pr-button-icon small',
+              title: l(:button_reinstate_request) do %>
+      <span class="icon icon-checked"><%= l(:button_reinstate_request) %></span>
+    <% end %>
+  <% end %>
   <%= link_to project_purchase_requests_path(@project), class: 'pr-button pr-button-cancel pr-button-icon small', title: l(:button_back_to_list) do %>
     <span class="icon icon-cancel"><%= l(:button_back_to_list) %></span>
   <% end %>
 </div>
+
+<%= render partial: 'purchase_requests/lifecycle_banner', locals: { request_record: @purchase_request } %>
+<% if @purchase_request.revision_of.present? || @purchase_request.superseded_by.present? %>
+  <div class="pr-hint pr-block-gap">
+    <%= l(:label_revision_number, number: @purchase_request.revision_number) %>
+    <% if @purchase_request.revision_of.present? %>
+      &middot;
+      <%= l(:label_revision_of) %>
+      <%= link_to "##{@purchase_request.revision_of.id}", project_purchase_request_path(@project, @purchase_request.revision_of) %>
+    <% end %>
+  </div>
+<% end %>
 
 <div class="pr-form-container">
   <div class="pr-form-header">
