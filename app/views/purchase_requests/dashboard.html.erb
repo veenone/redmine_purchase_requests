@@ -28,19 +28,19 @@
       selected_year: @selected_year,
       available_years: @available_years,
       available_tpc_codes: @available_tpc_codes,
-      selected_tpc_code_id: @selected_tpc_code_id,
+      selected_tpc_code_ids: selected_tpc_code_ids,
       year_defaulted: @budget_year_defaulted,
       year_required: true,
       compare_mode: true,
       compare_year: @compare_year %>
 
 <% if @project && (User.current.allowed_to?(:view_capex, @project) || User.current.allowed_to?(:view_opex, @project)) %>
-  <% selected_tpc = @available_tpc_codes.detect { |t| t.id.to_s == @selected_tpc_code_id.to_s } if @selected_tpc_code_id %>
+  <% band_tpcs = @available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } %>
   <div class="pr-card pr-budget-band">
     <div class="pr-card__header">
       <h3>
         <%= l(:label_budget_health, default: 'Budget health') %>
-        &mdash; <%= @budget_year %><% if selected_tpc %> &middot; <%= selected_tpc.tpc_number %><% end %>
+        &mdash; <%= @budget_year %><% if band_tpcs.one? %> &middot; <%= band_tpcs.first.tpc_number %><% elsif band_tpcs.any? %> &middot; <%= band_tpcs.size %> <%= l(:label_tpc) %><% end %>
       </h3>
       <% if @budget_year_defaulted %>
         <span class="pr-badge pr-badge--neutral"><%= l(:label_showing_current_year, default: 'Showing current year') %></span>
@@ -206,7 +206,7 @@
 
         <% if @currency_distribution && @currency_distribution.size > 1 %>
           <tr>
-            <th colspan="2" class="section-header"><%= l(:label_currency_breakdown) %></th>
+            <th scope="col" colspan="2" class="section-header"><%= l(:label_currency_breakdown) %></th>
           </tr>
           <% @currency_distribution.each do |currency, amount| %>
             <tr>
@@ -231,7 +231,7 @@
       <% if @converted_currency_distribution && @converted_currency_distribution.any? %>
         <table class="dashboard-table">
           <caption class="sr-only"><%= l(:label_caption_currency_conversion) %></caption>
-          <thead>
+          <th scope="col"ead>
             <tr>
               <th scope="col"><%= l(:field_currency) %></th>
               <th scope="col"><%= l(:label_original_amount) %></th>
@@ -273,7 +273,7 @@
           <p class="info"><%= l(:text_exchange_rates_info) %></p>
           <table class="dashboard-table">
             <caption class="sr-only"><%= l(:label_caption_exchange_rates) %></caption>
-            <thead>
+            <th scope="col"ead>
               <tr>
                 <th scope="col"><%= l(:field_currency) %></th>
                 <th scope="col"><%= l(:label_rate_to) %> <%= default_currency %></th>
@@ -307,7 +307,7 @@
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_monthly_trends) %></summary>
           <table class="dashboard-table">
             <caption class="sr-only"><%= l(:label_caption_monthly_trends) %></caption>
-            <thead>
+            <th scope="col"ead>
               <tr>
                 <th scope="col"><%= l(:label_month) %></th>
                 <th scope="col"><%= l(:label_requests) %></th>
@@ -352,7 +352,7 @@
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_tpc_code_distribution, default: "Budget Distribution by TPC Code") %></summary>
           <table class="dashboard-table">
             <caption class="sr-only"><%= l(:label_caption_tpc_distribution) %></caption>
-            <thead>
+            <th scope="col"ead>
               <tr>
                 <th scope="col"><%= l(:label_tpc_code) %></th>
                 <th scope="col"><%= l(:label_requests) %></th>
@@ -389,7 +389,7 @@
       <% if @top_vendors.present? && @top_vendors.any? %>
         <table class="dashboard-table">
           <caption class="sr-only"><%= l(:label_caption_top_vendors) %></caption>
-          <thead>
+          <th scope="col"ead>
             <tr>
               <th scope="col"><%= l(:field_vendor) %></th>
               <th scope="col"><%= l(:label_requests) %></th>
@@ -434,7 +434,7 @@
           <div class="chart-pie-legend">
             <% @status_distribution.each do |status| %>
               <div class="legend-item">
-                <div class="legend-color" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></div>
+                <div class="legend-color" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></div>
                 <span><%= status[:name] %> (<%= status[:count] %> - <%= status[:percentage] %>%)</span>
               </div>
             <% end %>
@@ -443,9 +443,10 @@
 
         <details class="pr-data-toggle">
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_status_distribution) %></summary>
+          <div class="autoscroll">
           <table class="dashboard-table">
             <caption class="sr-only"><%= l(:label_caption_by_status) %></caption>
-            <thead>
+            <th scope="col"ead>
               <tr>
                 <th scope="col"><%= l(:field_status) %></th>
                 <th scope="col"><%= l(:label_count) %></th>
@@ -456,7 +457,7 @@
             <% @status_distribution.each do |status| %>
               <tr>
                 <td>
-                  <span class="pr-swatch" style="background-color: <%= status[:color].presence || '#6b7280' %>;"></span>
+                  <span class="pr-swatch" style="background-color: <%= status[:color].presence || 'var(--pr-ink-muted)' %>;"></span>
                   <%= status[:name] %>
                 </td>
                 <td><%= status[:count] %></td>
@@ -465,6 +466,7 @@
             <% end %>
             </tbody>
           </table>
+          </div>
         </details>
       <% else %>
         <p class="nodata"><%= l(:label_no_data) %></p>
@@ -505,7 +507,7 @@
           <summary><%= l(:label_view_data_table, default: "View data table") %> — <%= l(:label_priority_distribution) %></summary>
           <table class="dashboard-table">
             <caption class="sr-only"><%= l(:label_caption_by_priority) %></caption>
-            <thead>
+            <th scope="col"ead>
               <tr>
                 <th scope="col"><%= l(:field_priority) %></th>
                 <th scope="col"><%= l(:label_count) %></th>
@@ -551,7 +553,7 @@
       <% if @recent_requests.present? && @recent_requests.any? %>
         <table class="dashboard-table">
           <caption class="sr-only"><%= l(:label_caption_recent_requests) %></caption>
-          <thead>
+          <th scope="col"ead>
             <tr>
               <th scope="col">#</th>
               <th scope="col"><%= l(:field_title) %></th>
@@ -589,7 +591,7 @@
       <% if @top_requesters.present? && @top_requesters.any? %>
         <table class="dashboard-table">
           <caption class="sr-only"><%= l(:label_caption_top_requesters) %></caption>
-          <thead>
+          <th scope="col"ead>
             <tr>
               <th scope="col"><%= l(:field_user) %></th>
               <th scope="col"><%= l(:label_requests) %></th>
@@ -640,6 +642,7 @@
   <% end %>
 </div>
 
+<%= render 'purchase_requests_reports/chart_colors' %>
 <script>
 // Chart copy and currency come from the server so charts stay localized and
 // respect the configured default currency instead of hardcoding "$".
@@ -675,16 +678,16 @@ document.addEventListener('DOMContentLoaded', function() {
   <% if @priority_distribution.present? && @priority_distribution.values.sum > 0 %>
   generatePieChart('priority-pie-chart', [
     <% if @priority_distribution[:urgent] > 0 %>
-      { label: '<%= j(l(:label_priority_urgent)) %>', value: <%= @priority_distribution[:urgent] %>, color: '#dc3a3a' },
+      { label: '<%= j(l(:label_priority_urgent)) %>', value: <%= @priority_distribution[:urgent] %>, color: PR_TOKEN('--pr-danger') },
     <% end %>
     <% if @priority_distribution[:high] > 0 %>
-      { label: '<%= j(l(:label_priority_high)) %>', value: <%= @priority_distribution[:high] %>, color: '#df8709' },
+      { label: '<%= j(l(:label_priority_high)) %>', value: <%= @priority_distribution[:high] %>, color: PR_TOKEN('--pr-warning') },
     <% end %>
     <% if @priority_distribution[:normal] > 0 %>
-      { label: '<%= j(l(:label_priority_normal)) %>', value: <%= @priority_distribution[:normal] %>, color: '#2f9e44' },
+      { label: '<%= j(l(:label_priority_normal)) %>', value: <%= @priority_distribution[:normal] %>, color: PR_TOKEN('--pr-success') },
     <% end %>
     <% if @priority_distribution[:low] > 0 %>
-      { label: '<%= j(l(:label_priority_low)) %>', value: <%= @priority_distribution[:low] %>, color: '#2272c4' },
+      { label: '<%= j(l(:label_priority_low)) %>', value: <%= @priority_distribution[:low] %>, color: PR_TOKEN('--pr-info') },
     <% end %>
   ]);
   <% end %>

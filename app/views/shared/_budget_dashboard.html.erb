@@ -166,8 +166,8 @@
                   where there is room for them; the ring itself comes out solid
                   danger because remaining is negative (see
                   generateBudgetDonutChart). %>
-              <div style="font-weight:700;font-size:14px;"><%= @budget_undefined ? '—' : "#{@utilization_percentage}%" %></div>
-              <div style="font-size:10px;color:var(--pr-ink-muted);"><%= @budget_undefined ? l(:label_no_budget_set) : l(:label_utilization) %></div>
+              <div style="font-weight:700;font-size: var(--pr-text-md);"><%= @budget_undefined ? '—' : "#{@utilization_percentage}%" %></div>
+              <div style="font-size: var(--pr-text-2xs);color:var(--pr-ink-muted);"><%= @budget_undefined ? l(:label_no_budget_set) : l(:label_utilization) %></div>
             </div>
           </div>
           <div style="flex:1;">

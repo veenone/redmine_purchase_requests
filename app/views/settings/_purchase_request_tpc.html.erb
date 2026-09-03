@@ -3,116 +3,73 @@
   <h3><%= l(:label_tpc_settings, default: 'TPC Code Settings') %></h3>
 </div>
 
-<div class="pr-grid pr-grid--narrow" style="margin-bottom: 22px;">
+<%#
+  One card of toggle rows rather than a card per toggle. Each setting is a
+  single boolean, and a card carrying a header, a checkbox label and an info
+  alert gave three stacked texts to one control -- unreadable once the grid
+  narrowed the column. A row list scans top to bottom and does not depend on
+  column width.
 
-  <!-- Global TPC Codes Setting -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_tpc_global_enabled) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <div class="form-row">
-        <p>
-          <label>
-            <%= check_box_tag 'settings[tpc_global_enabled]', '1',
-                             settings['tpc_global_enabled'] == '1',
-                             { id: 'settings_tpc_global_enabled' } %>
-            <%= l(:text_tpc_global_enabled_description) %>
-          </label>
-        </p>
-      </div>
-      <div class="pr-alert pr-alert-info">
-        <span class="icon icon-info"></span>
-        <%= l(:text_tpc_global_enabled_help) %>
-      </div>
+  The whole row is a <label>, so clicking the name or its explanation toggles
+  the setting, not just the 13px box.
+%>
+<div class="dashboard-card pr-block-gap">
+  <div class="dashboard-card-header">
+    <h3><%= l(:label_tpc_options, default: 'Options') %></h3>
+  </div>
+  <div class="dashboard-card-body">
+    <div class="pr-setting-list">
+      <%
+        tpc_toggles = [
+          ['tpc_global_enabled',    :label_tpc_global_enabled,    :text_tpc_global_enabled_description,    :text_tpc_global_enabled_help],
+          ['tpc_auto_link',         :label_tpc_auto_link,         :text_tpc_auto_link_description,         :text_tpc_auto_link_help],
+          ['tpc_require_for_capex', :label_tpc_require_for_capex, :text_tpc_require_for_capex_description, :text_tpc_require_for_capex_help],
+          ['tpc_require_for_opex',  :label_tpc_require_for_opex,  :text_tpc_require_for_opex_description,  :text_tpc_require_for_opex_help]
+        ]
+      %>
+      <% tpc_toggles.each do |key, name_key, description_key, help_key| %>
+        <label class="pr-setting-row" for="settings_<%= key %>">
+          <span class="pr-setting-row__text">
+            <span class="pr-setting-row__name"><%= l(name_key) %></span>
+            <span class="pr-setting-row__help"><%= l(description_key) %></span>
+            <span class="pr-setting-row__note"><%= l(help_key) %></span>
+          </span>
+          <span class="pr-setting-row__control">
+            <%= check_box_tag "settings[#{key}]", '1',
+                              settings[key] == '1',
+                              { id: "settings_#{key}" } %>
+          </span>
+        </label>
+      <% end %>
     </div>
   </div>
+</div>
 
-  <!-- Auto-link TPC Codes Setting -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_tpc_auto_link) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <div class="form-row">
-        <p>
-          <label>
-            <%= check_box_tag 'settings[tpc_auto_link]', '1',
-                             settings['tpc_auto_link'] == '1',
-                             { id: 'settings_tpc_auto_link' } %>
-            <%= l(:text_tpc_auto_link_description) %>
-          </label>
-        </p>
-      </div>
-      <div class="pr-alert pr-alert-info">
-        <span class="icon icon-info"></span>
-        <%= l(:text_tpc_auto_link_help) %>
-      </div>
-    </div>
+<div class="dashboard-card pr-block-gap">
+  <div class="dashboard-card-header">
+    <h3><%= l(:label_departments, default: 'Departments') %></h3>
   </div>
-
-  <!-- Require TPC for CAPEX Setting -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_tpc_require_for_capex) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <div class="form-row">
-        <p>
-          <label>
-            <%= check_box_tag 'settings[tpc_require_for_capex]', '1',
-                             settings['tpc_require_for_capex'] == '1',
-                             { id: 'settings_tpc_require_for_capex' } %>
-            <%= l(:text_tpc_require_for_capex_description) %>
-          </label>
-        </p>
-      </div>
-      <div class="pr-alert pr-alert-info">
-        <span class="icon icon-info"></span>
-        <%= l(:text_tpc_require_for_capex_help) %>
-      </div>
-    </div>
+  <div class="dashboard-card-body">
+    <p class="pr-subhead"><%= l(:text_departments_description, default: 'Maintain the department list that TPC codes are assigned to.') %></p>
+    <%= link_to l(:label_manage_departments, default: 'Manage Departments'), departments_path,
+                class: 'pr-button pr-button-primary pr-button-icon' %>
   </div>
-
-  <!-- Require TPC for OPEX Setting -->
-  <div class="dashboard-card">
-    <div class="dashboard-card-header">
-      <h3><%= l(:label_tpc_require_for_opex) %></h3>
-    </div>
-    <div class="dashboard-card-body">
-      <div class="form-row">
-        <p>
-          <label>
-            <%= check_box_tag 'settings[tpc_require_for_opex]', '1',
-                             settings['tpc_require_for_opex'] == '1',
-                             { id: 'settings_tpc_require_for_opex' } %>
-            <%= l(:text_tpc_require_for_opex_description) %>
-          </label>
-        </p>
-      </div>
-      <div class="pr-alert pr-alert-info">
-        <span class="icon icon-info"></span>
-        <%= l(:text_tpc_require_for_opex_help) %>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <!-- TPC Management Overview -->
 <div class="dashboard-card" style="background: var(--pr-accent); border-color: var(--pr-accent-hover);">
   <div class="dashboard-card-body" style="background: var(--pr-accent);">
-    <h3 style="margin: 0 0 10px; color: var(--pr-ink-invert); font-size: 15px; font-weight: 700;">
+    <h3 style="margin: 0 0 10px; color: var(--pr-ink-invert); font-size: var(--pr-text-lg); font-weight: 700;">
       <span class="icon icon-projects" style="margin-right: 6px;"></span>
       <%= l(:label_tpc_management_overview) %>
     </h3>
-    <p style="margin: 0 0 16px; color: rgba(255,255,255,0.92); line-height: 1.55; font-size: 13px;">
+    <p style="margin: 0 0 16px; color: rgba(255,255,255,0.92); line-height: 1.55; font-size: var(--pr-text-base);">
       <%= l(:text_tpc_management_description) %>
     </p>
     <div>
       <% if User.current.admin? || User.current.allowed_to?(:manage_purchase_requests, nil, global: true) %>
         <%= link_to global_tpc_codes_path, target: '_blank', rel: 'noopener noreferrer',
-            style: 'display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; background: rgba(255,255,255,0.18); color: #fff; text-decoration: none; border-radius: var(--pr-radius-sm); font-size: 13px; font-weight: 600; border: 1px solid rgba(255,255,255,0.30); transition: background .15s;',
+            style: 'display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; background: rgba(255,255,255,0.18); color: #fff; text-decoration: none; border-radius: var(--pr-radius-sm); font-size: var(--pr-text-base); font-weight: 600; border: 1px solid rgba(255,255,255,0.30); transition: background .15s;',
             onmouseover: "this.style.background='rgba(255,255,255,0.28)'",
             onmouseout: "this.style.background='rgba(255,255,255,0.18)'" do %>
           <span class="icon icon-projects"></span>

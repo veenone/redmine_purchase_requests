@@ -1,0 +1,55 @@
+<%#
+  Chart colours, read from the design tokens.
+
+  A JavaScript array cannot contain var(--pr-accent) -- a CSS custom property
+  only resolves inside CSS -- which is why every chart in this plugin had its
+  palette written out as hex. That left the token set and the charts as two
+  copies of the same decision, and after the 1.11.0 token work the legends
+  beside those charts referenced tokens while the charts did not. Change a
+  token and only the legend would move.
+
+  Resolving getComputedStyle once at load closes that: the stylesheet stays
+  the single definition, and the charts follow it. The literal after each
+  name is a fallback for the one case this cannot cover -- the stylesheet
+  having not applied when the script runs -- and should never be reached in
+  practice, since this partial renders after the stylesheet link.
+
+  Render it before any chart script in the page.
+%>
+<script>
+  (function () {
+    var css = getComputedStyle(document.documentElement);
+
+    function token(name, fallback) {
+      var value = css.getPropertyValue(name);
+      return (value && value.trim()) || fallback;
+    }
+    window.PR_TOKEN = token;
+
+    /* The categorical series. Six hues, each distinguishable from the others
+       at the same lightness. */
+    window.PR_CHART_COLORS = [
+      token('--pr-accent',  '#3a5bbf'),
+      token('--pr-success', '#2f9e44'),
+      token('--pr-warning', '#df8709'),
+      token('--pr-danger',  '#dc3a3a'),
+      token('--pr-info',    '#2272c4'),
+      token('--pr-violet',  '#6b4fc7')
+    ];
+
+    /* For charts carrying more than six series. The -ink shades continue the
+       sequence by dropping lightness rather than repeating a hue. */
+    window.PR_CHART_COLORS_10 = window.PR_CHART_COLORS.concat([
+      token('--pr-violet-ink',  '#54399e'),
+      token('--pr-success-ink', '#1e7a32'),
+      token('--pr-warning-ink', '#a4660a'),
+      token('--pr-danger-ink',  '#be2f2f')
+    ]);
+
+    /* Chart furniture rather than data. */
+    window.PR_CHART_NEUTRAL = token('--pr-ink-faint',     '#949ba8');
+    window.PR_CHART_AXIS    = token('--pr-border-strong', '#d3d7df');
+    window.PR_CHART_GRID    = token('--pr-border',        '#e5e7eb');
+    window.PR_CHART_LABEL   = token('--pr-ink-muted',     '#5c6573');
+  })();
+</script>

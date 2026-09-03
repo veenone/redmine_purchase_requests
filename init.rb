@@ -13,7 +13,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
   description 'A comprehensive plugin for managing purchase requests, CAPEX budgets, OPEX management, and vendor operations in Redmine'
-  version '1.10.0'
+  version '1.12.0'
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -23,27 +23,37 @@ Redmine::Plugin.register :redmine_purchase_requests do
     permission :add_purchase_requests, { purchase_requests: [:new, :create] }
     permission :edit_purchase_requests, { purchase_requests: [:edit, :update, :create_workflow_issue] }
     permission :delete_purchase_requests, { purchase_requests: [:destroy] }
+    # Cancelling frees budget, so it is separable from ordinary editing -- a
+    # role can be allowed to edit a request without being allowed to release
+    # its money.
+    permission :cancel_purchase_requests, { purchase_requests: [:cancel, :perform_cancel, :uncancel] }
+    # Revising creates a new record and supersedes this one, moving its
+    # budget to the successor -- the same reason cancelling is a separate
+    # permission from ordinary editing.
+    permission :revise_purchase_requests, { purchase_requests: [:revise] }
     permission :manage_purchase_request_settings, { purchase_request_settings: [:index] }
     permission :view_purchase_request_dashboard, { purchase_requests: [:dashboard] }
     permission :view_project_vendors, { project_vendors: [:index, :show] }
     permission :manage_project_vendors, { project_vendors: [:manage, :new, :create, :edit, :update, :destroy] }
-    permission :view_capex, { capex: [:index, :show] }
+    permission :view_capex, { capex: [:index, :show, :export_csv, :export_xlsx, :export_pdf] }
     permission :manage_capex, { capex: [:new, :create, :edit, :update, :destroy] }
     permission :view_capex_dashboard, { capex: [:dashboard] }
-    permission :view_opex, { opex: [:index, :show] }
+    permission :view_opex, { opex: [:index, :show, :export_csv, :export_xlsx, :export_pdf] }
     permission :manage_opex, { opex: [:new, :create, :edit, :update, :destroy] }
     permission :view_opex_dashboard, { opex: [:dashboard] }
     permission :view_tpc_codes, { tpc_codes: [:index, :show] }
     permission :manage_tpc_codes, { tpc_codes: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export] }
     permission :view_tpc_dashboard, { tpc_codes: [:dashboard] }
-    permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }
+    permission :view_purchase_request_reports, { purchase_requests_reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }
     
     # Global permissions (outside project context but grouped under purchase_requests module)
     permission :view_global_vendors, { vendors: [:index, :show, :autocomplete] }, global: true
     permission :manage_global_vendors, { vendors: [:new, :create, :edit, :update, :destroy, :import, :export, :import_export, :import_template, :migrate_from_settings] }, global: true
     permission :view_global_tpc_codes, { tpc_codes: [:global_index, :show] }, global: true
     permission :manage_global_tpc_codes, { tpc_codes: [:global_new, :global_create, :global_edit, :global_update, :global_destroy, :global_import, :global_export, :global_import_export] }, global: true
-    permission :view_purchase_request_reports, { reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
+    permission :view_purchase_request_reports, { purchase_requests_reports: [:index, :purchase_requests, :vendors, :tpc_codes, :capex, :opex, :overview] }, global: true
+    permission :view_departments, { departments: [:index] }, global: true
+    permission :manage_departments, { departments: [:new, :create, :edit, :update, :destroy] }, global: true
   end
   
   # Procurement menu (virtual parent) - only visible when purchase_requests module is enabled
@@ -75,7 +85,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
        if: Proc.new { |project| project.module_enabled?(:purchase_requests) }
 
   menu :project_menu, :purchase_request_reports,
-       { controller: 'reports', action: 'index' },
+       { controller: 'purchase_requests_reports', action: 'index' },
        caption: :label_reports,
        param: :project_id,
        parent: :procurement,
@@ -136,6 +146,13 @@ Redmine::Plugin.register :redmine_purchase_requests do
        parent: :budget_management,
        if: Proc.new { |project| project.module_enabled?(:purchase_requests) && User.current.allowed_to?(:view_tpc_dashboard, project) }
   
+  menu :project_menu, :departments,
+       { controller: 'departments', action: 'index' },
+       caption: :label_departments,
+       param: :project_id,
+       parent: :budget_management,
+       if: Proc.new { |project| project.module_enabled?(:purchase_requests) && (User.current.admin? || User.current.allowed_to?(:view_departments, project)) }
+
   # Add global TPC codes menu to top navigation (configurable via plugin settings)
   menu :top_menu, :global_tpc_codes,
        { controller: 'tpc_codes', action: 'global_index' },
@@ -168,7 +185,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
 
   # Add global reports menu to top navigation (configurable via plugin settings)
   menu :top_menu, :global_reports,
-       { controller: 'reports', action: 'index' },
+       { controller: 'purchase_requests_reports', action: 'index' },
        caption: 'Purchase Request Reports',
        if: Proc.new {
          User.current.logged? &&
@@ -183,6 +200,8 @@ Redmine::Plugin.register :redmine_purchase_requests do
     'default_assigned_to_id' => '',
     'default_currency' => 'USD',
     'enabled_currencies' => ['USD', 'EUR', 'GBP', 'IDR'],
+    # Matches the precision 15 estimated_price column (migration 037)
+    'max_purchase_amount' => '9999999999999.99',
     'show_exchange_rates' => '0',
     'exchange_rates' => {},  # Initialize exchange_rates as an empty hash
     'allow_custom_vendors' => '1',
@@ -248,6 +267,7 @@ Rails.application.config.to_prepare do
   # Load other dependencies
   require_dependency 'redmine_purchase_requests/hooks'
   require_dependency 'redmine_purchase_requests/issue_hooks'
+  require_dependency 'redmine_purchase_requests/tpc_filterable'
   require_dependency 'redmine_purchase_requests/patches/project_patch'
   require_dependency 'redmine_purchase_requests/patches/user_patch'
 end

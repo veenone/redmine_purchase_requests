@@ -1,4 +1,7 @@
 class CapexController < ApplicationController
+  helper :sort
+  include SortHelper
+  include RedminePurchaseRequests::TpcFilterable
   include BudgetDashboard
 
   before_action :find_project
@@ -10,13 +13,13 @@ class CapexController < ApplicationController
   menu_item :purchase_requests
 
   def index
-    @capex_entries = find_capex_entries
+    sort_init 'year', 'desc'
+    sort_update %w[year tpc_code_id description total_amount]
+
     # Get years without ordering to avoid DISTINCT conflict
     @years = @project.capex.distinct.pluck(:year).sort.reverse
-    @selected_year = params[:year].present? ? params[:year].to_i : Date.current.year
-    
-    @capex_entries = @capex_entries.for_year(@selected_year) if @selected_year.present?
-    
+    @capex_entries = capex_index_scope.reorder(sort_clause)
+
     respond_to do |format|
       format.html
       format.json { render json: @capex_entries.map(&:as_json) }
@@ -116,8 +119,7 @@ class CapexController < ApplicationController
     # the comment where it's assigned.
     capex_for_year = @project.capex.for_year(@current_year)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    capex_for_year = capex_for_year.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
+    capex_for_year = apply_tpc_filter(capex_for_year)
     # utilized_amount enumerates linked requests per record, so preload them
     # once rather than issuing a query per row. This is the row set used by
     # budget_dashboard_figures, the TPC grouping below, and view rendering —
@@ -320,12 +322,98 @@ class CapexController < ApplicationController
 
   def find_capex_entries
     capex_entries = @project.capex.ordered
-    
+
     if params[:search].present?
       capex_entries = capex_entries.search(params[:search])
     end
-    
+
     capex_entries
+  end
+
+  # Filtered CAPEX scope shared by #index and the export actions, so an
+  # export always matches what the current filters show on screen. Sets
+  # @selected_year and @available_tpc_codes as a side effect (used by the
+  # index view and by the export filenames).
+  def capex_index_scope
+    entries = find_capex_entries
+    @selected_year = params[:year].present? ? params[:year].to_i : Date.current.year
+    entries = entries.for_year(@selected_year) if @selected_year.present?
+
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    apply_tpc_filter(entries)
+  end
+
+  def capex_export_filename(extension)
+    parts = ['capex', @project.identifier]
+    parts << @selected_year.to_s if @selected_year.present?
+    parts << Date.current.strftime('%Y%m%d')
+    "#{parts.join('_')}.#{extension}"
+  end
+
+  def generate_capex_xlsx(scope)
+    require 'caxlsx'
+
+    package = Axlsx::Package.new
+    package.workbook.add_worksheet(name: 'CAPEX') do |sheet|
+      header_style = sheet.styles.add_style(b: true, bg_color: 'F4F3F9')
+      sheet.add_row(
+        ['Year', 'TPC Code', 'Description', 'Total Amount', 'Currency',
+         'Q1 Amount', 'Q2 Amount', 'Q3 Amount', 'Q4 Amount',
+         'Utilized', 'Remaining', 'Utilization %'],
+        style: header_style
+      )
+
+      scope.includes(:tpc_code_record).each do |capex|
+        sheet.add_row [
+          capex.capex_year,
+          capex.tpc_code_display,
+          capex.description,
+          capex.total_amount,
+          capex.currency,
+          capex.q1_amount,
+          capex.q2_amount,
+          capex.q3_amount,
+          capex.q4_amount,
+          capex.utilized_amount,
+          capex.remaining_amount,
+          capex.utilization_percentage
+        ]
+      end
+    end
+
+    package.to_stream.read
+  end
+
+  def generate_capex_pdf(scope)
+    pdf = BrandedReportPdf.new(
+      report_title:  'CAPEX Export',
+      project:       @project,
+      selected_year: @selected_year,
+      orientation:   'L'
+    )
+    pdf.add_page
+    pdf.print_cover(generated_at: Time.current, intro: 'CAPEX entries matching the current list filters.')
+    pdf.section_heading('CAPEX Entries')
+
+    header = ['Year', 'TPC Code', 'Description', 'Total Amount', 'Q1', 'Q2', 'Q3', 'Q4', 'Utilized', 'Remaining', 'Util %']
+    rows = scope.includes(:tpc_code_record).map do |capex|
+      [
+        capex.capex_year,
+        capex.tpc_code_display,
+        capex.description.to_s.truncate(60),
+        "#{capex.currency_symbol}#{helpers.number_with_precision(capex.total_amount, precision: 2, delimiter: ',')}",
+        "#{capex.currency_symbol}#{helpers.number_with_precision(capex.q1_amount, precision: 0, delimiter: ',')}",
+        "#{capex.currency_symbol}#{helpers.number_with_precision(capex.q2_amount, precision: 0, delimiter: ',')}",
+        "#{capex.currency_symbol}#{helpers.number_with_precision(capex.q3_amount, precision: 0, delimiter: ',')}",
+        "#{capex.currency_symbol}#{helpers.number_with_precision(capex.q4_amount, precision: 0, delimiter: ',')}",
+        "#{capex.currency_symbol}#{helpers.number_with_precision(capex.utilized_amount, precision: 2, delimiter: ',')}",
+        "#{capex.currency_symbol}#{helpers.number_with_precision(capex.remaining_amount, precision: 2, delimiter: ',')}",
+        "#{capex.utilization_percentage.round(1)}%"
+      ]
+    end
+
+    pdf.data_table(header, rows, col_widths: [14, 26, 55, 26, 20, 20, 20, 20, 24, 24, 12])
+    pdf.output
   end
 
   def capex_params

@@ -1,0 +1,15 @@
+<h2><%= l(:label_cancel_purchase_request) %></h2>
+
+<%= form_tag cancel_project_purchase_request_path(@project, @purchase_request), method: :post, class: 'pr-form' do %>
+  <p class="pr-subhead"><%= l(:text_cancel_purchase_request_intro) %></p>
+
+  <div class="pr-field">
+    <label for="cancellation_reason"><%= l(:field_cancellation_reason) %> <span class="required">*</span></label>
+    <%= text_area_tag :cancellation_reason, params[:cancellation_reason], rows: 4, required: true %>
+  </div>
+
+  <div class="pr-form-actions">
+    <%= submit_tag l(:button_cancel_request), class: 'pr-button pr-button-danger', name: nil %>
+    <%= link_to l(:button_back), project_purchase_request_path(@project, @purchase_request), class: 'pr-button pr-button-cancel' %>
+  </div>
+<% end %>

@@ -96,7 +96,7 @@
                 <% if @tpc_code.department.present? %>
                   <div class="grid-row">
                     <span class="label">Department:</span>
-                    <span class="value"><%= @tpc_code.department %></span>
+                    <span class="value"><%= @tpc_code.department.display_name %></span>
                   </div>
                 <% end %>
                 <div class="grid-row">
@@ -154,9 +154,9 @@
               <table class="dashboard-table">
                 <thead>
                   <tr>
-                    <th>TPC Code</th>
-                    <th>Description</th>
-                    <th>Amount</th>
+                    <th scope="col">TPC Code</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Amount</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -1,0 +1,26 @@
+<%# filepath: /opt/redmine/plugins/redmine_purchase_requests/app/views/purchase_requests/_lifecycle_banner.html.erb %>
+<% if request_record.cancelled? %>
+  <div class="pr-alert pr-alert-danger pr-block-gap">
+    <span class="icon icon-cancel"></span>
+    <div class="pr-alert-content">
+      <h4>
+        <%= l(:label_cancelled_on, date: format_time(request_record.cancelled_at)) %>
+        <%= request_record.cancelled_by&.name %>
+      </h4>
+      <p><%= h(request_record.cancellation_reason) %></p>
+      <p class="pr-hint"><%= l(:text_cancelled_no_budget) %></p>
+    </div>
+  </div>
+<% elsif request_record.superseded? && request_record.superseded_by.present? %>
+  <div class="pr-alert pr-alert-warning pr-block-gap">
+    <span class="icon icon-warning"></span>
+    <div class="pr-alert-content">
+      <h4>
+        <%= l(:label_superseded_by) %>
+        <%= link_to "##{request_record.superseded_by.id}",
+                  project_purchase_request_path(request_record.project, request_record.superseded_by) %>
+      </h4>
+      <p class="pr-hint"><%= l(:text_superseded_no_budget) %></p>
+    </div>
+  </div>
+<% end %>

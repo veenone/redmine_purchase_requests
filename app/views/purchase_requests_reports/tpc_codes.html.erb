@@ -24,7 +24,7 @@
 <h2>
   TPC Codes Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--violet" style="font-size:13px;vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--violet pr-badge--heading"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -82,32 +82,32 @@
   <div class="dashboard-card-header"><h3>TPC Code Usage Analysis</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
-      <div style="height:280px;"><canvas id="usageChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="usageChart"></canvas></div>
       <div style="display:grid;gap:12px;align-content:start;">
         <div class="pr-usage-card" style="border-left:3px solid var(--pr-warning);">
           <span class="pr-usage-card__icon" style="background:var(--pr-warning);color:var(--pr-ink-invert);">C</span>
           <div class="pr-usage-card__body">
-            <div style="font-size:14px;font-weight:600;color:var(--pr-ink);margin-bottom:3px;">CAPEX Allocations</div>
-            <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_capex] %> TPC codes</div>
-            <div style="font-size:15px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:capex_totals].values.sum.round(2)) %></div>
+            <div style="font-size: var(--pr-text-md);font-weight:600;color:var(--pr-ink);margin-bottom:3px;">CAPEX Allocations</div>
+            <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_capex] %> TPC codes</div>
+            <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:capex_totals].values.sum.round(2)) %></div>
           </div>
         </div>
 
         <div class="pr-usage-card" style="border-left:3px solid var(--pr-success);">
           <span class="pr-usage-card__icon" style="background:var(--pr-success);color:var(--pr-ink-invert);">O</span>
           <div class="pr-usage-card__body">
-            <div style="font-size:14px;font-weight:600;color:var(--pr-ink);margin-bottom:3px;">OPEX Allocations</div>
-            <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_opex] %> TPC codes</div>
-            <div style="font-size:15px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:opex_totals].values.sum.round(2)) %></div>
+            <div style="font-size: var(--pr-text-md);font-weight:600;color:var(--pr-ink);margin-bottom:3px;">OPEX Allocations</div>
+            <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_opex] %> TPC codes</div>
+            <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(@report_data[:opex_totals].values.sum.round(2)) %></div>
           </div>
         </div>
 
         <div class="pr-usage-card" style="border-left:3px solid var(--pr-violet);">
           <span class="pr-usage-card__icon" style="background:var(--pr-violet);color:var(--pr-ink-invert);">D</span>
           <div class="pr-usage-card__body">
-            <div style="font-size:14px;font-weight:600;color:var(--pr-ink);margin-bottom:3px;">Direct TPC Assignments</div>
-            <div style="font-size:13px;color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_direct_pr] %> TPC codes</div>
-            <div style="font-size:12px;color:var(--pr-ink-faint);">Purchase requests directly linked to TPC codes</div>
+            <div style="font-size: var(--pr-text-md);font-weight:600;color:var(--pr-ink);margin-bottom:3px;">Direct TPC Assignments</div>
+            <div style="font-size: var(--pr-text-base);color:var(--pr-ink-muted);margin-bottom:3px;"><%= @report_data[:summary][:with_direct_pr] %> TPC codes</div>
+            <div class="pr-hint">Purchase requests directly linked to TPC codes</div>
           </div>
         </div>
       </div>
@@ -121,12 +121,12 @@
   <div class="dashboard-card-header"><h3>TPC Codes by Department</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
-      <div style="height:280px;"><canvas id="departmentChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="departmentChart"></canvas></div>
       <div style="display:flex;flex-direction:column;gap:8px;align-content:start;">
         <% @report_data[:department_breakdown].sort_by { |_, count| -count }.each do |dept, count| %>
           <div class="pr-accentblock" style="display:flex;justify-content:space-between;align-items:center;border-left:3px solid var(--pr-violet);">
-            <span style="font-weight:500;color:var(--pr-ink);font-size:13px;"><%= dept %></span>
-            <span style="color:var(--pr-ink-muted);font-size:13px;font-variant-numeric:tabular-nums;"><%= count %> codes</span>
+            <span style="font-weight:500;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= dept %></span>
+            <span style="color:var(--pr-ink-muted);font-size: var(--pr-text-base);font-variant-numeric:tabular-nums;"><%= count %> codes</span>
           </div>
         <% end %>
       </div>
@@ -140,15 +140,15 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top TPC Codes by Purchase Requests</h3></div>
   <div class="dashboard-card-body">
-    <div style="display:grid;gap:10px;">
+    <div class="pr-card-stack">
       <% @report_data[:tpc_by_purchase_request].each_with_index do |tpc, index| %>
         <div class="pr-rank-row">
           <span class="pr-rank-badge" style="background:var(--pr-accent);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
-          <div style="flex:1;min-width:0;">
+          <div class="pr-fill">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-violet-ink);margin-bottom:2px;"><%= tpc[:tpc_number] %></div>
-            <div style="font-size:12px;color:var(--pr-ink-faint);"><%= tpc[:department].present? ? tpc[:department] : 'No Department' %> — <%= tpc[:owner] %></div>
+            <div class="pr-hint"><%= tpc[:department].present? ? tpc[:department] : 'No Department' %> — <%= tpc[:owner] %></div>
           </div>
-          <div style="font-size:16px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= tpc[:count] %> requests</div>
+          <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= tpc[:count] %> requests</div>
         </div>
       <% end %>
     </div>
@@ -219,15 +219,15 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top CAPEX Allocations by TPC Code</h3></div>
   <div class="dashboard-card-body">
-    <div style="display:grid;gap:10px;">
+    <div class="pr-card-stack">
       <% @report_data[:capex_totals].sort_by { |_, amount| -amount }.first(10).each_with_index do |(tpc_code, amount), index| %>
         <div class="pr-rank-row" style="border-left:3px solid var(--pr-warning);">
           <span class="pr-rank-badge" style="background:var(--pr-warning);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
-          <div style="flex:1;min-width:0;">
+          <div class="pr-fill">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-violet-ink);margin-bottom:2px;"><%= tpc_code %></div>
-            <div style="font-size:12px;color:var(--pr-ink-faint);">CAPEX Budget Allocation</div>
+            <div class="pr-hint">CAPEX Budget Allocation</div>
           </div>
-          <div style="font-size:16px;font-weight:700;color:var(--pr-warning-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(amount.round(2)) %></div>
+          <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-warning-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(amount.round(2)) %></div>
         </div>
       <% end %>
     </div>
@@ -240,15 +240,15 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top OPEX Allocations by TPC Code</h3></div>
   <div class="dashboard-card-body">
-    <div style="display:grid;gap:10px;">
+    <div class="pr-card-stack">
       <% @report_data[:opex_totals].sort_by { |_, amount| -amount }.first(10).each_with_index do |(tpc_code, amount), index| %>
         <div class="pr-rank-row" style="border-left:3px solid var(--pr-success);">
           <span class="pr-rank-badge" style="background:var(--pr-success);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
-          <div style="flex:1;min-width:0;">
+          <div class="pr-fill">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-violet-ink);margin-bottom:2px;"><%= tpc_code %></div>
-            <div style="font-size:12px;color:var(--pr-ink-faint);">OPEX Budget Allocation</div>
+            <div class="pr-hint">OPEX Budget Allocation</div>
           </div>
-          <div style="font-size:16px;font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(amount.round(2)) %></div>
+          <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-success-ink);font-variant-numeric:tabular-nums;"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %> <%= number_with_delimiter(amount.round(2)) %></div>
         </div>
       <% end %>
     </div>
@@ -283,7 +283,7 @@
             <tr>
               <td class="tpc-code-cell"><strong><%= tpc_code.tpc_number %></strong></td>
               <td><%= tpc_code.tpc_owner_name %></td>
-              <td><%= tpc_code.department.presence || '-' %></td>
+              <td><%= tpc_code.department&.name || '-' %></td>
               <td><%= tpc_code.tpc_email %></td>
               <td><%= truncate(tpc_code.description, length: 40) %></td>
               <td>
@@ -312,7 +312,7 @@
   </div>
 </div>
 
-<%= render 'reports/chart_colors' %>
+<%= render 'purchase_requests_reports/chart_colors' %>
 
 <% unless @print_mode %>
 <script>

@@ -1,4 +1,7 @@
 class OpexController < ApplicationController
+  helper :sort
+  include SortHelper
+  include RedminePurchaseRequests::TpcFilterable
   include BudgetDashboard
 
   layout 'base'
@@ -14,18 +17,14 @@ class OpexController < ApplicationController
   helper_method :opex_currency_symbol
   
   def index
-    @year = params[:year] || Date.current.year
-    @category = params[:category]
-    @search = params[:search]
-    
-    @opex_entries = @project.opex.ordered
-    @opex_entries = @opex_entries.for_year(@year) if @year.present?
-    @opex_entries = @opex_entries.for_category(@category) if @category.present?
-    @opex_entries = @opex_entries.search(@search) if @search.present?
-    
+    sort_init 'year', 'desc'
+    sort_update %w[year opex_code description total_amount category_id tpc_code_id]
+
+    @opex_entries = opex_index_scope.reorder(sort_clause)
+
     @years = @project.opex.distinct.pluck(:year).sort.reverse
     @categories = OpexCategory.all.pluck(:name, :id)
-    
+
     respond_to do |format|
       format.html
       format.json { render json: @opex_entries.map(&:as_json) }
@@ -113,8 +112,7 @@ class OpexController < ApplicationController
     # record instead of re-querying per category (see that block for why).
     @opex_entries = @project.opex.for_year(@current_year).includes(:purchase_requests, :opex_category)
     @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    @opex_entries = @opex_entries.where(tpc_code_id: @selected_tpc_code_id) if @selected_tpc_code_id
+    @opex_entries = apply_tpc_filter(@opex_entries)
 
     # Category filter, so a card in the grouping grid has somewhere to point.
     # CAPEX cards have linked to their filtered dashboard since that fix
@@ -294,6 +292,33 @@ class OpexController < ApplicationController
     end
   end
 
+  # Export the currently filtered OPEX list as CSV.
+  def export_csv
+    scope = opex_index_scope
+    send_data Opex.to_csv(scope),
+              filename: opex_export_filename('csv'),
+              type: 'text/csv',
+              disposition: 'attachment'
+  end
+
+  # Export the currently filtered OPEX list as XLSX.
+  def export_xlsx
+    scope = opex_index_scope
+    send_data generate_opex_xlsx(scope),
+              filename: opex_export_filename('xlsx'),
+              type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+              disposition: 'attachment'
+  end
+
+  # Export the currently filtered OPEX list as PDF.
+  def export_pdf
+    scope = opex_index_scope
+    send_data generate_opex_pdf(scope),
+              filename: opex_export_filename('pdf'),
+              type: 'application/pdf',
+              disposition: 'attachment'
+  end
+
   private
 
   # Rows in the order the table shows them, with the same "No budget set"
@@ -323,13 +348,108 @@ class OpexController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     render_404
   end
-  
+
   def find_opex
     @opex = @project.opex.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_404
   end
-  
+
+  # Filtered OPEX scope shared by #index and the export actions, so an
+  # export always matches what the current filters show on screen. Sets
+  # @year/@category/@search/@available_tpc_codes as a side effect (used by
+  # the index view and by the export filenames).
+  def opex_index_scope
+    @year = params[:year] || Date.current.year
+    @category = params[:category]
+    @search = params[:search]
+
+    entries = @project.opex.ordered
+    entries = entries.for_year(@year) if @year.present?
+    entries = entries.for_category(@category) if @category.present?
+    entries = entries.search(@search) if @search.present?
+
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    apply_tpc_filter(entries)
+  end
+
+  def opex_export_filename(extension)
+    parts = ['opex', @project.identifier]
+    parts << @year.to_s if @year.present?
+    parts << Date.current.strftime('%Y%m%d')
+    "#{parts.join('_')}.#{extension}"
+  end
+
+  def generate_opex_xlsx(scope)
+    require 'caxlsx'
+
+    package = Axlsx::Package.new
+    package.workbook.add_worksheet(name: 'OPEX') do |sheet|
+      header_style = sheet.styles.add_style(b: true, bg_color: 'F4F3F9')
+      sheet.add_row(
+        ['Year', 'OPEX Code', 'Description', 'Total Amount', 'Currency',
+         'Q1 Amount', 'Q2 Amount', 'Q3 Amount', 'Q4 Amount',
+         'Category', 'TPC Code', 'Utilized', 'Remaining', 'Utilization %'],
+        style: header_style
+      )
+
+      scope.includes(:opex_category, :tpc_code).each do |opex|
+        sheet.add_row [
+          opex.year,
+          opex.opex_code,
+          opex.description,
+          opex.total_amount,
+          opex.currency,
+          opex.q1_amount,
+          opex.q2_amount,
+          opex.q3_amount,
+          opex.q4_amount,
+          opex.category_display,
+          opex.tpc_code&.tpc_number,
+          opex.utilized_amount,
+          opex.remaining_amount,
+          opex.utilization_percentage
+        ]
+      end
+    end
+
+    package.to_stream.read
+  end
+
+  def generate_opex_pdf(scope)
+    pdf = BrandedReportPdf.new(
+      report_title:  'OPEX Export',
+      project:       @project,
+      selected_year: @year,
+      orientation:   'L'
+    )
+    pdf.add_page
+    pdf.print_cover(generated_at: Time.current, intro: 'OPEX entries matching the current list filters.')
+    pdf.section_heading('OPEX Entries')
+
+    header = ['Year', 'OPEX Code', 'Description', 'Total Amount', 'Q1', 'Q2', 'Q3', 'Q4', 'Category', 'TPC Code', 'Utilized', 'Remaining', 'Util %']
+    rows = scope.includes(:opex_category, :tpc_code).map do |opex|
+      [
+        opex.year,
+        opex.opex_code,
+        opex.description.to_s.truncate(60),
+        "#{opex.currency_symbol}#{helpers.number_with_precision(opex.total_amount, precision: 2, delimiter: ',')}",
+        "#{opex.currency_symbol}#{helpers.number_with_precision(opex.q1_amount, precision: 0, delimiter: ',')}",
+        "#{opex.currency_symbol}#{helpers.number_with_precision(opex.q2_amount, precision: 0, delimiter: ',')}",
+        "#{opex.currency_symbol}#{helpers.number_with_precision(opex.q3_amount, precision: 0, delimiter: ',')}",
+        "#{opex.currency_symbol}#{helpers.number_with_precision(opex.q4_amount, precision: 0, delimiter: ',')}",
+        opex.category_display,
+        opex.tpc_code&.tpc_number,
+        "#{opex.currency_symbol}#{helpers.number_with_precision(opex.utilized_amount, precision: 2, delimiter: ',')}",
+        "#{opex.currency_symbol}#{helpers.number_with_precision(opex.remaining_amount, precision: 2, delimiter: ',')}",
+        "#{opex.utilization_percentage.round(1)}%"
+      ]
+    end
+
+    pdf.data_table(header, rows, col_widths: [12, 22, 50, 22, 16, 16, 16, 16, 22, 18, 20, 20, 11])
+    pdf.output
+  end
+
   def opex_params
     params.require(:opex).permit(:year, :description, :opex_code, :tpc_code_id, :total_amount, :currency,
                                  :q1_amount, :q2_amount, :q3_amount, :q4_amount, :category_id,

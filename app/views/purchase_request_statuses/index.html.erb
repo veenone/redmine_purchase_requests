@@ -31,12 +31,12 @@
     <table class="pr-table">
       <thead>
         <tr>
-          <th><%= l(:field_name) %></th>
-          <th><%= l(:field_position) %></th>
-          <th><%= l(:field_is_closed) %></th>
-          <th><%= l(:label_status_color) %></th>
-          <th><%= l(:label_status_is_default) %></th>
-          <th></th>
+          <th scope="col"><%= l(:field_name) %></th>
+          <th scope="col"><%= l(:field_position) %></th>
+          <th scope="col"><%= l(:field_is_closed) %></th>
+          <th scope="col"><%= l(:label_status_color) %></th>
+          <th scope="col"><%= l(:label_status_is_default) %></th>
+          <th scope="col"></th>
         </tr>
       </thead>
       <tbody>
@@ -51,7 +51,7 @@
             <td><%= checked_image status.is_closed? if status.respond_to?(:is_closed?) %></td>
             <td>
               <span style="display: inline-block; background-color: <%= status.display_color %>; width: 22px; height: 22px; vertical-align: middle; border-radius: var(--pr-radius-sm); border: 1px solid var(--pr-border-strong);"></span>
-              <code style="font-family: var(--pr-font-mono); font-size: 12px; color: var(--pr-ink-muted);"><%= status.display_color %></code>
+              <code style="font-family: var(--pr-font-mono); font-size: var(--pr-text-sm); color: var(--pr-ink-muted);"><%= status.display_color %></code>
             </td>
             <td><%= checked_image status.is_default? if status.respond_to?(:is_default?) %></td>
             <td class="buttons">

@@ -1,0 +1,25 @@
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'purchase_requests', plugin: 'redmine_purchase_requests' %>
+<% end %>
+
+<% html_title l(:label_department_edit, default: 'Edit Department') %>
+
+<div class="contextual">
+  <%= link_to departments_index_path_for, class: 'pr-button pr-button-cancel pr-button-icon small' do %>
+    <span class="icon icon-cancel"><%= l(:label_departments, default: 'Back to Departments') %></span>
+  <% end %>
+</div>
+
+<div class="pr-form-container">
+  <div class="pr-form-header">
+    <div class="pr-form-title">
+      <h2><%= l(:label_department_edit, default: 'Edit Department') %></h2>
+    </div>
+  </div>
+
+  <div class="pr-form-box">
+    <div class="pr-form-content">
+      <%= render 'form' %>
+    </div>
+  </div>
+</div>

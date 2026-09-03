@@ -1,0 +1,41 @@
+// Show the workflow template form in a modal dialog
+(function() {
+  var html = '<%= j render(partial: "form_modal", locals: { title: l(:label_new_workflow_template, default: "New Workflow Template") }) %>';
+
+  // Remove any existing modal
+  var existingModal = document.getElementById('workflow-template-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  // Create modal container
+  var modalContainer = document.createElement('div');
+  modalContainer.id = 'workflow-template-modal';
+  modalContainer.className = 'workflow-modal-overlay';
+  modalContainer.innerHTML = html;
+
+  document.body.appendChild(modalContainer);
+
+  // Focus on the first input
+  var firstInput = modalContainer.querySelector('input[type="text"]');
+  if (firstInput) {
+    firstInput.focus();
+  }
+
+  // Close modal on overlay click
+  modalContainer.addEventListener('click', function(e) {
+    if (e.target === modalContainer) {
+      modalContainer.remove();
+    }
+  });
+
+  // Close modal on ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var modal = document.getElementById('workflow-template-modal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+  });
+})();

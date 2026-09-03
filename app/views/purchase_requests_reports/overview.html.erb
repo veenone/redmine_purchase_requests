@@ -24,7 +24,7 @@
 <h2>
   Executive Overview Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--accent" style="font-size:13px;margin-left:10px;vertical-align:middle;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--accent pr-badge--heading"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -268,7 +268,7 @@
       </div>
 
       <div class="currency-breakdown">
-        <h4 style="margin:0 0 14px;color:var(--pr-ink);font-size:14px;font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--pr-border);">Currency Distribution</h4>
+        <h4 style="margin:0 0 14px;color:var(--pr-ink);font-size: var(--pr-text-md);font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--pr-border);">Currency Distribution</h4>
         <% @report_data[:currency_usage][:by_value].sort_by { |_, v| -v }.each do |currency, value| %>
           <div class="currency-item">
             <div class="currency-header">
@@ -313,7 +313,7 @@
       </div>
 
       <div class="geo-country-list">
-        <h4 style="margin:0 0 12px;color:var(--pr-ink);font-size:14px;font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--pr-border);">Top Countries</h4>
+        <h4 style="margin:0 0 12px;color:var(--pr-ink);font-size: var(--pr-text-md);font-weight:700;padding-bottom:8px;border-bottom:1px solid var(--pr-border);">Top Countries</h4>
         <% @report_data[:vendor_countries][:distribution].first(10).each_with_index do |(country, count), index| %>
           <div class="geo-country-item">
             <span class="geo-country-rank">#<%= index + 1 %></span>
@@ -343,7 +343,7 @@
         { name: 'OPEX', action: 'opex', icon: 'icon-stats', color: 'danger' }
       ].each do |report| %>
         <div class="detailed-report-card detailed-report-card--<%= report[:color] %>">
-          <span class="<%= report[:icon] %>" style="font-size:28px;display:block;margin-bottom:12px;"></span>
+          <span class="<%= report[:icon] %>" style="font-size: var(--pr-text-3xl);display:block;margin-bottom:12px;"></span>
           <h4><%= report[:name] %></h4>
           <%
             case report[:action]
@@ -434,7 +434,7 @@
   </div>
 </div>
 
-<%= render 'reports/chart_colors' %>
+<%= render 'purchase_requests_reports/chart_colors' %>
 
 <% unless @print_mode %>
 <script>
@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function() {
       datasets: [{
         label: 'Vendors',
         data: <%= raw @report_data[:vendor_countries][:distribution].values.first(8).to_json %>,
-        backgroundColor: '#3a5bbf',
+        backgroundColor: PR_TOKEN('--pr-accent'),
         borderWidth: 0
       }]
     },
@@ -675,7 +675,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .executive-kpi-content { flex: 1; min-width: 0; }
 
   .executive-kpi-title {
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     font-weight: 600;
     color: var(--pr-ink-muted);
     text-transform: uppercase;
@@ -684,7 +684,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .executive-kpi-value {
-    font-size: 26px;
+    font-size: var(--pr-text-3xl);
     font-weight: 700;
     color: var(--pr-ink);
     line-height: 1.1;
@@ -693,7 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .executive-kpi-subtitle {
-    font-size: 11px;
+    font-size: var(--pr-text-xs);
     color: var(--pr-ink-faint);
     margin-bottom: 10px;
   }
@@ -701,7 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .executive-kpi-details {
     display: flex;
     gap: 14px;
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     color: var(--pr-ink-muted);
   }
   .executive-kpi-details span strong { color: var(--pr-ink); }
@@ -732,10 +732,10 @@ document.addEventListener('DOMContentLoaded', function() {
   .indicator-card.priority    { border-top-color: var(--pr-danger); }
   .indicator-card.engagement  { border-top-color: var(--pr-info); }
 
-  .indicator-icon { font-size: 26px; margin-bottom: 8px; }
+  .indicator-icon { font-size: var(--pr-text-3xl); margin-bottom: 8px; }
 
   .indicator-value {
-    font-size: 26px;
+    font-size: var(--pr-text-3xl);
     font-weight: 700;
     color: var(--pr-ink);
     line-height: 1.1;
@@ -743,7 +743,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .indicator-label {
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     color: var(--pr-ink-muted);
     margin: 6px 0 4px;
     font-weight: 600;
@@ -751,7 +751,7 @@ document.addEventListener('DOMContentLoaded', function() {
     letter-spacing: .04em;
   }
 
-  .indicator-detail { font-size: 11px; color: var(--pr-ink-faint); }
+  .indicator-detail { font-size: var(--pr-text-xs); color: var(--pr-ink-faint); }
   .indicator-detail.positive { color: var(--pr-success-ink); }
   .indicator-detail.negative { color: var(--pr-danger-ink); }
 
@@ -786,9 +786,9 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 6px;
   }
 
-  .source-name { font-weight: 600; color: var(--pr-ink); font-size: 13px; }
-  .source-percentage { font-size: 13px; font-weight: 700; color: var(--pr-ink-muted); font-variant-numeric: tabular-nums; }
-  .source-value { font-size: 18px; font-weight: 700; color: var(--pr-ink); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+  .source-name { font-weight: 600; color: var(--pr-ink); font-size: var(--pr-text-base); }
+  .source-percentage { font-size: var(--pr-text-base); font-weight: 700; color: var(--pr-ink-muted); font-variant-numeric: tabular-nums; }
+  .source-value { font-size: var(--pr-text-lg); font-weight: 700; color: var(--pr-ink); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
 
   /* ---- CAPEX/OPEX comparison ---- */
   .budget-analysis {
@@ -815,12 +815,12 @@ document.addEventListener('DOMContentLoaded', function() {
   .budget-item.capex { border-left-color: var(--pr-warning); }
   .budget-item.opex  { border-left-color: var(--pr-success); }
 
-  .budget-icon { font-size: 28px; flex-shrink: 0; }
+  .budget-icon { font-size: var(--pr-text-3xl); flex-shrink: 0; }
 
-  .budget-title { font-size: 14px; font-weight: 700; color: var(--pr-ink); margin-bottom: 4px; }
-  .budget-amount { font-size: 22px; font-weight: 700; color: var(--pr-ink); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
-  .budget-items { font-size: 13px; color: var(--pr-ink-muted); margin-bottom: 2px; }
-  .budget-percentage { font-size: 12px; color: var(--pr-accent); font-weight: 600; }
+  .budget-title { font-size: var(--pr-text-md); font-weight: 700; color: var(--pr-ink); margin-bottom: 4px; }
+  .budget-amount { font-size: var(--pr-text-xl); font-weight: 700; color: var(--pr-ink); margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+  .budget-items { font-size: var(--pr-text-base); color: var(--pr-ink-muted); margin-bottom: 2px; }
+  .budget-percentage { font-size: var(--pr-text-sm); color: var(--pr-accent); font-weight: 600; }
 
   /* ---- Currency analysis ---- */
   .currency-analysis-grid {
@@ -847,8 +847,8 @@ document.addEventListener('DOMContentLoaded', function() {
     margin-bottom: 3px;
   }
 
-  .currency-count { font-size: 12px; color: var(--pr-ink-muted); }
-  .currency-value { font-size: 17px; font-weight: 700; color: var(--pr-accent-ink); font-variant-numeric: tabular-nums; }
+  .currency-count { font-size: var(--pr-text-sm); color: var(--pr-ink-muted); }
+  .currency-value { font-size: var(--pr-text-lg); font-weight: 700; color: var(--pr-accent-ink); font-variant-numeric: tabular-nums; }
 
   /* ---- Geo distribution ---- */
   .geo-distribution-grid {
@@ -879,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
     gap: 10px;
     padding: 9px 0;
     border-bottom: 1px solid var(--pr-border);
-    font-size: 13px;
+    font-size: var(--pr-text-base);
   }
   .geo-country-item:last-child { border-bottom: none; }
 
@@ -887,14 +887,14 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: 700;
     color: var(--pr-accent);
     min-width: 28px;
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     font-variant-numeric: tabular-nums;
   }
 
   .geo-country-name { flex: 1; font-weight: 500; color: var(--pr-ink); }
 
   .geo-country-count {
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     color: var(--pr-ink-muted);
     background: var(--pr-surface-sunken);
     padding: 2px 8px;
@@ -919,7 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   .detailed-report-card:hover { transform: translateY(-2px); box-shadow: var(--pr-shadow-sm); }
 
-  .detailed-report-card h4 { margin: 0 0 14px; font-size: 14px; color: var(--pr-ink); }
+  .detailed-report-card h4 { margin: 0 0 14px; font-size: var(--pr-text-md); color: var(--pr-ink); }
 
   .detailed-report-card--accent  { border-top-color: var(--pr-accent); }
   .detailed-report-card--success { border-top-color: var(--pr-success); }
@@ -945,7 +945,7 @@ document.addEventListener('DOMContentLoaded', function() {
   .stat-group h4 {
     margin: 0 0 14px;
     color: var(--pr-ink);
-    font-size: 13px;
+    font-size: var(--pr-text-base);
     font-weight: 700;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--pr-border);
@@ -957,7 +957,7 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     padding: 7px 0;
     border-bottom: 1px solid var(--pr-border);
-    font-size: 13px;
+    font-size: var(--pr-text-base);
   }
   .stat-item:last-child { border-bottom: none; }
 

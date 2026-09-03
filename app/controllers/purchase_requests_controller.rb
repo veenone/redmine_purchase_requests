@@ -1,11 +1,14 @@
 class PurchaseRequestsController < ApplicationController
+  helper :sort
+  include SortHelper
+  include RedminePurchaseRequests::TpcFilterable
   # The budget-health band sums the same CAPEX and OPEX lines the two budget
   # dashboards do, so it takes their reliability rules from the same place
   # rather than deciding "over budget" on its own.
   include BudgetDashboard
 
   before_action :find_project, only: [:index, :new, :create, :dashboard]
-  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue]
+  before_action :find_purchase_request, only: [:show, :edit, :update, :destroy, :create_workflow_issue, :cancel, :perform_cancel, :uncancel, :revise]
   before_action :authorize, except: [:show]
   
   # Set the current menu item for proper highlighting
@@ -14,8 +17,12 @@ class PurchaseRequestsController < ApplicationController
   
   def index
     @limit = per_page_option
+
+    sort_init 'created_at', 'desc'
+    sort_update %w[id title status_id user_id estimated_price tpc_code_id created_at updated_at]
     
     scope = @project ? @project.purchase_requests : PurchaseRequest
+    @unfiltered_count = (@project ? @project.purchase_requests : PurchaseRequest).count
     
     if params[:status_id].present?
       scope = scope.where(status_id: params[:status_id])
@@ -26,10 +33,18 @@ class PurchaseRequestsController < ApplicationController
       scope = scope.where("LOWER(title) LIKE ? OR LOWER(description) LIKE ?", search_terms, search_terms)
     end
     
+    @lifecycle = params[:lifecycle].presence || 'active'
+    scope = scope.for_lifecycle(params[:lifecycle])
+
+    # TPC filter
+    tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
+    @available_tpc_codes = tpc_scope.active.ordered
+    scope = apply_tpc_filter(scope)
+
     @purchase_request_count = scope.count
     @pages = Paginator.new @purchase_request_count, @limit, params[:page]
     @offset ||= @pages.offset
-    @purchase_requests = scope.order(created_at: :desc).limit(@limit).offset(@offset)
+    @purchase_requests = scope.reorder(sort_clause).limit(@limit).offset(@offset)
   end
   
   def show
@@ -134,6 +149,31 @@ class PurchaseRequestsController < ApplicationController
     redirect_to project_purchase_request_path(@project, @purchase_request)
   end
 
+  def cancel
+    render_403 and return unless @purchase_request.cancellable?
+  end
+
+  def perform_cancel
+    @purchase_request.cancel!(user: User.current, reason: params[:cancellation_reason])
+    flash[:notice] = l(:notice_purchase_request_cancelled)
+    redirect_to project_purchase_request_path(@project, @purchase_request)
+  rescue ArgumentError => e
+    flash.now[:error] = e.message
+    render :cancel
+  end
+
+  def uncancel
+    @purchase_request.uncancel!
+    flash[:notice] = l(:notice_purchase_request_reinstated)
+    redirect_to project_purchase_request_path(@project, @purchase_request)
+  end
+
+  def revise
+    child = @purchase_request.revise!(user: User.current)
+    flash[:notice] = l(:notice_purchase_request_revised)
+    redirect_to edit_project_purchase_request_path(@project, child)
+  end
+
   def dashboard
     # Collect general statistics for the current project
     scope = @project ? @project.purchase_requests : PurchaseRequest
@@ -156,11 +196,8 @@ class PurchaseRequestsController < ApplicationController
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
     @available_tpc_codes = tpc_scope.active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    if @selected_tpc_code_id
-      scope = scope.where(tpc_code_id: @selected_tpc_code_id)
-      year_agnostic_scope = year_agnostic_scope.where(tpc_code_id: @selected_tpc_code_id)
-    end
+    scope               = apply_tpc_filter(scope)
+    year_agnostic_scope = apply_tpc_filter(year_agnostic_scope)
 
     @total_requests = scope.count
     @open_requests = scope.open.count
@@ -295,14 +332,14 @@ class PurchaseRequestsController < ApplicationController
     
     # Currency distribution with original amounts
     @currency_distribution = {}
-    scope.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+    scope.budgeted.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
       curr = currency.presence || default_currency
       @currency_distribution[curr] = amount.round(2)
     end
-    
+
     # Currency distribution with converted amounts for comparison
     @converted_currency_distribution = {}
-    scope.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
+    scope.budgeted.where.not(estimated_price: nil).group(:currency).sum(:estimated_price).each do |currency, amount|
       curr = currency.presence || default_currency
       converted_amount = helpers.convert_currency(amount, curr, default_currency)
       
@@ -403,7 +440,7 @@ class PurchaseRequestsController < ApplicationController
         next if monthly_requests.empty?
         
         # Calculate both original and converted amounts
-        original_amount = monthly_requests.sum(:estimated_price)
+        original_amount = PurchaseRequest.committed_sum(monthly_requests)
         converted_amount = 0
         
         # Convert each request amount individually to ensure accurate conversion
@@ -429,7 +466,7 @@ class PurchaseRequestsController < ApplicationController
       if monthly_null_requests.any? && @currency_monthly_trends.key?(default_currency)
         month_idx = @currency_monthly_trends[default_currency].index { |m| m[:month] == month_str }
         if month_idx
-          null_amount = monthly_null_requests.sum(:estimated_price)
+          null_amount = PurchaseRequest.committed_sum(monthly_null_requests)
           @currency_monthly_trends[default_currency][month_idx][:amount] += null_amount.round(2)
           @currency_monthly_trends[default_currency][month_idx][:converted_amount] += null_amount.round(2)
         end
@@ -567,9 +604,9 @@ class PurchaseRequestsController < ApplicationController
     opex_scope  = Opex.for_year(year)
     capex_scope = capex_scope.for_project(@project) if @project
     opex_scope  = opex_scope.for_project(@project)  if @project
-    if @selected_tpc_code_id
-      capex_scope = capex_scope.where(tpc_code_id: @selected_tpc_code_id)
-      opex_scope  = opex_scope.where(tpc_code_id: @selected_tpc_code_id)
+    if tpc_filter_active?
+      capex_scope = apply_tpc_filter(capex_scope)
+      opex_scope  = apply_tpc_filter(opex_scope)
     end
 
     capex_records = capex_scope.to_a
@@ -630,6 +667,7 @@ class PurchaseRequestsController < ApplicationController
       month_end = month_start.end_of_month
       requests = base_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), year)
                            .where(created_at: month_start..month_end)
+                           .budgeted
       amount = 0
       requests.where.not(estimated_price: nil).each do |r|
         amount += helpers.convert_currency(r.estimated_price, r.currency.presence || default_currency, default_currency)

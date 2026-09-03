@@ -10,71 +10,73 @@
   </div>
 
   <!-- Statuses Table Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3><%= l(:label_manage_statuses) %></h3>
     </div>
     <div class="dashboard-card-body">
       <p class="pr-subhead"><%= l(:text_statuses_description) || 'Manage statuses for purchase requests' %></p>
 
-      <table class="pr-table">
-        <thead>
-          <tr>
-            <th style="width: 30%;"><%= l(:label_status_name) %></th>
-            <th style="width: 10%;"><%= l(:label_status_position) %></th>
-            <th style="width: 15%;"><%= l(:label_status_is_closed) %></th>
-            <th style="width: 20%;"><%= l(:label_status_color) %></th>
-            <th style="width: 15%;"><%= l(:label_status_is_default) %></th>
-            <th style="width: 10%;"><%= l(:label_actions) %></th>
-          </tr>
-        </thead>
-        <tbody>
-          <% PurchaseRequestStatus.order(:position).each do |status| %>
+      <div class="autoscroll">
+        <table class="pr-table">
+          <thead>
             <tr>
-              <td style="font-weight: 500; color: var(--pr-ink);"><%= status.name %></td>
-              <td>
-                <span class="pr-badge pr-badge--neutral" style="min-width: 28px; text-align: center; display: inline-block;"><%= status.position %></span>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <%= checked_image status.is_closed? %>
-                  <span style="font-size: 12px; color: var(--pr-ink-muted);"><%= status.is_closed? ? 'Closed' : 'Open' %></span>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="display: inline-block; width: 28px; height: 28px; border-radius: var(--pr-radius-sm); border: 2px solid var(--pr-surface); box-shadow: 0 0 0 1px var(--pr-border), var(--pr-shadow-xs); background-color: <%= status.display_color %>;"></span>
-                  <span class="pr-mono" style="background: var(--pr-surface-subtle); padding: 3px 7px; border-radius: var(--pr-radius-sm); font-size: 11px; color: var(--pr-ink-muted); border: 1px solid var(--pr-border);"><%= status.display_color %></span>
-                </div>
-              </td>
-              <td>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <%= checked_image status.is_default? %>
-                  <% if status.is_default? %>
-                    <span class="pr-badge pr-badge--accent" style="font-size: 11px;"><%= l(:label_default) %></span>
-                  <% end %>
-                </div>
-              </td>
-              <td>
-                <div class="pr-table-actions">
-                  <%= link_to edit_purchase_request_status_path(status),
-                        class: 'pr-button pr-button-secondary pr-button-icon small',
-                        title: l(:label_edit) do %>
-                    <span class="icon icon-edit"><%= l(:label_edit) %></span>
-                  <% end %>
-                  <%= link_to purchase_request_status_path(status),
-                        method: :delete,
-                        class: 'pr-button pr-button-danger pr-button-icon small',
-                        title: l(:label_delete),
-                        data: {confirm: l(:text_are_you_sure)} do %>
-                    <span class="icon icon-del"><%= l(:label_delete) %></span>
-                  <% end %>
-                </div>
-              </td>
+              <th scope="col" style="width: 30%;"><%= l(:label_status_name) %></th>
+              <th scope="col" style="width: 10%;"><%= l(:label_status_position) %></th>
+              <th scope="col" style="width: 15%;"><%= l(:label_status_is_closed) %></th>
+              <th scope="col" style="width: 20%;"><%= l(:label_status_color) %></th>
+              <th scope="col" style="width: 15%;"><%= l(:label_status_is_default) %></th>
+              <th scope="col" style="width: 10%;"><%= l(:label_actions) %></th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% PurchaseRequestStatus.order(:position).each do |status| %>
+              <tr>
+                <td style="font-weight: 500; color: var(--pr-ink);"><%= status.name %></td>
+                <td>
+                  <span class="pr-badge pr-badge--neutral" style="min-width: 28px; text-align: center; display: inline-block;"><%= status.position %></span>
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <%= checked_image status.is_closed? %>
+                    <span style="font-size: var(--pr-text-sm); color: var(--pr-ink-muted);"><%= status.is_closed? ? 'Closed' : 'Open' %></span>
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="display: inline-block; width: 28px; height: 28px; border-radius: var(--pr-radius-sm); border: 2px solid var(--pr-surface); box-shadow: 0 0 0 1px var(--pr-border), var(--pr-shadow-xs); background-color: <%= status.display_color %>;"></span>
+                    <span class="pr-mono" style="background: var(--pr-surface-subtle); padding: 3px 7px; border-radius: var(--pr-radius-sm); font-size: var(--pr-text-xs); color: var(--pr-ink-muted); border: 1px solid var(--pr-border);"><%= status.display_color %></span>
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <%= checked_image status.is_default? %>
+                    <% if status.is_default? %>
+                      <span class="pr-badge pr-badge--accent" style="font-size: var(--pr-text-xs);"><%= l(:label_default) %></span>
+                    <% end %>
+                  </div>
+                </td>
+                <td>
+                  <div class="pr-table-actions">
+                    <%= link_to edit_purchase_request_status_path(status),
+                          class: 'pr-button pr-button-secondary pr-button-icon small',
+                          title: l(:label_edit) do %>
+                      <span class="icon icon-edit"><%= l(:label_edit) %></span>
+                    <% end %>
+                    <%= link_to purchase_request_status_path(status),
+                          method: :delete,
+                          class: 'pr-button pr-button-danger pr-button-icon small',
+                          title: l(:label_delete),
+                          data: {confirm: l(:text_are_you_sure)} do %>
+                      <span class="icon icon-del"><%= l(:label_delete) %></span>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 

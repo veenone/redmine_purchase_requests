@@ -4,7 +4,7 @@
   </div>
 
   <!-- Basic CAPEX Settings Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3>CAPEX Configuration</h3>
     </div>
@@ -54,7 +54,7 @@
   </div>
 
   <!-- Default Values Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3>Default Values</h3>
     </div>
@@ -125,7 +125,7 @@
   </div>
 
   <!-- Exchange Rates Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3>Exchange Rates</h3>
     </div>
@@ -160,7 +160,7 @@
           </select>
         </div>
         <div>
-          <span style="color: var(--pr-ink-faint); font-size: 12px;">Base Currency:</span>
+          <span class="pr-hint">Base Currency:</span>
           <span class="pr-badge pr-badge--accent currency-badge" style="margin-left: 4px;"><%= default_currency %></span>
         </div>
       </div>
@@ -168,10 +168,10 @@
       <table class="pr-table" id="capex-rates-table">
         <thead>
           <tr>
-            <th style="width: 15%;">Year</th>
-            <th style="width: 20%;"><%= l(:field_currency) %></th>
-            <th style="width: 35%;">Rate to <%= default_currency %></th>
-            <th style="width: 30%;">Example</th>
+            <th scope="col" style="width: 15%;">Year</th>
+            <th scope="col" style="width: 20%;"><%= l(:field_currency) %></th>
+            <th scope="col" style="width: 35%;">Rate to <%= default_currency %></th>
+            <th scope="col" style="width: 30%;">Example</th>
           </tr>
         </thead>
         <tbody>
@@ -189,7 +189,7 @@
                 </td>
                 <td>
                   <span class="pr-capex-rate-wrap">
-                    <span style="color: var(--pr-ink-faint); font-size: 12px;">1 <%= currency %> =</span>
+                    <span class="pr-hint">1 <%= currency %> =</span>
                     <%= text_field_tag "settings[capex_exchange_rate_#{year}_#{currency}]",
                                    year_exchange_rates[currency].to_s,
                                    class: 'form-control exchange-rate-input',
@@ -197,7 +197,7 @@
                                    step: '0.0001',
                                    style: 'width: 100px; display: inline-block; margin: 0 6px;',
                                    data: { currency: currency, year: year } %>
-                    <span style="color: var(--pr-ink-faint); font-size: 12px;"><%= default_currency %></span>
+                    <span class="pr-hint"><%= default_currency %></span>
                   </span>
                 </td>
                 <td>
@@ -219,7 +219,7 @@
   </div>
 
   <!-- Approval Workflow Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3>Approval Workflow</h3>
     </div>
@@ -272,7 +272,7 @@
     border: 1px solid var(--pr-border);
     border-radius: var(--pr-radius-sm);
     color: var(--pr-ink-muted);
-    font-size: 12px;
+    font-size: var(--pr-text-sm);
     font-weight: 600;
     white-space: nowrap;
   }

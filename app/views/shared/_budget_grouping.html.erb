@@ -56,27 +56,27 @@
           <div class="dashboard-card-body">
             <div class="summary-stats" style="margin-bottom:12px;">
               <div class="stat-box pr-stat--accent">
-                <div class="stat-number stat-currency" style="font-size:16px;">
+                <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                   <%= data[:currency_symbol] %><%= number_with_precision(data[:total_budget], precision: 2, delimiter: ',') %>
                 </div>
                 <div class="stat-label"><%= l(:label_total_budget) %></div>
               </div>
               <div class="stat-box pr-stat--success">
-                <div class="stat-number stat-currency" style="font-size:16px;">
+                <div class="stat-number stat-currency" style="font-size: var(--pr-text-lg);">
                   <%= data[:currency_symbol] %><%= number_with_precision(data[:total_utilized], precision: 2, delimiter: ',') %>
                   <% if data[:mixed_currency] %><span class="pr-badge pr-badge--warning"><%= l(:label_multi_currency) %></span><% end %>
                 </div>
                 <div class="stat-label"><%= l(:label_utilized) %></div>
               </div>
               <div class="stat-box">
-                <div class="stat-number" style="font-size:16px;"><%= data[:entries_count] %></div>
+                <div class="stat-number" style="font-size: var(--pr-text-lg);"><%= data[:entries_count] %></div>
                 <div class="stat-label"><%= l(:label_entries) %></div>
               </div>
             </div>
             <div class="utilization-bar">
               <div class="utilization-fill <%= data[:budget_undefined] || data[:utilization_percentage].to_f >= 100 ? 'high' : (data[:utilization_percentage].to_f >= 80 ? 'medium' : 'low') %>" style="width: <%= data[:budget_undefined] ? 100 : [data[:utilization_percentage].to_f, 100].min %>%"></div>
             </div>
-            <div style="text-align:center;margin-top:8px;font-size:13px;color:var(--pr-ink-muted);">
+            <div style="text-align:center;margin-top:8px;font-size: var(--pr-text-base);color:var(--pr-ink-muted);">
               <% if data[:budget_undefined] %>
                 <%# No denominator, so no percentage to print. Saying "0%"
                     here is what made budget-less spend the greenest card on

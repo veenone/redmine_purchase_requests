@@ -71,7 +71,7 @@ class Opex < ActiveRecord::Base
     target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
     # See Capex#utilized_amount: filter in Ruby so a preloaded association is
     # actually used instead of triggering a fresh scoped query.
-    purchase_requests.reject { |r| r.estimated_price.nil? }.sum do |request|
+    purchase_requests.reject { |r| r.estimated_price.nil? || !r.counts_toward_budget? }.sum do |request|
       source = request.currency.presence || target
       PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
     end
@@ -241,6 +241,38 @@ class Opex < ActiveRecord::Base
     purchase_requests.where(allocated_quarter: quarter)
                     .where.not(allocated_amount: nil)
                     .sum(:allocated_amount) || 0
+  end
+
+  # CSV export for the list view. `scope` is an Opex relation already
+  # filtered by the caller (index filters -- year, category, search, TPC)
+  # so the export matches what's on screen. Defaults to `all` for ad-hoc use.
+  def self.to_csv(scope = all)
+    require 'csv'
+
+    CSV.generate(headers: true) do |csv|
+      csv << ['Year', 'OPEX Code', 'Description', 'Total Amount', 'Currency',
+              'Q1 Amount', 'Q2 Amount', 'Q3 Amount', 'Q4 Amount',
+              'Category', 'TPC Code', 'Utilized', 'Remaining', 'Utilization %']
+
+      scope.includes(:opex_category, :tpc_code).each do |opex|
+        csv << [
+          opex.year,
+          opex.opex_code,
+          opex.description,
+          opex.total_amount,
+          opex.currency,
+          opex.q1_amount,
+          opex.q2_amount,
+          opex.q3_amount,
+          opex.q4_amount,
+          opex.category_display,
+          opex.tpc_code&.tpc_number,
+          opex.utilized_amount,
+          opex.remaining_amount,
+          opex.utilization_percentage
+        ]
+      end
+    end
   end
   
   private

@@ -5,7 +5,7 @@
   </div>
 
   <!-- Default Status Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3><%= l(:label_default_status) %></h3>
     </div>
@@ -25,8 +25,30 @@
     </div>
   </div>
 
+  <!-- Maximum Purchase Amount Section -->
+  <div class="dashboard-card pr-block-gap">
+    <div class="dashboard-card-header">
+      <h3><%= l(:label_max_purchase_amount) %></h3>
+    </div>
+    <div class="dashboard-card-body">
+      <p class="pr-subhead"><%= l(:text_max_purchase_amount_description) %></p>
+      <div class="form-row">
+        <p>
+          <label class="pr-settings-label" for="settings_max_purchase_amount"><%= l(:label_max_purchase_amount) %></label>
+          <%= text_field_tag 'settings[max_purchase_amount]',
+                            @settings['max_purchase_amount'] || '9999999999999.99',
+                            size: 20,
+                            class: 'form-control',
+                            id: 'settings_max_purchase_amount',
+                            style: 'max-width: 300px;' %>
+          <em class="info"><%= l(:text_max_purchase_amount_help) %></em>
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- Notification Settings Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3><%= l(:label_notifications) %></h3>
     </div>
@@ -46,7 +68,7 @@
   </div>
 
   <!-- Default Assignment Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3><%= l(:label_default_assignment) %></h3>
     </div>
@@ -67,7 +89,7 @@
   </div>
 
   <!-- Global Menu Visibility Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3><%= l(:label_global_menu_settings) %></h3>
     </div>

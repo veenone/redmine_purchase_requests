@@ -42,9 +42,9 @@
             ['Inactive Only', 'false']
           ], params[:active]), { include_blank: false } %>
 
-      <%= f.submit 'Filter', class: 'pr-button pr-button-secondary small' %>
+      <%= f.submit 'Filter', class: 'pr-button pr-button-secondary' %>
       <% if params[:search].present? || params[:active].present? %>
-        <%= link_to 'Clear', vendors_path, class: 'pr-button pr-button-cancel small' %>
+        <%= link_to 'Clear', vendors_path, class: 'pr-button pr-button-cancel' %>
       <% end %>
     </div>
   <% end %>
@@ -55,16 +55,16 @@
     <table class="pr-table">
       <thead>
         <tr>
-          <th>Vendor Name</th>
-          <th>Vendor ID</th>
-          <th>Country</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Contact Person</th>
-          <th>Scope</th>
-          <th>Status</th>
-          <th>Purchase Requests</th>
-          <th class="buttons">Actions</th>
+          <%= sort_header_tag('name', caption: 'Vendor Name') %>
+          <%= sort_header_tag('vendor_id', caption: 'Vendor ID') %>
+          <%= sort_header_tag('country', caption: 'Country') %>
+          <%= sort_header_tag('email', caption: 'Email') %>
+          <%= sort_header_tag('phone', caption: 'Phone') %>
+          <%= sort_header_tag('contact_person', caption: 'Contact Person') %>
+          <%= sort_header_tag('project_id', caption: 'Scope') %>
+          <%= sort_header_tag('is_active', caption: 'Status') %>
+          <th scope="col">Purchase Requests</th>
+          <th scope="col" class="buttons">Actions</th>
         </tr>
       </thead>
       <tbody>

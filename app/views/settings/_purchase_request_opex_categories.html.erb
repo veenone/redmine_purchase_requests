@@ -13,7 +13,7 @@
   </div>
 
   <!-- Category Overview Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3>Category Overview</h3>
     </div>
@@ -29,9 +29,9 @@
       <table class="pr-table" id="opex-categories-table">
         <thead>
           <tr>
-            <th style="width: 50%;"><%= l(:field_opex_category_name, default: 'Category Name') %></th>
-            <th style="width: 25%;"><%= l(:label_created_on, default: 'Created') %></th>
-            <th style="width: 25%;">Status</th>
+            <th scope="col" style="width: 50%;"><%= l(:field_opex_category_name, default: 'Category Name') %></th>
+            <th scope="col" style="width: 25%;"><%= l(:label_created_on, default: 'Created') %></th>
+            <th scope="col" style="width: 25%;">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -41,9 +41,9 @@
                 <td style="font-weight: 500; color: var(--pr-ink);"><%= category.name %></td>
                 <td>
                   <% if category.respond_to?(:created_at) && category.created_at %>
-                    <span class="pr-badge pr-badge--neutral pr-mono" style="font-size: 11px;"><%= category.created_at.strftime('%Y-%m-%d') %></span>
+                    <span class="pr-badge pr-badge--neutral pr-mono" style="font-size: var(--pr-text-xs);"><%= category.created_at.strftime('%Y-%m-%d') %></span>
                   <% else %>
-                    <span class="pr-badge pr-badge--neutral" style="font-size: 11px;">Unknown</span>
+                    <span class="pr-badge pr-badge--neutral" style="font-size: var(--pr-text-xs);">Unknown</span>
                   <% end %>
                 </td>
                 <td>
@@ -73,19 +73,19 @@
   </div>
 
   <!-- Category Management Information Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3>Category Management</h3>
     </div>
     <div class="dashboard-card-body">
       <p class="pr-subhead">Information about managing your OPEX categories</p>
 
-      <div class="pr-grid pr-grid--narrow" style="margin-bottom: 18px;">
+      <div class="pr-grid pr-grid--narrow pr-block-gap">
         <div class="dashboard-card">
           <div class="dashboard-card-body">
             <span class="icon icon-add" style="color: var(--pr-accent);"></span>
             <strong style="display: block; margin: 6px 0 4px; color: var(--pr-ink);">Add Categories</strong>
-            <span style="color: var(--pr-ink-muted); font-size: 13px;">Create new OPEX categories to classify your operational expenses effectively.</span>
+            <span style="color: var(--pr-ink-muted); font-size: var(--pr-text-base);">Create new OPEX categories to classify your operational expenses effectively.</span>
           </div>
         </div>
 
@@ -93,7 +93,7 @@
           <div class="dashboard-card-body">
             <span class="icon icon-edit" style="color: var(--pr-warning);"></span>
             <strong style="display: block; margin: 6px 0 4px; color: var(--pr-ink);">Edit Categories</strong>
-            <span style="color: var(--pr-ink-muted); font-size: 13px;">Modify existing category names and properties as your business needs evolve.</span>
+            <span style="color: var(--pr-ink-muted); font-size: var(--pr-text-base);">Modify existing category names and properties as your business needs evolve.</span>
           </div>
         </div>
 
@@ -101,7 +101,7 @@
           <div class="dashboard-card-body">
             <span class="icon icon-del" style="color: var(--pr-danger);"></span>
             <strong style="display: block; margin: 6px 0 4px; color: var(--pr-ink);">Remove Categories</strong>
-            <span style="color: var(--pr-ink-muted); font-size: 13px;">Delete unused categories while preserving historical expense data.</span>
+            <span style="color: var(--pr-ink-muted); font-size: var(--pr-text-base);">Delete unused categories while preserving historical expense data.</span>
           </div>
         </div>
       </div>
@@ -113,12 +113,12 @@
         <div class="dashboard-card-body">
           <% if OpexCategory.respond_to?(:all) && OpexCategory.all.any? %>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
-              <span class="pr-badge pr-badge--accent" style="font-size: 14px; padding: 6px 12px;"><%= OpexCategory.all.count %></span>
-              <span style="color: var(--pr-ink-muted); font-size: 13px;">categories defined</span>
+              <span class="pr-badge pr-badge--accent" style="font-size: var(--pr-text-md); padding: 6px 12px;"><%= OpexCategory.all.count %></span>
+              <span style="color: var(--pr-ink-muted); font-size: var(--pr-text-base);">categories defined</span>
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 8px;">
               <% OpexCategory.all.each do |category| %>
-                <span class="pr-badge pr-badge--neutral" style="padding: 6px 12px; font-size: 13px;">📁 <%= category.name %></span>
+                <span class="pr-badge pr-badge--neutral" style="padding: 6px 12px; font-size: var(--pr-text-base);">📁 <%= category.name %></span>
               <% end %>
             </div>
           <% else %>
@@ -134,7 +134,7 @@
   </div>
 
   <!-- Quick Actions Section -->
-  <div class="dashboard-card" style="margin-bottom: 18px;">
+  <div class="dashboard-card pr-block-gap">
     <div class="dashboard-card-header">
       <h3>Quick Actions</h3>
     </div>

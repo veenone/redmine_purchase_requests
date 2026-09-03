@@ -1,0 +1,8 @@
+<h2>New Purchase Request</h2>
+
+<p><strong>Title:</strong> <%= @purchase_request.title %></p>
+<p><strong>Requested by:</strong> <%= @requester.name %></p>
+<p><strong>Priority:</strong> <%= @purchase_request.priority %></p>
+<p><strong>Estimated Price:</strong> <%= @purchase_request.formatted_price %></p>
+
+<p><%= link_to 'View Purchase Request', project_purchase_request_url(@project, @purchase_request) %></p>

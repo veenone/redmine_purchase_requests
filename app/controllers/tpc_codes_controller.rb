@@ -1,4 +1,7 @@
 class TpcCodesController < ApplicationController
+  helper :sort
+  include SortHelper
+  include RedminePurchaseRequests::TpcFilterable
   include PurchaseRequestsHelper
 
   before_action :find_project_for_dashboard, only: [:dashboard]
@@ -9,28 +12,62 @@ class TpcCodesController < ApplicationController
   before_action :find_global_tpc_code, only: [:global_show, :global_edit, :global_update, :global_destroy]
   
   def index
+    sort_init 'tpc_number', 'asc'
+    sort_update({ 'tpc_number' => 'tpc_codes.tpc_number',
+                  'tpc_name' => 'tpc_codes.tpc_name',
+                  'tpc_owner_name' => 'tpc_codes.tpc_owner_name',
+                  'department' => 'departments.name',
+                  'tpc_email' => 'tpc_codes.tpc_email',
+                  'description' => 'tpc_codes.description',
+                  'project_id' => 'tpc_codes.project_id',
+                  'is_active' => 'tpc_codes.is_active' })
+
     @tpc_codes = TpcCode.available_for_project(@project)
     @tpc_codes = @tpc_codes.search(params[:search]) if params[:search].present?
     @tpc_codes = @tpc_codes.active if params[:active] == 'true'
     @tpc_codes = @tpc_codes.inactive if params[:active] == 'false'
     @tpc_codes = @tpc_codes.ordered
     
+    # TPC filter (selects rows of this list, so it targets :id)
+    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
+                 .left_joins(:department)
+                 .preload(:department)
+                 .reorder(sort_clause)
+
     @tpc_codes_count = @tpc_codes.count
     @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']
     @tpc_codes = @tpc_codes.limit(@tpc_codes_pages.per_page).offset(@tpc_codes_pages.offset)
   end
   
   def global_index
+    sort_init 'tpc_number', 'asc'
+    sort_update({ 'tpc_number' => 'tpc_codes.tpc_number',
+                  'tpc_name' => 'tpc_codes.tpc_name',
+                  'tpc_owner_name' => 'tpc_codes.tpc_owner_name',
+                  'department' => 'departments.name',
+                  'tpc_email' => 'tpc_codes.tpc_email',
+                  'description' => 'tpc_codes.description',
+                  'project_id' => 'tpc_codes.project_id',
+                  'is_active' => 'tpc_codes.is_active' })
+
     @tpc_codes = TpcCode.global
     @tpc_codes = @tpc_codes.search(params[:search]) if params[:search].present?
     @tpc_codes = @tpc_codes.active if params[:active] == 'true'
     @tpc_codes = @tpc_codes.inactive if params[:active] == 'false'
     @tpc_codes = @tpc_codes.ordered
-    
+
+    # TPC filter (selects rows of this list, so it targets :id)
+    @available_tpc_codes = TpcCode.global.active.ordered
+    @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
+                 .left_joins(:department)
+                 .preload(:department)
+                 .reorder(sort_clause)
+
     @tpc_codes_count = @tpc_codes.count
     @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']
     @tpc_codes = @tpc_codes.limit(@tpc_codes_pages.per_page).offset(@tpc_codes_pages.offset)
-    
+
     render 'index'
   end
   
@@ -198,6 +235,11 @@ class TpcCodesController < ApplicationController
       
       if results[:errors].any?
         flash[:error] = l(:error_tpc_code_import_failed, error: results[:errors].join(', '))
+      elsif results[:unmatched_departments].present?
+        flash[:warning] = l(:warning_tpc_codes_imported_unmatched_departments,
+                             count: results[:created],
+                             updated: results[:updated],
+                             departments: results[:unmatched_departments].uniq.join(', '))
       else
         flash[:notice] = l(:notice_tpc_codes_imported, count: results[:created], updated: results[:updated])
       end
@@ -232,6 +274,11 @@ class TpcCodesController < ApplicationController
       
       if results[:errors].any?
         flash[:error] = l(:error_tpc_code_import_failed, error: results[:errors].join(', '))
+      elsif results[:unmatched_departments].present?
+        flash[:warning] = l(:warning_tpc_codes_imported_unmatched_departments,
+                             count: results[:created],
+                             updated: results[:updated],
+                             departments: results[:unmatched_departments].uniq.join(', '))
       else
         flash[:notice] = l(:notice_tpc_codes_imported, count: results[:created], updated: results[:updated])
       end
@@ -257,11 +304,8 @@ class TpcCodesController < ApplicationController
 
     # TPC filter dropdown data and narrowing
     @available_tpc_codes = (@project ? TpcCode.available_for_project(@project) : TpcCode).active.ordered
-    @selected_tpc_code_id = params[:tpc_code_id].presence
-    if @selected_tpc_code_id
-      @all_tpc_codes = @all_tpc_codes.where(id: @selected_tpc_code_id)
-      base_scope = base_scope.where(id: @selected_tpc_code_id)
-    end
+    @all_tpc_codes = apply_tpc_filter(@all_tpc_codes, column: :id)
+    base_scope = apply_tpc_filter(base_scope, column: :id)
 
     # Year filter
     @selected_year = params[:year].present? ? params[:year].to_i : nil
@@ -294,7 +338,7 @@ class TpcCodesController < ApplicationController
     opex_tpc_counts.each { |tpc_id, count| tpc_pr_counts[tpc_id] = (tpc_pr_counts[tpc_id] || 0) + count }
 
     # Narrow PR count chart to the selected TPC if one is chosen
-    tpc_pr_counts.select! { |tpc_id, _| tpc_id.to_s == @selected_tpc_code_id } if @selected_tpc_code_id
+    tpc_pr_counts.select! { |tpc_id, _| tpc_selected?(tpc_id) } if tpc_filter_active?
 
     # Build the chart data
     tpc_pr_counts.each do |tpc_id, count|
@@ -303,13 +347,13 @@ class TpcCodesController < ApplicationController
       @tpc_by_purchase_request << {
         name: tpc.tpc_number,
         count: count,
-        department: tpc.department
+        department: tpc.department&.name
       }
     end
     @tpc_by_purchase_request = @tpc_by_purchase_request.sort_by { |t| -t[:count] }.take(10)
 
     # TPC codes by department
-    @tpc_by_department = @all_tpc_codes.where.not(department: [nil, '']).group(:department).count
+    @tpc_by_department = @all_tpc_codes.joins(:department).group('departments.name').count
 
     # Calculate total costs and utilization for each TPC code
     default_currency = Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
@@ -322,7 +366,7 @@ class TpcCodesController < ApplicationController
       # Get costs from CAPEX entries (filter by project and year if applicable)
       capex_scope = @project ? tpc.capex.where(project_id: @project.id) : tpc.capex
       capex_scope.each do |capex|
-        capex_pr_scope = @selected_year ? capex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) : capex.purchase_requests
+        capex_pr_scope = @selected_year ? capex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year).budgeted : capex.purchase_requests.budgeted
         capex_pr_scope.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
@@ -333,7 +377,7 @@ class TpcCodesController < ApplicationController
       # Get costs from OPEX entries (filter by project and year if applicable)
       opex_scope = @project ? tpc.opex.where(project_id: @project.id) : tpc.opex
       opex_scope.each do |opex|
-        opex_pr_scope = @selected_year ? opex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) : opex.purchase_requests
+        opex_pr_scope = @selected_year ? opex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year).budgeted : opex.purchase_requests.budgeted
         opex_pr_scope.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
@@ -344,7 +388,7 @@ class TpcCodesController < ApplicationController
       # Get costs from direct purchase requests (filter by project and year if applicable)
       pr_scope = @project ? tpc.purchase_requests.where(project_id: @project.id) : tpc.purchase_requests
       pr_scope = pr_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) if @selected_year
-      pr_scope.where.not(estimated_price: nil).each do |pr|
+      pr_scope.budgeted.where.not(estimated_price: nil).each do |pr|
         curr = pr.currency.presence || default_currency
         total_cost += convert_currency(pr.estimated_price, curr, default_currency)
         request_count += 1
@@ -353,7 +397,7 @@ class TpcCodesController < ApplicationController
       @tpc_utilization << {
         tpc_code: tpc.tpc_number,
         tpc_name: tpc.tpc_name.to_s,
-        department: tpc.department,
+        department: tpc.department&.name,
         owner: tpc.tpc_owner_name,
         total_cost: total_cost.round(2),
         request_count: request_count
@@ -389,19 +433,19 @@ class TpcCodesController < ApplicationController
           tpc_total = 0
 
           # Direct TPC assignments
-          month_pr_scope.where(tpc_code_id: tpc_id).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.where(tpc_code_id: tpc_id).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via CAPEX
-          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via OPEX
-          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
@@ -431,19 +475,19 @@ class TpcCodesController < ApplicationController
           tpc_total = 0
 
           # Direct TPC assignments
-          month_pr_scope.where(tpc_code_id: tpc_id).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.where(tpc_code_id: tpc_id).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via CAPEX
-          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:capex).where(capex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
 
           # Via OPEX
-          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).where.not(estimated_price: nil).each do |pr|
+          month_pr_scope.joins(:opex).where(opex: { tpc_code_id: tpc_id }).budgeted.where.not(estimated_price: nil).each do |pr|
             curr = pr.currency.presence || default_currency
             tpc_total += convert_currency(pr.estimated_price, curr, default_currency)
           end
@@ -488,7 +532,7 @@ class TpcCodesController < ApplicationController
         end
 
         # Total count — narrowed to the selected TPC when one is filtered
-        if @selected_tpc_code_id
+        if tpc_filter_active?
           total_count = tpc_counts.values.sum
         else
           direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
@@ -520,7 +564,7 @@ class TpcCodesController < ApplicationController
         end
 
         # Total count — narrowed to the selected TPC when one is filtered
-        if @selected_tpc_code_id
+        if tpc_filter_active?
           total_count = tpc_counts.values.sum
         else
           direct_count = month_pr_scope.where.not(tpc_code_id: nil).count
@@ -597,6 +641,6 @@ class TpcCodesController < ApplicationController
   end
   
   def tpc_code_params
-    params.require(:tpc_code).permit(:tpc_number, :tpc_name, :tpc_owner_name, :department, :tpc_email, :description, :is_active, :notes)
+    params.require(:tpc_code).permit(:tpc_number, :tpc_name, :tpc_owner_name, :department_id, :tpc_email, :description, :is_active, :notes)
   end
 end

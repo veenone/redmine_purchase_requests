@@ -67,7 +67,7 @@
   <div class="utilization-bar">
     <div class="utilization-fill" style="width: <%= [@opex.utilization_percentage, 100].min %>%"></div>
   </div>
-  <div style="text-align:right; font-size:12px; color:var(--pr-ink-muted); margin-top:4px;">
+  <div style="text-align:right; font-size: var(--pr-text-sm); color:var(--pr-ink-muted); margin-top:4px;">
     <%= @opex.utilization_percentage %>% Utilized
   </div>
   <% if @opex.utilization_percentage > 100 %>
@@ -133,10 +133,10 @@
           <% quarterly_consumption = @opex.quarterly_consumption(quarter) %>
           <div class="capex-quarterly-field">
             <div style="font-weight:600; color:var(--pr-ink); margin-bottom:6px;">Q<%= quarter %> <%= @opex.year %></div>
-            <div class="stat-currency" style="font-size:13px;">
+            <div class="stat-currency" style="font-size: var(--pr-text-base);">
               Consumed: <%= @opex.currency_symbol %><%= number_with_precision(quarterly_consumption, precision: 2, delimiter: ',') %>
             </div>
-            <div style="font-size:12px; color:var(--pr-ink-muted); margin-top:3px;">
+            <div style="font-size: var(--pr-text-sm); color:var(--pr-ink-muted); margin-top:3px;">
               <%= quarterly_consumption > 0 ? ((quarterly_consumption / @opex.send("q#{quarter}_amount")) * 100).round(2) : 0 %>% of Q<%= quarter %> budget
             </div>
           </div>
@@ -150,10 +150,10 @@
         <% [1, 2, 3, 4].each do |quarter| %>
           <div class="capex-quarterly-field">
             <div style="font-weight:600; color:var(--pr-ink); margin-bottom:6px;">Q<%= quarter %> <%= @opex.year %></div>
-            <div class="stat-currency" style="font-size:14px; font-weight:600;">
+            <div class="stat-currency" style="font-size: var(--pr-text-md); font-weight:600;">
               <%= @opex.currency_symbol %><%= number_with_precision(@opex.send("q#{quarter}_amount"), precision: 2, delimiter: ',') %>
             </div>
-            <div style="font-size:12px; color:var(--pr-ink-muted); margin:4px 0;">
+            <div style="font-size: var(--pr-text-sm); color:var(--pr-ink-muted); margin:4px 0;">
               <%= @opex.quarterly_percentage(quarter) %>% of total
             </div>
             <div class="progress-bar" style="height:6px;">
@@ -169,27 +169,36 @@
 <!-- Linked Purchase Requests -->
 <% if @linked_requests.any? %>
   <div class="details-section" style="margin-top:30px; padding-top:20px; border-top:1px solid var(--pr-border);">
-    <h4>Linked Purchase Requests (<%= @linked_requests.count %>)</h4>
+    <% counting = @linked_requests.count(&:counts_toward_budget?) %>
+    <h4>
+      <%= l(:label_linked_purchase_requests) %> (<%= @linked_requests.count %>)
+      <% if counting < @linked_requests.count %>
+        <span class="pr-hint"><%= l(:text_n_count_toward_budget, count: counting) %></span>
+      <% end %>
+    </h4>
 
     <div class="autoscroll">
       <table class="pr-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Status</th>
-            <th>Author</th>
-            <th>Estimated Price</th>
-            <th>Proposed Quarter</th>
-            <th>Created</th>
-            <th class="buttons">Actions</th>
+            <th scope="col">#</th>
+            <th scope="col">Title</th>
+            <th scope="col">Status</th>
+            <th scope="col">Author</th>
+            <th scope="col">Estimated Price</th>
+            <th scope="col">Proposed Quarter</th>
+            <th scope="col">Created</th>
+            <th scope="col" class="buttons">Actions</th>
           </tr>
         </thead>
         <tbody>
           <% @linked_requests.each do |pr| %>
-            <tr class="<%= cycle('odd', 'even') %>">
+            <tr class="<%= cycle('odd', 'even') %> <%= 'pr-row--void' unless pr.counts_toward_budget? %>">
               <td class="pr-cell-id">
                 <%= link_to "##{pr.id}", project_purchase_request_path(@project, pr) %>
+                <% unless pr.counts_toward_budget? %>
+                  <span class="pr-hint"><%= l(:text_does_not_count_toward_budget) %></span>
+                <% end %>
               </td>
               <td class="title">
                 <%= link_to truncate(pr.title, length: 50), project_purchase_request_path(@project, pr), class: 'pr-title-link' %>
@@ -216,7 +225,7 @@
               <td class="quarter">
                 <% if pr.has_quarterly_allocation? %>
                   <span class="pr-badge pr-badge--accent">Q<%= pr.allocated_quarter %></span>
-                  <div style="font-size:12px; color:var(--pr-ink-muted); margin-top:2px;">
+                  <div style="font-size: var(--pr-text-sm); color:var(--pr-ink-muted); margin-top:2px;">
                     <%= pr.currency == @opex.currency ? @opex.currency_symbol : pr.currency %>
                     <%= number_with_precision(pr.allocated_amount, precision: 2, delimiter: ',') %>
                   </div>

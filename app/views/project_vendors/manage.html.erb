@@ -161,8 +161,8 @@
 <% content_for :header_tags do %>
 <style>
   .info-box {
-    background-color: #e7f3ff;
-    border: 1px solid #b3d9ff;
+    background-color: var(--pr-info-soft);
+    border: 1px solid var(--pr-info-border);
     border-radius: 4px;
     padding: 15px;
     margin-bottom: 20px;
@@ -195,7 +195,7 @@
   .stat-number {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #007bff;
+    color: var(--pr-accent);
     margin-bottom: 10px;
   }
   
@@ -266,10 +266,10 @@
     display: inline-block;
     padding: 2px 6px;
     border-radius: 3px;
-    font-size: 10px;
+    font-size: var(--pr-text-2xs);
     font-weight: bold;
     text-transform: uppercase;
-    background-color: #2196F3;
+    background-color: var(--pr-info);
     color: white;
   }
   
@@ -289,7 +289,7 @@
   }
   
   .pr-button-small {
-    font-size: 11px;
+    font-size: var(--pr-text-xs);
     padding: 4px 8px;
   }
   
@@ -319,11 +319,11 @@
   }
   
   h2 .count {
-    background: #e3f2fd;
-    color: #1976d2;
+    background: var(--pr-info-soft);
+    color: var(--pr-info);
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: var(--pr-text-md);
     font-weight: normal;
   }
 </style>

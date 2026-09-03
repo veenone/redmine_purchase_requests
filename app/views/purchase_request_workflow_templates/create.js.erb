@@ -1,0 +1,19 @@
+<% if @template.errors.any? %>
+// Show validation errors in the modal
+(function() {
+  var html = '<%= j render(partial: "form_modal", locals: { title: l(:label_new_workflow_template, default: "New Workflow Template") }) %>';
+
+  var modal = document.getElementById('workflow-template-modal');
+  if (modal) {
+    modal.innerHTML = html;
+    // Focus on the first input
+    var firstInput = modal.querySelector('input[type="text"]');
+    if (firstInput) {
+      firstInput.focus();
+    }
+  }
+})();
+<% else %>
+// Template created successfully - reload the page to show the new template
+window.location.href = '<%= plugin_settings_path("redmine_purchase_requests", tab: "workflow") %>';
+<% end %>

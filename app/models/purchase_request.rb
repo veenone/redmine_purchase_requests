@@ -1,4 +1,9 @@
 class PurchaseRequest < ActiveRecord::Base
+  # Ceiling used when no max_purchase_amount is configured. Matches the
+  # precision 15, scale 2 estimated_price column, so the fallback never
+  # permits a value the database cannot store.
+  DEFAULT_MAX_PURCHASE_AMOUNT = BigDecimal('9999999999999.99')
+
   belongs_to :user
   belongs_to :project
   belongs_to :status, class_name: 'PurchaseRequestStatus', foreign_key: 'status_id'
@@ -8,6 +13,135 @@ class PurchaseRequest < ActiveRecord::Base
   belongs_to :opex_category, class_name: 'OpexCategory', foreign_key: 'category_id', optional: true
   belongs_to :tpc_code, optional: true
   belongs_to :issue, optional: true
+
+  LIFECYCLES = %w[active cancelled superseded].freeze
+
+  # Fields a revision carries forward from the request it supersedes.
+  # attributes.slice returns string keys, which is why this list uses
+  # strings. vendor is a string column shadowed by the vendor association --
+  # copying it through attributes is safe, but assigning vendor: to new()
+  # would hit the association and raise AssociationTypeMismatch.
+  COPIED_ON_REVISION = %w[
+    title description project_id vendor_id vendor tpc_code_id
+    capex_id opex_id category_id allocated_quarter allocated_amount
+    estimated_price currency priority due_date product_url notes user_id
+  ].freeze
+
+  belongs_to :revision_of, class_name: 'PurchaseRequest', optional: true
+  belongs_to :cancelled_by, class_name: 'User', optional: true
+  has_one :superseded_by, class_name: 'PurchaseRequest', foreign_key: 'revision_of_id'
+
+  validates :lifecycle, inclusion: { in: LIFECYCLES }
+
+  # Only active requests represent money anyone still intends to spend.
+  scope :budgeted, -> { where(lifecycle: 'active') }
+
+  # An unrecognised value falls back to active rather than raising or
+  # returning everything: this reads a query parameter, so a typo or a
+  # probe must not widen what the caller sees.
+  scope :for_lifecycle, lambda { |value|
+    value = value.to_s
+    if value == 'all'
+      all
+    elsif LIFECYCLES.include?(value)
+      where(lifecycle: value)
+    else
+      where(lifecycle: 'active')
+    end
+  }
+
+  # The single statement of "money we are still committed to". Every figure
+  # representing committed spend calls this rather than repeating the
+  # filter, so a site missed during a sweep is a visible leftover of the old
+  # pattern rather than an invisible wrong number.
+  #
+  # Use this wherever the scope is a plain relation. Where an association
+  # has been preloaded -- Capex and Opex -- filter in Ruby instead; see
+  # those models for why.
+  def self.committed_sum(scope = all)
+    scope.budgeted.where.not(estimated_price: nil).sum(:estimated_price)
+  end
+
+  def active?
+    lifecycle == 'active'
+  end
+
+  def cancelled?
+    lifecycle == 'cancelled'
+  end
+
+  def superseded?
+    lifecycle == 'superseded'
+  end
+
+  def counts_toward_budget?
+    active?
+  end
+
+  def cancellable?
+    active?
+  end
+
+  # Reinstating is refused once something supersedes the request: the budget
+  # it would reclaim already belongs to its successor.
+  def uncancellable?
+    cancelled? && superseded_by.nil?
+  end
+
+  def cancel!(user:, reason:)
+    raise ArgumentError, 'a cancellation reason is required' if reason.to_s.strip.empty?
+    raise "cannot cancel a #{lifecycle} request" unless cancellable?
+
+    update!(lifecycle: 'cancelled', cancelled_by: user,
+            cancelled_at: Time.current, cancellation_reason: reason.strip)
+  end
+
+  def uncancel!
+    raise "cannot reinstate a #{lifecycle} request" unless uncancellable?
+
+    update!(lifecycle: 'active', cancelled_by_id: nil,
+            cancelled_at: nil, cancellation_reason: nil)
+  end
+
+  def revisable?
+    active?
+  end
+
+  # Attachments are not copied: the superseded request keeps the quotation
+  # it was approved against, and the revision receives the new one.
+  # issue_id is not copied: the issue belongs to the version that raised it.
+  # status resets, because the price changed and needs approving again.
+  def build_revision
+    copied = attributes.slice(*COPIED_ON_REVISION)
+    # vendor is shadowed by belongs_to :vendor: assign_attributes calls
+    # vendor=, which is the association setter regardless of whether the key
+    # arrived as a string or a symbol, so handing it to new() still raises
+    # AssociationTypeMismatch. Set the raw column directly instead, the same
+    # way every build_request helper in test/verification/*.rb does.
+    vendor_value = copied.delete('vendor')
+    child = PurchaseRequest.new(copied)
+    child.write_attribute(:vendor, vendor_value)
+    child.revision_of_id  = id
+    child.revision_number = revision_number + 1
+    child.lifecycle       = 'active'
+    child.status_id       = PurchaseRequestStatus.default&.id
+    child
+  end
+
+  # One transaction: a parent superseded with no child would delete budget
+  # silently. The unique index on revision_of_id is what stops a second
+  # revision, so no check here can be raced past.
+  def revise!(user:)
+    raise "cannot revise a #{lifecycle} request" unless revisable?
+
+    child = nil
+    transaction do
+      child = build_revision
+      child.save!
+      update!(lifecycle: 'superseded')
+    end
+    child
+  end
 
   has_many :purchase_request_subtasks, dependent: :destroy
   has_many :subtask_issues, through: :purchase_request_subtasks, source: :issue
@@ -46,6 +180,7 @@ class PurchaseRequest < ActiveRecord::Base
   validate :business_justification_for_high_value
   validate :capex_or_opex_consistency
   validate :quarterly_allocation_consistency
+  validate :estimated_price_within_limit
   
   # Add any additional scopes or validations as needed
   scope :open, -> { joins(:status).where(purchase_request_statuses: { is_closed: false }) }
@@ -321,7 +456,21 @@ class PurchaseRequest < ActiveRecord::Base
       errors.add(:description, I18n.t('error_business_justification_required', default: 'Business justification is required for high-value purchases. Please provide a detailed description (minimum 50 characters).'))
     end
   end
-  
+
+  # Caps estimated_price at the configured max_purchase_amount. Compared as
+  # BigDecimal rather than Float so amounts near the column ceiling are not
+  # thrown off by floating point rounding.
+  def estimated_price_within_limit
+    return if estimated_price.blank?
+
+    configured = Setting.plugin_redmine_purchase_requests['max_purchase_amount'].to_s.to_d
+    max = configured > 0 ? configured : DEFAULT_MAX_PURCHASE_AMOUNT
+
+    if estimated_price > max
+      errors.add(:estimated_price, :less_than, count: ActiveSupport::NumberHelper.number_to_delimited(max.to_s('F')))
+    end
+  end
+
   def capex_or_opex_consistency
     if capex_id.present? && opex_id.present?
       errors.add(:base, I18n.t('error_cannot_link_both_capex_opex', default: 'Cannot link to both CAPEX and OPEX entries. Please select only one.'))

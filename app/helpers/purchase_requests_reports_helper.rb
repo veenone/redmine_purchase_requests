@@ -1,4 +1,4 @@
-module ReportsHelper
+module PurchaseRequestsReportsHelper
   # Build the query string for an export link, preserving the current year filter.
   # Usage in views:  "<%= report_export_params(:pdf) %>"  =>  "format=pdf&year=2026"
   def report_export_params(format)

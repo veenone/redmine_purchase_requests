@@ -24,7 +24,7 @@
 <h2>
   CAPEX Report<%= report_year_suffix %>
   <% if @project %>
-    <span class="pr-badge pr-badge--accent" style="font-size:13px;vertical-align:middle;margin-left:10px;"><%= @project.name %></span>
+    <span class="pr-badge pr-badge--accent pr-badge--heading"><%= @project.name %></span>
   <% end %>
 </h2>
 
@@ -82,11 +82,11 @@
   <div class="dashboard-card-body">
     <div class="pr-grid">
       <div>
-        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">CAPEX Usage Status</p>
+        <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">CAPEX Usage Status</p>
         <div style="height:260px;"><canvas id="utilizationChart"></canvas></div>
       </div>
       <div>
-        <p style="text-align:center;font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">Utilization Level Distribution</p>
+        <p style="text-align:center;font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin:0 0 10px;">Utilization Level Distribution</p>
         <div style="height:260px;"><canvas id="utilizationStatusChart"></canvas></div>
       </div>
     </div>
@@ -120,14 +120,14 @@
       <table class="pr-table">
         <thead>
           <tr>
-            <th>Year</th>
-            <th>Description</th>
-            <th>Budgeted</th>
-            <th>Spent</th>
-            <th>Remaining</th>
-            <th>Utilization</th>
-            <th>PRs</th>
-            <th>Status</th>
+            <th scope="col">Year</th>
+            <th scope="col">Description</th>
+            <th scope="col">Budgeted</th>
+            <th scope="col">Spent</th>
+            <th scope="col">Remaining</th>
+            <th scope="col">Utilization</th>
+            <th scope="col">PRs</th>
+            <th scope="col">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -182,14 +182,14 @@
   <div class="dashboard-card-header"><h3>Purchase Requests by Status</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
-      <div style="height:280px;"><canvas id="prStatusChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="prStatusChart"></canvas></div>
       <div>
         <% total_prs = @report_data[:pr_status_breakdown].values.sum %>
         <% @report_data[:pr_status_breakdown].each do |status, count| %>
           <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);margin-bottom:8px;">
-            <span style="flex:1;font-weight:500;color:var(--pr-ink);font-size:13px;"><%= status %></span>
-            <span style="font-size:17px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= count %></span>
-            <span style="font-size:12px;color:var(--pr-ink-faint);min-width:44px;text-align:right;"><%= total_prs > 0 ? "#{((count.to_f / total_prs) * 100).round(1)}%" : "0%" %></span>
+            <span style="flex:1;font-weight:500;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= status %></span>
+            <span style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;"><%= count %></span>
+            <span style="font-size: var(--pr-text-sm);color:var(--pr-ink-faint);min-width:44px;text-align:right;"><%= total_prs > 0 ? "#{((count.to_f / total_prs) * 100).round(1)}%" : "0%" %></span>
           </div>
         <% end %>
       </div>
@@ -206,8 +206,8 @@
     <div class="pr-grid--narrow" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
       <% @report_data[:yearly_totals].each do |year, total| %>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-left:3px solid var(--pr-warning);border-radius:var(--pr-radius-sm);">
-          <span style="font-weight:600;color:var(--pr-ink);font-size:13px;"><%= year %></span>
-          <span style="color:var(--pr-warning-ink);font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(total.round(2)) %></span>
+          <span style="font-weight:600;color:var(--pr-ink);font-size: var(--pr-text-base);"><%= year %></span>
+          <span style="color:var(--pr-warning-ink);font-weight:700;font-size: var(--pr-text-base);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(total.round(2)) %></span>
         </div>
       <% end %>
     </div>
@@ -219,7 +219,7 @@
   <div class="dashboard-card-header"><h3><%= Date.current.year %> Quarterly Breakdown</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
-      <div style="height:280px;"><canvas id="quarterlyChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="quarterlyChart"></canvas></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start;">
         <% [:q1, :q2, :q3, :q4].each_with_index do |quarter, index| %>
           <%
@@ -227,9 +227,9 @@
             qpct = total_quarterly > 0 ? ((@report_data[:quarterly_breakdown][quarter] / total_quarterly) * 100).round(1) : 0
           %>
           <div style="text-align:center;padding:18px 14px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-top:3px solid var(--pr-accent);border-radius:var(--pr-radius);">
-            <div style="font-size:13px;font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
-            <div style="font-size:19px;font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
-            <div style="font-size:12px;color:var(--pr-accent-ink);font-weight:500;"><%= qpct %>%</div>
+            <div style="font-size: var(--pr-text-base);font-weight:600;color:var(--pr-ink-muted);margin-bottom:6px;">Q<%= index + 1 %> <%= Date.current.year %></div>
+            <div style="font-size: var(--pr-text-xl);font-weight:700;color:var(--pr-ink);font-variant-numeric:tabular-nums;margin-bottom:4px;">$<%= number_with_delimiter(@report_data[:quarterly_breakdown][quarter].round(2)) %></div>
+            <div style="font-size: var(--pr-text-sm);color:var(--pr-accent-ink);font-weight:500;"><%= qpct %>%</div>
           </div>
         <% end %>
       </div>
@@ -242,15 +242,15 @@
 <div class="dashboard-card pr-card--gap">
   <div class="dashboard-card-header"><h3>Top TPC Code Allocations</h3></div>
   <div class="dashboard-card-body">
-    <div style="display:grid;gap:10px;">
+    <div class="pr-card-stack">
       <% @report_data[:tpc_distribution].each_with_index do |(tpc_info, amount), index| %>
         <div class="pr-rank-row">
           <span class="pr-rank-badge" style="background:var(--pr-warning);color:var(--pr-ink-invert);">#<%= index + 1 %></span>
-          <div style="flex:1;min-width:0;">
+          <div class="pr-fill">
             <div class="tpc-number" style="font-weight:600;color:var(--pr-ink);margin-bottom:2px;"><%= tpc_info %></div>
-            <div style="font-size:12px;color:var(--pr-ink-faint);">CAPEX Allocation</div>
+            <div class="pr-hint">CAPEX Allocation</div>
           </div>
-          <div style="font-size:17px;font-weight:700;color:var(--pr-warning-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
+          <div style="font-size: var(--pr-text-lg);font-weight:700;color:var(--pr-warning-ink);font-variant-numeric:tabular-nums;">$<%= number_with_delimiter(amount.round(2)) %></div>
         </div>
       <% end %>
     </div>
@@ -264,7 +264,7 @@
   <div class="dashboard-card-header"><h3>Currency Distribution</h3></div>
   <div class="dashboard-card-body">
     <div class="pr-grid">
-      <div style="height:280px;"><canvas id="currencyChart"></canvas></div>
+      <div class="pr-chart-box"><canvas id="currencyChart"></canvas></div>
       <div style="display:grid;gap:8px;align-content:start;">
         <% @report_data[:currency_breakdown].each do |currency, amount| %>
           <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--pr-surface-subtle);border:1px solid var(--pr-border);border-radius:var(--pr-radius-sm);">
@@ -286,18 +286,18 @@
       <table class="pr-table">
         <thead>
           <tr>
-            <th>Year</th>
-            <th>Description</th>
-            <th>Project</th>
-            <th>TPC Code</th>
-            <th>Total Amount</th>
-            <th>Currency</th>
-            <th>PRs</th>
-            <th>Q1</th>
-            <th>Q2</th>
-            <th>Q3</th>
-            <th>Q4</th>
-            <th>Created</th>
+            <th scope="col">Year</th>
+            <th scope="col">Description</th>
+            <th scope="col">Project</th>
+            <th scope="col">TPC Code</th>
+            <th scope="col">Total Amount</th>
+            <th scope="col">Currency</th>
+            <th scope="col">PRs</th>
+            <th scope="col">Q1</th>
+            <th scope="col">Q2</th>
+            <th scope="col">Q3</th>
+            <th scope="col">Q4</th>
+            <th scope="col">Created</th>
           </tr>
         </thead>
         <tbody>
@@ -323,7 +323,7 @@
   </div>
 </div>
 
-<%= render 'reports/chart_colors' %>
+<%= render 'purchase_requests_reports/chart_colors' %>
 
 <% unless @print_mode %>
 <script>

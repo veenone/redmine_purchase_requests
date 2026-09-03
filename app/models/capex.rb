@@ -65,10 +65,12 @@ class Capex < ActiveRecord::Base
     return @utilized_amount if defined?(@utilized_amount)
     @utilized_amount = begin
     target = currency.presence || Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD'
-    # reject/sum in Ruby rather than .where.not(...): a scoped where issues a
-    # fresh query even when the association is preloaded, defeating the
-    # controller's includes(:purchase_requests).
-    purchase_requests.reject { |r| r.estimated_price.nil? }.sum do |request|
+    # Filtered in Ruby, not with a scoped where. The dashboard controller
+    # preloads this association with includes(:purchase_requests); a scoped
+    # where issues a fresh query per record even when it is preloaded, which
+    # is the N+1 that preload was added to remove. PurchaseRequest.committed_sum
+    # is for plain relations, not for this.
+    purchase_requests.reject { |r| r.estimated_price.nil? || !r.counts_toward_budget? }.sum do |request|
       source = request.currency.presence || target
       PurchaseRequestsHelper.convert_amount(request.estimated_price, source, target) || 0
     end
@@ -168,6 +170,36 @@ class Capex < ActiveRecord::Base
     purchase_requests.where(allocated_quarter: quarter)
                     .where.not(allocated_amount: nil)
                     .sum(:allocated_amount) || 0
+  end
+
+  # CSV export for the list view. `scope` is a Capex relation already
+  # filtered by the caller (index filters -- year, search, TPC) so the
+  # export matches what's on screen. Defaults to `all` for ad-hoc use.
+  def self.to_csv(scope = all)
+    require 'csv'
+
+    CSV.generate(headers: true) do |csv|
+      csv << ['Year', 'TPC Code', 'Description', 'Total Amount', 'Currency',
+              'Q1 Amount', 'Q2 Amount', 'Q3 Amount', 'Q4 Amount',
+              'Utilized', 'Remaining', 'Utilization %']
+
+      scope.includes(:tpc_code_record).each do |capex|
+        csv << [
+          capex.capex_year,
+          capex.tpc_code_display,
+          capex.description,
+          capex.total_amount,
+          capex.currency,
+          capex.q1_amount,
+          capex.q2_amount,
+          capex.q3_amount,
+          capex.q4_amount,
+          capex.utilized_amount,
+          capex.remaining_amount,
+          capex.utilization_percentage
+        ]
+      end
+    end
   end
 
   private

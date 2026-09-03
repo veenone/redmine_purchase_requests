@@ -5,6 +5,10 @@ RedmineApp::Application.routes.draw do
     resources :purchase_requests do
       member do
         post 'create_workflow_issue'
+        get 'cancel'
+        post 'cancel', action: 'perform_cancel'
+        post 'uncancel'
+        post 'revise'
       end
       collection do
         get 'dashboard'
@@ -22,6 +26,9 @@ RedmineApp::Application.routes.draw do
     resources :capex, path: 'capex', as: 'capex' do
       collection do
         get 'dashboard'
+        get 'export_csv'
+        get 'export_xlsx'
+        get 'export_pdf'
       end
       member do
         get 'quarterly_data'
@@ -32,6 +39,9 @@ RedmineApp::Application.routes.draw do
     resources :opex, path: 'opex', as: 'opex' do
       collection do
         get 'dashboard'
+        get 'export_csv'
+        get 'export_xlsx'
+        get 'export_pdf'
       end
       member do
         get 'quarterly_data'
@@ -51,8 +61,14 @@ RedmineApp::Application.routes.draw do
       end
     end
     
+    # Departments are global data, but reachable from inside a project so
+    # the Budget Management menu can link to them without dropping the user
+    # out of the project. Same controller and same rows either way — the
+    # controller notices params[:project_id] and keeps the context.
+    resources :departments, except: [:show]
+
     # Add project-scoped reports
-    resources :reports, only: [:index] do
+    resources :reports, only: [:index], controller: 'purchase_requests_reports' do
       collection do
         get 'purchase_requests'
         get 'vendors'
@@ -99,9 +115,10 @@ RedmineApp::Application.routes.draw do
   patch 'tpc_codes/:id', to: 'tpc_codes#global_update'
   put 'tpc_codes/:id', to: 'tpc_codes#global_update'
   delete 'tpc_codes/:id', to: 'tpc_codes#global_destroy'
+  resources :departments, except: [:show]
   
   # Global reports
-  resources :reports, only: [:index] do
+  resources :reports, only: [:index], controller: 'purchase_requests_reports' do
     collection do
       get 'purchase_requests'
       get 'vendors'

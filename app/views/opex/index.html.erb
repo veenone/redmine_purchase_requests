@@ -36,9 +36,10 @@
       <label for="search">Search:</label>
       <%= text_field_tag 'search', params[:search], size: 30, placeholder: 'Search by description or OPEX code' %>
 
-      <%= submit_tag 'Search', name: nil, class: 'pr-button pr-button-secondary small' %>
-      <% if params[:year].present? || params[:search].present? %>
-        <%= link_to project_opex_index_path(@project), class: 'pr-button pr-button-cancel small' do %>
+      <%= render 'shared/tpc_filter_field', available_tpc_codes: @available_tpc_codes, selected_tpc_code_ids: selected_tpc_code_ids %>
+      <%= submit_tag 'Search', name: nil, class: 'pr-button pr-button-secondary' %>
+      <% if params[:year].present? || params[:search].present? || params[:tpc_code_id].present? %>
+        <%= link_to project_opex_index_path(@project), class: 'pr-button pr-button-cancel' do %>
           Clear
         <% end %>
       <% end %>
@@ -46,22 +47,35 @@
   </fieldset>
 <% end %>
 
+<%
+  opex_export_query = {
+    year: @year,
+    search: params[:search].presence,
+    category: @category.presence,
+    tpc_code_id: selected_tpc_code_ids.presence
+  }.compact
+%>
+<%= render 'shared/export_actions',
+           csv_path:  export_csv_project_opex_index_path(@project, opex_export_query),
+           xlsx_path: export_xlsx_project_opex_index_path(@project, opex_export_query),
+           pdf_path:  export_pdf_project_opex_index_path(@project, opex_export_query) %>
+
 <% if @opex_entries.any? %>
   <div class="autoscroll">
     <table class="pr-table">
       <thead>
         <tr>
-          <th>Year</th>
-          <th>OPEX Code</th>
-          <th>Description</th>
-          <th>Total Amount</th>
-          <th>Quarterly Distribution</th>
-          <th>Category</th>
-          <th>TPC Code</th>
-          <th>Utilized</th>
-          <th>Remaining</th>
-          <th>Utilization %</th>
-          <th class="buttons">Actions</th>
+          <%= sort_header_tag('year', caption: 'Year') %>
+          <%= sort_header_tag('opex_code', caption: 'OPEX Code') %>
+          <%= sort_header_tag('description', caption: 'Description') %>
+          <%= sort_header_tag('total_amount', caption: 'Total Amount') %>
+          <th scope="col">Quarterly Distribution</th>
+          <%= sort_header_tag('category_id', caption: 'Category') %>
+          <%= sort_header_tag('tpc_code_id', caption: 'TPC Code') %>
+          <th scope="col">Utilized</th>
+          <th scope="col">Remaining</th>
+          <th scope="col">Utilization %</th>
+          <th scope="col" class="buttons">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -81,14 +95,14 @@
               <span class="currency-code"><%= opex.currency %></span>
             </td>
             <td class="quarterly-distribution">
-              <div class="capex-quarterly-grid" style="grid-template-columns: repeat(4,auto); gap:4px; font-size:11px;">
+              <div class="capex-quarterly-grid" style="grid-template-columns: repeat(4,auto); gap:4px; font-size: var(--pr-text-xs);">
                 <% [1, 2, 3, 4].each do |q| %>
                   <div class="capex-quarterly-field" style="text-align:center; min-width:38px;">
                     <div style="font-weight:600; color:var(--pr-ink-muted);">Q<%= q %></div>
-                    <div style="font-size:10px; color:var(--pr-ink);">
+                    <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink);">
                       <%= opex.currency_symbol %><%= number_with_precision(opex.send("q#{q}_amount"), precision: 0, delimiter: ',') %>
                     </div>
-                    <div style="font-size:9px; color:var(--pr-ink-faint);"><%= opex.quarterly_percentage(q) %>%</div>
+                    <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink-faint);"><%= opex.quarterly_percentage(q) %>%</div>
                   </div>
                 <% end %>
               </div>
@@ -101,7 +115,7 @@
                 <div>
                   <span class="tpc-number"><%= opex.tpc_code.tpc_number %></span>
                   <% if opex.tpc_code.department.present? %>
-                    <div style="font-size:10px; color:var(--pr-ink-faint); font-style:italic;"><%= opex.tpc_code.department %></div>
+                    <div style="font-size: var(--pr-text-2xs); color:var(--pr-ink-faint); font-style:italic;"><%= opex.tpc_code.department.name %></div>
                   <% end %>
                 </div>
               <% else %>

@@ -1,5 +1,7 @@
 class PurchaseRequestStatus < ActiveRecord::Base
-  has_many :purchase_requests
+  # The column is status_id, not the purchase_request_status_id Rails would
+  # infer, so every call to this association raised until the key was named.
+  has_many :purchase_requests, foreign_key: 'status_id'
 
   validates :name, presence: true, uniqueness: true
   validates :position, presence: true, numericality: { greater_than: 0 }

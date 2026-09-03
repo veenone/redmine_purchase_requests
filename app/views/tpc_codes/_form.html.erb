@@ -41,8 +41,10 @@
         <em class="info">Full name of the TPC owner</em>
       </div>
       <div class="form-row">
-        <%= f.label :department %>
-        <%= f.text_field :department, maxlength: 100, class: 'form-control' %>
+        <%= f.label :department_id, l(:field_department, default: 'Department') %>
+        <%= f.collection_select :department_id, Department.ordered, :id, :display_name,
+                                { include_blank: l(:label_no_department, default: '-- No department --') },
+                                { class: 'form-control' } %>
         <em class="info">Department name (optional)</em>
       </div>
     </div>
