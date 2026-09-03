@@ -5,6 +5,38 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-09-03
+
+Purchase requests stop being forward-only: a request can be cancelled or revised into a corrected version, and the budget it consumed is released.
+
+> **Deploy note:** run plugin migrations before restarting. Migration 041 adds `lifecycle`, `revision_of_id`, `revision_number`, `cancelled_at`, `cancelled_by_id` and `cancellation_reason` to `purchase_requests`, with a UNIQUE index on `revision_of_id`. It is additive, so the running worker is unaffected until it reloads — the migration may safely run ahead of the restart. Afterwards, grant the two new permissions to whichever roles should hold them; no role receives them automatically.
+
+### Added
+
+- Revising a request creates a new record carrying the corrected figures, linked to the one it supersedes. The original keeps its history and stops counting toward budget. Both directions of the chain are navigable from either request.
+- Cancelling a request records who cancelled it, when, and a required reason, and releases its budget. The request stays in the list with its history intact.
+- Reinstating a cancelled request, so a mis-click does not need SQL to undo. Refused once a successor exists, because that budget now belongs to the successor.
+- `cancel_purchase_requests` and `revise_purchase_requests` permissions. Cancelling releases money, so it is deliberately separable from ordinary editing — a role can be allowed to edit a request without being allowed to release its budget.
+- A banner on the request page naming both the lifecycle state and its cause: the successor for a superseded request, the reason and canceller for a cancelled one.
+- A state filter on the purchase request list, with the cancelled and superseded states marked inline and their rows muted.
+- `PurchaseRequest.committed_sum` and the `budgeted` scope, so the lifecycle rule has one definition rather than one per call site.
+
+### Changed
+
+- Every budget figure now excludes cancelled and superseded requests — 45 sites across the CAPEX, OPEX, TPC, reports and dashboard code paths, covering SQL sums, joined sums and Ruby accumulation with currency conversion.
+- The CAPEX and OPEX pages annotate linked requests that do not count toward the total and state how many of the listed requests do, so a list of five beside a total covering three reads as a fact rather than a defect.
+- The purchase request list defaults to active requests. Existing requests are all active, so the view is unchanged until something is cancelled.
+- A revision copies the request's figures but not its attachments: the superseded request keeps the quotation it was approved against, and the revision receives the new one. The issue link stays with the version that raised it, and status resets to default because a changed price needs approving again.
+
+### Fixed
+
+- `PurchaseRequestStatus#purchase_requests` named the wrong foreign key. The column is `status_id`, not the `purchase_request_status_id` Rails infers, so every call to the association raised.
+
+### Notes
+
+- Revising twice is prevented by a UNIQUE database index rather than a controller check, so it cannot be raced past into two budget-consuming children.
+- Counts and money deliberately differ in scope: a cancelled request still appears in lists and counts, because it happened, but stops contributing to any monetary total.
+
 ## [1.11.0] - 2026-08-20
 
 Departments become real records, TPC filtering becomes multi-select, and list views gain sorting and exports.
