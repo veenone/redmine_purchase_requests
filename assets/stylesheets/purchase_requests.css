@@ -676,8 +676,45 @@
   font-size: var(--pr-text-sm);
   text-align: center;
 }
-#content .pr-pagination,
 #content .pagination-wrapper { margin-top: var(--pr-space-7); text-align: center; }
+
+/* Pager. The wrapper also carries Redmine's .pagination class, which gives
+   the inline list layout and hides the pager when printing; these rules
+   swap core's greys and blue for the plugin tokens. Without that class the
+   pages rendered as a bare, borderless list. */
+#content .pr-pagination {
+  margin-top: var(--pr-space-7);
+  text-align: center;
+  color: var(--pr-ink-muted);
+  font-size: var(--pr-text-sm);
+}
+#content .pr-pagination ul.pages li {
+  border: 1px solid var(--pr-border-strong);
+  background: var(--pr-surface);
+  margin-bottom: var(--pr-space-3);
+  line-height: 2em;
+}
+#content .pr-pagination ul.pages li:first-child { border-radius: var(--pr-radius-sm) 0 0 var(--pr-radius-sm); }
+#content .pr-pagination ul.pages li:last-child  { border-radius: 0 var(--pr-radius-sm) var(--pr-radius-sm) 0; }
+#content .pr-pagination ul.pages li a,
+#content .pr-pagination ul.pages li span {
+  display: inline-block;
+  padding: 0 var(--pr-space-4);
+}
+#content .pr-pagination ul.pages li a { color: var(--pr-accent-ink); text-decoration: none; }
+#content .pr-pagination ul.pages li.page:hover { background: var(--pr-accent-soft); }
+#content .pr-pagination ul.pages li.current {
+  background: var(--pr-accent);
+  border-color: var(--pr-accent);
+  color: var(--pr-ink-invert);
+  font-weight: 600;
+}
+/* Disabled Previous/Next on the first and last page, and the "…" spacer. */
+#content .pr-pagination ul.pages li:not(.page):not(.current) { color: var(--pr-ink-faint); }
+#content .pr-pagination .items { margin-left: var(--pr-space-3); }
+#content .pr-pagination .per-page { margin-left: var(--pr-space-3); }
+#content .pr-pagination .per-page a { color: var(--pr-accent-ink); }
+#content .pr-pagination .per-page span.selected { color: var(--pr-ink); font-weight: 600; }
 
 /* Stacked cell content (price, budget link, TPC code) */
 #content .price-display,
