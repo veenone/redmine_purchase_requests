@@ -11,6 +11,7 @@
       <thead>
         <tr>
           <th scope="col"><%= l(:field_vendor_name) %></th>
+          <th scope="col"><%= l(:field_description) %></th>
           <th scope="col"><%= l(:field_vendor_id) %></th>
           <th scope="col"><%= l(:field_email) %></th>
           <th scope="col"><%= l(:field_phone) %></th>
@@ -27,10 +28,8 @@
           <tr>
             <td>
               <%= link_to vendor.name, vendor_path(vendor), class: 'vendor-name-link' %>
-              <% if vendor.description.present? %>
-                <div class="description-preview" title="<%= vendor.description %>"><%= truncate(vendor.description, length: 80) %></div>
-              <% end %>
             </td>
+            <td class="vendor-description" title="<%= vendor.description %>"><%= truncate(vendor.description.to_s, length: 80) %></td>
             <td><%= vendor.vendor_id %></td>
             <td><%= vendor.email %></td>
             <td><%= vendor.phone %></td>

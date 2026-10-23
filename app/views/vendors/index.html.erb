@@ -56,6 +56,7 @@
       <thead>
         <tr>
           <%= sort_header_tag('name', caption: 'Vendor Name') %>
+          <th scope="col"><%= l(:field_description) %></th>
           <%= sort_header_tag('vendor_id', caption: 'Vendor ID') %>
           <%= sort_header_tag('country', caption: 'Country') %>
           <%= sort_header_tag('email', caption: 'Email') %>
@@ -72,10 +73,8 @@
           <tr class="<%= 'is-muted' unless vendor.is_active? %>">
             <td>
               <strong><%= vendor.name %></strong>
-              <% if vendor.description.present? %>
-                <div class="description-preview" title="<%= vendor.description %>"><%= truncate(vendor.description, length: 80) %></div>
-              <% end %>
             </td>
+            <td class="vendor-description" title="<%= vendor.description %>"><%= truncate(vendor.description.to_s, length: 80) %></td>
             <td><%= vendor.vendor_id %></td>
             <td>
               <% if vendor.respond_to?(:country) && vendor.country.present? %>
