@@ -5,6 +5,12 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.1] - 2026-10-23
+
+### Changed
+
+- The vendor description has its own column in the global vendor list, the project vendor list and the shared vendor table, right after Vendor Name. Long descriptions are truncated to 80 characters, with the full text in the cell tooltip. It replaces the small preview under the vendor name, which was easy to miss.
+
 ## [1.13.0] - 2026-10-23
 
 > **Deploy note:** run plugin migrations before restarting. Migration 042 adds a nullable `description` text column to `vendors`.
