@@ -58,8 +58,10 @@
   }
 
   # Removes a single TPC from the selection, keeping the others applied.
-  strip_tpc = ->(id) {
-    remaining_ids = selected_tpc_code_ids - [id.to_s]
+  # Takes every id in a merged entry's group, so one click clears the whole
+  # chip instead of leaving its sibling id still applied.
+  strip_tpc = ->(ids) {
+    remaining_ids = selected_tpc_code_ids - Array(ids).map(&:to_s)
     rest = qp.except('tpc_code_id')
     rest = rest.merge('tpc_code_id' => remaining_ids) if remaining_ids.any?
     rest.empty? ? request.path : "#{request.path}?#{rest.to_query}"
@@ -70,7 +72,11 @@
   tpc_active      = selected_tpc_code_ids.any?
   compare_active  = show_year && compare_mode && compare_year.present?
   category_active = selected_category.present?
-  selected_tpcs   = tpc_active ? available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } : []
+  selected_tpcs   = tpc_active ? available_tpc_codes.select { |t| (t.group_ids.map(&:to_s) & selected_tpc_code_ids).any? } : []
+  # Ids the chips above already account for. One merged entry covers several,
+  # so counting chips against the raw selection would report phantom extras.
+  chipped_tpc_ids   = selected_tpcs.flat_map { |t| t.group_ids.map(&:to_s) }
+  unchipped_tpc_ids = selected_tpc_code_ids - chipped_tpc_ids
   any_active      = year_active || tpc_active || compare_active || category_active
 %>
 <%= form_tag request.path, method: :get, class: 'pr-filters-form' do %>
@@ -123,11 +129,11 @@
           <span class="pr-badge pr-badge--neutral"><%= l(:label_compare_to) %>: <%= compare_year %><%= link_to '×', strip.call('compare_year'), class: 'pr-chip-remove', title: l(:label_remove_comparison) %></span>
         <% end %>
         <% selected_tpcs.each do |tpc| %>
-          <span class="pr-badge pr-badge--accent" title="<%= tpc.display_name %>"><%= l(:label_tpc) %>: <%= tpc.tpc_number %><%= link_to '×', strip_tpc.call(tpc.id), class: 'pr-chip-remove', title: l(:label_remove_tpc_filter) %></span>
+          <span class="pr-badge pr-badge--accent" title="<%= tpc.display_name %>"><%= l(:label_tpc) %>: <%= tpc.tpc_number %><%= link_to '×', strip_tpc.call(tpc.group_ids), class: 'pr-chip-remove', title: l(:label_remove_tpc_filter) %></span>
         <% end %>
-        <% if tpc_active && selected_tpcs.size < selected_tpc_code_ids.size %>
+        <% if tpc_active && unchipped_tpc_ids.any? %>
           <%# ids that are filtered but not in available_tpc_codes (inactive or out of project scope) %>
-          <span class="pr-badge pr-badge--neutral" title="<%= l(:text_tpc_filter_unavailable, default: 'Some selected TPC codes are not in the current list') %>"><%= l(:label_tpc) %>: +<%= selected_tpc_code_ids.size - selected_tpcs.size %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: l(:label_remove_tpc_filter) %></span>
+          <span class="pr-badge pr-badge--neutral" title="<%= l(:text_tpc_filter_unavailable, default: 'Some selected TPC codes are not in the current list') %>"><%= l(:label_tpc) %>: +<%= unchipped_tpc_ids.size %><%= link_to '×', strip.call('tpc_code_id'), class: 'pr-chip-remove', title: l(:label_remove_tpc_filter) %></span>
         <% end %>
         <% if category_active %>
           <span class="pr-badge pr-badge--accent"><%= l(:field_opex_category) %>: <%= selected_category %><%= link_to '×', strip.call('category'), class: 'pr-chip-remove', title: l(:label_remove_category_filter) %></span>

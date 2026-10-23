@@ -111,7 +111,7 @@ class OpexController < ApplicationController
     # is preloaded too: the category grouping below reads it off every loaded
     # record instead of re-querying per category (see that block for why).
     @opex_entries = @project.opex.for_year(@current_year).includes(:purchase_requests, :opex_category)
-    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(TpcCode.available_for_project(@project).active.ordered)
     @opex_entries = apply_tpc_filter(@opex_entries)
 
     # Category filter, so a card in the grouping grid has somewhere to point.
@@ -369,7 +369,7 @@ class OpexController < ApplicationController
     entries = entries.for_category(@category) if @category.present?
     entries = entries.search(@search) if @search.present?
 
-    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(TpcCode.available_for_project(@project).active.ordered)
     apply_tpc_filter(entries)
   end
 

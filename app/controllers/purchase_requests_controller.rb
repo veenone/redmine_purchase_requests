@@ -38,7 +38,7 @@ class PurchaseRequestsController < ApplicationController
 
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
-    @available_tpc_codes = tpc_scope.active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(tpc_scope.active.ordered)
     scope = apply_tpc_filter(scope)
 
     @purchase_request_count = scope.count
@@ -195,7 +195,7 @@ class PurchaseRequestsController < ApplicationController
 
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
-    @available_tpc_codes = tpc_scope.active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(tpc_scope.active.ordered)
     scope               = apply_tpc_filter(scope)
     year_agnostic_scope = apply_tpc_filter(year_agnostic_scope)
 

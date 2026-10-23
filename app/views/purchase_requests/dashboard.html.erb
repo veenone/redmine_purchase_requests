@@ -35,7 +35,7 @@
       compare_year: @compare_year %>
 
 <% if @project && (User.current.allowed_to?(:view_capex, @project) || User.current.allowed_to?(:view_opex, @project)) %>
-  <% band_tpcs = @available_tpc_codes.select { |t| selected_tpc_code_ids.include?(t.id.to_s) } %>
+  <% band_tpcs = @available_tpc_codes.select { |t| (t.group_ids.map(&:to_s) & selected_tpc_code_ids).any? } %>
   <div class="pr-card pr-budget-band">
     <div class="pr-card__header">
       <h3>

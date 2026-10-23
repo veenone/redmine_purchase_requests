@@ -27,7 +27,7 @@
     if selected.empty?
       l(:label_all_tpcs, default: 'All TPCs')
     elsif selected.size == 1
-      chosen = choices.detect { |t| t.id.to_s == selected.first }
+      chosen = choices.detect { |t| (t.group_ids.map(&:to_s) & selected).any? }
       chosen ? truncate(chosen.display_name, length: 34) : "#{selected.size} selected"
     else
       l(:label_tpcs_selected, count: selected.size, default: "#{selected.size} TPCs selected")
@@ -61,8 +61,10 @@
       <% choices.each do |tpc| %>
         <li class="pr-multiselect__option">
           <label title="<%= tpc.display_name %>">
+            <%# Checked when ANY id in the group is selected, so a URL
+                bookmarked against the sibling id still reads as applied. %>
             <%= check_box_tag 'tpc_code_id[]', tpc.id.to_s,
-                              selected.include?(tpc.id.to_s),
+                              (tpc.group_ids.map(&:to_s) & selected).any?,
                               id: "#{field_id}_opt_#{tpc.id}" %>
             <span><%= truncate(tpc.display_name, length: 60) %></span>
           </label>

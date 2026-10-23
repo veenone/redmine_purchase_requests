@@ -1,5 +1,9 @@
 class PurchaseRequestStatusesController < ApplicationController
   layout 'admin'
+  # index.html.erb colours each status badge with readable_text_color,
+  # which lives in PurchaseRequestsHelper. See CapexController for why
+  # that needs declaring rather than being available by default.
+  helper :purchase_requests
   before_action :require_admin
   
   def index

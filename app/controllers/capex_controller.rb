@@ -1,5 +1,11 @@
 class CapexController < ApplicationController
   helper :sort
+  # Redmine runs with config.action_controller.include_all_helpers = false,
+  # so a view only sees ApplicationHelper plus its own matching helper.
+  # The CAPEX views call readable_text_color and currency_symbol, which live
+  # in PurchaseRequestsHelper, so it has to be declared here the way
+  # OpexController already declares it for the twin OPEX views.
+  helper :purchase_requests
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
   include BudgetDashboard
@@ -118,7 +124,7 @@ class CapexController < ApplicationController
     # walk, not a SQL aggregate), so they use @capex_entries instead — see
     # the comment where it's assigned.
     capex_for_year = @project.capex.for_year(@current_year)
-    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(TpcCode.available_for_project(@project).active.ordered)
     capex_for_year = apply_tpc_filter(capex_for_year)
     # utilized_amount enumerates linked requests per record, so preload them
     # once rather than issuing a query per row. This is the row set used by
@@ -339,7 +345,7 @@ class CapexController < ApplicationController
     @selected_year = params[:year].present? ? params[:year].to_i : Date.current.year
     entries = entries.for_year(@selected_year) if @selected_year.present?
 
-    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(TpcCode.available_for_project(@project).active.ordered)
     apply_tpc_filter(entries)
   end
 

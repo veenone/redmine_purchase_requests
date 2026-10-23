@@ -39,6 +39,103 @@ class TpcCode < ActiveRecord::Base
   def global?
     project_id.nil?
   end
+
+  # --- Filter grouping -----------------------------------------------------
+  #
+  # A TPC number can legitimately exist twice: once globally and once scoped
+  # to a project, because the uniqueness validation above is scoped to
+  # project_id. available_for_project then returns both, which rendered two
+  # identical-looking entries in every TPC filter and split the matching
+  # records between them -- records reference one specific row, so a pair that
+  # reads as one code behaved as two. Grouping by number presents them as the
+  # single code they are, while still selecting every underlying row.
+
+  # A number is the same code whatever its casing or surrounding whitespace;
+  # the uniqueness validation above is already case-insensitive.
+  def self.normalize_number(value)
+    value.to_s.strip.downcase
+  end
+
+  def normalized_number
+    self.class.normalize_number(tpc_number)
+  end
+
+  # A plain row stands only for itself. MergedEntry overrides this with every
+  # id sharing its number, so views and filters can treat the two alike.
+  def group_ids
+    [id]
+  end
+
+  # One entry per TPC number, each standing for every row that shares it.
+  def self.merged_for_filter(scope)
+    rows = scope.respond_to?(:includes) ? scope.includes(:project, :department).to_a : Array(scope)
+
+    rows.group_by { |row| normalize_number(row.tpc_number) }
+        .values
+        .map { |members| MergedEntry.new(members) }
+        .sort_by { |entry| normalize_number(entry.tpc_number) }
+  end
+
+  # Stands in for every row sharing a TPC number.
+  #
+  # The project-scoped row leads, so a project's own wording wins, but each
+  # displayed field falls back to the global row when the project one is
+  # blank: an imported project row with no tpc_name would otherwise render as
+  # a bare owner name while the global row carried the real one.
+  #
+  # Everything else delegates to that leading row -- #id included, so the
+  # filter checkbox keeps the value shape it had before grouping and URLs
+  # bookmarked against either id still resolve.
+  class MergedEntry < SimpleDelegator
+    attr_reader :members
+
+    def initialize(members)
+      @members = members.sort_by { |row| [row.global? ? 1 : 0, row.id] }
+      super(@members.first)
+    end
+
+    def group_ids
+      members.map(&:id)
+    end
+
+    def merged?
+      members.size > 1
+    end
+
+    def tpc_name
+      first_present(:tpc_name)
+    end
+
+    def tpc_owner_name
+      first_present(:tpc_owner_name)
+    end
+
+    def description
+      first_present(:description)
+    end
+
+    def department
+      members.map(&:department).compact.first
+    end
+
+    # Recomputed rather than delegated: TpcCode#display_name reads the leading
+    # row's own attributes and would miss the fallbacks above.
+    def display_name
+      [tpc_number, tpc_name.presence || tpc_owner_name.presence].compact.join(' - ')
+    end
+
+    # Names every scope the entry covers, so a merged one reads as
+    # "Global + IST Jakarta" rather than claiming to be only one of them.
+    def scope_display
+      members.map(&:scope_display).join(' + ')
+    end
+
+    private
+
+    def first_present(attribute)
+      members.filter_map { |row| row.public_send(attribute).presence&.strip }.first
+    end
+  end
   
   def display_name
     # The name identifies the code; the owner stands in until names are

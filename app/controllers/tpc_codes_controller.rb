@@ -29,7 +29,7 @@ class TpcCodesController < ApplicationController
     @tpc_codes = @tpc_codes.ordered
     
     # TPC filter (selects rows of this list, so it targets :id)
-    @available_tpc_codes = TpcCode.available_for_project(@project).active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(TpcCode.available_for_project(@project).active.ordered)
     @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
                  .left_joins(:department)
                  .preload(:department)
@@ -58,7 +58,7 @@ class TpcCodesController < ApplicationController
     @tpc_codes = @tpc_codes.ordered
 
     # TPC filter (selects rows of this list, so it targets :id)
-    @available_tpc_codes = TpcCode.global.active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter(TpcCode.global.active.ordered)
     @tpc_codes = apply_tpc_filter(@tpc_codes, column: :id)
                  .left_joins(:department)
                  .preload(:department)
@@ -303,7 +303,7 @@ class TpcCodesController < ApplicationController
     end
 
     # TPC filter dropdown data and narrowing
-    @available_tpc_codes = (@project ? TpcCode.available_for_project(@project) : TpcCode).active.ordered
+    @available_tpc_codes = TpcCode.merged_for_filter((@project ? TpcCode.available_for_project(@project) : TpcCode).active.ordered)
     @all_tpc_codes = apply_tpc_filter(@all_tpc_codes, column: :id)
     base_scope = apply_tpc_filter(base_scope, column: :id)
 
