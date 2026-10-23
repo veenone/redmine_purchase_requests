@@ -8,6 +8,7 @@ class CapexController < ApplicationController
   helper :purchase_requests
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
+  include RedminePurchaseRequests::Paginatable
   include BudgetDashboard
 
   before_action :find_project
@@ -27,7 +28,7 @@ class CapexController < ApplicationController
     @capex_entries = capex_index_scope.reorder(sort_clause)
 
     respond_to do |format|
-      format.html
+      format.html { @capex_pages, @capex_entries = paginate(@capex_entries) }
       format.json { render json: @capex_entries.map(&:as_json) }
     end
   end
@@ -254,7 +255,8 @@ class CapexController < ApplicationController
 
     
     respond_to do |format|
-      format.html
+      # Only the table pages; the CSV export below keeps every sorted row.
+      format.html { @entry_pages, @page_entries = paginate_array(@sorted_entries) }
       # Exports exactly what is on screen: same year, same TPC filter, same
       # sort order. A dashboard whose numbers cannot leave it is why the
       # spreadsheet it replaces stays open in the next tab.

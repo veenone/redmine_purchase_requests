@@ -241,6 +241,9 @@
 
                     <% if vendor_obj.present? %>
                       <div class="vendor-details-display">
+                        <% if vendor_obj.description.present? %>
+                          <div><strong><%= l(:field_description) %>:</strong> <%= vendor_obj.description %></div>
+                        <% end %>
                         <% if vendor_obj.vendor_id.present? %>
                           <div><strong><%= l(:field_vendor_id) %>:</strong> <%= vendor_obj.vendor_id %></div>
                         <% end %>

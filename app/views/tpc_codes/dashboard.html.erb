@@ -120,7 +120,15 @@
                     <span class="currency-code"><%= Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD' %></span>
                     <%= number_with_precision(tpc[:total_cost], precision: 2, delimiter: ',') %>
                   </td>
-                  <td><%= tpc[:request_count] %></td>
+                  <td>
+                    <%# The request list is project-scoped, so the global dashboard has nowhere to link. %>
+                    <% if @project && tpc[:request_count] > 0 %>
+                      <%= link_to tpc[:request_count], project_purchase_requests_path(@project, tpc_code_id: tpc[:tpc_id]),
+                                  title: "Purchase requests with TPC #{tpc[:tpc_code]}" %>
+                    <% else %>
+                      <%= tpc[:request_count] %>
+                    <% end %>
+                  </td>
                 </tr>
               <% end %>
             </tbody>
@@ -233,7 +241,8 @@ const utilizationData = <%= raw @tpc_utilization.to_json %>;
 const costChartContainer = document.getElementById('tpc-cost-chart');
 
 if (costChartContainer) {
-  const maxCost = Math.max(...utilizationData.map(t => t.total_cost));
+  const tpcCostCurrency = '<%= j(Setting.plugin_redmine_purchase_requests['default_currency'] || 'USD') %>';
+  const maxCost = Math.max(...utilizationData.map(t => Number(t.total_cost)));
 
   utilizationData.forEach((tpc, index) => {
     const bar = document.createElement('div');
@@ -247,9 +256,14 @@ if (costChartContainer) {
     barContainer.style.cssText = 'flex:1;background:var(--pr-surface-sunken);height:30px;border-radius:var(--pr-radius-sm);overflow:hidden;';
 
     const barFill = document.createElement('div');
-    const percentage = maxCost > 0 ? (tpc.total_cost / maxCost) * 100 : 0;
+    const percentage = maxCost > 0 ? (Number(tpc.total_cost) / maxCost) * 100 : 0;
     barFill.style.cssText = `width:${percentage}%;background:var(--pr-accent);height:100%;display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:bold;font-size: var(--pr-text-sm);`;
-    barFill.textContent = tpc.total_cost.toLocaleString();
+    // total_cost is a BigDecimal, which to_json emits as a string, so
+    // toLocaleString() printed the raw "12345.6". Parse, then format as money.
+    barFill.textContent = tpcCostCurrency + ' ' + Number(tpc.total_cost).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
 
     barContainer.appendChild(barFill);
     bar.appendChild(label);

@@ -2,6 +2,7 @@ class PurchaseRequestsController < ApplicationController
   helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
+  include RedminePurchaseRequests::Paginatable
   # The budget-health band sums the same CAPEX and OPEX lines the two budget
   # dashboards do, so it takes their reliability rules from the same place
   # rather than deciding "over budget" on its own.
@@ -39,7 +40,7 @@ class PurchaseRequestsController < ApplicationController
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
     @available_tpc_codes = TpcCode.merged_for_filter(tpc_scope.active.ordered)
-    scope = apply_tpc_filter(scope)
+    scope = apply_request_tpc_filter(scope)
 
     @purchase_request_count = scope.count
     @pages = Paginator.new @purchase_request_count, @limit, params[:page]
@@ -80,6 +81,7 @@ class PurchaseRequestsController < ApplicationController
       # Handle attachments using Redmine's attachment system
       attachments = Attachment.attach_files(@purchase_request, params[:attachments])
       render_attachment_warning_if_needed(@purchase_request)
+      RedminePurchaseRequests::DmsfMirror.sync(@purchase_request)
 
       # Handle notifications
       if @purchase_request.notify_manager? && Setting.plugin_redmine_purchase_requests['enable_notifications']
@@ -119,6 +121,7 @@ class PurchaseRequestsController < ApplicationController
       # Handle attachments using Redmine's attachment system
       attachments = Attachment.attach_files(@purchase_request, params[:attachments])
       render_attachment_warning_if_needed(@purchase_request)
+      RedminePurchaseRequests::DmsfMirror.sync(@purchase_request)
       
       flash[:notice] = l(:notice_purchase_request_updated)
       redirect_to project_purchase_request_path(@project, @purchase_request)
@@ -191,13 +194,16 @@ class PurchaseRequestsController < ApplicationController
     @budget_year_defaulted = @selected_year.blank?
     @selected_year ||= Date.current.year
     year_agnostic_scope = scope
-    scope = scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
+    # A plain string, not Arel.sql: where() counts the "?" placeholders with
+    # String#count, and Arel's SqlLiteral overrides count to build a COUNT
+    # node, so wrapping it raised PreparedStatementInvalid on every load.
+    scope = scope.where('YEAR(purchase_requests.created_at) = ?', @selected_year)
 
     # TPC filter
     tpc_scope = @project ? TpcCode.available_for_project(@project) : TpcCode
     @available_tpc_codes = TpcCode.merged_for_filter(tpc_scope.active.ordered)
-    scope               = apply_tpc_filter(scope)
-    year_agnostic_scope = apply_tpc_filter(year_agnostic_scope)
+    scope               = apply_request_tpc_filter(scope)
+    year_agnostic_scope = apply_request_tpc_filter(year_agnostic_scope)
 
     @total_requests = scope.count
     @open_requests = scope.open.count
@@ -594,6 +600,23 @@ class PurchaseRequestsController < ApplicationController
   
   private
 
+  # A request carries its TPC code directly or inherits it from its CAPEX or
+  # OPEX line -- the precedence PurchaseRequest#tpc_code_display and the
+  # list's TPC column use. Filtering on the direct column alone hid every
+  # inheriting request, so a TPC dashboard link landed on a list missing most
+  # of the requests it had just counted. Budget scopes (Capex/Opex) still use
+  # apply_tpc_filter.
+  def apply_request_tpc_filter(scope)
+    return scope unless tpc_filter_active?
+
+    matching = PurchaseRequest.left_joins(:capex, :opex).where(
+      'purchase_requests.tpc_code_id IN (:ids) OR (purchase_requests.tpc_code_id IS NULL AND ' \
+      '(capex.tpc_code_id IN (:ids) OR opex.tpc_code_id IN (:ids)))',
+      ids: expanded_tpc_code_ids
+    )
+    scope.where(id: matching.select(:id))
+  end
+
   # CAPEX + OPEX budget figures for one year, narrowed by the active project
   # and TPC filter, expressed in `target_currency`. Extracted so the selected
   # year and an optional comparison year are computed by identical code —
@@ -665,7 +688,7 @@ class PurchaseRequestsController < ApplicationController
     (1..12).map do |month|
       month_start = Date.new(year, month, 1)
       month_end = month_start.end_of_month
-      requests = base_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), year)
+      requests = base_scope.where('YEAR(purchase_requests.created_at) = ?', year)
                            .where(created_at: month_start..month_end)
                            .budgeted
       amount = 0

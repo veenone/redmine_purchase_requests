@@ -5,6 +5,25 @@ All notable changes to the Redmine Purchase Requests Plugin will be documented i
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-10-23
+
+> **Deploy note:** run plugin migrations before restarting. Migration 042 adds a nullable `description` text column to `vendors`.
+
+### Added
+
+- Vendor description, for explaining a vendor whose commercial (trading) name differs from its vendor name. Shown on the vendor page, under the name in both vendor lists, with the vendor details on a purchase request, and carried in the CSV export, template and import. Importing a file without the column leaves existing descriptions untouched.
+- Pagination on the CAPEX and OPEX lists, the entries tables of the CAPEX and OPEX dashboards, the project and global TPC code lists, departments and the purchase request list. Pages default to 10 rows with 10/25/50/100 per-page links. The choice is remembered separately from Redmine's global per-page setting, so core issue lists are unaffected.
+- Purchase request attachments appear on the project's Files tab, grouped per request with a link back to it. Delete links there follow the request's own permission (`edit_purchase_requests`).
+- When DMSF is installed and enabled on the project, purchase request attachments are also copied into DMSF under `Purchase Requests / PR-<id> <title>`. The Redmine attachment stays in place. Copying happens on every create or update, so older attachments are backfilled the next time their request is saved. Deleting an attachment does not delete its DMSF copy.
+- The request count in the TPC dashboard's "Top 10 TPC Codes by Total Cost" table links to the purchase request list filtered to that TPC.
+
+### Fixed
+
+- The purchase request dashboard raised `ActiveRecord::PreparedStatementInvalid` on every load. Year filters were passed to `where` wrapped in `Arel.sql`, whose `count` builds a SQL `COUNT` node instead of counting `?` placeholders. Fixed at all six call sites, including the TPC dashboard's year filter.
+- The TPC filter on the purchase request list and dashboard now also matches requests that inherit their TPC from a CAPEX or OPEX line, the same rule the list's TPC column uses. Previously only directly assigned codes matched.
+- The "Top 10 TPC Codes by Total Cost" bars showed the raw decimal string (`12345.6`). They now show the currency with grouped, two-decimal amounts.
+- The purchase request list header showed the page's row count instead of the filtered total.
+
 ## [1.12.0] - 2026-09-03
 
 Purchase requests stop being forward-only: a request can be cancelled or revised into a corrected version, and the budget it consumed is released.

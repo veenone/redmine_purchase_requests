@@ -1,4 +1,6 @@
 class DepartmentsController < ApplicationController
+  include RedminePurchaseRequests::Paginatable
+
   # Departments are global data — one list, shared by every project — but the
   # page is reachable from two places, and it should stay where the user was.
   #
@@ -17,7 +19,7 @@ class DepartmentsController < ApplicationController
                 :edit_department_path_for, :department_path_for
 
   def index
-    @departments = Department.ordered
+    @department_pages, @departments = paginate(Department.ordered)
     # One grouped count instead of a COUNT per row in the view.
     @tpc_counts = TpcCode.where.not(department_id: nil).group(:department_id).count
   end

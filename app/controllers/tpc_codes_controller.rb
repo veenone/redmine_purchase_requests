@@ -2,6 +2,7 @@ class TpcCodesController < ApplicationController
   helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
+  include RedminePurchaseRequests::Paginatable
   include PurchaseRequestsHelper
 
   before_action :find_project_for_dashboard, only: [:dashboard]
@@ -35,9 +36,8 @@ class TpcCodesController < ApplicationController
                  .preload(:department)
                  .reorder(sort_clause)
 
-    @tpc_codes_count = @tpc_codes.count
-    @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']
-    @tpc_codes = @tpc_codes.limit(@tpc_codes_pages.per_page).offset(@tpc_codes_pages.offset)
+    @tpc_codes_pages, @tpc_codes = paginate(@tpc_codes)
+    @tpc_codes_count = @tpc_codes_pages.item_count
   end
   
   def global_index
@@ -64,9 +64,8 @@ class TpcCodesController < ApplicationController
                  .preload(:department)
                  .reorder(sort_clause)
 
-    @tpc_codes_count = @tpc_codes.count
-    @tpc_codes_pages = Redmine::Pagination::Paginator.new @tpc_codes_count, 25, params['page']
-    @tpc_codes = @tpc_codes.limit(@tpc_codes_pages.per_page).offset(@tpc_codes_pages.offset)
+    @tpc_codes_pages, @tpc_codes = paginate(@tpc_codes)
+    @tpc_codes_count = @tpc_codes_pages.item_count
 
     render 'index'
   end
@@ -316,7 +315,7 @@ class TpcCodesController < ApplicationController
 
     # Apply year filter to purchase request scope if selected
     if @selected_year.present?
-      pr_year_scope = pr_base_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year)
+      pr_year_scope = pr_base_scope.where('YEAR(purchase_requests.created_at) = ?', @selected_year)
     else
       pr_year_scope = pr_base_scope
     end
@@ -366,7 +365,7 @@ class TpcCodesController < ApplicationController
       # Get costs from CAPEX entries (filter by project and year if applicable)
       capex_scope = @project ? tpc.capex.where(project_id: @project.id) : tpc.capex
       capex_scope.each do |capex|
-        capex_pr_scope = @selected_year ? capex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year).budgeted : capex.purchase_requests.budgeted
+        capex_pr_scope = @selected_year ? capex.purchase_requests.where('YEAR(purchase_requests.created_at) = ?', @selected_year).budgeted : capex.purchase_requests.budgeted
         capex_pr_scope.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
@@ -377,7 +376,7 @@ class TpcCodesController < ApplicationController
       # Get costs from OPEX entries (filter by project and year if applicable)
       opex_scope = @project ? tpc.opex.where(project_id: @project.id) : tpc.opex
       opex_scope.each do |opex|
-        opex_pr_scope = @selected_year ? opex.purchase_requests.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year).budgeted : opex.purchase_requests.budgeted
+        opex_pr_scope = @selected_year ? opex.purchase_requests.where('YEAR(purchase_requests.created_at) = ?', @selected_year).budgeted : opex.purchase_requests.budgeted
         opex_pr_scope.each do |pr|
           curr = pr.currency.presence || default_currency
           total_cost += convert_currency(pr.estimated_price || 0, curr, default_currency)
@@ -387,7 +386,7 @@ class TpcCodesController < ApplicationController
 
       # Get costs from direct purchase requests (filter by project and year if applicable)
       pr_scope = @project ? tpc.purchase_requests.where(project_id: @project.id) : tpc.purchase_requests
-      pr_scope = pr_scope.where(Arel.sql('YEAR(purchase_requests.created_at) = ?'), @selected_year) if @selected_year
+      pr_scope = pr_scope.where('YEAR(purchase_requests.created_at) = ?', @selected_year) if @selected_year
       pr_scope.budgeted.where.not(estimated_price: nil).each do |pr|
         curr = pr.currency.presence || default_currency
         total_cost += convert_currency(pr.estimated_price, curr, default_currency)
@@ -395,6 +394,7 @@ class TpcCodesController < ApplicationController
       end
 
       @tpc_utilization << {
+        tpc_id: tpc.id,
         tpc_code: tpc.tpc_number,
         tpc_name: tpc.tpc_name.to_s,
         department: tpc.department&.name,

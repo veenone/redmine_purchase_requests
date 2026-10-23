@@ -27,6 +27,9 @@
           <tr>
             <td>
               <%= link_to vendor.name, vendor_path(vendor), class: 'vendor-name-link' %>
+              <% if vendor.description.present? %>
+                <div class="description-preview" title="<%= vendor.description %>"><%= truncate(vendor.description, length: 80) %></div>
+              <% end %>
             </td>
             <td><%= vendor.vendor_id %></td>
             <td><%= vendor.email %></td>

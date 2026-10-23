@@ -270,7 +270,7 @@ class VendorsController < ApplicationController
   end
   
   def vendor_params
-    params.require(:vendor).permit(:name, :vendor_id, :email, :phone, :website, :address, :country, :contact_person, :notes, :is_active, :project_id)
+    params.require(:vendor).permit(:name, :vendor_id, :email, :phone, :website, :address, :country, :contact_person, :notes, :description, :is_active, :project_id)
   end
   
   def generate_csv(vendors)
@@ -279,6 +279,7 @@ class VendorsController < ApplicationController
     CSV.generate(headers: true) do |csv|
       csv << [
         l(:field_name),
+        l(:field_description),
         l(:field_email),
         l(:field_phone),
         l(:field_website),
@@ -292,6 +293,7 @@ class VendorsController < ApplicationController
       vendors.each do |vendor|
         csv << [
           vendor.name,
+          vendor.description,
           vendor.email,
           vendor.phone,
           vendor.website,
@@ -311,6 +313,7 @@ class VendorsController < ApplicationController
     CSV.generate(headers: true) do |csv|
       csv << [
         l(:field_name),
+        l(:field_description),
         l(:field_email),
         l(:field_phone),
         l(:field_website),
@@ -324,6 +327,7 @@ class VendorsController < ApplicationController
       # Add sample row
       csv << [
         'Sample Vendor Inc.',
+        'Trades as "SampleCo"; legal entity on invoices is Sample Vendor Inc.',
         'contact@samplevendor.com',
         '+1-555-0123',
         'https://www.samplevendor.com',
@@ -357,6 +361,9 @@ class VendorsController < ApplicationController
         notes: row[l(:field_notes)],
         is_active: row[l(:field_is_active)].to_s.downcase.in?(['yes', 'true', '1'])
       }
+      # Files exported before the Description column existed must not blank
+      # the descriptions of the vendors they update.
+      vendor_data[:description] = row[l(:field_description)] if row.headers.include?(l(:field_description))
       
       existing_vendor = Vendor.find_by(name: vendor_data[:name])
       

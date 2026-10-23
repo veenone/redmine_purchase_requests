@@ -72,6 +72,9 @@
           <tr class="<%= 'is-muted' unless vendor.is_active? %>">
             <td>
               <strong><%= vendor.name %></strong>
+              <% if vendor.description.present? %>
+                <div class="description-preview" title="<%= vendor.description %>"><%= truncate(vendor.description, length: 80) %></div>
+              <% end %>
             </td>
             <td><%= vendor.vendor_id %></td>
             <td>

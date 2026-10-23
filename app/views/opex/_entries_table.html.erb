@@ -27,7 +27,7 @@
           </tr>
         </thead>
         <tbody>
-          <% @sorted_entries.each do |opex| %>
+          <% @page_entries.each do |opex| %>
             <tr class="<%= cycle('odd', 'even') %>">
               <td>
                 <span class="tpc-number"><%= opex.opex_code %></span>
@@ -112,4 +112,5 @@
         </tbody>
       </table>
     </div>
+    <div class="pr-pagination"><%= pagination_links_full @entry_pages, @entry_pages.item_count %></div>
   </div>

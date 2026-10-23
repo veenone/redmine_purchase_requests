@@ -71,6 +71,12 @@
               <td class="vendor-label"><%= l(:field_vendor_name) %></td>
               <td class="vendor-value"><strong><%= @vendor.name %></strong></td>
             </tr>
+            <% if @vendor.description.present? %>
+            <tr>
+              <td class="vendor-label"><%= l(:field_description) %></td>
+              <td class="vendor-value"><%= simple_format(@vendor.description) %></td>
+            </tr>
+            <% end %>
             <% if @vendor.vendor_id.present? %>
             <tr>
               <td class="vendor-label"><%= l(:field_vendor_id) %></td>

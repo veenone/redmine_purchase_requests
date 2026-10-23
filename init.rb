@@ -13,7 +13,7 @@ Redmine::Plugin.register :redmine_purchase_requests do
   name 'Redmine Purchase Requests plugin'
   author 'Achmad Fienan Rahardianto'
   description 'A comprehensive plugin for managing purchase requests, CAPEX budgets, OPEX management, and vendor operations in Redmine'
-  version '1.12.0'
+  version '1.13.0'
   url 'https://github.com/veenone/redmine_purchase_requests'
   author_url 'https://github.com/veenone'
   
@@ -271,3 +271,9 @@ Rails.application.config.to_prepare do
   require_dependency 'redmine_purchase_requests/patches/project_patch'
   require_dependency 'redmine_purchase_requests/patches/user_patch'
 end
+
+# Purchase request attachments are listed on the project Files tab (see
+# app/views/files/index.html.erb). Registered here, not in the to_prepare block
+# above: Redmine 5.1 runs init.rb from inside to_prepare, so a to_prepare
+# registered here never fires at boot.
+FilesController.helper RedminePurchaseRequests::FilesHelper

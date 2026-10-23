@@ -2,6 +2,7 @@ class OpexController < ApplicationController
   helper :sort
   include SortHelper
   include RedminePurchaseRequests::TpcFilterable
+  include RedminePurchaseRequests::Paginatable
   include BudgetDashboard
 
   layout 'base'
@@ -26,7 +27,7 @@ class OpexController < ApplicationController
     @categories = OpexCategory.all.pluck(:name, :id)
 
     respond_to do |format|
-      format.html
+      format.html { @opex_pages, @opex_entries = paginate(@opex_entries) }
       format.json { render json: @opex_entries.map(&:as_json) }
     end
   end
@@ -280,7 +281,8 @@ class OpexController < ApplicationController
     end
 
     respond_to do |format|
-      format.html
+      # Only the table pages; the CSV export below keeps every sorted row.
+      format.html { @entry_pages, @page_entries = paginate_array(@sorted_entries) }
       # Exports exactly what is on screen: same year, same filter, same sort
       # order. A dashboard whose numbers cannot leave it is why the spreadsheet
       # it replaces stays open in the next tab.

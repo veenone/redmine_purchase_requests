@@ -17,7 +17,7 @@
 
 <h2>
   <%= l(:label_purchase_requests) %> - <%= @project.name %>
-  <span class="count">(<%= @purchase_requests.count %>)</span>
+  <span class="count">(<%= @purchase_request_count %>)</span>
 </h2>
 
 <div class="info-box">
@@ -221,10 +221,8 @@
     </table>
   </div>
 
-  <% if defined?(@purchase_request_count) && @purchase_request_count && @purchase_request_count > @limit %>
-    <div class="pr-pagination">
-      <%= pagination_links_full @pages, @purchase_request_count, per_page: @limit %>
-    </div>
-  <% end %>
+  <div class="pr-pagination">
+    <%= pagination_links_full @pages, @purchase_request_count %>
+  </div>
   <% end %>
 <% end %>

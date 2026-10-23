@@ -28,6 +28,12 @@
     </div>
   </div>
 
+  <div class="form-row">
+    <%= f.label :description, l(:field_description) %>
+    <%= f.text_area :description, rows: 3, class: 'form-control' %>
+    <em class="info">What this vendor is. Explain here when the commercial (trading) name differs from the vendor name.</em>
+  </div>
+
   <div class="pr-field-pair">
     <div class="form-row">
       <%= f.label :email, l(:field_email) %>
